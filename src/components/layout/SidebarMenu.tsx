@@ -1,17 +1,20 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Calendar, Users, BarChart, FileSpreadsheet, Settings } from 'lucide-react';
+import { Calendar, Users, BarChart, FileSpreadsheet, Settings, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface MenuItem {
   icon: React.ElementType;
   label: string;
   path: string;
+  adminOnly?: boolean;
 }
 
 export function SidebarMenu() {
   const location = useLocation();
+  const { isAdmin } = useAuth();
   
   const menuItems: MenuItem[] = [
     {
@@ -38,13 +41,21 @@ export function SidebarMenu() {
       icon: Settings,
       label: 'Paramètres',
       path: '/settings'
+    },
+    {
+      icon: Lock,
+      label: 'Administration',
+      path: '/admin',
+      adminOnly: true
     }
   ];
+  
+  const filteredMenuItems = menuItems.filter(item => !item.adminOnly || isAdmin);
   
   return (
     <div className="py-4">
       <ul className="space-y-1">
-        {menuItems.map((item) => (
+        {filteredMenuItems.map((item) => (
           <li key={item.path}>
             <Link
               to={item.path}

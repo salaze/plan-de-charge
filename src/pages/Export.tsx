@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { Layout } from '@/components/layout/Layout';
@@ -7,7 +6,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Download, FileSpreadsheet, FileCsv, FileJson } from 'lucide-react';
+import { Download, FileSpreadsheet, Files, FileJson } from 'lucide-react';
 import { exportToExcel } from '@/utils';
 import { StatusCell } from '@/components/calendar/StatusCell';
 import { StatusCode } from '@/types';
@@ -43,7 +42,7 @@ const Export = () => {
   const getFormatIcon = (format: string) => {
     switch (format) {
       case "excel": return <FileSpreadsheet className="h-4 w-4 mr-2" />;
-      case "csv": return <FileCsv className="h-4 w-4 mr-2" />;
+      case "csv": return <Files className="h-4 w-4 mr-2" />;
       case "json": return <FileJson className="h-4 w-4 mr-2" />;
       default: return <Download className="h-4 w-4 mr-2" />;
     }

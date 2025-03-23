@@ -7,10 +7,16 @@ interface StatusCellProps {
   status: StatusCode;
   isBadge?: boolean;
   className?: string;
+  period?: 'AM' | 'PM' | 'FULL';
 }
 
-export function StatusCell({ status, isBadge = false, className }: StatusCellProps) {
+export function StatusCell({ status, isBadge = false, className, period }: StatusCellProps) {
   if (!status) return <span className="text-muted-foreground">-</span>;
+  
+  // Ajout du texte de la période si spécifié (AM/PM)
+  const displayText = period && period !== 'FULL' 
+    ? `${STATUS_LABELS[status]} (${period})` 
+    : STATUS_LABELS[status];
   
   if (isBadge) {
     return (
@@ -21,7 +27,7 @@ export function StatusCell({ status, isBadge = false, className }: StatusCellPro
           className
         )}
       >
-        {STATUS_LABELS[status]}
+        {displayText}
       </span>
     );
   }
@@ -34,7 +40,7 @@ export function StatusCell({ status, isBadge = false, className }: StatusCellPro
         className
       )}
     >
-      {STATUS_LABELS[status]}
+      {displayText}
     </span>
   );
 }

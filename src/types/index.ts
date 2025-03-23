@@ -1,9 +1,8 @@
 
 export type StatusCode = 
-  | 'present' 
+  | 'assistance' 
   | 'absent' 
   | 'vacation' 
-  | 'sick' 
   | 'training' 
   | '';
 
@@ -42,24 +41,21 @@ export interface SummaryStats {
   presentDays: number;
   absentDays: number;
   vacationDays: number;
-  sickDays: number;
   trainingDays: number;
 }
 
 export const STATUS_LABELS: Record<StatusCode, string> = {
-  present: 'Présent',
+  assistance: 'Assistance',
   absent: 'Absent',
   vacation: 'Congés',
-  sick: 'Maladie',
   training: 'Formation',
   '': '-'
 };
 
 export const STATUS_COLORS: Record<StatusCode, string> = {
-  present: 'bg-attendance-present text-attendance-present-foreground',
+  assistance: 'bg-attendance-present text-attendance-present-foreground',
   absent: 'bg-attendance-absent text-attendance-absent-foreground',
   vacation: 'bg-attendance-vacation text-attendance-vacation-foreground',
-  sick: 'bg-attendance-sick text-attendance-sick-foreground',
   training: 'bg-attendance-training text-attendance-training-foreground',
   '': 'bg-transparent text-foreground'
 };

@@ -53,7 +53,8 @@ const Index = () => {
       };
     });
     
-    toast.success('Statut modifié avec succès');
+    const periodLabel = period === 'AM' ? 'matin' : period === 'PM' ? 'après-midi' : 'journée';
+    toast.success(`Statut ${periodLabel} modifié avec succès`);
   };
   
   const handleExport = () => {

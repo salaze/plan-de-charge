@@ -10,7 +10,7 @@ import {
 import { MonthSelector } from '@/components/calendar/MonthSelector';
 import { StatusCell } from '@/components/calendar/StatusCell';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { calculateEmployeeStats } from '@/utils/dataUtils';
+import { calculateEmployeeStats } from '@/utils/statsUtils';
 import { Employee, MonthData, SummaryStats } from '@/types';
 
 interface EmployeeStatsData {
@@ -18,7 +18,6 @@ interface EmployeeStatsData {
   present: number;
   absent: number;
   vacation: number;
-  sick: number;
   training: number;
 }
 
@@ -36,7 +35,6 @@ const Statistics = () => {
     presentDays: 0,
     absentDays: 0,
     vacationDays: 0,
-    sickDays: 0,
     trainingDays: 0
   });
   
@@ -56,7 +54,6 @@ const Statistics = () => {
       presentDays: 0,
       absentDays: 0,
       vacationDays: 0,
-      sickDays: 0,
       trainingDays: 0
     };
     
@@ -68,19 +65,17 @@ const Statistics = () => {
         present: stats.presentDays,
         absent: stats.absentDays,
         vacation: stats.vacationDays,
-        sick: stats.sickDays,
         training: stats.trainingDays
       });
       
-      // Additionner pour les totaux
+      // Add to totals
       totals.presentDays += stats.presentDays;
       totals.absentDays += stats.absentDays;
       totals.vacationDays += stats.vacationDays;
-      totals.sickDays += stats.sickDays;
       totals.trainingDays += stats.trainingDays;
     });
     
-    // Définir le total des jours (basé sur la première statistique d'employé s'il y en a)
+    // Set total days based on first employee's stats if available
     if (employees.length > 0) {
       const firstStats = calculateEmployeeStats(employees[0], year, month);
       totals.totalDays = firstStats.totalDays;
@@ -101,14 +96,14 @@ const Statistics = () => {
           onChange={handleMonthChange} 
         />
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 animate-scale-in">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-scale-in">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-lg">Présents</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center">
-                <StatusCell status="present" className="mr-2 w-3 h-3 rounded-full" />
+                <StatusCell status="assistance" className="mr-2 w-3 h-3 rounded-full" />
                 <span className="text-2xl font-bold">
                   {totalStats.presentDays.toFixed(1)}
                 </span>
@@ -139,20 +134,6 @@ const Statistics = () => {
                 <StatusCell status="vacation" className="mr-2 w-3 h-3 rounded-full" />
                 <span className="text-2xl font-bold">
                   {totalStats.vacationDays.toFixed(1)}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Maladie</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center">
-                <StatusCell status="sick" className="mr-2 w-3 h-3 rounded-full" />
-                <span className="text-2xl font-bold">
-                  {totalStats.sickDays.toFixed(1)}
                 </span>
               </div>
             </CardContent>
@@ -191,7 +172,6 @@ const Statistics = () => {
                   <Bar dataKey="present" name="Présent" fill="hsl(var(--attendance-present))" />
                   <Bar dataKey="absent" name="Absent" fill="hsl(var(--attendance-absent))" />
                   <Bar dataKey="vacation" name="Congés" fill="hsl(var(--attendance-vacation))" />
-                  <Bar dataKey="sick" name="Maladie" fill="hsl(var(--attendance-sick))" />
                   <Bar dataKey="training" name="Formation" fill="hsl(var(--attendance-training))" />
                 </BarChart>
               </ResponsiveContainer>

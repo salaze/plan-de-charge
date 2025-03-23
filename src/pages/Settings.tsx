@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { toast } from 'sonner';
 import { Layout } from '@/components/layout/Layout';
@@ -8,7 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Info, Trash2, RefreshCw } from 'lucide-react';
-import { createSampleData } from '@/utils/dataUtils';
+import { createSampleData } from '@/utils';
 
 const Settings = () => {
   const resetData = () => {

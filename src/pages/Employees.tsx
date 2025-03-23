@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { Layout } from '@/components/layout/Layout';
@@ -15,7 +14,7 @@ import {
   AlertDialogTitle
 } from '@/components/ui/alert-dialog';
 import { Employee } from '@/types';
-import { createEmptyEmployee, generateId } from '@/utils/dataUtils';
+import { createEmptyEmployee, generateId } from '@/utils';
 
 const Employees = () => {
   // Récupérer les employés du localStorage

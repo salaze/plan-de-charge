@@ -21,7 +21,7 @@ import {
   getEmployeeStatusForDate, 
   formatDate,
   calculateEmployeeStats
-} from '@/utils/dataUtils';
+} from '@/utils';
 import { StatusSelector } from './StatusSelector';
 import { StatusCell } from './StatusCell';
 import { Employee, DayPeriod, StatusCode } from '@/types';

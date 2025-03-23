@@ -10,7 +10,7 @@ import {
   createSampleData, 
   setEmployeeStatus,
   exportToExcel
-} from '@/utils/dataUtils';
+} from '@/utils';
 import { DayPeriod, StatusCode, MonthData } from '@/types';
 
 const Index = () => {

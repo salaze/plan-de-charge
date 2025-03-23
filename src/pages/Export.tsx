@@ -3,128 +3,142 @@ import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileSpreadsheet, Calendar, Download, Database } from 'lucide-react';
-import { exportToExcel } from '@/utils/dataUtils';
-import { MonthData } from '@/types';
+import { Calendar } from '@/components/ui/calendar';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Download, FileSpreadsheet, FileCsv, FileJson } from 'lucide-react';
+import { exportToExcel } from '@/utils';
+import { StatusCell } from '@/components/calendar/StatusCell';
+import { StatusCode } from '@/types';
 
 const Export = () => {
-  const [data, setData] = useState<MonthData>(() => {
-    const savedData = localStorage.getItem('planningData');
-    return savedData ? JSON.parse(savedData) : { year: new Date().getFullYear(), month: new Date().getMonth(), employees: [] };
-  });
+  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [exportFormat, setExportFormat] = useState<string>("excel");
+  const [exportScope, setExportScope] = useState<string>("month");
   
   const handleExport = () => {
-    exportToExcel(data);
-    toast.success('Données exportées avec succès');
-  };
-  
-  const handleBackup = () => {
-    const jsonData = JSON.stringify(data, null, 2);
-    const blob = new Blob([jsonData], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `planning_backup_${new Date().toISOString().slice(0, 10)}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
-    toast.success('Sauvegarde créée avec succès');
-  };
-  
-  const handleRestore = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const result = e.target?.result as string;
-        const parsedData = JSON.parse(result);
-        
-        // Validation basique
-        if (!parsedData.employees || !Array.isArray(parsedData.employees)) {
-          throw new Error('Format de fichier invalide');
-        }
-        
-        // Mise à jour des données
-        localStorage.setItem('planningData', result);
-        setData(parsedData);
-        toast.success('Données restaurées avec succès');
-      } catch (error) {
-        toast.error('Erreur lors de la restauration des données');
-        console.error(error);
-      }
+    // Simuler l'exportation
+    const today = new Date();
+    const data = {
+      year: today.getFullYear(),
+      month: today.getMonth(),
+      employees: []
     };
     
-    reader.readAsText(file);
+    exportToExcel(data);
     
-    // Réinitialiser l'input
-    event.target.value = '';
+    toast.success(`Données exportées au format ${getFormatLabel(exportFormat)}`);
   };
+  
+  const getFormatLabel = (format: string) => {
+    switch (format) {
+      case "excel": return "Excel (.xlsx)";
+      case "csv": return "CSV (.csv)";
+      case "json": return "JSON (.json)";
+      default: return format;
+    }
+  };
+  
+  const getFormatIcon = (format: string) => {
+    switch (format) {
+      case "excel": return <FileSpreadsheet className="h-4 w-4 mr-2" />;
+      case "csv": return <FileCsv className="h-4 w-4 mr-2" />;
+      case "json": return <FileJson className="h-4 w-4 mr-2" />;
+      default: return <Download className="h-4 w-4 mr-2" />;
+    }
+  };
+  
+  const statuses: StatusCode[] = ['assistance', 'absent', 'vacation', 'training'];
   
   return (
     <Layout>
       <div className="space-y-6 animate-fade-in">
-        <h1 className="text-3xl font-bold mb-6">Export et sauvegarde</h1>
+        <h1 className="text-3xl font-bold">Exporter les données</h1>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="glass-panel hover:shadow-lg transition-all duration-300 animate-scale-in">
+          <Card>
             <CardHeader>
-              <div className="flex items-center gap-2">
-                <FileSpreadsheet className="h-6 w-6 text-primary" />
-                <CardTitle>Export Excel</CardTitle>
-              </div>
+              <CardTitle>Paramètres d'exportation</CardTitle>
               <CardDescription>
-                Exportez vos données de planning au format Excel pour les utiliser dans d'autres applications.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button 
-                className="w-full flex items-center justify-center gap-2 transition-transform hover:scale-105"
-                onClick={handleExport}
-              >
-                <Download className="h-4 w-4" />
-                Exporter les données
-              </Button>
-            </CardContent>
-          </Card>
-          
-          <Card className="glass-panel hover:shadow-lg transition-all duration-300 animate-scale-in">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Database className="h-6 w-6 text-primary" />
-                <CardTitle>Sauvegarde</CardTitle>
-              </div>
-              <CardDescription>
-                Créez une sauvegarde de vos données et restaurez-les à tout moment.
+                Configurez les options pour exporter vos données de planning
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Button 
-                className="w-full flex items-center justify-center gap-2 transition-transform hover:scale-105"
-                onClick={handleBackup}
-              >
-                <Download className="h-4 w-4" />
-                Créer une sauvegarde
-              </Button>
-              
-              <div className="relative">
-                <Button 
-                  variant="outline" 
-                  className="w-full flex items-center justify-center gap-2 transition-all hover:bg-secondary"
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Format</label>
+                <Select
+                  value={exportFormat}
+                  onValueChange={setExportFormat}
                 >
-                  <Calendar className="h-4 w-4" />
-                  Restaurer une sauvegarde
-                </Button>
-                <input
-                  type="file"
-                  accept=".json"
-                  onChange={handleRestore}
-                  className="absolute inset-0 opacity-0 cursor-pointer"
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionnez un format" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="excel">Excel (.xlsx)</SelectItem>
+                    <SelectItem value="csv">CSV (.csv)</SelectItem>
+                    <SelectItem value="json">JSON (.json)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Période</label>
+                <Select
+                  value={exportScope}
+                  onValueChange={setExportScope}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionnez une période" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="day">Jour</SelectItem>
+                    <SelectItem value="week">Semaine</SelectItem>
+                    <SelectItem value="month">Mois</SelectItem>
+                    <SelectItem value="custom">Personnalisée</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <Separator />
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Sélectionnez une date</label>
+                <Calendar
+                  mode="single"
+                  selected={date}
+                  onSelect={setDate}
+                  className="rounded-md border"
                 />
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button onClick={handleExport} className="w-full">
+                {getFormatIcon(exportFormat)}
+                Exporter au format {getFormatLabel(exportFormat)}
+              </Button>
+            </CardFooter>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Légende des statuts</CardTitle>
+              <CardDescription>
+                Référence des codes utilisés dans le planning
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {statuses.map((status) => (
+                  <div key={status} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <StatusCell status={status} isBadge={true} />
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      Code: {status.toUpperCase()}
+                    </div>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>

@@ -54,17 +54,19 @@ export function PlanningGrid({
   
   const days = generateDaysInMonth(year, month);
   
-  const handleCellClick = (employeeId: string, date: string) => {
+  const handleCellClick = (employeeId: string, date: string, period: DayPeriod) => {
     const employee = employees.find(emp => emp.id === employeeId);
     if (!employee) return;
     
-    const currentStatus = getEmployeeStatusForDate(employee, date, selectedPeriod);
+    const currentStatus = getEmployeeStatusForDate(employee, date, period);
     
     setSelectedCell({
       employeeId,
       date,
       currentStatus
     });
+    
+    setSelectedPeriod(period);
   };
   
   const handleStatusChange = (status: StatusCode) => {
@@ -108,13 +110,32 @@ export function PlanningGrid({
               {days.map((day, index) => (
                 <TableHead 
                   key={index}
-                  className={`text-center min-w-[70px] ${isWeekend(day) ? 'bg-muted' : ''}`}
+                  colSpan={2}
+                  className={`text-center min-w-[140px] ${isWeekend(day) ? 'bg-muted' : ''}`}
                 >
                   <div className="calendar-day">{getDayName(day, true)}</div>
                   <div className="calendar-date">{day.getDate()}</div>
                 </TableHead>
               ))}
               <TableHead className="text-center min-w-[100px]">Total</TableHead>
+            </TableRow>
+            <TableRow className="hover:bg-secondary">
+              <TableHead className="sticky left-0 bg-secondary z-20"></TableHead>
+              {days.map((day, index) => (
+                <React.Fragment key={`header-${index}`}>
+                  <TableHead 
+                    className={`text-center w-[70px] ${isWeekend(day) ? 'bg-muted' : ''}`}
+                  >
+                    AM
+                  </TableHead>
+                  <TableHead 
+                    className={`text-center w-[70px] ${isWeekend(day) ? 'bg-muted' : ''}`}
+                  >
+                    PM
+                  </TableHead>
+                </React.Fragment>
+              ))}
+              <TableHead></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -135,42 +156,37 @@ export function PlanningGrid({
                     const dayStatus = getDayPeriodStatus(employee, date);
                     
                     return (
-                      <TableCell 
-                        key={index} 
-                        className={`text-center p-1 ${isWeekend(day) ? 'bg-muted/50' : ''}`}
-                      >
-                        <div className="flex flex-col gap-1">
+                      <React.Fragment key={`employee-${employee.id}-day-${index}`}>
+                        <TableCell 
+                          className={`text-center p-1 ${isWeekend(day) ? 'bg-muted/50' : ''}`}
+                        >
                           <div 
                             className="cursor-pointer hover:bg-secondary/50 rounded p-1 transition-all text-xs"
-                            onClick={() => {
-                              setSelectedPeriod('AM');
-                              handleCellClick(employee.id, date);
-                            }}
+                            onClick={() => handleCellClick(employee.id, date, 'AM')}
                           >
-                            <div className="text-xs font-medium text-muted-foreground">AM</div>
                             {dayStatus.AM ? (
                               <StatusCell status={dayStatus.AM} />
                             ) : (
                               <span className="inline-block w-full py-1 text-muted-foreground">-</span>
                             )}
                           </div>
-                          
+                        </TableCell>
+                        
+                        <TableCell 
+                          className={`text-center p-1 ${isWeekend(day) ? 'bg-muted/50' : ''}`}
+                        >
                           <div 
                             className="cursor-pointer hover:bg-secondary/50 rounded p-1 transition-all text-xs"
-                            onClick={() => {
-                              setSelectedPeriod('PM');
-                              handleCellClick(employee.id, date);
-                            }}
+                            onClick={() => handleCellClick(employee.id, date, 'PM')}
                           >
-                            <div className="text-xs font-medium text-muted-foreground">PM</div>
                             {dayStatus.PM ? (
                               <StatusCell status={dayStatus.PM} />
                             ) : (
                               <span className="inline-block w-full py-1 text-muted-foreground">-</span>
                             )}
                           </div>
-                        </div>
-                      </TableCell>
+                        </TableCell>
+                      </React.Fragment>
                     );
                   })}
                   

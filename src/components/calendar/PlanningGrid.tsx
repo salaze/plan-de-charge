@@ -15,6 +15,7 @@ import {
   DialogTitle
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 import { 
   generateDaysInMonth, 
   getDayName, 
@@ -22,32 +23,42 @@ import {
   formatDate,
   calculateEmployeeStats
 } from '@/utils';
-import { StatusSelector } from './StatusSelector';
+import { StatusSelectorEnhanced } from './StatusSelectorEnhanced';
 import { StatusCell } from './StatusCell';
 import { Employee, DayPeriod, StatusCode } from '@/types';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface PlanningGridProps {
   year: number;
   month: number;
   employees: Employee[];
+  projects: { id: string; code: string; name: string; color: string }[];
   onStatusChange: (
     employeeId: string, 
     date: string, 
     status: StatusCode, 
-    period: DayPeriod
+    period: DayPeriod,
+    isHighlighted?: boolean,
+    projectCode?: string
   ) => void;
+  isAdmin: boolean;
 }
 
 export function PlanningGrid({ 
   year, 
   month, 
   employees, 
-  onStatusChange 
+  projects,
+  onStatusChange,
+  isAdmin
 }: PlanningGridProps) {
+  const isMobile = useIsMobile();
   const [selectedCell, setSelectedCell] = useState<{
     employeeId: string;
     date: string;
     currentStatus: StatusCode;
+    isHighlighted?: boolean;
+    projectCode?: string;
   } | null>(null);
   
   const [selectedPeriod, setSelectedPeriod] = useState<DayPeriod>('AM');
@@ -55,28 +66,39 @@ export function PlanningGrid({
   const days = generateDaysInMonth(year, month);
   
   const handleCellClick = (employeeId: string, date: string, period: DayPeriod) => {
+    if (!isAdmin) {
+      toast.info("Mode lecture seule. Connexion administrateur requise pour modifier.");
+      return;
+    }
+    
     const employee = employees.find(emp => emp.id === employeeId);
     if (!employee) return;
     
-    const currentStatus = getEmployeeStatusForDate(employee, date, period);
+    const dayEntry = employee.schedule.find(
+      (day) => day.date === date && day.period === period
+    );
     
     setSelectedCell({
       employeeId,
       date,
-      currentStatus
+      currentStatus: dayEntry?.status || '',
+      isHighlighted: dayEntry?.isHighlighted,
+      projectCode: dayEntry?.projectCode
     });
     
     setSelectedPeriod(period);
   };
   
-  const handleStatusChange = (status: StatusCode) => {
+  const handleStatusChange = (status: StatusCode, isHighlighted?: boolean, projectCode?: string) => {
     if (!selectedCell) return;
     
     onStatusChange(
       selectedCell.employeeId,
       selectedCell.date,
       status,
-      selectedPeriod
+      selectedPeriod,
+      isHighlighted,
+      projectCode
     );
     
     setSelectedCell(null);
@@ -92,13 +114,41 @@ export function PlanningGrid({
     return day === 0 || day === 6; // 0 = Sunday, 6 = Saturday
   };
   
-  // Fonction pour obtenir les statuts AM et PM pour une date donnée
-  const getDayPeriodStatus = (employee: Employee, date: string) => {
+  // Fonction pour obtenir les détails d'un statut pour une date et période
+  const getDayStatus = (employee: Employee, date: string, period: DayPeriod) => {
+    const dayEntry = employee.schedule.find(
+      (day) => day.date === date && day.period === period
+    );
+    
     return {
-      AM: getEmployeeStatusForDate(employee, date, 'AM'),
-      PM: getEmployeeStatusForDate(employee, date, 'PM')
+      status: dayEntry?.status || '',
+      isHighlighted: dayEntry?.isHighlighted || false,
+      projectCode: dayEntry?.projectCode
     };
   };
+  
+  // Calculer les statistiques totales pour un employé
+  const getTotalStats = (employee: Employee) => {
+    const stats = calculateEmployeeStats(employee, year, month);
+    return stats.presentDays;
+  };
+  
+  // Obtenir le mois visible en tenant compte du nombre de colonnes sur mobile
+  const getVisibleDays = () => {
+    if (isMobile) {
+      // Sur mobile, prendre les 7 premiers jours ou tous si moins de 7
+      const today = new Date();
+      if (today.getFullYear() === year && today.getMonth() === month) {
+        // Si c'est le mois actuel, commencer par la date actuelle
+        const currentDay = today.getDate() - 1; // 0-indexed
+        return days.slice(Math.max(0, Math.min(currentDay, days.length - 7)), Math.max(7, Math.min(currentDay + 7, days.length)));
+      }
+      return days.slice(0, Math.min(7, days.length));
+    }
+    return days;
+  };
+  
+  const visibleDays = getVisibleDays();
   
   return (
     <>
@@ -107,7 +157,7 @@ export function PlanningGrid({
           <TableHeader className="bg-secondary sticky top-0 z-10">
             <TableRow className="hover:bg-secondary">
               <TableHead className="sticky left-0 bg-secondary z-20 min-w-[200px]">Employé</TableHead>
-              {days.map((day, index) => (
+              {visibleDays.map((day, index) => (
                 <TableHead 
                   key={index}
                   colSpan={2}
@@ -121,7 +171,7 @@ export function PlanningGrid({
             </TableRow>
             <TableRow className="hover:bg-secondary">
               <TableHead className="sticky left-0 bg-secondary z-20"></TableHead>
-              {days.map((day, index) => (
+              {visibleDays.map((day, index) => (
                 <React.Fragment key={`header-${index}`}>
                   <TableHead 
                     className={`text-center w-[70px] ${isWeekend(day) ? 'bg-muted' : ''}`}
@@ -140,7 +190,7 @@ export function PlanningGrid({
           </TableHeader>
           <TableBody>
             {employees.map((employee) => {
-              const stats = calculateEmployeeStats(employee, year, month);
+              const totalStats = getTotalStats(employee);
               
               return (
                 <TableRow 
@@ -151,9 +201,10 @@ export function PlanningGrid({
                     {employee.name}
                   </TableCell>
                   
-                  {days.map((day, index) => {
+                  {visibleDays.map((day, index) => {
                     const date = formatDate(day);
-                    const dayStatus = getDayPeriodStatus(employee, date);
+                    const amStatus = getDayStatus(employee, date, 'AM');
+                    const pmStatus = getDayStatus(employee, date, 'PM');
                     
                     return (
                       <React.Fragment key={`employee-${employee.id}-day-${index}`}>
@@ -164,8 +215,12 @@ export function PlanningGrid({
                             className="cursor-pointer hover:bg-secondary/50 rounded p-1 transition-all text-xs"
                             onClick={() => handleCellClick(employee.id, date, 'AM')}
                           >
-                            {dayStatus.AM ? (
-                              <StatusCell status={dayStatus.AM} />
+                            {amStatus.status ? (
+                              <StatusCell 
+                                status={amStatus.status} 
+                                isHighlighted={amStatus.isHighlighted}
+                                projectCode={amStatus.projectCode}
+                              />
                             ) : (
                               <span className="inline-block w-full py-1 text-muted-foreground">-</span>
                             )}
@@ -179,8 +234,12 @@ export function PlanningGrid({
                             className="cursor-pointer hover:bg-secondary/50 rounded p-1 transition-all text-xs"
                             onClick={() => handleCellClick(employee.id, date, 'PM')}
                           >
-                            {dayStatus.PM ? (
-                              <StatusCell status={dayStatus.PM} />
+                            {pmStatus.status ? (
+                              <StatusCell 
+                                status={pmStatus.status} 
+                                isHighlighted={pmStatus.isHighlighted}
+                                projectCode={pmStatus.projectCode}
+                              />
                             ) : (
                               <span className="inline-block w-full py-1 text-muted-foreground">-</span>
                             )}
@@ -191,7 +250,7 @@ export function PlanningGrid({
                   })}
                   
                   <TableCell className="text-center font-medium">
-                    {stats.presentDays.toFixed(1)}
+                    {totalStats.toFixed(1)}
                   </TableCell>
                 </TableRow>
               );
@@ -227,9 +286,12 @@ export function PlanningGrid({
                 </Button>
               </div>
               
-              <StatusSelector 
-                value={selectedCell.currentStatus} 
-                onChange={handleStatusChange} 
+              <StatusSelectorEnhanced 
+                value={selectedCell.currentStatus}
+                onChange={handleStatusChange}
+                projects={projects}
+                isHighlighted={selectedCell.isHighlighted}
+                projectCode={selectedCell.projectCode}
               />
             </div>
           )}

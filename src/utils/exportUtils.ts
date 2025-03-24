@@ -1,11 +1,32 @@
 
-import { MonthData } from '@/types';
+import { MonthData, DayStatus } from '@/types';
 
 /**
  * Exports the data to a JSON file (simulating Excel export)
  */
 export const exportToExcel = (data: MonthData): void => {
-  const jsonData = JSON.stringify(data, null, 2);
+  // Enrichir les données pour l'export
+  const exportData = {
+    ...data,
+    exportDate: new Date().toISOString(),
+    metadata: {
+      statusTypes: [
+        { code: 'assistance', label: 'Assistance', color: '#FFEB3B' },
+        { code: 'vigi', label: 'Vigi', color: '#F44336' },
+        { code: 'formation', label: 'Formation', color: '#2196F3' },
+        { code: 'projet', label: 'Projet', color: '#4CAF50' },
+        { code: 'conges', label: 'Congés', color: '#795548' },
+        { code: 'management', label: 'Management', color: '#9C27B0' },
+        { code: 'tp', label: 'Temps Partiel', color: '#9E9E9E' },
+        { code: 'coordinateur', label: 'Coordinateur Vigi Ticket', color: '#8BC34A' },
+        { code: 'absence', label: 'Autre Absence', color: '#F48FB1' },
+        { code: 'regisseur', label: 'Régisseur', color: '#03A9F4' },
+        { code: 'demenagement', label: 'Déménagements', color: '#3F51B5' }
+      ]
+    }
+  };
+  
+  const jsonData = JSON.stringify(exportData, null, 2);
   const blob = new Blob([jsonData], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -16,6 +37,6 @@ export const exportToExcel = (data: MonthData): void => {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
   
-  // In a real app, use a library like xlsx to generate a proper Excel file
+  // Dans une application réelle, utiliser une librairie comme xlsx pour générer un véritable fichier Excel
   console.log('Export to Excel feature would be implemented here with a proper Excel library');
 };

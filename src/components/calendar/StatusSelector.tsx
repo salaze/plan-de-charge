@@ -12,7 +12,7 @@ interface StatusSelectorProps {
 }
 
 export function StatusSelector({ value, onChange }: StatusSelectorProps) {
-  const statuses: StatusCode[] = ['assistance', 'vigi', 'formation', 'conges', ''];
+  const statuses: StatusCode[] = ['assistance', 'vigi', 'formation', 'projet', 'conges', 'management', 'tp', 'coordinateur', 'absence', 'regisseur', 'demenagement', ''];
   
   return (
     <Popover>

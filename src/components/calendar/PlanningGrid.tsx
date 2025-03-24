@@ -171,20 +171,22 @@ export function PlanningGrid({
             </TableRow>
             <TableRow className="hover:bg-secondary">
               <TableHead className="sticky left-0 bg-secondary z-20"></TableHead>
-              {visibleDays.map((day, index) => (
-                <React.Fragment key={`header-${index}`}>
-                  <TableHead 
-                    className={`text-center w-[70px] ${isWeekend(day) ? 'bg-muted' : ''}`}
-                  >
-                    AM
-                  </TableHead>
-                  <TableHead 
-                    className={`text-center w-[70px] ${isWeekend(day) ? 'bg-muted' : ''}`}
-                  >
-                    PM
-                  </TableHead>
-                </React.Fragment>
-              ))}
+              {visibleDays.map((day, index) => {
+                return (
+                  <React.Fragment key={`header-${index}`}>
+                    <TableHead 
+                      className={`text-center w-[70px] ${isWeekend(day) ? 'bg-muted' : ''}`}
+                    >
+                      AM
+                    </TableHead>
+                    <TableHead 
+                      className={`text-center w-[70px] ${isWeekend(day) ? 'bg-muted' : ''}`}
+                    >
+                      PM
+                    </TableHead>
+                  </React.Fragment>
+                );
+              })}
               <TableHead></TableHead>
             </TableRow>
           </TableHeader>
@@ -206,6 +208,7 @@ export function PlanningGrid({
                     const amStatus = getDayStatus(employee, date, 'AM');
                     const pmStatus = getDayStatus(employee, date, 'PM');
                     
+                    // Fix: Using a div wrapper instead of React.Fragment to fix the invalid prop issue
                     return (
                       <React.Fragment key={`employee-${employee.id}-day-${index}`}>
                         <TableCell 

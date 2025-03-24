@@ -24,7 +24,12 @@ interface EmployeeStatsData {
 const Statistics = () => {
   const [data, setData] = useState<MonthData>(() => {
     const savedData = localStorage.getItem('planningData');
-    return savedData ? JSON.parse(savedData) : { year: new Date().getFullYear(), month: new Date().getMonth(), employees: [] };
+    return savedData ? JSON.parse(savedData) : { 
+      year: new Date().getFullYear(), 
+      month: new Date().getMonth(), 
+      employees: [],
+      projects: []
+    };
   });
   
   const [currentYear, setCurrentYear] = useState(data.year);
@@ -35,7 +40,16 @@ const Statistics = () => {
     presentDays: 0,
     absentDays: 0,
     vacationDays: 0,
-    trainingDays: 0
+    trainingDays: 0,
+    managementDays: 0,
+    projectDays: 0,
+    vigiDays: 0,
+    tpDays: 0,
+    coordinatorDays: 0,
+    otherAbsenceDays: 0,
+    regisseurDays: 0,
+    demenagementDays: 0,
+    projectStats: {}
   });
   
   useEffect(() => {
@@ -54,7 +68,16 @@ const Statistics = () => {
       presentDays: 0,
       absentDays: 0,
       vacationDays: 0,
-      trainingDays: 0
+      trainingDays: 0,
+      managementDays: 0,
+      projectDays: 0,
+      vigiDays: 0,
+      tpDays: 0,
+      coordinatorDays: 0,
+      otherAbsenceDays: 0,
+      regisseurDays: 0,
+      demenagementDays: 0,
+      projectStats: {}
     };
     
     employees.forEach((employee) => {
@@ -73,6 +96,14 @@ const Statistics = () => {
       totals.absentDays += stats.absentDays;
       totals.vacationDays += stats.vacationDays;
       totals.trainingDays += stats.trainingDays;
+      totals.managementDays += stats.managementDays;
+      totals.projectDays += stats.projectDays;
+      totals.vigiDays += stats.vigiDays;
+      totals.tpDays += stats.tpDays;
+      totals.coordinatorDays += stats.coordinatorDays;
+      totals.otherAbsenceDays += stats.otherAbsenceDays;
+      totals.regisseurDays += stats.regisseurDays;
+      totals.demenagementDays += stats.demenagementDays;
     });
     
     // Set total days based on first employee's stats if available
@@ -117,7 +148,7 @@ const Statistics = () => {
             </CardHeader>
             <CardContent>
               <div className="flex items-center">
-                <StatusCell status="absent" className="mr-2 w-3 h-3 rounded-full" />
+                <StatusCell status="absence" className="mr-2 w-3 h-3 rounded-full" />
                 <span className="text-2xl font-bold">
                   {totalStats.absentDays.toFixed(1)}
                 </span>
@@ -131,7 +162,7 @@ const Statistics = () => {
             </CardHeader>
             <CardContent>
               <div className="flex items-center">
-                <StatusCell status="vacation" className="mr-2 w-3 h-3 rounded-full" />
+                <StatusCell status="conges" className="mr-2 w-3 h-3 rounded-full" />
                 <span className="text-2xl font-bold">
                   {totalStats.vacationDays.toFixed(1)}
                 </span>
@@ -145,7 +176,7 @@ const Statistics = () => {
             </CardHeader>
             <CardContent>
               <div className="flex items-center">
-                <StatusCell status="training" className="mr-2 w-3 h-3 rounded-full" />
+                <StatusCell status="formation" className="mr-2 w-3 h-3 rounded-full" />
                 <span className="text-2xl font-bold">
                   {totalStats.trainingDays.toFixed(1)}
                 </span>

@@ -34,7 +34,7 @@ export const createSampleData = (): MonthData => {
   
   // Generate some random statuses for each employee
   const days = generateDaysInMonth(year, month);
-  const statuses: StatusCode[] = ['assistance', 'absent', 'vacation', 'training'];
+  const statuses: StatusCode[] = ['assistance', 'absence', 'conges', 'formation'];
   
   employees.forEach(employee => {
     days.forEach(day => {
@@ -60,9 +60,19 @@ export const createSampleData = (): MonthData => {
     });
   });
   
+  // Sample projects
+  const projects = [
+    { id: '1', code: 'P001', name: 'Développement interne', color: '#4CAF50' },
+    { id: '2', code: 'P002', name: 'Client A', color: '#2196F3' },
+    { id: '3', code: 'P003', name: 'Client B', color: '#FF9800' },
+    { id: '4', code: 'P004', name: 'Maintenance préventive', color: '#9C27B0' },
+    { id: '5', code: 'P005', name: 'Mission externe', color: '#00BCD4' },
+  ];
+  
   return {
     year,
     month,
-    employees
+    employees,
+    projects
   };
 };

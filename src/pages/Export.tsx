@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { Layout } from '@/components/layout/Layout';
@@ -22,7 +23,8 @@ const Export = () => {
     const data = {
       year: today.getFullYear(),
       month: today.getMonth(),
-      employees: []
+      employees: [],
+      projects: []
     };
     
     exportToExcel(data);
@@ -48,7 +50,7 @@ const Export = () => {
     }
   };
   
-  const statuses: StatusCode[] = ['assistance', 'absent', 'vacation', 'training'];
+  const statuses: StatusCode[] = ['assistance', 'absence', 'conges', 'formation'];
   
   return (
     <Layout>

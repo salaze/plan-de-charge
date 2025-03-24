@@ -121,7 +121,7 @@ export function PlanningGrid({
     );
     
     return {
-      status: dayEntry?.status || '',
+      status: dayEntry?.status || (''),
       isHighlighted: dayEntry?.isHighlighted || false,
       projectCode: dayEntry?.projectCode
     };

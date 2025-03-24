@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table';
-import { Plus, Edit, Trash } from 'lucide-react';
+import { Plus, Edit, Trash, Mail } from 'lucide-react';
 import { Employee } from '@/types';
 
 interface EmployeeListProps {
@@ -40,6 +40,7 @@ export function EmployeeList({
           <TableHeader>
             <TableRow>
               <TableHead>Nom</TableHead>
+              <TableHead>Email</TableHead>
               <TableHead>Poste</TableHead>
               <TableHead>Département</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -48,7 +49,7 @@ export function EmployeeList({
           <TableBody>
             {employees.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                   Aucun employé dans la liste
                 </TableCell>
               </TableRow>
@@ -56,6 +57,14 @@ export function EmployeeList({
               employees.map((employee) => (
                 <TableRow key={employee.id} className="hover:bg-secondary">
                   <TableCell className="font-medium">{employee.name}</TableCell>
+                  <TableCell>
+                    {employee.email ? (
+                      <div className="flex items-center gap-1">
+                        <Mail className="h-3 w-3 text-muted-foreground" />
+                        <span>{employee.email}</span>
+                      </div>
+                    ) : '-'}
+                  </TableCell>
                   <TableCell>{employee.position || '-'}</TableCell>
                   <TableCell>{employee.department || '-'}</TableCell>
                   <TableCell className="text-right">

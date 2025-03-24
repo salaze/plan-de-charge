@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Employee } from '@/types';
+import { Mail } from 'lucide-react';
 
 interface EmployeeFormProps {
   open: boolean;
@@ -26,6 +27,7 @@ export function EmployeeForm({
   employee 
 }: EmployeeFormProps) {
   const [name, setName] = useState(employee?.name || '');
+  const [email, setEmail] = useState(employee?.email || '');
   const [position, setPosition] = useState(employee?.position || '');
   const [department, setDepartment] = useState(employee?.department || '');
   
@@ -37,6 +39,7 @@ export function EmployeeForm({
     onSave({
       id: employee?.id || '',
       name: name.trim(),
+      email: email.trim() || undefined,
       position: position.trim() || undefined,
       department: department.trim() || undefined,
       schedule: employee?.schedule || []
@@ -47,6 +50,7 @@ export function EmployeeForm({
   
   const resetForm = () => {
     setName(employee?.name || '');
+    setEmail(employee?.email || '');
     setPosition(employee?.position || '');
     setDepartment(employee?.department || '');
   };
@@ -76,6 +80,21 @@ export function EmployeeForm({
               placeholder="Nom de l'employé"
               required
             />
+          </div>
+          
+          <div className="grid gap-2">
+            <Label htmlFor="email">Email</Label>
+            <div className="flex items-center gap-2 relative">
+              <Mail className="h-4 w-4 absolute left-3 text-muted-foreground" />
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Email de l'employé"
+                className="pl-10"
+              />
+            </div>
           </div>
           
           <div className="grid gap-2">

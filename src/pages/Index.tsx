@@ -6,7 +6,7 @@ import { MonthSelector } from '@/components/calendar/MonthSelector';
 import { PlanningGrid } from '@/components/calendar/PlanningGrid';
 import { Button } from '@/components/ui/button';
 import { LegendModal } from '@/components/calendar/LegendModal';
-import { Filter, Download, BookOpen, Info } from 'lucide-react';
+import { Filter, Download, BookOpen, Info, LogOut } from 'lucide-react';
 import { 
   createSampleData, 
   setEmployeeStatus,
@@ -14,47 +14,63 @@ import {
 } from '@/utils';
 import { DayPeriod, StatusCode, MonthData, FilterOptions } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const Index = () => {
-  const { isAuthenticated, isAdmin } = useAuth();
+  const { isAuthenticated, isAdmin, logout } = useAuth();
+  const navigate = useNavigate();
 
   const [data, setData] = useState<MonthData>(() => {
     // Récupérer les données depuis le localStorage ou créer des données de démo
     const savedData = localStorage.getItem('planningData');
     
     if (savedData) {
-      const parsedData = JSON.parse(savedData);
-      
-      // Assurer que la structure contient des projets
-      if (!parsedData.projects) {
-        parsedData.projects = [
-          { id: '1', code: 'P001', name: 'Développement interne', color: '#4CAF50' },
-          { id: '2', code: 'P002', name: 'Client A', color: '#2196F3' },
-          { id: '3', code: 'P003', name: 'Client B', color: '#FF9800' },
-          { id: '4', code: 'P004', name: 'Maintenance préventive', color: '#9C27B0' },
-          { id: '5', code: 'P005', name: 'Mission externe', color: '#00BCD4' },
-        ];
+      try {
+        const parsedData = JSON.parse(savedData);
+        
+        // Assurer que les données ont la structure correcte
+        if (!parsedData.year) parsedData.year = new Date().getFullYear();
+        if (!parsedData.month && parsedData.month !== 0) parsedData.month = new Date().getMonth();
+        if (!Array.isArray(parsedData.employees)) parsedData.employees = [];
+        
+        // Assurer que la structure contient des projets
+        if (!parsedData.projects) {
+          parsedData.projects = [
+            { id: '1', code: 'P001', name: 'Développement interne', color: '#4CAF50' },
+            { id: '2', code: 'P002', name: 'Client A', color: '#2196F3' },
+            { id: '3', code: 'P003', name: 'Client B', color: '#FF9800' },
+            { id: '4', code: 'P004', name: 'Maintenance préventive', color: '#9C27B0' },
+            { id: '5', code: 'P005', name: 'Mission externe', color: '#00BCD4' },
+          ];
+        }
+        
+        return parsedData;
+      } catch (error) {
+        console.error("Erreur lors de la lecture des données:", error);
+        return createDefaultData();
       }
-      
-      return parsedData;
     } else {
-      const sampleData = createSampleData();
-      
-      // Ajouter des projets aux données de démo
-      sampleData.projects = [
-        { id: '1', code: 'P001', name: 'Développement interne', color: '#4CAF50' },
-        { id: '2', code: 'P002', name: 'Client A', color: '#2196F3' },
-        { id: '3', code: 'P003', name: 'Client B', color: '#FF9800' },
-        { id: '4', code: 'P004', name: 'Maintenance préventive', color: '#9C27B0' },
-        { id: '5', code: 'P005', name: 'Mission externe', color: '#00BCD4' },
-      ];
-      
-      return sampleData;
+      return createDefaultData();
     }
   });
   
-  const [currentYear, setCurrentYear] = useState(data.year);
-  const [currentMonth, setCurrentMonth] = useState(data.month);
+  function createDefaultData() {
+    const sampleData = createSampleData();
+    
+    // Ajouter des projets aux données de démo
+    sampleData.projects = [
+      { id: '1', code: 'P001', name: 'Développement interne', color: '#4CAF50' },
+      { id: '2', code: 'P002', name: 'Client A', color: '#2196F3' },
+      { id: '3', code: 'P003', name: 'Client B', color: '#FF9800' },
+      { id: '4', code: 'P004', name: 'Maintenance préventive', color: '#9C27B0' },
+      { id: '5', code: 'P005', name: 'Mission externe', color: '#00BCD4' },
+    ];
+    
+    return sampleData;
+  }
+  
+  const [currentYear, setCurrentYear] = useState(data.year || new Date().getFullYear());
+  const [currentMonth, setCurrentMonth] = useState(typeof data.month === 'number' ? data.month : new Date().getMonth());
   const [filters, setFilters] = useState<FilterOptions>({});
   const [isLegendOpen, setIsLegendOpen] = useState(false);
   
@@ -148,6 +164,12 @@ const Index = () => {
     toast.success('Données exportées avec succès');
   };
   
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+    toast.success('Vous avez été déconnecté');
+  };
+  
   return (
     <Layout>
       <div className="space-y-6 animate-fade-in">
@@ -185,6 +207,15 @@ const Index = () => {
                 </Button>
               </>
             )}
+            
+            <Button 
+              variant="outline" 
+              onClick={handleLogout}
+              className="transition-all hover:bg-secondary ml-auto"
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Déconnexion
+            </Button>
           </div>
         </div>
         
@@ -192,8 +223,8 @@ const Index = () => {
           <PlanningGrid 
             year={currentYear} 
             month={currentMonth} 
-            employees={data.employees}
-            projects={data.projects}
+            employees={data.employees || []}
+            projects={data.projects || []}
             onStatusChange={handleStatusChange}
             isAdmin={isAdmin}
           />
@@ -202,7 +233,7 @@ const Index = () => {
         <LegendModal 
           isOpen={isLegendOpen}
           onClose={() => setIsLegendOpen(false)}
-          projects={data.projects}
+          projects={data.projects || []}
         />
       </div>
     </Layout>

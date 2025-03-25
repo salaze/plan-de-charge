@@ -47,8 +47,8 @@ interface PlanningGridProps {
 export function PlanningGrid({ 
   year, 
   month, 
-  employees, 
-  projects,
+  employees = [], 
+  projects = [],
   onStatusChange,
   isAdmin
 }: PlanningGridProps) {
@@ -63,7 +63,11 @@ export function PlanningGrid({
   
   const [selectedPeriod, setSelectedPeriod] = useState<DayPeriod>('AM');
   
-  const days = generateDaysInMonth(year, month);
+  // Vérifier que year et month sont valides
+  const safeYear = Number.isFinite(year) ? year : new Date().getFullYear();
+  const safeMonth = Number.isFinite(month) ? month : new Date().getMonth();
+  
+  const days = generateDaysInMonth(safeYear, safeMonth);
   
   const handleCellClick = (employeeId: string, date: string, period: DayPeriod) => {
     if (!isAdmin) {
@@ -129,7 +133,7 @@ export function PlanningGrid({
   
   // Calculer les statistiques totales pour un employé
   const getTotalStats = (employee: Employee) => {
-    const stats = calculateEmployeeStats(employee, year, month);
+    const stats = calculateEmployeeStats(employee, safeYear, safeMonth);
     return stats.presentDays;
   };
   
@@ -138,7 +142,7 @@ export function PlanningGrid({
     if (isMobile) {
       // Sur mobile, prendre les 4 premiers jours ou tous si moins de 4
       const today = new Date();
-      if (today.getFullYear() === year && today.getMonth() === month) {
+      if (today.getFullYear() === safeYear && today.getMonth() === safeMonth) {
         // Si c'est le mois actuel, commencer par la date actuelle
         const currentDay = today.getDate() - 1; // 0-indexed
         return days.slice(Math.max(0, Math.min(currentDay, days.length - 4)), Math.max(4, Math.min(currentDay + 4, days.length)));
@@ -149,6 +153,15 @@ export function PlanningGrid({
   };
   
   const visibleDays = getVisibleDays();
+  
+  // Si pas d'employés, afficher un message
+  if (!employees.length) {
+    return (
+      <div className="text-center p-8 bg-muted/30 rounded-lg">
+        <p className="text-muted-foreground">Aucun employé disponible</p>
+      </div>
+    );
+  }
   
   return (
     <>

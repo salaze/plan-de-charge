@@ -33,6 +33,7 @@ export const calculateEmployeeStats = (
     otherAbsenceDays: 0,
     regisseurDays: 0,
     demenagementDays: 0,
+    permanenceDays: 0,
     projectStats: {}
   };
   
@@ -45,48 +46,58 @@ export const calculateEmployeeStats = (
       stats.projectStats[day.projectCode] = (stats.projectStats[day.projectCode] || 0) + dayMultiplier;
     }
     
-    switch(day.status) {
-      case 'assistance':
-        stats.presentDays += dayMultiplier;
-        break;
-      case 'vigi':
-        stats.presentDays += dayMultiplier;
-        stats.vigiDays += dayMultiplier;
-        break;
-      case 'formation':
-        stats.presentDays += dayMultiplier;
-        stats.trainingDays += dayMultiplier;
-        break;
-      case 'projet':
-        stats.presentDays += dayMultiplier;
-        stats.projectDays += dayMultiplier;
-        break;
-      case 'conges':
-        stats.vacationDays += dayMultiplier;
-        break;
-      case 'management':
-        stats.presentDays += dayMultiplier;
-        stats.managementDays += dayMultiplier;
-        break;
-      case 'tp':
-        stats.tpDays += dayMultiplier;
-        break;
-      case 'coordinateur':
-        stats.presentDays += dayMultiplier;
-        stats.coordinatorDays += dayMultiplier;
-        break;
-      case 'absence':
-        stats.absentDays += dayMultiplier;
-        stats.otherAbsenceDays += dayMultiplier;
-        break;
-      case 'regisseur':
-        stats.presentDays += dayMultiplier;
-        stats.regisseurDays += dayMultiplier;
-        break;
-      case 'demenagement':
-        stats.presentDays += dayMultiplier;
-        stats.demenagementDays += dayMultiplier;
-        break;
+    // Si c'est une permanence (mise en évidence / isHighlighted)
+    if (day.isHighlighted) {
+      stats.permanenceDays += dayMultiplier;
+      stats.presentDays += dayMultiplier;
+    } else {
+      switch(day.status) {
+        case 'assistance':
+          stats.presentDays += dayMultiplier;
+          break;
+        case 'vigi':
+          stats.presentDays += dayMultiplier;
+          stats.vigiDays += dayMultiplier;
+          break;
+        case 'formation':
+          stats.presentDays += dayMultiplier;
+          stats.trainingDays += dayMultiplier;
+          break;
+        case 'projet':
+          stats.presentDays += dayMultiplier;
+          stats.projectDays += dayMultiplier;
+          break;
+        case 'conges':
+          stats.vacationDays += dayMultiplier;
+          break;
+        case 'management':
+          stats.presentDays += dayMultiplier;
+          stats.managementDays += dayMultiplier;
+          break;
+        case 'tp':
+          stats.tpDays += dayMultiplier;
+          break;
+        case 'coordinateur':
+          stats.presentDays += dayMultiplier;
+          stats.coordinatorDays += dayMultiplier;
+          break;
+        case 'absence':
+          stats.absentDays += dayMultiplier;
+          stats.otherAbsenceDays += dayMultiplier;
+          break;
+        case 'regisseur':
+          stats.presentDays += dayMultiplier;
+          stats.regisseurDays += dayMultiplier;
+          break;
+        case 'demenagement':
+          stats.presentDays += dayMultiplier;
+          stats.demenagementDays += dayMultiplier;
+          break;
+        case 'permanence':
+          stats.presentDays += dayMultiplier;
+          stats.permanenceDays += dayMultiplier;
+          break;
+      }
     }
   });
   

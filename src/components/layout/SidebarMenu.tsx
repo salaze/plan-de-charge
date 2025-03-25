@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Calendar, Users, BarChart, FileSpreadsheet, Settings, Lock } from 'lucide-react';
+import { Calendar, Users, BarChart, FileSpreadsheet, Settings, Lock, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -14,19 +14,19 @@ interface MenuItem {
 
 export function SidebarMenu() {
   const location = useLocation();
-  const { isAdmin } = useAuth();
+  const { isAdmin, logout } = useAuth();
   
   const menuItems: MenuItem[] = [
     {
       icon: Calendar,
       label: 'Planning',
       path: '/',
-      adminOnly: true
     },
     {
       icon: Users,
       label: 'Employés',
-      path: '/employees'
+      path: '/employees',
+      adminOnly: true
     },
     {
       icon: BarChart,
@@ -75,6 +75,17 @@ export function SidebarMenu() {
             </Link>
           </li>
         ))}
+        
+        {/* Bouton de déconnexion */}
+        <li className="mt-6">
+          <button
+            onClick={logout}
+            className="flex w-full items-center px-3 py-2.5 text-sm font-medium rounded-md transition-all duration-300 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent/30"
+          >
+            <LogOut className="mr-2 h-5 w-5" />
+            Déconnexion
+          </button>
+        </li>
       </ul>
     </div>
   );

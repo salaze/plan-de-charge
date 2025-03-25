@@ -11,6 +11,7 @@ export type StatusCode =
   | 'absence'
   | 'regisseur'
   | 'demenagement'
+  | 'permanence'
   | '';
 
 export type DayPeriod = 'AM' | 'PM' | 'FULL';
@@ -72,6 +73,7 @@ export interface SummaryStats {
   otherAbsenceDays: number;
   regisseurDays: number;
   demenagementDays: number;
+  permanenceDays: number;
   projectStats: Record<string, number>;
 }
 
@@ -87,6 +89,7 @@ export const STATUS_LABELS: Record<StatusCode, string> = {
   absence: 'Autre Absence',
   regisseur: 'Régisseur',
   demenagement: 'Déménagements',
+  permanence: 'Permanences',
   '': '-'
 };
 
@@ -102,5 +105,6 @@ export const STATUS_COLORS: Record<StatusCode, string> = {
   absence: 'bg-pink-300 text-pink-800',
   regisseur: 'bg-blue-300 text-blue-800',
   demenagement: 'bg-indigo-500 text-white',
+  permanence: 'bg-pink-600 text-white',
   '': 'bg-transparent text-foreground'
 };

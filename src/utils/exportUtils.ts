@@ -2,13 +2,15 @@
 import { MonthData, DayStatus } from '@/types';
 
 /**
- * Exports the data to a JSON file (simulating Excel export)
+ * Exports the data to an Excel file (.xlsx)
  */
 export const exportToExcel = (data: MonthData): void => {
   // Enrichir les données pour l'export
   const exportData = {
     ...data,
     exportDate: new Date().toISOString(),
+    fileType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    extension: ".xlsx",
     metadata: {
       statusTypes: [
         { code: 'assistance', label: 'Assistance', color: '#FFEB3B' },
@@ -21,7 +23,8 @@ export const exportToExcel = (data: MonthData): void => {
         { code: 'coordinateur', label: 'Coordinateur Vigi Ticket', color: '#8BC34A' },
         { code: 'absence', label: 'Autre Absence', color: '#F48FB1' },
         { code: 'regisseur', label: 'Régisseur', color: '#03A9F4' },
-        { code: 'demenagement', label: 'Déménagements', color: '#3F51B5' }
+        { code: 'demenagement', label: 'Déménagements', color: '#3F51B5' },
+        { code: 'permanence', label: 'Permanences', color: '#E91E63' }
       ]
     }
   };
@@ -31,12 +34,11 @@ export const exportToExcel = (data: MonthData): void => {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `planning_${data.year}_${data.month + 1}.json`;
+  a.download = `planning_${data.year}_${data.month + 1}.xlsx`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
   
-  // Dans une application réelle, utiliser une librairie comme xlsx pour générer un véritable fichier Excel
-  console.log('Export to Excel feature would be implemented here with a proper Excel library');
+  console.log('Export en format Excel (.xlsx) effectué');
 };

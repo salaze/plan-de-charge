@@ -168,25 +168,27 @@ const Index = () => {
               Légende
             </Button>
             
-            <Button variant="outline" className="transition-all hover:bg-secondary">
-              <Filter className="mr-2 h-4 w-4" />
-              Filtres
-            </Button>
-            
             {isAdmin && (
-              <Button 
-                variant="outline" 
-                onClick={handleExport}
-                className="transition-all hover:bg-secondary"
-              >
-                <Download className="mr-2 h-4 w-4" />
-                Exporter
-              </Button>
+              <>
+                <Button variant="outline" className="transition-all hover:bg-secondary">
+                  <Filter className="mr-2 h-4 w-4" />
+                  Filtres
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  onClick={handleExport}
+                  className="transition-all hover:bg-secondary"
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Exporter
+                </Button>
+              </>
             )}
           </div>
         </div>
         
-        <div className="glass-panel p-1 md:p-4 animate-scale-in">
+        <div className="glass-panel p-1 md:p-4 animate-scale-in overflow-x-auto">
           <PlanningGrid 
             year={currentYear} 
             month={currentMonth} 

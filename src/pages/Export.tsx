@@ -50,7 +50,7 @@ const Export = () => {
     }
   };
   
-  const statuses: StatusCode[] = ['assistance', 'absence', 'conges', 'formation'];
+  const statuses: StatusCode[] = ['assistance', 'absence', 'conges', 'formation', 'permanence'];
   
   return (
     <Layout>
@@ -71,14 +71,15 @@ const Export = () => {
                 <Select
                   value={exportFormat}
                   onValueChange={setExportFormat}
+                  defaultValue="excel"
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionnez un format" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="excel">Excel (.xlsx)</SelectItem>
-                    <SelectItem value="csv">CSV (.csv)</SelectItem>
-                    <SelectItem value="json">JSON (.json)</SelectItem>
+                    <SelectItem value="csv" disabled>CSV (.csv)</SelectItem>
+                    <SelectItem value="json" disabled>JSON (.json)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -140,6 +141,15 @@ const Export = () => {
                     </div>
                   </div>
                 ))}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <StatusCell status="assistance" isHighlighted={true} isBadge={true} />
+                    <span className="text-sm">Entouré (Permanence)</span>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Statut avec permanence
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>

@@ -136,14 +136,14 @@ export function PlanningGrid({
   // Obtenir le mois visible en tenant compte du nombre de colonnes sur mobile
   const getVisibleDays = () => {
     if (isMobile) {
-      // Sur mobile, prendre les 7 premiers jours ou tous si moins de 7
+      // Sur mobile, prendre les 4 premiers jours ou tous si moins de 4
       const today = new Date();
       if (today.getFullYear() === year && today.getMonth() === month) {
         // Si c'est le mois actuel, commencer par la date actuelle
         const currentDay = today.getDate() - 1; // 0-indexed
-        return days.slice(Math.max(0, Math.min(currentDay, days.length - 7)), Math.max(7, Math.min(currentDay + 7, days.length)));
+        return days.slice(Math.max(0, Math.min(currentDay, days.length - 4)), Math.max(4, Math.min(currentDay + 4, days.length)));
       }
-      return days.slice(0, Math.min(7, days.length));
+      return days.slice(0, Math.min(4, days.length));
     }
     return days;
   };
@@ -152,22 +152,22 @@ export function PlanningGrid({
   
   return (
     <>
-      <div className="overflow-x-auto">
-        <Table className="border rounded-lg bg-white dark:bg-gray-900 shadow-sm">
+      <div className="overflow-x-auto -mx-2 sm:mx-0">
+        <Table className="border rounded-lg bg-white dark:bg-gray-900 shadow-sm min-w-full">
           <TableHeader className="bg-secondary sticky top-0 z-10">
             <TableRow className="hover:bg-secondary">
-              <TableHead className="sticky left-0 bg-secondary z-20 min-w-[200px]">Employé</TableHead>
+              <TableHead className="sticky left-0 bg-secondary z-20 min-w-[120px] lg:min-w-[200px]">Employé</TableHead>
               {visibleDays.map((day, index) => (
                 <TableHead 
                   key={index}
                   colSpan={2}
-                  className={`text-center min-w-[140px] ${isWeekend(day) ? 'bg-muted' : ''}`}
+                  className={`text-center min-w-[120px] ${isWeekend(day) ? 'bg-muted' : ''}`}
                 >
-                  <div className="calendar-day">{getDayName(day, true)}</div>
-                  <div className="calendar-date">{day.getDate()}</div>
+                  <div className="calendar-day text-xs sm:text-sm">{getDayName(day, true)}</div>
+                  <div className="calendar-date text-xs sm:text-sm">{day.getDate()}</div>
                 </TableHead>
               ))}
-              <TableHead className="text-center min-w-[100px]">Total</TableHead>
+              <TableHead className="text-center min-w-[60px] sm:min-w-[100px]">Total</TableHead>
             </TableRow>
             <TableRow className="hover:bg-secondary">
               <TableHead className="sticky left-0 bg-secondary z-20"></TableHead>
@@ -175,12 +175,12 @@ export function PlanningGrid({
                 return (
                   <React.Fragment key={`header-${index}`}>
                     <TableHead 
-                      className={`text-center w-[70px] ${isWeekend(day) ? 'bg-muted' : ''}`}
+                      className={`text-center w-[60px] text-xs sm:w-[70px] ${isWeekend(day) ? 'bg-muted' : ''}`}
                     >
                       AM
                     </TableHead>
                     <TableHead 
-                      className={`text-center w-[70px] ${isWeekend(day) ? 'bg-muted' : ''}`}
+                      className={`text-center w-[60px] text-xs sm:w-[70px] ${isWeekend(day) ? 'bg-muted' : ''}`}
                     >
                       PM
                     </TableHead>
@@ -199,7 +199,7 @@ export function PlanningGrid({
                   key={employee.id} 
                   className="hover:bg-secondary/30 transition-colors duration-200"
                 >
-                  <TableCell className="font-medium sticky left-0 bg-background z-10">
+                  <TableCell className="font-medium sticky left-0 bg-background z-10 text-xs sm:text-sm">
                     {employee.name}
                   </TableCell>
                   
@@ -208,14 +208,13 @@ export function PlanningGrid({
                     const amStatus = getDayStatus(employee, date, 'AM');
                     const pmStatus = getDayStatus(employee, date, 'PM');
                     
-                    // Fix: Using a div wrapper instead of React.Fragment to fix the invalid prop issue
                     return (
                       <React.Fragment key={`employee-${employee.id}-day-${index}`}>
                         <TableCell 
-                          className={`text-center p-1 ${isWeekend(day) ? 'bg-muted/50' : ''}`}
+                          className={`text-center p-0 sm:p-1 ${isWeekend(day) ? 'bg-muted/50' : ''}`}
                         >
                           <div 
-                            className="cursor-pointer hover:bg-secondary/50 rounded p-1 transition-all text-xs"
+                            className="cursor-pointer hover:bg-secondary/50 rounded p-0.5 sm:p-1 transition-all text-xs"
                             onClick={() => handleCellClick(employee.id, date, 'AM')}
                           >
                             {amStatus.status ? (
@@ -231,10 +230,10 @@ export function PlanningGrid({
                         </TableCell>
                         
                         <TableCell 
-                          className={`text-center p-1 ${isWeekend(day) ? 'bg-muted/50' : ''}`}
+                          className={`text-center p-0 sm:p-1 ${isWeekend(day) ? 'bg-muted/50' : ''}`}
                         >
                           <div 
-                            className="cursor-pointer hover:bg-secondary/50 rounded p-1 transition-all text-xs"
+                            className="cursor-pointer hover:bg-secondary/50 rounded p-0.5 sm:p-1 transition-all text-xs"
                             onClick={() => handleCellClick(employee.id, date, 'PM')}
                           >
                             {pmStatus.status ? (
@@ -252,7 +251,7 @@ export function PlanningGrid({
                     );
                   })}
                   
-                  <TableCell className="text-center font-medium">
+                  <TableCell className="text-center font-medium text-xs sm:text-sm">
                     {totalStats.toFixed(1)}
                   </TableCell>
                 </TableRow>
@@ -263,7 +262,7 @@ export function PlanningGrid({
       </div>
       
       <Dialog open={!!selectedCell} onOpenChange={handleCloseDialog}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px] max-w-[90vw]">
           <DialogHeader>
             <DialogTitle>
               Modifier le statut {selectedPeriod === 'AM' ? '(Matin)' : '(Après-midi)'}

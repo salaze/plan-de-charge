@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { 
@@ -49,6 +48,7 @@ const Statistics = () => {
     otherAbsenceDays: 0,
     regisseurDays: 0,
     demenagementDays: 0,
+    permanenceDays: 0,
     projectStats: {}
   });
   
@@ -77,6 +77,7 @@ const Statistics = () => {
       otherAbsenceDays: 0,
       regisseurDays: 0,
       demenagementDays: 0,
+      permanenceDays: 0,
       projectStats: {}
     };
     
@@ -91,7 +92,6 @@ const Statistics = () => {
         training: stats.trainingDays
       });
       
-      // Add to totals
       totals.presentDays += stats.presentDays;
       totals.absentDays += stats.absentDays;
       totals.vacationDays += stats.vacationDays;
@@ -104,9 +104,9 @@ const Statistics = () => {
       totals.otherAbsenceDays += stats.otherAbsenceDays;
       totals.regisseurDays += stats.regisseurDays;
       totals.demenagementDays += stats.demenagementDays;
+      totals.permanenceDays += stats.permanenceDays;
     });
     
-    // Set total days based on first employee's stats if available
     if (employees.length > 0) {
       const firstStats = calculateEmployeeStats(employees[0], year, month);
       totals.totalDays = firstStats.totalDays;

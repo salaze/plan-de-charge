@@ -7,7 +7,6 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AdminRoute } from "@/components/AdminRoute";
 import { EmployeeRoute } from "@/components/EmployeeRoute";
-import { useAuth } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import Employees from "./pages/Employees";
 import Statistics from "./pages/Statistics";
@@ -18,16 +17,6 @@ import Admin from "./pages/Admin";
 import AdminLogin from "./pages/AdminLogin";
 
 const queryClient = new QueryClient();
-
-const ProtectedIndex = () => {
-  const { isAdmin } = useAuth();
-  
-  if (!isAdmin) {
-    return <Navigate to="/employees" replace />;
-  }
-  
-  return <Index />;
-};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -41,16 +30,16 @@ const App = () => (
               path="/" 
               element={
                 <EmployeeRoute>
-                  <ProtectedIndex />
+                  <Index />
                 </EmployeeRoute>
               } 
             />
             <Route 
               path="/employees" 
               element={
-                <EmployeeRoute>
+                <AdminRoute>
                   <Employees />
-                </EmployeeRoute>
+                </AdminRoute>
               } 
             />
             <Route 

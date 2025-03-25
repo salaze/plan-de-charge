@@ -155,7 +155,7 @@ export function PlanningGrid({
   const visibleDays = getVisibleDays();
   
   // Si pas d'employés, afficher un message
-  if (!employees.length) {
+  if (!employees || employees.length === 0) {
     return (
       <div className="text-center p-8 bg-muted/30 rounded-lg">
         <p className="text-muted-foreground">Aucun employé disponible</p>

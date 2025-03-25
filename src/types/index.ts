@@ -24,12 +24,15 @@ export interface DayStatus {
   isHighlighted?: boolean;
 }
 
+export type UserRole = 'admin' | 'employee';
+
 export interface Employee {
   id: string;
   name: string;
-  email?: string; // Ajout du champ email
+  email?: string;
   position?: string;
   department?: string;
+  role?: UserRole;
   schedule: DayStatus[];
 }
 

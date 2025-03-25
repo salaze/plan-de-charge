@@ -1,10 +1,11 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { UserRole } from '@/types';
 
 type User = {
   username: string;
-  role: 'admin' | 'user';
+  role: UserRole;
 } | null;
 
 interface AuthContextType {
@@ -31,18 +32,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   // Check local storage for existing session on initial load
   useEffect(() => {
-    const storedUser = localStorage.getItem('adminUser');
+    const storedUser = localStorage.getItem('user');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
   }, []);
 
   const login = (username: string, password: string): boolean => {
-    // Simple admin authentication (in real app, use proper authentication)
+    // Simple authentication (in real app, use proper authentication)
     if (username === 'admin' && password === 'admin123') {
-      const adminUser = { username, role: 'admin' as const };
+      const adminUser = { username, role: 'admin' as UserRole };
       setUser(adminUser);
-      localStorage.setItem('adminUser', JSON.stringify(adminUser));
+      localStorage.setItem('user', JSON.stringify(adminUser));
+      return true;
+    } else if (username === 'employee' && password === 'employee123') {
+      // Ajouter un utilisateur employé par défaut
+      const employeeUser = { username, role: 'employee' as UserRole };
+      setUser(employeeUser);
+      localStorage.setItem('user', JSON.stringify(employeeUser));
       return true;
     }
     return false;
@@ -50,7 +57,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('adminUser');
+    localStorage.removeItem('user');
     navigate('/login');
   };
 

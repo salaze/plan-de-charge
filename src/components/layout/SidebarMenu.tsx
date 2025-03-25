@@ -20,7 +20,8 @@ export function SidebarMenu() {
     {
       icon: Calendar,
       label: 'Planning',
-      path: '/'
+      path: '/',
+      adminOnly: true
     },
     {
       icon: Users,
@@ -30,17 +31,20 @@ export function SidebarMenu() {
     {
       icon: BarChart,
       label: 'Statistiques',
-      path: '/statistics'
+      path: '/statistics',
+      adminOnly: true
     },
     {
       icon: FileSpreadsheet,
       label: 'Export',
-      path: '/export'
+      path: '/export',
+      adminOnly: true
     },
     {
       icon: Settings,
       label: 'Paramètres',
-      path: '/settings'
+      path: '/settings',
+      adminOnly: true
     },
     {
       icon: Lock,

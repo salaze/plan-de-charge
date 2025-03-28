@@ -10,6 +10,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LogOut, Users, Settings as SettingsIcon, FileSpreadsheet, Shield } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
+import { EmployeeList } from '@/components/employees/EmployeeList';
+import { EmployeeForm } from '@/components/employees/EmployeeForm';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from '@/components/ui/alert-dialog';
+import { Employee } from '@/types';
+import { createEmptyEmployee, generateId } from '@/utils';
 
 const Admin = () => {
   const { logout } = useAuth();
@@ -17,6 +31,12 @@ const Admin = () => {
     const savedData = localStorage.getItem('planningData');
     return savedData ? JSON.parse(savedData) : { projects: [], employees: [] };
   });
+  
+  // Ajout pour la gestion des employés
+  const [formOpen, setFormOpen] = useState(false);
+  const [currentEmployee, setCurrentEmployee] = useState<Employee | undefined>(undefined);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [employeeToDelete, setEmployeeToDelete] = useState<string>('');
   
   useEffect(() => {
     if (data) {
@@ -44,6 +64,56 @@ const Admin = () => {
       ...prevData,
       employees
     }));
+  };
+  
+  // Fonctions pour gérer les employés
+  const handleAddEmployee = () => {
+    setCurrentEmployee(undefined);
+    setFormOpen(true);
+  };
+  
+  const handleEditEmployee = (employee: Employee) => {
+    setCurrentEmployee(employee);
+    setFormOpen(true);
+  };
+  
+  const handleDeleteEmployee = (employeeId: string) => {
+    setEmployeeToDelete(employeeId);
+    setDeleteDialogOpen(true);
+  };
+  
+  const confirmDeleteEmployee = () => {
+    if (!employeeToDelete) return;
+    
+    const updatedEmployees = data.employees.filter((emp: Employee) => emp.id !== employeeToDelete);
+    handleEmployeesChange(updatedEmployees);
+    
+    toast.success('Employé supprimé avec succès');
+    setDeleteDialogOpen(false);
+    setEmployeeToDelete('');
+  };
+  
+  const handleSaveEmployee = (employee: Employee) => {
+    let updatedEmployees: Employee[];
+    
+    if (employee.id) {
+      // Mettre à jour un employé existant
+      updatedEmployees = data.employees.map((emp: Employee) => 
+        emp.id === employee.id ? employee : emp
+      );
+      toast.success('Employé modifié avec succès');
+    } else {
+      // Ajouter un nouvel employé
+      const newEmployee = {
+        ...employee,
+        id: generateId(),
+        schedule: []
+      };
+      updatedEmployees = [...data.employees, newEmployee];
+      toast.success('Employé ajouté avec succès');
+    }
+    
+    handleEmployeesChange(updatedEmployees);
   };
   
   return (
@@ -93,16 +163,44 @@ const Admin = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">
-                  Utilisez la page Employés pour gérer le personnel.
-                </p>
-                <div className="mt-4">
-                  <Link to="/employees">
-                    <Button>Aller à la page Employés</Button>
-                  </Link>
+                <div className="glass-panel p-6 animate-scale-in">
+                  <EmployeeList 
+                    employees={data.employees || []}
+                    onAddEmployee={handleAddEmployee}
+                    onEditEmployee={handleEditEmployee}
+                    onDeleteEmployee={handleDeleteEmployee}
+                  />
                 </div>
               </CardContent>
             </Card>
+            
+            <EmployeeForm 
+              open={formOpen}
+              onClose={() => setFormOpen(false)}
+              onSave={handleSaveEmployee}
+              employee={currentEmployee}
+            />
+            
+            <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Cette action est irréversible. Cela supprimera définitivement l'employé
+                    et toutes ses données de présence.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Annuler</AlertDialogCancel>
+                  <AlertDialogAction 
+                    onClick={confirmDeleteEmployee}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Supprimer
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </TabsContent>
           
           <TabsContent value="roles">

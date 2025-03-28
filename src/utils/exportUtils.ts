@@ -91,6 +91,6 @@ function prepareExcelData(data: MonthData): any[][] {
  * Format status for display
  */
 function formatStatus(status: StatusCode): string {
-  if (!status || status === '') return '';
+  if (status === undefined || status === null || status === '') return '';
   return STATUS_LABELS[status] || status;
 }

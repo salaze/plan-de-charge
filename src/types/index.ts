@@ -1,3 +1,4 @@
+
 export type StatusCode = 
   | 'assistance' 
   | 'vigi'
@@ -33,6 +34,7 @@ export interface Employee {
   position?: string;
   department?: string;
   role?: UserRole;
+  password?: string;
   schedule: DayStatus[];
 }
 

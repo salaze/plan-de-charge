@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserRole, Employee } from '@/types';
+import { toast } from 'sonner';
 
 type User = {
   username: string;
@@ -15,6 +16,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isAdmin: boolean;
   updateUserRoles: (employeeId: string, newRole: UserRole) => void;
+  updatePassword: (employeeId: string, newPassword: string) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -57,9 +59,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Vérifier si l'employé existe
       const employee = employees.find(emp => emp.email === username);
       if (employee) {
-        // Pour simplifier, nous utilisons un mot de passe standard pour tous les employés
-        // Dans une application réelle, vous devriez avoir un système d'authentification sécurisé
-        if (password === 'employee123') {
+        // Vérifier le mot de passe de l'employé s'il existe, sinon utiliser celui par défaut
+        const correctPassword = employee.password || 'employee123';
+        if (password === correctPassword) {
           const userRole = employee.role || 'employee';
           const employeeUser = { username, role: userRole as UserRole };
           setUser(employeeUser);
@@ -128,13 +130,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const updatePassword = (employeeId: string, newPassword: string): boolean => {
+    if (!newPassword || newPassword.length < 6) {
+      return false;
+    }
+
+    const planningData = localStorage.getItem('planningData');
+    if (planningData) {
+      const data = JSON.parse(planningData);
+      const employees: Employee[] = data.employees || [];
+      
+      const updatedEmployees = employees.map(emp => {
+        if (emp.id === employeeId) {
+          return { ...emp, password: newPassword };
+        }
+        return emp;
+      });
+      
+      // Mettre à jour les données dans le localStorage
+      localStorage.setItem('planningData', JSON.stringify({
+        ...data,
+        employees: updatedEmployees
+      }));
+      
+      return true;
+    }
+    
+    return false;
+  };
+
   const value = {
     user,
     login,
     logout,
     isAuthenticated: !!user,
     isAdmin: user?.role === 'admin',
-    updateUserRoles
+    updateUserRoles,
+    updatePassword
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

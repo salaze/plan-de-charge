@@ -1,16 +1,17 @@
 
 import React from 'react';
+import { User, Pencil, Trash, UserPlus, Mail, Briefcase, Building } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { 
+import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
+  TableRow,
 } from '@/components/ui/table';
-import { Plus, Edit, Trash, Mail } from 'lucide-react';
 import { Employee } from '@/types';
+import { PasswordManager } from '@/components/employees/PasswordManager';
 
 interface EmployeeListProps {
   employees: Employee[];
@@ -19,23 +20,28 @@ interface EmployeeListProps {
   onDeleteEmployee: (employeeId: string) => void;
 }
 
-export function EmployeeList({ 
-  employees, 
-  onAddEmployee, 
-  onEditEmployee, 
-  onDeleteEmployee 
+export function EmployeeList({
+  employees,
+  onAddEmployee,
+  onEditEmployee,
+  onDeleteEmployee
 }: EmployeeListProps) {
+  const sortedEmployees = [...employees].sort((a, b) => a.name.localeCompare(b.name));
+  
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Liste des employés</h2>
-        <Button onClick={onAddEmployee} className="transition-transform hover:scale-105">
-          <Plus className="mr-2 h-4 w-4" />
-          Ajouter un employé
+        <h2 className="text-xl font-semibold flex items-center gap-2">
+          <User className="h-5 w-5" />
+          <span>Liste des employés</span>
+        </h2>
+        <Button onClick={onAddEmployee} size="sm" className="flex items-center gap-1">
+          <UserPlus className="h-4 w-4" />
+          <span>Ajouter</span>
         </Button>
       </div>
       
-      <div className="glass-panel overflow-hidden">
+      <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
@@ -47,15 +53,15 @@ export function EmployeeList({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {employees.length === 0 ? (
+            {sortedEmployees.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                  Aucun employé dans la liste
+                <TableCell colSpan={5} className="text-center py-4 text-muted-foreground">
+                  Aucun employé trouvé
                 </TableCell>
               </TableRow>
             ) : (
-              employees.map((employee) => (
-                <TableRow key={employee.id} className="hover:bg-secondary">
+              sortedEmployees.map((employee) => (
+                <TableRow key={employee.id}>
                   <TableCell className="font-medium">{employee.name}</TableCell>
                   <TableCell>
                     {employee.email ? (
@@ -63,29 +69,47 @@ export function EmployeeList({
                         <Mail className="h-3 w-3 text-muted-foreground" />
                         <span>{employee.email}</span>
                       </div>
-                    ) : '-'}
+                    ) : (
+                      <span className="text-muted-foreground text-sm">—</span>
+                    )}
                   </TableCell>
-                  <TableCell>{employee.position || '-'}</TableCell>
-                  <TableCell>{employee.department || '-'}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => onEditEmployee(employee)}
-                        className="transition-transform hover:scale-105"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => onDeleteEmployee(employee.id)}
-                        className="text-destructive transition-transform hover:scale-105"
-                      >
-                        <Trash className="h-4 w-4" />
-                      </Button>
-                    </div>
+                  <TableCell>
+                    {employee.position ? (
+                      <div className="flex items-center gap-1">
+                        <Briefcase className="h-3 w-3 text-muted-foreground" />
+                        <span>{employee.position}</span>
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {employee.department ? (
+                      <div className="flex items-center gap-1">
+                        <Building className="h-3 w-3 text-muted-foreground" />
+                        <span>{employee.department}</span>
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right space-x-2">
+                    <PasswordManager employee={employee} />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onEditEmployee(employee)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onDeleteEmployee(employee.id)}
+                      className="text-destructive"
+                    >
+                      <Trash className="h-4 w-4" />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))

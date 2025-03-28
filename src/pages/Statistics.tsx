@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { 
@@ -10,14 +11,19 @@ import { MonthSelector } from '@/components/calendar/MonthSelector';
 import { StatusCell } from '@/components/calendar/StatusCell';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { calculateEmployeeStats } from '@/utils/statsUtils';
-import { Employee, MonthData, SummaryStats } from '@/types';
+import { Employee, MonthData, SummaryStats, StatusCode, STATUS_LABELS } from '@/types';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
-interface EmployeeStatsData {
+interface EmployeeStatusData {
   name: string;
-  present: number;
-  absent: number;
-  vacation: number;
-  training: number;
+  [key: string]: number | string;
 }
 
 const Statistics = () => {
@@ -33,24 +39,9 @@ const Statistics = () => {
   
   const [currentYear, setCurrentYear] = useState(data.year);
   const [currentMonth, setCurrentMonth] = useState(data.month);
-  const [statsData, setStatsData] = useState<EmployeeStatsData[]>([]);
-  const [totalStats, setTotalStats] = useState<SummaryStats>({
-    totalDays: 0,
-    presentDays: 0,
-    absentDays: 0,
-    vacationDays: 0,
-    trainingDays: 0,
-    managementDays: 0,
-    projectDays: 0,
-    vigiDays: 0,
-    tpDays: 0,
-    coordinatorDays: 0,
-    otherAbsenceDays: 0,
-    regisseurDays: 0,
-    demenagementDays: 0,
-    permanenceDays: 0,
-    projectStats: {}
-  });
+  const [employeeStats, setEmployeeStats] = useState<SummaryStats[]>([]);
+  const [chartData, setChartData] = useState<EmployeeStatusData[]>([]);
+  const [allStatusCodes, setAllStatusCodes] = useState<StatusCode[]>([]);
   
   useEffect(() => {
     calculateStats(data.employees, currentYear, currentMonth);
@@ -62,58 +53,87 @@ const Statistics = () => {
   };
   
   const calculateStats = (employees: Employee[], year: number, month: number) => {
-    const employeeStats: EmployeeStatsData[] = [];
-    let totals: SummaryStats = {
-      totalDays: 0,
-      presentDays: 0,
-      absentDays: 0,
-      vacationDays: 0,
-      trainingDays: 0,
-      managementDays: 0,
-      projectDays: 0,
-      vigiDays: 0,
-      tpDays: 0,
-      coordinatorDays: 0,
-      otherAbsenceDays: 0,
-      regisseurDays: 0,
-      demenagementDays: 0,
-      permanenceDays: 0,
-      projectStats: {}
-    };
+    // Stocker les statistiques par employé
+    const stats: SummaryStats[] = [];
+    const statusCodes = new Set<StatusCode>();
     
+    // Calculer les statistiques pour chaque employé
     employees.forEach((employee) => {
-      const stats = calculateEmployeeStats(employee, year, month);
-      
-      employeeStats.push({
-        name: employee.name,
-        present: stats.presentDays,
-        absent: stats.absentDays,
-        vacation: stats.vacationDays,
-        training: stats.trainingDays
+      const employeeStats = calculateEmployeeStats(employee, year, month);
+      stats.push({
+        ...employeeStats,
+        employeeName: employee.name
       });
-      
-      totals.presentDays += stats.presentDays;
-      totals.absentDays += stats.absentDays;
-      totals.vacationDays += stats.vacationDays;
-      totals.trainingDays += stats.trainingDays;
-      totals.managementDays += stats.managementDays;
-      totals.projectDays += stats.projectDays;
-      totals.vigiDays += stats.vigiDays;
-      totals.tpDays += stats.tpDays;
-      totals.coordinatorDays += stats.coordinatorDays;
-      totals.otherAbsenceDays += stats.otherAbsenceDays;
-      totals.regisseurDays += stats.regisseurDays;
-      totals.demenagementDays += stats.demenagementDays;
-      totals.permanenceDays += stats.permanenceDays;
     });
     
-    if (employees.length > 0) {
-      const firstStats = calculateEmployeeStats(employees[0], year, month);
-      totals.totalDays = firstStats.totalDays;
-    }
+    // Trouver tous les statuts utilisés
+    Object.keys(STATUS_LABELS).forEach(status => {
+      if (status) {
+        statusCodes.add(status as StatusCode);
+      }
+    });
     
-    setStatsData(employeeStats);
-    setTotalStats(totals);
+    // Préparer les données pour le graphique
+    const chartData: EmployeeStatusData[] = employees.map(employee => {
+      const employeeStats = calculateEmployeeStats(employee, year, month);
+      const dataPoint: EmployeeStatusData = { name: employee.name };
+      
+      // Ajouter chaque type de statut
+      Array.from(statusCodes).forEach(status => {
+        switch(status) {
+          case 'assistance':
+            dataPoint[status] = employeeStats.presentDays - 
+              employeeStats.vigiDays - 
+              employeeStats.trainingDays - 
+              employeeStats.projectDays - 
+              employeeStats.managementDays - 
+              employeeStats.coordinatorDays - 
+              employeeStats.regisseurDays - 
+              employeeStats.demenagementDays -
+              employeeStats.permanenceDays;
+            break;
+          case 'vigi':
+            dataPoint[status] = employeeStats.vigiDays;
+            break;
+          case 'formation':
+            dataPoint[status] = employeeStats.trainingDays;
+            break;
+          case 'projet':
+            dataPoint[status] = employeeStats.projectDays;
+            break;
+          case 'conges':
+            dataPoint[status] = employeeStats.vacationDays;
+            break;
+          case 'management':
+            dataPoint[status] = employeeStats.managementDays;
+            break;
+          case 'tp':
+            dataPoint[status] = employeeStats.tpDays;
+            break;
+          case 'coordinateur':
+            dataPoint[status] = employeeStats.coordinatorDays;
+            break;
+          case 'absence':
+            dataPoint[status] = employeeStats.otherAbsenceDays;
+            break;
+          case 'regisseur':
+            dataPoint[status] = employeeStats.regisseurDays;
+            break;
+          case 'demenagement':
+            dataPoint[status] = employeeStats.demenagementDays;
+            break;
+          case 'permanence':
+            dataPoint[status] = employeeStats.permanenceDays;
+            break;
+        }
+      });
+      
+      return dataPoint;
+    });
+    
+    setEmployeeStats(stats);
+    setChartData(chartData);
+    setAllStatusCodes(Array.from(statusCodes));
   };
   
   return (
@@ -127,72 +147,56 @@ const Statistics = () => {
           onChange={handleMonthChange} 
         />
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-scale-in">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Présents</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center">
-                <StatusCell status="assistance" className="mr-2 w-3 h-3 rounded-full" />
-                <span className="text-2xl font-bold">
-                  {totalStats.presentDays.toFixed(1)}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
+        <div className="glass-panel p-6 animate-scale-in">
+          <h2 className="text-xl font-semibold mb-4">Répartition des statuts par employé</h2>
           
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Absents</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center">
-                <StatusCell status="absence" className="mr-2 w-3 h-3 rounded-full" />
-                <span className="text-2xl font-bold">
-                  {totalStats.absentDays.toFixed(1)}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Congés</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center">
-                <StatusCell status="conges" className="mr-2 w-3 h-3 rounded-full" />
-                <span className="text-2xl font-bold">
-                  {totalStats.vacationDays.toFixed(1)}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Formation</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center">
-                <StatusCell status="formation" className="mr-2 w-3 h-3 rounded-full" />
-                <span className="text-2xl font-bold">
-                  {totalStats.trainingDays.toFixed(1)}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Employé</TableHead>
+                {allStatusCodes.map(status => (
+                  <TableHead key={status}>
+                    <div className="flex items-center gap-2">
+                      <StatusCell status={status} className="w-3 h-3 rounded-full" />
+                      {STATUS_LABELS[status]}
+                    </div>
+                  </TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {chartData.length > 0 ? (
+                chartData.map((employee) => (
+                  <TableRow key={employee.name}>
+                    <TableCell className="font-medium">{employee.name}</TableCell>
+                    {allStatusCodes.map(status => (
+                      <TableCell key={status}>
+                        {typeof employee[status] === 'number'
+                          ? (employee[status] as number).toFixed(1)
+                          : '0.0'}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={allStatusCodes.length + 1} className="text-center text-muted-foreground">
+                    Aucune donnée disponible
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </div>
         
         <div className="glass-panel p-4 animate-scale-in">
-          <h2 className="text-xl font-semibold mb-4">Répartition par employé</h2>
+          <h2 className="text-xl font-semibold mb-4">Graphique par employé</h2>
           
           <div className="h-80">
-            {statsData.length > 0 ? (
+            {chartData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
-                  data={statsData}
+                  data={chartData}
                   margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
@@ -200,10 +204,15 @@ const Statistics = () => {
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="present" name="Présent" fill="hsl(var(--attendance-present))" />
-                  <Bar dataKey="absent" name="Absent" fill="hsl(var(--attendance-absent))" />
-                  <Bar dataKey="vacation" name="Congés" fill="hsl(var(--attendance-vacation))" />
-                  <Bar dataKey="training" name="Formation" fill="hsl(var(--attendance-training))" />
+                  {allStatusCodes.map(status => (
+                    <Bar 
+                      key={status}
+                      dataKey={status} 
+                      name={STATUS_LABELS[status]} 
+                      stackId="a"
+                      fill={`var(--${status}-color, #888)`}
+                    />
+                  ))}
                 </BarChart>
               </ResponsiveContainer>
             ) : (

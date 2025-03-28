@@ -1,4 +1,3 @@
-
 export type StatusCode = 
   | 'assistance' 
   | 'vigi'
@@ -75,6 +74,7 @@ export interface SummaryStats {
   demenagementDays: number;
   permanenceDays: number;
   projectStats: Record<string, number>;
+  employeeName?: string;
 }
 
 export const STATUS_LABELS: Record<StatusCode, string> = {

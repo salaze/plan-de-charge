@@ -34,7 +34,8 @@ export const calculateEmployeeStats = (
     regisseurDays: 0,
     demenagementDays: 0,
     permanenceDays: 0,
-    projectStats: {}
+    projectStats: {},
+    employeeName: employee.name
   };
   
   // Compter chaque type de jour

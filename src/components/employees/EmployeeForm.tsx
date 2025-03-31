@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Dialog, 
   DialogContent, 
@@ -73,6 +72,11 @@ export function EmployeeForm({
       schedule: employee?.schedule || []
     };
     
+    // Si c'est un nouvel employé sans mot de passe spécifié, utiliser un mot de passe par défaut
+    if (isNewEmployee && !updatedEmployee.password) {
+      updatedEmployee.password = 'employee123';
+    }
+    
     onSave(updatedEmployee);
     onClose();
   };
@@ -87,7 +91,7 @@ export function EmployeeForm({
     setPasswordError('');
   };
   
-  React.useEffect(() => {
+  useEffect(() => {
     if (open) {
       resetForm();
     }
@@ -118,7 +122,7 @@ export function EmployeeForm({
           </div>
           
           <div className="grid gap-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">Email *</Label>
             <div className="flex items-center gap-2 relative">
               <Mail className="h-4 w-4 absolute left-3 text-muted-foreground" />
               <Input
@@ -128,6 +132,7 @@ export function EmployeeForm({
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email de l'employé"
                 className="pl-10"
+                required
               />
             </div>
           </div>
@@ -174,6 +179,7 @@ export function EmployeeForm({
                 placeholder={isNewEmployee ? "Minimum 6 caractères" : "Laisser vide pour conserver l'actuel"}
                 className="pl-10"
                 required={isNewEmployee}
+                minLength={6}
               />
             </div>
           </div>
@@ -188,6 +194,7 @@ export function EmployeeForm({
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Confirmer le mot de passe"
                 required={isNewEmployee || !!password}
+                minLength={6}
               />
             </div>
           )}

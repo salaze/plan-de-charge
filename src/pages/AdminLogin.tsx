@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Label } from '@/components/ui/label';
-import { Lock } from 'lucide-react';
+import { Lock, Mail, KeyRound, Info } from 'lucide-react';
 
 const AdminLogin = () => {
   const [username, setUsername] = useState('');
@@ -29,8 +29,6 @@ const AdminLogin = () => {
     
     if (success) {
       navigate('/admin');
-    } else {
-      setError('Nom d\'utilisateur ou mot de passe incorrect');
     }
   };
 
@@ -43,9 +41,9 @@ const AdminLogin = () => {
               <Lock className="h-6 w-6 text-primary" />
             </div>
           </div>
-          <CardTitle className="text-center text-2xl">Espace Administrateur</CardTitle>
+          <CardTitle className="text-center text-2xl">Connexion</CardTitle>
           <CardDescription className="text-center">
-            Connectez-vous pour accéder à l'interface d'administration
+            Connectez-vous pour accéder à l'application
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
@@ -55,25 +53,44 @@ const AdminLogin = () => {
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
+            
+            <Alert className="bg-muted/50">
+              <Info className="h-4 w-4" />
+              <AlertDescription>
+                <ul className="text-xs list-disc list-inside">
+                  <li>Administrateur: email "admin", mot de passe "admin123"</li>
+                  <li>Employés: utilisez l'email et le mot de passe définis</li>
+                </ul>
+              </AlertDescription>
+            </Alert>
+            
             <div className="space-y-2">
-              <Label htmlFor="username">Nom d'utilisateur</Label>
-              <Input
-                id="username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="admin"
-              />
+              <Label htmlFor="username">Email</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="username"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="votre@email.com"
+                  className="pl-10"
+                />
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Mot de passe</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-              />
+              <div className="relative">
+                <KeyRound className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="pl-10"
+                />
+              </div>
             </div>
           </CardContent>
           <CardFooter>

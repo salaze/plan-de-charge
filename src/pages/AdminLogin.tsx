@@ -58,7 +58,6 @@ const AdminLogin = () => {
               <Info className="h-4 w-4" />
               <AlertDescription>
                 <ul className="text-xs list-disc list-inside">
-                  <li>Administrateur: identifiant "admin", mot de passe "admin123"</li>
                   <li>Employés: utilisez votre nom et le mot de passe défini</li>
                 </ul>
               </AlertDescription>

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { Layout } from '@/components/layout/Layout';
@@ -14,13 +15,13 @@ import {
   AlertDialogTitle
 } from '@/components/ui/alert-dialog';
 import { Employee } from '@/types';
-import { createEmptyEmployee, generateId } from '@/utils';
+import { generateId } from '@/utils';
 
 const Employees = () => {
   // Récupérer les employés du localStorage
   const [employees, setEmployees] = useState<Employee[]>(() => {
     const savedData = localStorage.getItem('planningData');
-    return savedData ? JSON.parse(savedData).employees : [];
+    return savedData ? JSON.parse(savedData).employees || [] : [];
   });
   
   const [formOpen, setFormOpen] = useState(false);
@@ -55,6 +56,8 @@ const Employees = () => {
       const data = JSON.parse(savedData);
       data.employees = updatedEmployees;
       localStorage.setItem('planningData', JSON.stringify(data));
+    } else {
+      localStorage.setItem('planningData', JSON.stringify({ employees: updatedEmployees }));
     }
     
     toast.success('Employé supprimé avec succès');
@@ -90,6 +93,8 @@ const Employees = () => {
       const data = JSON.parse(savedData);
       data.employees = updatedEmployees;
       localStorage.setItem('planningData', JSON.stringify(data));
+    } else {
+      localStorage.setItem('planningData', JSON.stringify({ employees: updatedEmployees }));
     }
   };
   

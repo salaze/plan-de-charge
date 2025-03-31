@@ -5,7 +5,8 @@ import {
   DialogContent, 
   DialogHeader, 
   DialogTitle,
-  DialogFooter
+  DialogFooter,
+  DialogDescription
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -62,7 +63,7 @@ export function EmployeeForm({
       return;
     }
     
-    onSave({
+    const updatedEmployee: Employee = {
       id: employee?.id || '',
       name: name.trim(),
       email: email.trim() || undefined,
@@ -70,8 +71,9 @@ export function EmployeeForm({
       department: department.trim() || undefined,
       password: password || employee?.password,
       schedule: employee?.schedule || []
-    });
+    };
     
+    onSave(updatedEmployee);
     onClose();
   };
   
@@ -98,6 +100,9 @@ export function EmployeeForm({
           <DialogTitle>
             {employee ? 'Modifier un employé' : 'Ajouter un employé'}
           </DialogTitle>
+          <DialogDescription>
+            {employee ? 'Modifiez les informations de l\'employé' : 'Remplissez les informations du nouvel employé'}
+          </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="grid gap-4 py-4">

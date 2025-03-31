@@ -3,11 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Layout } from '@/components/layout/Layout';
 import { ProjectManager } from '@/components/admin/ProjectManager';
+import { StatusManager } from '@/components/admin/StatusManager';
 import { RoleManagement } from '@/components/employees/RoleManagement';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LogOut, Users, Settings as SettingsIcon, FileSpreadsheet, Shield } from 'lucide-react';
+import { LogOut, Users, Settings as SettingsIcon, FileSpreadsheet, Shield, LayoutList } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import { EmployeeList } from '@/components/employees/EmployeeList';
@@ -22,14 +23,18 @@ import {
   AlertDialogHeader,
   AlertDialogTitle
 } from '@/components/ui/alert-dialog';
-import { Employee } from '@/types';
+import { Employee, StatusCode, STATUS_LABELS, STATUS_COLORS } from '@/types';
 import { createEmptyEmployee, generateId } from '@/utils';
 
 const Admin = () => {
   const { logout } = useAuth();
   const [data, setData] = useState(() => {
     const savedData = localStorage.getItem('planningData');
-    return savedData ? JSON.parse(savedData) : { projects: [], employees: [] };
+    return savedData ? JSON.parse(savedData) : { 
+      projects: [], 
+      employees: [],
+      statuses: [] 
+    };
   });
   
   // Ajout pour la gestion des employés
@@ -38,16 +43,37 @@ const Admin = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<string>('');
   
+  // Initialiser les statuts si c'est le premier accès
+  useEffect(() => {
+    if (!data.statuses || data.statuses.length === 0) {
+      // Créer des statuts par défaut à partir des STATUS_LABELS et STATUS_COLORS
+      const defaultStatuses = Object.entries(STATUS_LABELS)
+        .filter(([code]) => code !== '') // Ignorer le statut vide
+        .map(([code, label]) => ({
+          id: generateId(),
+          code: code as StatusCode,
+          label,
+          color: STATUS_COLORS[code as StatusCode]
+        }));
+      
+      setData(prevData => ({
+        ...prevData,
+        statuses: defaultStatuses
+      }));
+    }
+  }, []);
+  
   useEffect(() => {
     if (data) {
       const savedData = localStorage.getItem('planningData');
       const fullData = savedData ? JSON.parse(savedData) : {};
       
-      // Mettre à jour les projets et les employés dans le localStorage
+      // Mettre à jour les projets, les employés et les statuts dans le localStorage
       localStorage.setItem('planningData', JSON.stringify({
         ...fullData,
         projects: data.projects,
-        employees: data.employees
+        employees: data.employees,
+        statuses: data.statuses
       }));
     }
   }, [data]);
@@ -56,6 +82,13 @@ const Admin = () => {
     setData(prevData => ({
       ...prevData,
       projects
+    }));
+  };
+  
+  const handleStatusesChange = (statuses: any[]) => {
+    setData(prevData => ({
+      ...prevData,
+      statuses
     }));
   };
   
@@ -128,10 +161,14 @@ const Admin = () => {
         </div>
         
         <Tabs defaultValue="projects" className="w-full">
-          <TabsList className="grid grid-cols-4 mb-4">
+          <TabsList className="grid grid-cols-5 mb-4">
             <TabsTrigger value="projects" className="flex items-center gap-2">
               <FileSpreadsheet className="h-4 w-4" />
               <span>Projets</span>
+            </TabsTrigger>
+            <TabsTrigger value="statuses" className="flex items-center gap-2">
+              <LayoutList className="h-4 w-4" />
+              <span>Statuts</span>
             </TabsTrigger>
             <TabsTrigger value="employees" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
@@ -151,6 +188,13 @@ const Admin = () => {
             <ProjectManager 
               projects={data.projects || []} 
               onProjectsChange={handleProjectsChange} 
+            />
+          </TabsContent>
+          
+          <TabsContent value="statuses" className="space-y-4">
+            <StatusManager
+              statuses={data.statuses || []}
+              onStatusesChange={handleStatusesChange}
             />
           </TabsContent>
           

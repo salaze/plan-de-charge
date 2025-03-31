@@ -54,7 +54,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return true;
       }
       
-      const employee = employees.find(emp => emp.email === username);
+      const employee = employees.find(emp => emp.name === username);
       if (employee) {
         if (employee.password && password === employee.password) {
           const userRole = employee.role || 'employee';
@@ -67,7 +67,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           localStorage.setItem('user', JSON.stringify(employeeUser));
           toast.success(`Bienvenue, ${employee.name}`);
           return true;
+        } else {
+          toast.error('Mot de passe incorrect');
         }
+      } else {
+        toast.error('Utilisateur non trouvé');
       }
     } else {
       if (username === 'admin' && password === 'admin123') {
@@ -82,10 +86,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem('user', JSON.stringify(employeeUser));
         toast.success('Connexion réussie en tant qu\'employé');
         return true;
+      } else {
+        toast.error('Identifiants incorrects');
       }
     }
     
-    toast.error('Identifiants incorrects');
     return false;
   };
 

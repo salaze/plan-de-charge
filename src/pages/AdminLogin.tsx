@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Label } from '@/components/ui/label';
-import { Lock, Mail, KeyRound, Info } from 'lucide-react';
+import { Lock, User, KeyRound, Info } from 'lucide-react';
 
 const AdminLogin = () => {
   const [username, setUsername] = useState('');
@@ -58,22 +58,22 @@ const AdminLogin = () => {
               <Info className="h-4 w-4" />
               <AlertDescription>
                 <ul className="text-xs list-disc list-inside">
-                  <li>Administrateur: email "admin", mot de passe "admin123"</li>
-                  <li>Employés: utilisez l'email et le mot de passe définis</li>
+                  <li>Administrateur: identifiant "admin", mot de passe "admin123"</li>
+                  <li>Employés: utilisez votre nom et le mot de passe défini</li>
                 </ul>
               </AlertDescription>
             </Alert>
             
             <div className="space-y-2">
-              <Label htmlFor="username">Email</Label>
+              <Label htmlFor="username">Nom</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="username"
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="votre@email.com"
+                  placeholder="Votre nom"
                   className="pl-10"
                 />
               </div>

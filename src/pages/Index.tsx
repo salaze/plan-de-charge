@@ -6,19 +6,18 @@ import { MonthSelector } from '@/components/calendar/MonthSelector';
 import { PlanningGrid } from '@/components/calendar/PlanningGrid';
 import { Button } from '@/components/ui/button';
 import { LegendModal } from '@/components/calendar/LegendModal';
-import { Filter, Download, BookOpen, Info, LogOut } from 'lucide-react';
+import { Filter, Download, Upload, BookOpen, Info } from 'lucide-react';
 import { 
   createSampleData, 
   setEmployeeStatus,
-  exportToExcel
+  exportToExcel,
+  importFromExcel
 } from '@/utils';
 import { DayPeriod, StatusCode, MonthData, FilterOptions } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
 
 const Index = () => {
-  const { isAuthenticated, isAdmin, logout } = useAuth();
-  const navigate = useNavigate();
+  const { isAdmin } = useAuth();
 
   const [data, setData] = useState<MonthData>(() => {
     // Récupérer les données depuis le localStorage ou créer des données de démo
@@ -163,11 +162,38 @@ const Index = () => {
     exportToExcel(data);
     toast.success('Données exportées avec succès');
   };
-  
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-    toast.success('Vous avez été déconnecté');
+
+  const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!isAdmin) {
+      toast.error("Vous n'avez pas les droits pour importer des données");
+      return;
+    }
+
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const result = e.target?.result;
+        if (typeof result === 'string' || result instanceof ArrayBuffer) {
+          const importedData = await importFromExcel(result);
+          if (importedData) {
+            setData(importedData);
+            toast.success('Données importées avec succès');
+          }
+        }
+      } catch (error) {
+        console.error('Erreur lors de l\'import:', error);
+        toast.error('Erreur lors de l\'import du fichier');
+      }
+      
+      // Réinitialiser l'input file
+      if (event.target) {
+        event.target.value = '';
+      }
+    };
+    reader.readAsArrayBuffer(file);
   };
   
   return (
@@ -205,17 +231,25 @@ const Index = () => {
                   <Download className="mr-2 h-4 w-4" />
                   Exporter
                 </Button>
+
+                <div className="relative">
+                  <input
+                    type="file"
+                    id="file-upload"
+                    accept=".xlsx"
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    onChange={handleImport}
+                  />
+                  <Button 
+                    variant="outline" 
+                    className="transition-all hover:bg-secondary"
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    Importer
+                  </Button>
+                </div>
               </>
             )}
-            
-            <Button 
-              variant="outline" 
-              onClick={handleLogout}
-              className="transition-all hover:bg-secondary ml-auto"
-            >
-              <LogOut className="mr-2 h-4 w-4" />
-              Déconnexion
-            </Button>
           </div>
         </div>
         

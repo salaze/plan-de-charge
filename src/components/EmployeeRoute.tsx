@@ -7,11 +7,6 @@ interface EmployeeRouteProps {
 }
 
 export const EmployeeRoute = ({ children }: EmployeeRouteProps) => {
-  const { isAuthenticated } = useAuth();
-  
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-  
+  // Plus besoin de vérifier l'authentification pour accéder au planning
   return <>{children}</>;
 };

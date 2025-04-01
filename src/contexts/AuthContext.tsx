@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserRole, Employee } from '@/types';
@@ -80,12 +81,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem('user', JSON.stringify(adminUser));
         toast.success('Connexion réussie en tant qu\'administrateur');
         return true;
-      } else if (username === 'employee' && password === 'employee123') {
-        const employeeUser = { username, role: 'employee' as UserRole };
-        setUser(employeeUser);
-        localStorage.setItem('user', JSON.stringify(employeeUser));
-        toast.success('Connexion réussie en tant qu\'employé');
-        return true;
       } else {
         toast.error('Identifiants incorrects');
       }
@@ -97,7 +92,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user');
-    navigate('/login');
   };
 
   const updateUserRoles = (employeeId: string, newRole: UserRole) => {
@@ -119,7 +113,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }));
       
       if (user && user.username) {
-        const updatedEmployee = updatedEmployees.find(emp => emp.email === user.username);
+        const updatedEmployee = updatedEmployees.find(emp => emp.name === user.username);
         if (updatedEmployee && updatedEmployee.role !== user.role) {
           const updatedUser = { ...user, role: updatedEmployee.role };
           setUser(updatedUser);

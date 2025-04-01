@@ -7,10 +7,10 @@ import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Download, FileSpreadsheet, Files, FileJson } from 'lucide-react';
-import { exportToExcel } from '@/utils';
+import { Download, FileSpreadsheet, Files, FileJson, Upload } from 'lucide-react';
+import { exportToExcel, importFromExcel } from '@/utils';
 import { StatusCell } from '@/components/calendar/StatusCell';
-import { StatusCode } from '@/types';
+import { MonthData, StatusCode } from '@/types';
 
 const Export = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -18,18 +18,57 @@ const Export = () => {
   const [exportScope, setExportScope] = useState<string>("month");
   
   const handleExport = () => {
-    // Simuler l'exportation
-    const today = new Date();
-    const data = {
-      year: today.getFullYear(),
-      month: today.getMonth(),
-      employees: [],
-      projects: []
+    try {
+      // Get actual data from localStorage
+      const savedData = localStorage.getItem('planningData');
+      let data: MonthData;
+      
+      if (savedData) {
+        data = JSON.parse(savedData);
+      } else {
+        data = {
+          year: date?.getFullYear() || new Date().getFullYear(),
+          month: date?.getMonth() || new Date().getMonth(),
+          employees: [],
+          projects: []
+        };
+      }
+      
+      exportToExcel(data);
+      toast.success(`Données exportées au format ${getFormatLabel(exportFormat)}`);
+    } catch (error) {
+      console.error('Erreur lors de l\'export:', error);
+      toast.error('Une erreur est survenue lors de l\'export');
+    }
+  };
+  
+  const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const result = e.target?.result;
+        if (typeof result === 'string' || result instanceof ArrayBuffer) {
+          const importedData = await importFromExcel(result);
+          if (importedData) {
+            // Save to localStorage
+            localStorage.setItem('planningData', JSON.stringify(importedData));
+            toast.success('Données importées avec succès');
+          }
+        }
+      } catch (error) {
+        console.error('Erreur lors de l\'import:', error);
+        toast.error('Erreur lors de l\'import du fichier');
+      }
+      
+      // Réinitialiser l'input file
+      if (event.target) {
+        event.target.value = '';
+      }
     };
-    
-    exportToExcel(data);
-    
-    toast.success(`Données exportées au format ${getFormatLabel(exportFormat)}`);
+    reader.readAsArrayBuffer(file);
   };
   
   const getFormatLabel = (format: string) => {
@@ -114,11 +153,25 @@ const Export = () => {
                 />
               </div>
             </CardContent>
-            <CardFooter>
+            <CardFooter className="flex flex-col space-y-2">
               <Button onClick={handleExport} className="w-full">
                 {getFormatIcon(exportFormat)}
                 Exporter au format {getFormatLabel(exportFormat)}
               </Button>
+              
+              <div className="relative w-full">
+                <input
+                  type="file"
+                  id="file-upload"
+                  accept=".xlsx"
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  onChange={handleImport}
+                />
+                <Button variant="outline" className="w-full">
+                  <Upload className="h-4 w-4 mr-2" />
+                  Importer un fichier Excel
+                </Button>
+              </div>
             </CardFooter>
           </Card>
           

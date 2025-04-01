@@ -6,12 +6,10 @@ import { MonthSelector } from '@/components/calendar/MonthSelector';
 import { PlanningGrid } from '@/components/calendar/PlanningGrid';
 import { Button } from '@/components/ui/button';
 import { LegendModal } from '@/components/calendar/LegendModal';
-import { Filter, Download, Upload, BookOpen, Info } from 'lucide-react';
+import { Filter, Info } from 'lucide-react';
 import { 
-  createSampleData, 
-  setEmployeeStatus,
-  exportToExcel,
-  importFromExcel
+  createSampleData,
+  handleFileImport
 } from '@/utils';
 import { DayPeriod, StatusCode, MonthData, FilterOptions } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -153,49 +151,6 @@ const Index = () => {
     toast.success(`Statut ${periodLabel} modifié avec succès`);
   };
   
-  const handleExport = () => {
-    if (!isAdmin) {
-      toast.error("Vous n'avez pas les droits pour exporter les données");
-      return;
-    }
-    
-    exportToExcel(data);
-    toast.success('Données exportées avec succès');
-  };
-
-  const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!isAdmin) {
-      toast.error("Vous n'avez pas les droits pour importer des données");
-      return;
-    }
-
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      try {
-        const result = e.target?.result;
-        if (typeof result === 'string' || result instanceof ArrayBuffer) {
-          const importedData = await importFromExcel(result);
-          if (importedData) {
-            setData(importedData);
-            toast.success('Données importées avec succès');
-          }
-        }
-      } catch (error) {
-        console.error('Erreur lors de l\'import:', error);
-        toast.error('Erreur lors de l\'import du fichier');
-      }
-      
-      // Réinitialiser l'input file
-      if (event.target) {
-        event.target.value = '';
-      }
-    };
-    reader.readAsArrayBuffer(file);
-  };
-  
   return (
     <Layout>
       <div className="space-y-6 animate-fade-in">
@@ -217,38 +172,10 @@ const Index = () => {
             </Button>
             
             {isAdmin && (
-              <>
-                <Button variant="outline" className="transition-all hover:bg-secondary">
-                  <Filter className="mr-2 h-4 w-4" />
-                  Filtres
-                </Button>
-                
-                <Button 
-                  variant="outline" 
-                  onClick={handleExport}
-                  className="transition-all hover:bg-secondary"
-                >
-                  <Download className="mr-2 h-4 w-4" />
-                  Exporter
-                </Button>
-
-                <div className="relative">
-                  <input
-                    type="file"
-                    id="file-upload"
-                    accept=".xlsx"
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    onChange={handleImport}
-                  />
-                  <Button 
-                    variant="outline" 
-                    className="transition-all hover:bg-secondary"
-                  >
-                    <Upload className="mr-2 h-4 w-4" />
-                    Importer
-                  </Button>
-                </div>
-              </>
+              <Button variant="outline" className="transition-all hover:bg-secondary">
+                <Filter className="mr-2 h-4 w-4" />
+                Filtres
+              </Button>
             )}
           </div>
         </div>

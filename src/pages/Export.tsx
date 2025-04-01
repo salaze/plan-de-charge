@@ -7,8 +7,9 @@ import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Download, FileSpreadsheet, Files, FileJson, Upload } from 'lucide-react';
-import { exportToExcel, importFromExcel } from '@/utils';
+import { Download, FileSpreadsheet, Files, FileJson, Upload, FileUp, FileDown, Info } from 'lucide-react';
+import { exportToExcel } from '@/utils/exportUtils';
+import { handleFileImport } from '@/utils/fileImportUtils';
 import { StatusCell } from '@/components/calendar/StatusCell';
 import { MonthData, StatusCode } from '@/types';
 
@@ -16,6 +17,7 @@ const Export = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [exportFormat, setExportFormat] = useState<string>("excel");
   const [exportScope, setExportScope] = useState<string>("month");
+  const [importedData, setImportedData] = useState<MonthData | null>(null);
   
   const handleExport = () => {
     try {
@@ -42,33 +44,9 @@ const Export = () => {
     }
   };
   
-  const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      try {
-        const result = e.target?.result;
-        if (typeof result === 'string' || result instanceof ArrayBuffer) {
-          const importedData = await importFromExcel(result);
-          if (importedData) {
-            // Save to localStorage
-            localStorage.setItem('planningData', JSON.stringify(importedData));
-            toast.success('Données importées avec succès');
-          }
-        }
-      } catch (error) {
-        console.error('Erreur lors de l\'import:', error);
-        toast.error('Erreur lors de l\'import du fichier');
-      }
-      
-      // Réinitialiser l'input file
-      if (event.target) {
-        event.target.value = '';
-      }
-    };
-    reader.readAsArrayBuffer(file);
+  const handleImportSuccess = (data: MonthData) => {
+    setImportedData(data);
+    toast.success('Données importées avec succès! Les données ont été sauvegardées.');
   };
   
   const getFormatLabel = (format: string) => {
@@ -99,9 +77,12 @@ const Export = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
-              <CardTitle>Paramètres d'exportation</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <FileDown className="h-5 w-5" />
+                <span>Exporter le planning</span>
+              </CardTitle>
               <CardDescription>
-                Configurez les options pour exporter vos données de planning
+                Exportez votre planning avec les employés et leurs statuts au format Excel
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -153,26 +134,57 @@ const Export = () => {
                 />
               </div>
             </CardContent>
-            <CardFooter className="flex flex-col space-y-2">
+            <CardFooter>
               <Button onClick={handleExport} className="w-full">
                 {getFormatIcon(exportFormat)}
                 Exporter au format {getFormatLabel(exportFormat)}
               </Button>
-              
-              <div className="relative w-full">
-                <input
-                  type="file"
-                  id="file-upload"
-                  accept=".xlsx"
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  onChange={handleImport}
-                />
-                <Button variant="outline" className="w-full">
-                  <Upload className="h-4 w-4 mr-2" />
-                  Importer un fichier Excel
-                </Button>
-              </div>
             </CardFooter>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileUp className="h-5 w-5" />
+                <span>Importer des données</span>
+              </CardTitle>
+              <CardDescription>
+                Importez un fichier Excel pour mettre à jour votre planning
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="p-8 border-2 border-dashed rounded-lg text-center">
+                <FileSpreadsheet className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-sm text-muted-foreground mb-4">
+                  Glissez-déposez un fichier Excel (.xlsx) ici, ou cliquez pour sélectionner un fichier
+                </p>
+                <div className="relative">
+                  <input
+                    type="file"
+                    id="file-upload"
+                    accept=".xlsx"
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    onChange={(e) => handleFileImport(e, handleImportSuccess)}
+                  />
+                  <Button variant="outline" className="w-full">
+                    <Upload className="h-4 w-4 mr-2" />
+                    Importer un fichier Excel
+                  </Button>
+                </div>
+              </div>
+              
+              {importedData && (
+                <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-md">
+                  <p className="text-sm font-medium text-green-800 dark:text-green-300 flex items-center">
+                    <Info className="h-4 w-4 mr-2" />
+                    Importation réussie
+                  </p>
+                  <p className="text-xs text-green-700 dark:text-green-400 mt-1">
+                    {importedData.employees.length} employés importés pour {importedData.month + 1}/{importedData.year}
+                  </p>
+                </div>
+              )}
+            </CardContent>
           </Card>
           
           <Card>

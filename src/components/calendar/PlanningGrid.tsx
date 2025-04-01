@@ -169,7 +169,7 @@ export function PlanningGrid({
         <Table className="border rounded-lg bg-white dark:bg-gray-900 shadow-sm min-w-full">
           <TableHeader className="bg-secondary sticky top-0 z-10">
             <TableRow className="hover:bg-secondary">
-              <TableHead className="sticky left-0 bg-secondary z-20 min-w-[200px] lg:min-w-[300px]">Employé / Département</TableHead>
+              <TableHead className="sticky left-0 bg-secondary z-20 min-w-[200px] lg:min-w-[300px]">Employé / Département / Poste</TableHead>
               {visibleDays.map((day, index) => (
                 <TableHead 
                   key={index}
@@ -215,9 +215,14 @@ export function PlanningGrid({
                   <TableCell className="font-medium sticky left-0 bg-background z-10 text-xs sm:text-sm">
                     <div className="flex flex-col">
                       <span>{employee.name}</span>
-                      {employee.department && (
-                        <span className="text-xs text-muted-foreground">{employee.department}</span>
-                      )}
+                      <div className="space-y-0.5">
+                        {employee.department && (
+                          <span className="text-xs text-muted-foreground">Dpt: {employee.department}</span>
+                        )}
+                        {employee.position && (
+                          <span className="text-xs text-muted-foreground">Poste: {employee.position}</span>
+                        )}
+                      </div>
                     </div>
                   </TableCell>
                   

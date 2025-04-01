@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   Dialog, 
@@ -138,14 +139,14 @@ export function EmployeeForm({
           </div>
           
           <div className="grid gap-2">
-            <Label htmlFor="position">Poste</Label>
+            <Label htmlFor="position">Fonction</Label>
             <div className="flex items-center gap-2 relative">
               <Briefcase className="h-4 w-4 absolute left-3 text-muted-foreground" />
               <Input
                 id="position"
                 value={position}
                 onChange={(e) => setPosition(e.target.value)}
-                placeholder="Poste de l'employé"
+                placeholder="Fonction de l'employé"
                 className="pl-10"
               />
             </div>

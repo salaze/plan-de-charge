@@ -47,7 +47,7 @@ export function EmployeeList({
             <TableRow>
               <TableHead>Nom</TableHead>
               <TableHead>Email</TableHead>
-              <TableHead>Poste</TableHead>
+              <TableHead>Fonction</TableHead>
               <TableHead>Département</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>

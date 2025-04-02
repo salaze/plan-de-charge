@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Layout } from '@/components/layout/Layout';
@@ -168,8 +169,10 @@ const Export = () => {
         toast.error('Erreur lors de l\'import du fichier');
       }
       
-      if (e.target) {
-        e.target.value = '';
+      // Reset the input
+      if (e.target?.parentElement) {
+        const fileInput = e.target.parentElement as HTMLInputElement;
+        fileInput.value = '';
       }
     };
     

@@ -7,7 +7,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Download, FileSpreadsheet, Files, FileJson, Upload, FileUp, FileDown, Info, UserSearch, BarChartIcon, Laptop, Package } from 'lucide-react';
+import { Download, FileSpreadsheet, Files, FileJson, Upload, FileUp, FileDown, Info, UserSearch, BarChartIcon, Laptop, Package, Filter } from 'lucide-react';
 import { exportToExcel } from '@/utils/exportUtils';
 import { handleFileImport } from '@/utils/fileImportUtils';
 import { exportEmployeesToExcel, importEmployeesFromExcel } from '@/utils/employeeExportUtils';
@@ -31,6 +31,16 @@ const Export = () => {
   const [planningData, setPlanningData] = useState<MonthData | null>(null);
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
+  const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
+  
+  const departments = [
+    { value: "all", label: "Tous les départements" },
+    { value: "REC", label: "REC" },
+    { value: "78", label: "78" },
+    { value: "91", label: "91" },
+    { value: "92", label: "92" },
+    { value: "95", label: "95" },
+  ];
   
   useEffect(() => {
     const savedData = localStorage.getItem('planningData');
@@ -46,6 +56,14 @@ const Export = () => {
       
       if (savedData) {
         data = JSON.parse(savedData);
+        
+        // Filter by department if needed
+        if (selectedDepartment !== "all") {
+          data = {
+            ...data,
+            employees: data.employees.filter(emp => emp.department === selectedDepartment)
+          };
+        }
       } else {
         data = {
           year: date?.getFullYear() || new Date().getFullYear(),
@@ -71,6 +89,11 @@ const Export = () => {
       if (savedData) {
         const data = JSON.parse(savedData);
         employees = data.employees || [];
+        
+        // Filter by department if needed
+        if (selectedDepartment !== "all") {
+          employees = employees.filter(emp => emp.department === selectedDepartment);
+        }
       }
       
       if (employees.length === 0) {
@@ -95,7 +118,13 @@ const Export = () => {
       }
       
       const data = JSON.parse(savedData);
-      const employees = data.employees || [];
+      let employees = data.employees || [];
+      
+      // Filter by department if needed
+      if (selectedDepartment !== "all") {
+        employees = employees.filter(emp => emp.department === selectedDepartment);
+      }
+      
       const year = currentYear || new Date().getFullYear();
       const month = currentMonth || new Date().getMonth();
       
@@ -125,9 +154,9 @@ const Export = () => {
 
     const reader = new FileReader();
     
-    reader.onload = async (e) => {
+    reader.onload = async (event) => {
       try {
-        const result = e.target?.result;
+        const result = event.target?.result;
         if (result instanceof ArrayBuffer) {
           const employees = await importEmployeesFromExcel(result);
           
@@ -170,9 +199,8 @@ const Export = () => {
       }
       
       // Reset the input
-      if (e.target?.parentElement) {
-        const fileInput = e.target.parentElement as HTMLInputElement;
-        fileInput.value = '';
+      if (e.target) {
+        e.target.value = '';
       }
     };
     
@@ -282,6 +310,38 @@ const Export = () => {
               Exporter pour utilisation locale
             </Button>
           </CardFooter>
+        </Card>
+        
+        <Card className="mb-4">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Filter className="h-5 w-5" />
+              <span>Filtrer les données</span>
+            </CardTitle>
+            <CardDescription>
+              Filtrez les données à exporter par département
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Département</label>
+              <Select
+                value={selectedDepartment}
+                onValueChange={setSelectedDepartment}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Sélectionnez un département" />
+                </SelectTrigger>
+                <SelectContent>
+                  {departments.map((dept) => (
+                    <SelectItem key={dept.value} value={dept.value}>
+                      {dept.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
         </Card>
         
         <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -462,7 +522,8 @@ const Export = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground mb-4">
-                    Cette opération exportera tous les employés avec leurs informations (nom, email, fonction, département).
+                    Cette opération exportera tous les employés {selectedDepartment !== "all" ? `du département ${selectedDepartment}` : ""} 
+                    avec leurs informations (nom, email, fonction, département).
                     Les données de planning ne seront pas incluses.
                   </p>
                 </CardContent>
@@ -534,7 +595,8 @@ const Export = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Cette opération exportera les statistiques de tous les employés pour le mois actuel,
+                  Cette opération exportera les statistiques de tous les employés 
+                  {selectedDepartment !== "all" ? ` du département ${selectedDepartment}` : ""} pour le mois sélectionné,
                   incluant les jours de présence, congés, formation, etc.
                 </p>
                 <div className="space-y-2 mb-4">

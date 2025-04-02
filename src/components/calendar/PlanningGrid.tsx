@@ -191,7 +191,7 @@ export function PlanningGrid({
                 <TableHead 
                   key={index}
                   colSpan={2}
-                  className={`text-center min-w-[120px] ${isWeekendOrHoliday(day) ? 'bg-muted' : ''}`}
+                  className={`text-center min-w-[120px] ${isWeekendOrHoliday(day) ? 'bg-gray-200 dark:bg-gray-700' : ''}`}
                 >
                   <div className="calendar-day text-xs sm:text-sm">{getDayName(day, true)}</div>
                   <div className="calendar-date text-xs sm:text-sm">{day.getDate()}</div>
@@ -205,12 +205,12 @@ export function PlanningGrid({
                 return (
                   <React.Fragment key={`header-${index}`}>
                     <TableHead 
-                      className={`text-center w-[60px] text-xs sm:w-[70px] ${isWeekendOrHoliday(day) ? 'bg-muted' : ''}`}
+                      className={`text-center w-[60px] text-xs sm:w-[70px] ${isWeekendOrHoliday(day) ? 'bg-gray-200 dark:bg-gray-700' : ''}`}
                     >
                       AM
                     </TableHead>
                     <TableHead 
-                      className={`text-center w-[60px] text-xs sm:w-[70px] ${isWeekendOrHoliday(day) ? 'bg-muted' : ''}`}
+                      className={`text-center w-[60px] text-xs sm:w-[70px] ${isWeekendOrHoliday(day) ? 'bg-gray-200 dark:bg-gray-700' : ''}`}
                     >
                       PM
                     </TableHead>
@@ -224,10 +224,10 @@ export function PlanningGrid({
             {departmentGroups.map((group, groupIndex) => (
               <React.Fragment key={`dept-${groupIndex}`}>
                 {/* Ligne de titre du département */}
-                <TableRow className="bg-muted/30 border-t-2 border-b-2 border-muted-foreground/30">
+                <TableRow className="bg-muted/50 border-t-2 border-b-2 border-primary">
                   <TableCell 
                     colSpan={visibleDays.length * 2 + 2} 
-                    className="sticky left-0 bg-muted/30 font-bold text-sm py-1"
+                    className="sticky left-0 bg-muted/50 font-bold text-sm py-1"
                   >
                     Département: {group.name}
                   </TableCell>
@@ -265,7 +265,7 @@ export function PlanningGrid({
                         return (
                           <React.Fragment key={`employee-${employee.id}-day-${index}`}>
                             <TableCell 
-                              className={`text-center p-0 sm:p-1 ${isWeekendOrHol ? 'bg-muted/50' : ''}`}
+                              className={`text-center p-0 sm:p-1 ${isWeekendOrHol ? 'bg-gray-200 dark:bg-gray-700/50' : ''}`}
                             >
                               <div 
                                 className="cursor-pointer hover:bg-secondary/50 rounded p-0.5 sm:p-1 transition-all text-xs"
@@ -284,7 +284,7 @@ export function PlanningGrid({
                             </TableCell>
                             
                             <TableCell 
-                              className={`text-center p-0 sm:p-1 ${isWeekendOrHol ? 'bg-muted/50' : ''}`}
+                              className={`text-center p-0 sm:p-1 ${isWeekendOrHol ? 'bg-gray-200 dark:bg-gray-700/50' : ''}`}
                             >
                               <div 
                                 className="cursor-pointer hover:bg-secondary/50 rounded p-0.5 sm:p-1 transition-all text-xs"

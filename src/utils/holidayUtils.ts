@@ -11,21 +11,56 @@ export const isHoliday = (date: Date): boolean => {
   
   // Jours fériés fixes
   if (
-    (month === 0 && day === 1) || // Jour de l'an
-    (month === 4 && day === 1) || // Fête du travail
-    (month === 4 && day === 8) || // Victoire 1945
-    (month === 6 && day === 14) || // Fête nationale
-    (month === 7 && day === 15) || // Assomption
-    (month === 10 && day === 1) || // Toussaint
-    (month === 10 && day === 11) || // Armistice
-    (month === 11 && day === 25) // Noël
+    (month === 0 && day === 1) || // Jour de l'an (1er janvier)
+    (month === 4 && day === 1) || // Fête du travail (1er mai)
+    (month === 4 && day === 8) || // Victoire 1945 (8 mai)
+    (month === 6 && day === 14) || // Fête nationale (14 juillet)
+    (month === 7 && day === 15) || // Assomption (15 août)
+    (month === 10 && day === 1) || // Toussaint (1er novembre)
+    (month === 10 && day === 11) || // Armistice (11 novembre)
+    (month === 11 && day === 25)    // Noël (25 décembre)
   ) {
     return true;
   }
   
-  // Pâques (calcul approximatif pour les jours fériés liés à Pâques)
-  // Pour une implémentation complète, il faudrait un algorithme spécifique
-  // Cette implémentation simplifiée sera à remplacer par un calcul précis
+  // Calcul de Pâques (algorithme de Oudin)
+  const g = year % 19;
+  const c = Math.floor(year / 100);
+  const h = (c - Math.floor(c / 4) - Math.floor((8 * c + 13) / 25) + 19 * g + 15) % 30;
+  const i = h - Math.floor(h / 28) * (1 - Math.floor(29 / (h + 1)) * Math.floor((21 - g) / 11));
+  const j = (year + Math.floor(year / 4) + i + 2 - c + Math.floor(c / 4)) % 7;
+  const l = i - j;
+  const easterMonth = 3 + Math.floor((l + 40) / 44);
+  const easterDay = l + 28 - 31 * Math.floor(easterMonth / 4);
+  
+  const easterDate = new Date(year, easterMonth - 1, easterDay);
+  
+  // Lundi de Pâques (1 jour après Pâques)
+  const easterMonday = new Date(easterDate);
+  easterMonday.setDate(easterDate.getDate() + 1);
+  
+  // Jeudi de l'Ascension (39 jours après Pâques)
+  const ascensionThursday = new Date(easterDate);
+  ascensionThursday.setDate(easterDate.getDate() + 39);
+  
+  // Lundi de Pentecôte (50 jours après Pâques)
+  const pentecostMonday = new Date(easterDate);
+  pentecostMonday.setDate(easterDate.getDate() + 50);
+  
+  // Vérifier si la date correspond à un jour férié lié à Pâques
+  const isSameDate = (date1: Date, date2: Date) => {
+    return date1.getDate() === date2.getDate() && 
+           date1.getMonth() === date2.getMonth() && 
+           date1.getFullYear() === date2.getFullYear();
+  };
+  
+  if (
+    isSameDate(date, easterMonday) ||
+    isSameDate(date, ascensionThursday) ||
+    isSameDate(date, pentecostMonday)
+  ) {
+    return true;
+  }
   
   return false;
 };

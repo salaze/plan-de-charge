@@ -6,17 +6,19 @@ import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Download, FileSpreadsheet, Files, FileJson, Upload, FileUp, FileDown, Info, UserSearch, BarChartIcon } from 'lucide-react';
+import { Download, FileSpreadsheet, Files, FileJson, Upload, FileUp, FileDown, Info, UserSearch, BarChartIcon, Laptop, Package } from 'lucide-react';
 import { exportToExcel } from '@/utils/exportUtils';
 import { handleFileImport } from '@/utils/fileImportUtils';
 import { exportEmployeesToExcel, importEmployeesFromExcel } from '@/utils/employeeExportUtils';
 import { exportStatsToExcel } from '@/utils/statsExportUtils';
+import { exportApplicationForLocalUse } from '@/utils/appExportUtils';
 import { StatusCell } from '@/components/calendar/StatusCell';
 import { MonthData, StatusCode, Employee } from '@/types';
 import { calculateEmployeeStats } from '@/utils/statsUtils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 const Export = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -30,7 +32,6 @@ const Export = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   
   useEffect(() => {
-    // Charger les données du planning depuis localStorage
     const savedData = localStorage.getItem('planningData');
     if (savedData) {
       setPlanningData(JSON.parse(savedData));
@@ -39,7 +40,6 @@ const Export = () => {
   
   const handleExport = () => {
     try {
-      // Récupérer les données réelles depuis localStorage
       const savedData = localStorage.getItem('planningData');
       let data: MonthData;
       
@@ -64,7 +64,6 @@ const Export = () => {
   
   const handleExportEmployees = () => {
     try {
-      // Récupérer les employés depuis localStorage
       const savedData = localStorage.getItem('planningData');
       let employees: Employee[] = [];
       
@@ -88,7 +87,6 @@ const Export = () => {
   
   const handleExportStats = () => {
     try {
-      // Récupérer les données depuis localStorage
       const savedData = localStorage.getItem('planningData');
       if (!savedData) {
         toast.error('Aucune donnée disponible');
@@ -105,7 +103,6 @@ const Export = () => {
         return;
       }
       
-      // Calculer les statistiques pour chaque employé
       const stats = employees.map(employee => calculateEmployeeStats(employee, year, month));
       
       exportStatsToExcel(stats);
@@ -136,13 +133,10 @@ const Export = () => {
           if (employees && employees.length > 0) {
             setImportedEmployees(employees);
             
-            // Mettre à jour le localStorage
             const savedData = localStorage.getItem('planningData');
             if (savedData) {
               const data = JSON.parse(savedData);
               
-              // Fusionner les employés importés avec les existants
-              // Si un employé avec le même ID existe, il sera mis à jour
               const existingEmployees = data.employees || [];
               const employeeMap = new Map();
               
@@ -150,7 +144,6 @@ const Export = () => {
               employees.forEach(emp => {
                 const existing = employeeMap.get(emp.id);
                 if (existing) {
-                  // Préserver les données de planning existantes
                   emp.schedule = existing.schedule || [];
                 }
                 employeeMap.set(emp.id, emp);
@@ -175,13 +168,21 @@ const Export = () => {
         toast.error('Erreur lors de l\'import du fichier');
       }
       
-      // Réinitialiser l'input file
       if (e.target) {
         e.target.value = '';
       }
     };
     
     reader.readAsArrayBuffer(file);
+  };
+  
+  const handleExportApplication = async () => {
+    try {
+      await exportApplicationForLocalUse();
+    } catch (error) {
+      console.error('Erreur lors de l\'export de l\'application:', error);
+      toast.error('Une erreur est survenue lors de l\'export de l\'application');
+    }
   };
   
   const getFormatLabel = (format: string) => {
@@ -216,6 +217,69 @@ const Export = () => {
             Votre application est connectée à Supabase. Vous pouvez maintenant stocker et récupérer des données dans votre base de données.
           </AlertDescription>
         </Alert>
+        
+        <Card className="border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Laptop className="h-5 w-5" />
+              <span>Exporter l'application pour utilisation locale</span>
+            </CardTitle>
+            <CardDescription>
+              Téléchargez l'application pour l'utiliser hors ligne sur votre PC
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              Cette option vous permet d'installer l'application sur votre PC pour l'utiliser hors ligne. 
+              L'application sera téléchargée sous forme de fichier ZIP contenant tous les fichiers nécessaires.
+            </p>
+          </CardContent>
+          <CardFooter className="flex justify-between">
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <Info className="h-4 w-4 mr-2" />
+                  Comment ça marche ?
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Utilisation locale de l'application</DialogTitle>
+                  <DialogDescription>
+                    Guide d'installation et d'utilisation
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Installation comme PWA</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Cette application est une PWA (Progressive Web App). Vous pouvez l'installer sur votre PC en cliquant sur l'icône d'installation dans la barre d'adresse de votre navigateur.
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Export des données</h4>
+                    <p className="text-sm text-muted-foreground">
+                      L'application fonctionne en mode hors ligne. Toutes vos données sont stockées localement dans le navigateur.
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Utilisation en mode local</h4>
+                    <ol className="text-sm text-muted-foreground list-decimal list-inside pl-2 space-y-1">
+                      <li>Cliquez sur "Exporter pour utilisation locale"</li>
+                      <li>Décompressez le fichier ZIP téléchargé</li>
+                      <li>Ouvrez le fichier index.html dans un navigateur moderne</li>
+                      <li>Utilisez l'application comme d'habitude, sans connexion internet</li>
+                    </ol>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+            <Button onClick={handleExportApplication}>
+              <Package className="h-4 w-4 mr-2" />
+              Exporter pour utilisation locale
+            </Button>
+          </CardFooter>
+        </Card>
         
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid grid-cols-3 mb-4">

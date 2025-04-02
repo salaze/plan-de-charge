@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Menu, X } from 'lucide-react';
 import { SidebarMenu } from './SidebarMenu';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -11,15 +11,68 @@ interface LayoutProps {
 export function Layout({ children }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isMobile = useIsMobile();
+  const sidebarRef = useRef<HTMLDivElement>(null);
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
   
+  // Fonction pour gérer l'entrée de la souris dans la zone de détection à gauche
+  const handleMouseEnter = () => {
+    if (isMobile) return; // Ne pas activer sur mobile
+    
+    // Effacer le timeout précédent s'il existe
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+    
+    // Définir un petit délai pour éviter les fluctuations
+    hoverTimeoutRef.current = setTimeout(() => {
+      setSidebarOpen(true);
+    }, 200);
+  };
+  
+  // Fonction pour gérer la sortie de la souris du sidebar
+  const handleMouseLeave = () => {
+    if (isMobile) return; // Ne pas activer sur mobile
+    
+    // Effacer le timeout précédent s'il existe
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+    
+    // Définir un délai avant de fermer pour éviter les fluctuations
+    hoverTimeoutRef.current = setTimeout(() => {
+      setSidebarOpen(false);
+    }, 300);
+  };
+  
+  // Nettoyage des timeouts lors du démontage du composant
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+    };
+  }, []);
+  
   return (
     <div className="min-h-screen flex">
-      {/* Sidebar for desktop */}
-      <aside className="hidden md:flex flex-col w-64 bg-sidebar fixed inset-y-0 z-50">
+      {/* Zone de détection pour l'apparition du sidebar au survol */}
+      <div 
+        className="hidden md:block fixed top-0 left-0 w-4 h-full z-40"
+        onMouseEnter={handleMouseEnter}
+      />
+      
+      {/* Sidebar pour desktop - apparaît au survol */}
+      <aside 
+        ref={sidebarRef}
+        className={`hidden md:flex flex-col w-64 bg-sidebar fixed inset-y-0 z-50 transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        onMouseLeave={handleMouseLeave}
+      >
         <div className="p-4 border-b border-sidebar-border">
           <h1 className="text-xl font-semibold text-sidebar-foreground">Planning Manager</h1>
         </div>
@@ -49,7 +102,7 @@ export function Layout({ children }: LayoutProps) {
       </aside>
       
       {/* Main content */}
-      <div className="flex-1 md:ml-64 w-full">
+      <div className="flex-1 md:ml-0 w-full">
         {/* Mobile header */}
         <header className="bg-background p-4 border-b border-border md:hidden sticky top-0 z-10">
           <div className="flex items-center justify-between">
@@ -68,7 +121,16 @@ export function Layout({ children }: LayoutProps) {
         {/* Desktop header */}
         <header className="bg-background p-4 border-b border-border hidden md:block sticky top-0 z-10">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-semibold">Planning Manager</h1>
+            <div className="flex items-center">
+              <button
+                className="text-foreground p-2 mr-2 rounded-md hover:bg-secondary md:flex"
+                onClick={toggleSidebar}
+                aria-label="Ouvrir/Fermer le menu"
+              >
+                <Menu size={24} />
+              </button>
+              <h1 className="text-xl font-semibold">Planning Manager</h1>
+            </div>
           </div>
         </header>
         
@@ -81,7 +143,7 @@ export function Layout({ children }: LayoutProps) {
       </div>
       
       {/* Mobile overlay */}
-      {sidebarOpen && (
+      {sidebarOpen && isMobile && (
         <div 
           className="fixed inset-0 bg-black/30 z-40 md:hidden"
           onClick={toggleSidebar}

@@ -9,3 +9,4 @@ export * from './employeeUtils';
 export * from './fileImportUtils';
 export * from './employeeExportUtils';
 export * from './statsExportUtils';
+export * from './holidayUtils';

@@ -295,9 +295,11 @@ function prepareExcelData(data: MonthData): any[][] {
       let cellValue = '';
       if (amStatus && pmStatus) {
         if (amStatus.status === pmStatus.status) {
+          // Si même statut matin et après-midi, l'afficher une seule fois
           cellValue = formatStatus(amStatus.status);
         } else {
-          cellValue = `${formatStatus(amStatus.status)} / ${formatStatus(pmStatus.status)}`;
+          // Afficher les deux statuts séparés pour matin et après-midi
+          cellValue = `AM: ${formatStatus(amStatus.status)} / PM: ${formatStatus(pmStatus.status)}`;
         }
       } else if (amStatus) {
         cellValue = `AM: ${formatStatus(amStatus.status)}`;

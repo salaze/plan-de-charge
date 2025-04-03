@@ -273,41 +273,34 @@ function prepareExcelData(data: MonthData): any[][] {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
   
-  // Create header row
-  const headerRow = [
-    'Employé', 
-    ...days.map(day => format(new Date(year, month, day), 'dd/MM EEE', { locale: fr }))
-  ];
+  // Create header row with AM/PM columns for each day
+  const headerRow = ['Employé'];
+  
+  days.forEach(day => {
+    const date = new Date(year, month, day);
+    const formattedDay = format(date, 'dd/MM EEE', { locale: fr });
+    // Add two columns for each day (AM and PM)
+    headerRow.push(`${formattedDay} (AM)`);
+    headerRow.push(`${formattedDay} (PM)`);
+  });
   
   // Create data rows
   const dataRows = employees.map(employee => {
     const employeeRow = [employee.name];
     
-    // For each day, get the employee's status
+    // For each day, get the employee's AM and PM statuses separately
     days.forEach(day => {
       const date = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       
-      // Find AM and PM statuses
-      const amStatus = employee.schedule.find(s => s.date === date && s.period === 'AM');
-      const pmStatus = employee.schedule.find(s => s.date === date && s.period === 'PM');
+      // Find AM status
+      const amStatus = employee.schedule.find(s => s.date === date && (s.period === 'AM' || s.period === 'FULL'));
+      const amCellValue = amStatus ? formatStatus(amStatus.status) : '';
+      employeeRow.push(amCellValue);
       
-      // Format cell value
-      let cellValue = '';
-      if (amStatus && pmStatus) {
-        if (amStatus.status === pmStatus.status) {
-          // Si même statut matin et après-midi, l'afficher une seule fois
-          cellValue = formatStatus(amStatus.status);
-        } else {
-          // Afficher les deux statuts séparés pour matin et après-midi
-          cellValue = `AM: ${formatStatus(amStatus.status)} / PM: ${formatStatus(pmStatus.status)}`;
-        }
-      } else if (amStatus) {
-        cellValue = `AM: ${formatStatus(amStatus.status)}`;
-      } else if (pmStatus) {
-        cellValue = `PM: ${formatStatus(pmStatus.status)}`;
-      }
-      
-      employeeRow.push(cellValue);
+      // Find PM status
+      const pmStatus = employee.schedule.find(s => s.date === date && (s.period === 'PM' || s.period === 'FULL'));
+      const pmCellValue = pmStatus ? formatStatus(pmStatus.status) : '';
+      employeeRow.push(pmCellValue);
     });
     
     return employeeRow;

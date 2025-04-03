@@ -86,15 +86,23 @@ export const exportApplicationForLocalUse = async (): Promise<void> => {
           }
           
           async loadData() {
-            const response = await fetch('./data/planningData.json');
-            this.data = await response.json();
-            console.log('Données chargées:', this.data);
-            
-            // Mettre à jour l'info sur la période
-            const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
-            document.getElementById('period-info').textContent = \`\${monthNames[this.data.month]} \${this.data.year}\`;
-            
-            return this.data;
+            try {
+              const response = await fetch('./data/planningData.json');
+              if (!response.ok) {
+                throw new Error('Impossible de charger les données');
+              }
+              this.data = await response.json();
+              console.log('Données chargées:', this.data);
+              
+              // Mettre à jour l'info sur la période
+              const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+              document.getElementById('period-info').textContent = \`\${monthNames[this.data.month]} \${this.data.year}\`;
+              
+              return this.data;
+            } catch (error) {
+              console.error('Erreur lors du chargement des données:', error);
+              throw error;
+            }
           }
           
           renderEmployeeList() {
@@ -112,7 +120,7 @@ export const exportApplicationForLocalUse = async (): Promise<void> => {
                   </div>
                   <div class="card-body">
                     <p><strong>Email:</strong> \${employee.email || 'Non défini'}</p>
-                    <p><strong>Fonction:</strong> \${employee.role || 'Non défini'}</p>
+                    <p><strong>Fonction:</strong> \${employee.position || 'Non défini'}</p>
                     <p><strong>Département:</strong> \${employee.department || 'Non défini'}</p>
                     <button class="btn btn-primary" onclick="app.showEmployeeDetails('\${employee.id}')">Voir détails</button>
                   </div>
@@ -131,46 +139,23 @@ export const exportApplicationForLocalUse = async (): Promise<void> => {
             
             let totalEmployees = this.data.employees.length;
             let departmentCount = {};
-            let statusCount = {
-              'conges': 0,
-              'formation': 0,
-              'assistance': 0,
-              'absence': 0,
-              'permanence': 0
-            };
             
             // Calculer les statistiques
             this.data.employees.forEach(employee => {
               // Compter par département
-              departmentCount[employee.department] = (departmentCount[employee.department] || 0) + 1;
-              
-              // Compter les statuts
-              if (employee.schedule) {
-                for (let day in employee.schedule) {
-                  const daySchedule = employee.schedule[day];
-                  if (daySchedule.morning && daySchedule.morning !== 'none') {
-                    statusCount[daySchedule.morning] = (statusCount[daySchedule.morning] || 0) + 1;
-                  }
-                  if (daySchedule.afternoon && daySchedule.afternoon !== 'none') {
-                    statusCount[daySchedule.afternoon] = (statusCount[daySchedule.afternoon] || 0) + 1;
-                  }
-                }
+              if (employee.department) {
+                departmentCount[employee.department] = (departmentCount[employee.department] || 0) + 1;
+              } else {
+                departmentCount['Non défini'] = (departmentCount['Non défini'] || 0) + 1;
               }
             });
             
             // Générer HTML pour les stats par département
             let departmentHtml = '<h4>Répartition par département</h4><ul>';
             for (let dept in departmentCount) {
-              departmentHtml += \`<li>\${dept || 'Non défini'}: \${departmentCount[dept]} employés</li>\`;
+              departmentHtml += \`<li>\${dept}: \${departmentCount[dept]} employés</li>\`;
             }
             departmentHtml += '</ul>';
-            
-            // Générer HTML pour les stats par statut
-            let statusHtml = '<h4>Répartition des statuts</h4><ul>';
-            for (let status in statusCount) {
-              statusHtml += \`<li>\${status.charAt(0).toUpperCase() + status.slice(1)}: \${statusCount[status]} occurrences</li>\`;
-            }
-            statusHtml += '</ul>';
             
             statsContainer.innerHTML = \`
               <div class="card">
@@ -180,14 +165,13 @@ export const exportApplicationForLocalUse = async (): Promise<void> => {
                 <div class="card-body">
                   <p><strong>Nombre total d'employés:</strong> \${totalEmployees}</p>
                   \${departmentHtml}
-                  \${statusHtml}
                 </div>
               </div>
             \`;
           }
           
           renderCalendar() {
-            if (!this.data) return;
+            if (!this.data || !this.data.employees.length === 0) return;
             
             const calendarContainer = document.getElementById('calendar-container');
             if (!calendarContainer) return;
@@ -208,7 +192,9 @@ export const exportApplicationForLocalUse = async (): Promise<void> => {
             
             // Ajouter les colonnes pour chaque jour
             for (let day = 1; day <= daysInMonth; day++) {
-              tableHtml += \`<th>\${day}</th>\`;
+              const date = new Date(year, month, day);
+              const dayOfWeek = date.toLocaleDateString('fr-FR', { weekday: 'short' });
+              tableHtml += \`<th>\${day}<br>\${dayOfWeek}</th>\`;
             }
             
             tableHtml += \`
@@ -223,26 +209,32 @@ export const exportApplicationForLocalUse = async (): Promise<void> => {
               
               // Ajouter les cellules pour chaque jour
               for (let day = 1; day <= daysInMonth; day++) {
-                const dayKey = day.toString();
-                let dayContent = '';
+                const dateStr = \`\${year}-\${String(month + 1).padStart(2, '0')}-\${String(day).padStart(2, '0')}\`;
+                let cellContent = '';
                 
-                if (employee.schedule && employee.schedule[dayKey]) {
-                  const morning = employee.schedule[dayKey].morning;
-                  const afternoon = employee.schedule[dayKey].afternoon;
+                if (employee.schedule) {
+                  // Trouver les statuts pour AM et PM
+                  const amStatus = employee.schedule.find(
+                    s => s.date === dateStr && (s.period === 'AM' || s.period === 'FULL')
+                  );
                   
-                  if (morning && morning !== 'none') {
-                    dayContent += \`<span class="badge badge-\${this.getStatusClass(morning)}" title="Matin">\${this.getStatusShort(morning)}</span>\`;
+                  const pmStatus = employee.schedule.find(
+                    s => s.date === dateStr && (s.period === 'PM' || s.period === 'FULL')
+                  );
+                  
+                  if (amStatus && amStatus.status) {
+                    cellContent += \`<span class="badge badge-\${this.getStatusClass(amStatus.status)}" title="Matin">\${this.getStatusShort(amStatus.status)}</span>\`;
                   }
                   
-                  if (afternoon && afternoon !== 'none') {
-                    if (dayContent) dayContent += '<br>';
-                    dayContent += \`<span class="badge badge-\${this.getStatusClass(afternoon)}" title="Après-midi">\${this.getStatusShort(afternoon)}</span>\`;
+                  if (pmStatus && pmStatus.status) {
+                    if (cellContent) cellContent += '<br>';
+                    cellContent += \`<span class="badge badge-\${this.getStatusClass(pmStatus.status)}" title="Après-midi">\${this.getStatusShort(pmStatus.status)}</span>\`;
                   }
                 }
                 
-                if (!dayContent) dayContent = '-';
+                if (!cellContent) cellContent = '-';
                 
-                tableHtml += \`<td>\${dayContent}</td>\`;
+                tableHtml += \`<td>\${cellContent}</td>\`;
               }
               
               tableHtml += '</tr>';
@@ -272,6 +264,13 @@ export const exportApplicationForLocalUse = async (): Promise<void> => {
               case 'assistance': return 'primary';
               case 'absence': return 'danger';
               case 'permanence': return 'warning';
+              case 'vigi': return 'danger';
+              case 'projet': return 'success';
+              case 'management': return 'info';
+              case 'tp': return 'secondary';
+              case 'coordinateur': return 'primary';
+              case 'regisseur': return 'warning';
+              case 'demenagement': return 'info';
               default: return 'secondary';
             }
           }
@@ -283,6 +282,13 @@ export const exportApplicationForLocalUse = async (): Promise<void> => {
               case 'assistance': return 'A';
               case 'absence': return 'ABS';
               case 'permanence': return 'P';
+              case 'vigi': return 'V';
+              case 'projet': return 'PR';
+              case 'management': return 'M';
+              case 'tp': return 'TP';
+              case 'coordinateur': return 'CO';
+              case 'regisseur': return 'R';
+              case 'demenagement': return 'D';
               default: return '?';
             }
           }
@@ -304,21 +310,29 @@ export const exportApplicationForLocalUse = async (): Promise<void> => {
             const daysInMonth = new Date(this.data.year, this.data.month + 1, 0).getDate();
             
             for (let day = 1; day <= daysInMonth; day++) {
-              const dayKey = day.toString();
-              let morning = '-';
-              let afternoon = '-';
+              const dateStr = \`\${this.data.year}-\${String(this.data.month + 1).padStart(2, '0')}-\${String(day).padStart(2, '0')}\`;
               
-              if (employee.schedule && employee.schedule[dayKey]) {
-                if (employee.schedule[dayKey].morning && employee.schedule[dayKey].morning !== 'none') {
-                  morning = \`<span class="badge badge-\${this.getStatusClass(employee.schedule[dayKey].morning)}">\${employee.schedule[dayKey].morning}</span>\`;
-                }
-                
-                if (employee.schedule[dayKey].afternoon && employee.schedule[dayKey].afternoon !== 'none') {
-                  afternoon = \`<span class="badge badge-\${this.getStatusClass(employee.schedule[dayKey].afternoon)}">\${employee.schedule[dayKey].afternoon}</span>\`;
-                }
+              // Trouver les statuts pour AM et PM
+              const amStatus = employee.schedule.find(
+                s => s.date === dateStr && (s.period === 'AM' || s.period === 'FULL')
+              );
+              
+              const pmStatus = employee.schedule.find(
+                s => s.date === dateStr && (s.period === 'PM' || s.period === 'FULL')
+              );
+              
+              let morningStatus = '-';
+              let afternoonStatus = '-';
+              
+              if (amStatus && amStatus.status) {
+                morningStatus = \`<span class="badge badge-\${this.getStatusClass(amStatus.status)}">\${amStatus.status}</span>\`;
               }
               
-              scheduleHtml += \`<tr><td>\${day}</td><td>\${morning}</td><td>\${afternoon}</td></tr>\`;
+              if (pmStatus && pmStatus.status) {
+                afternoonStatus = \`<span class="badge badge-\${this.getStatusClass(pmStatus.status)}">\${pmStatus.status}</span>\`;
+              }
+              
+              scheduleHtml += \`<tr><td>\${day}</td><td>\${morningStatus}</td><td>\${afternoonStatus}</td></tr>\`;
             }
             
             scheduleHtml += '</tbody></table>';
@@ -330,16 +344,16 @@ export const exportApplicationForLocalUse = async (): Promise<void> => {
                 </div>
                 <div class="card-body">
                   <p><strong>Email:</strong> \${employee.email || 'Non défini'}</p>
-                  <p><strong>Fonction:</strong> \${employee.role || 'Non défini'}</p>
+                  <p><strong>Fonction:</strong> \${employee.position || 'Non défini'}</p>
                   <p><strong>Département:</strong> \${employee.department || 'Non défini'}</p>
                   
                   <h4>Statistiques</h4>
                   <ul>
-                    <li>Jours de présence: \${stats.presenceDays}</li>
-                    <li>Jours de congés: \${stats.congesDays}</li>
-                    <li>Jours de formation: \${stats.formationDays}</li>
-                    <li>Jours d'assistance: \${stats.assistanceDays}</li>
-                    <li>Jours d'absence: \${stats.absenceDays}</li>
+                    <li>Jours de présence: \${stats.presentDays.toFixed(1)}</li>
+                    <li>Jours de congés: \${stats.congesDays.toFixed(1)}</li>
+                    <li>Jours de formation: \${stats.formationDays.toFixed(1)}</li>
+                    <li>Jours d'assistance: \${stats.assistanceDays.toFixed(1)}</li>
+                    <li>Jours d'absence: \${stats.absenceDays.toFixed(1)}</li>
                   </ul>
                   
                   \${scheduleHtml}
@@ -362,43 +376,76 @@ export const exportApplicationForLocalUse = async (): Promise<void> => {
           
           calculateEmployeeStats(employee) {
             const stats = {
-              presenceDays: 0,
+              presentDays: 0,
               congesDays: 0,
               formationDays: 0,
               assistanceDays: 0,
-              absenceDays: 0
+              absenceDays: 0,
+              vigiDays: 0,
+              projetDays: 0,
+              managementDays: 0,
+              tpDays: 0,
+              coordinateurDays: 0,
+              regisseurDays: 0,
+              demenagementDays: 0,
+              permanenceDays: 0
             };
             
             if (!employee.schedule) return stats;
             
             // Parcourir tous les jours du planning
-            for (let day in employee.schedule) {
-              const daySchedule = employee.schedule[day];
+            employee.schedule.forEach(day => {
+              const multiplier = day.period === 'FULL' ? 1 : 0.5;
               
-              // Matin
-              if (daySchedule.morning) {
-                switch(daySchedule.morning) {
-                  case 'conges': stats.congesDays += 0.5; break;
-                  case 'formation': stats.formationDays += 0.5; break;
-                  case 'assistance': stats.assistanceDays += 0.5; stats.presenceDays += 0.5; break;
-                  case 'absence': stats.absenceDays += 0.5; break;
-                  case 'permanence': stats.presenceDays += 0.5; break;
-                  default: break;
-                }
+              switch(day.status) {
+                case 'conges': 
+                  stats.congesDays += multiplier; 
+                  break;
+                case 'formation': 
+                  stats.formationDays += multiplier; 
+                  stats.presentDays += multiplier; 
+                  break;
+                case 'assistance': 
+                  stats.assistanceDays += multiplier; 
+                  stats.presentDays += multiplier; 
+                  break;
+                case 'absence': 
+                  stats.absenceDays += multiplier; 
+                  break;
+                case 'permanence': 
+                  stats.permanenceDays += multiplier; 
+                  stats.presentDays += multiplier; 
+                  break;
+                case 'vigi':
+                  stats.vigiDays += multiplier;
+                  stats.presentDays += multiplier;
+                  break;
+                case 'projet':
+                  stats.projetDays += multiplier;
+                  stats.presentDays += multiplier;
+                  break;
+                case 'management':
+                  stats.managementDays += multiplier;
+                  stats.presentDays += multiplier;
+                  break;
+                case 'tp':
+                  stats.tpDays += multiplier;
+                  break;
+                case 'coordinateur':
+                  stats.coordinateurDays += multiplier;
+                  stats.presentDays += multiplier;
+                  break;
+                case 'regisseur':
+                  stats.regisseurDays += multiplier;
+                  stats.presentDays += multiplier;
+                  break;
+                case 'demenagement':
+                  stats.demenagementDays += multiplier;
+                  stats.presentDays += multiplier;
+                  break;
+                default: break;
               }
-              
-              // Après-midi
-              if (daySchedule.afternoon) {
-                switch(daySchedule.afternoon) {
-                  case 'conges': stats.congesDays += 0.5; break;
-                  case 'formation': stats.formationDays += 0.5; break;
-                  case 'assistance': stats.assistanceDays += 0.5; stats.presenceDays += 0.5; break;
-                  case 'absence': stats.absenceDays += 0.5; break;
-                  case 'permanence': stats.presenceDays += 0.5; break;
-                  default: break;
-                }
-              }
-            }
+            });
             
             return stats;
           }

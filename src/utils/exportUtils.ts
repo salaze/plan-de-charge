@@ -82,7 +82,9 @@ export const importFromExcel = async (file: string | ArrayBuffer): Promise<Month
     for (let i = 1; i < headerRow.length; i++) {
       const dateText = headerRow[i];
       if (dateText && typeof dateText === 'string') {
-        const match = dateText.match(/(\d{2})\/(\d{2})/);
+        // Check for AM/PM format in header
+        const dateOnly = dateText.replace(/\s+\(AM\)|\s+\(PM\)/g, '');
+        const match = dateOnly.match(/(\d{2})\/(\d{2})/);
         if (match) {
           const day = match[1];
           const monthNum = match[2];
@@ -101,65 +103,26 @@ export const importFromExcel = async (file: string | ArrayBuffer): Promise<Month
       const schedule: DayStatus[] = [];
       
       // Extract status for each date
-      for (let j = 1; j < row.length && j - 1 < dates.length; j++) {
+      let dateIndex = 0;
+      for (let j = 1; j < row.length && dateIndex < dates.length; j++) {
         const cellValue = row[j];
-        if (!cellValue) continue;
+        const date = dates[dateIndex];
         
-        const date = dates[j - 1];
+        // Determine if this is AM or PM based on column index
+        const period = j % 2 === 1 ? 'AM' : 'PM';
         
-        // Check for AM/PM split
-        if (cellValue.includes('/')) {
-          const [amStatus, pmStatus] = cellValue.split('/').map(s => s.trim());
-          
-          if (amStatus) {
-            const statusCode = getStatusCodeFromLabel(amStatus);
-            if (statusCode) {
-              schedule.push({
-                date,
-                status: statusCode,
-                period: 'AM'
-              });
-            }
-          }
-          
-          if (pmStatus) {
-            const statusCode = getStatusCodeFromLabel(pmStatus);
-            if (statusCode) {
-              schedule.push({
-                date,
-                status: statusCode,
-                period: 'PM'
-              });
-            }
-          }
-        } 
-        // Check for AM: or PM: prefix
-        else if (cellValue.startsWith('AM:') || cellValue.startsWith('PM:')) {
-          const period = cellValue.startsWith('AM:') ? 'AM' : 'PM';
-          const statusText = cellValue.substring(3).trim();
-          const statusCode = getStatusCodeFromLabel(statusText);
-          
-          if (statusCode) {
-            schedule.push({
-              date,
-              status: statusCode,
-              period
-            });
-          }
-        } 
-        // Full day status
-        else {
+        // Move to next date only after processing PM (even columns)
+        if (period === 'PM') {
+          dateIndex++;
+        }
+        
+        if (cellValue) {
           const statusCode = getStatusCodeFromLabel(cellValue);
           if (statusCode) {
             schedule.push({
               date,
               status: statusCode,
-              period: 'AM'
-            });
-            schedule.push({
-              date,
-              status: statusCode,
-              period: 'PM'
+              period
             });
           }
         }
@@ -198,6 +161,16 @@ function getStatusCodeFromLabel(label: string): StatusCode | null {
   for (const [code, statusLabel] of Object.entries(STATUS_LABELS)) {
     if (statusLabel.toLowerCase() === normalizedLabel) {
       return code as StatusCode;
+    }
+  }
+  
+  // Si le statut contient une indication d'être surligné (permanence)
+  if (normalizedLabel.includes('(permanence)')) {
+    const baseStatus = normalizedLabel.replace(/\s*\(permanence\)\s*/i, '');
+    const statusCode = getStatusCodeFromLabel(baseStatus);
+    
+    if (statusCode) {
+      return statusCode;
     }
   }
   
@@ -271,16 +244,16 @@ function prepareExcelData(data: MonthData): any[][] {
   
   // Get all days in the month
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+  const days = Array.from({ length: daysInMonth }, (_, i) => new Date(year, month, i + 1));
   
   // Create header row with AM/PM columns for each day
   const headerRow = ['Employé'];
   
   days.forEach(day => {
-    const date = new Date(year, month, day);
-    const formattedDay = format(date, 'dd/MM EEE', { locale: fr });
-    // Add two columns for each day (AM and PM)
+    const formattedDay = format(day, 'dd/MM EEE', { locale: fr });
+    // Add explicit AM column
     headerRow.push(`${formattedDay} (AM)`);
+    // Add explicit PM column
     headerRow.push(`${formattedDay} (PM)`);
   });
   
@@ -288,18 +261,45 @@ function prepareExcelData(data: MonthData): any[][] {
   const dataRows = employees.map(employee => {
     const employeeRow = [employee.name];
     
-    // For each day, get the employee's AM and PM statuses separately
+    // For each day, get the employee's AM and PM statuses
     days.forEach(day => {
-      const date = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const dateStr = format(day, 'yyyy-MM-dd');
       
       // Find AM status
-      const amStatus = employee.schedule.find(s => s.date === date && (s.period === 'AM' || s.period === 'FULL'));
-      const amCellValue = amStatus ? formatStatus(amStatus.status) : '';
-      employeeRow.push(amCellValue);
+      const amStatusEntry = employee.schedule.find(
+        s => s.date === dateStr && (s.period === 'AM' || s.period === 'FULL')
+      );
       
       // Find PM status
-      const pmStatus = employee.schedule.find(s => s.date === date && (s.period === 'PM' || s.period === 'FULL'));
-      const pmCellValue = pmStatus ? formatStatus(pmStatus.status) : '';
+      const pmStatusEntry = employee.schedule.find(
+        s => s.date === dateStr && (s.period === 'PM' || s.period === 'FULL')
+      );
+      
+      // Format AM status
+      let amCellValue = '';
+      if (amStatusEntry) {
+        amCellValue = formatStatus(amStatusEntry.status);
+        if (amStatusEntry.isHighlighted) {
+          amCellValue += ' (Permanence)';
+        }
+        if (amStatusEntry.status === 'projet' && amStatusEntry.projectCode) {
+          amCellValue += ` - ${amStatusEntry.projectCode}`;
+        }
+      }
+      
+      // Format PM status
+      let pmCellValue = '';
+      if (pmStatusEntry) {
+        pmCellValue = formatStatus(pmStatusEntry.status);
+        if (pmStatusEntry.isHighlighted) {
+          pmCellValue += ' (Permanence)';
+        }
+        if (pmStatusEntry.status === 'projet' && pmStatusEntry.projectCode) {
+          pmCellValue += ` - ${pmStatusEntry.projectCode}`;
+        }
+      }
+      
+      employeeRow.push(amCellValue);
       employeeRow.push(pmCellValue);
     });
     

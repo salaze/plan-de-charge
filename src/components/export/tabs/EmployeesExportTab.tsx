@@ -34,7 +34,7 @@ const EmployeesExportTab: React.FC<EmployeesExportTabProps> = ({
           <CardContent>
             <p className="text-sm text-muted-foreground mb-4">
               Cette opération exportera tous les employés {selectedDepartment !== "all" ? `du département ${selectedDepartment}` : ""} 
-              avec leurs informations (nom, email, fonction, département).
+              avec leurs informations (nom, UID, fonction, département).
               Les données de planning ne seront pas incluses.
             </p>
           </CardContent>
@@ -60,7 +60,7 @@ const EmployeesExportTab: React.FC<EmployeesExportTabProps> = ({
             <div className="p-8 border-2 border-dashed rounded-lg text-center">
               <FileSpreadsheet className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <p className="text-sm text-muted-foreground mb-4">
-                Format attendu: colonnes "Nom", "Email", "Fonction", "Département"
+                Format attendu: colonnes "Nom", "UID", "Fonction", "Département"
               </p>
               <div className="relative">
                 <input

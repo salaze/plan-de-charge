@@ -13,11 +13,11 @@ export const exportEmployeesToExcel = (employees: Employee[]): void => {
     }
 
     // Préparer les données pour Excel
-    const headers = ['Nom', 'Email', 'Fonction', 'Département', 'ID'];
+    const headers = ['Nom', 'UID', 'Fonction', 'Département', 'ID'];
     
     const data = employees.map(employee => [
       employee.name,
-      employee.email || '',
+      employee.uid || '',
       employee.position || '',
       employee.department || '',
       employee.id
@@ -64,7 +64,7 @@ export const importEmployeesFromExcel = async (file: ArrayBuffer): Promise<Emplo
       const employee: Employee = {
         id: row.ID || generateId(),
         name: row.Nom || row.nom || '',
-        email: row.Email || row.email || undefined,
+        uid: row.UID || row.uid || undefined,
         position: row.Fonction || row.Position || row.fonction || row.position || undefined,
         department: row.Département || row.Departement || row.département || row.departement || undefined,
         schedule: []

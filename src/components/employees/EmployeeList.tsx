@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { User, Pencil, Trash, UserPlus, Mail, Briefcase, Building } from 'lucide-react';
+import { User, Pencil, Trash, UserPlus, Briefcase, Building, Fingerprint } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -46,7 +46,7 @@ export function EmployeeList({
           <TableHeader>
             <TableRow>
               <TableHead>Nom</TableHead>
-              <TableHead>Email</TableHead>
+              <TableHead>UID</TableHead>
               <TableHead>Fonction</TableHead>
               <TableHead>Département</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -64,13 +64,13 @@ export function EmployeeList({
                 <TableRow key={employee.id}>
                   <TableCell className="font-medium">{employee.name}</TableCell>
                   <TableCell>
-                    {employee.email ? (
+                    {employee.uid ? (
                       <div className="flex items-center gap-1">
-                        <Mail className="h-3 w-3 text-muted-foreground" />
-                        <span>{employee.email}</span>
+                        <Fingerprint className="h-3 w-3 text-muted-foreground" />
+                        <span>{employee.uid}</span>
                       </div>
                     ) : (
-                      <span className="text-muted-foreground text-sm">—</span>
+                      <span className="text-muted-foreground text-sm font-bold text-red-500">Non défini</span>
                     )}
                   </TableCell>
                   <TableCell>

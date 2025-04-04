@@ -5,13 +5,11 @@ import { Layout } from '@/components/layout/Layout';
 import { exportToExcel } from '@/utils/exportUtils';
 import { exportEmployeesToExcel, importEmployeesFromExcel } from '@/utils/employeeExportUtils';
 import { exportStatsToExcel } from '@/utils/statsExportUtils';
-import { exportApplicationForLocalUse } from '@/utils/appExportUtils';
 import { MonthData, Employee } from '@/types';
 import { calculateEmployeeStats } from '@/utils/statsUtils';
 
 // Import our new components
 import SupabaseAlert from '@/components/export/SupabaseAlert';
-import AppExportCard from '@/components/export/AppExportCard';
 import DepartmentFilter from '@/components/export/DepartmentFilter';
 import ExportTabs from '@/components/export/ExportTabs';
 
@@ -190,23 +188,12 @@ const Export = () => {
     reader.readAsArrayBuffer(file);
   };
   
-  const handleExportApplication = async () => {
-    try {
-      await exportApplicationForLocalUse();
-    } catch (error) {
-      console.error('Erreur lors de l\'export de l\'application:', error);
-      toast.error('Une erreur est survenue lors de l\'export de l\'application');
-    }
-  };
-  
   return (
     <Layout>
       <div className="space-y-6 animate-fade-in">
         <h1 className="text-3xl font-bold">Exporter les données</h1>
         
         <SupabaseAlert />
-        
-        <AppExportCard handleExportApplication={handleExportApplication} />
         
         <DepartmentFilter 
           selectedDepartment={selectedDepartment}

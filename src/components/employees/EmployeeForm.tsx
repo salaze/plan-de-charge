@@ -88,7 +88,7 @@ export function EmployeeForm({
           />
 
           <EmployeeContactField 
-            email={email} 
+            uid={email} 
             onChange={setEmail} 
           />
           

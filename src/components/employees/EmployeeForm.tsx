@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Employee } from '@/types';
-import { Mail, Building, Briefcase, Key } from 'lucide-react';
+import { Mail, Building, Briefcase, Key, Fingerprint } from 'lucide-react';
 
 interface EmployeeFormProps {
   open: boolean;
@@ -28,12 +28,14 @@ export function EmployeeForm({
   employee 
 }: EmployeeFormProps) {
   const [name, setName] = useState(employee?.name || '');
+  const [uid, setUid] = useState(employee?.uid || '');
   const [email, setEmail] = useState(employee?.email || '');
   const [position, setPosition] = useState(employee?.position || '');
   const [department, setDepartment] = useState(employee?.department || '');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [uidError, setUidError] = useState('');
   const isNewEmployee = !employee?.id;
   
   const validatePassword = () => {
@@ -53,10 +55,25 @@ export function EmployeeForm({
     return true;
   };
   
+  const validateUid = () => {
+    if (!uid.trim()) {
+      setUidError('L\'UID est obligatoire');
+      return false;
+    }
+    
+    setUidError('');
+    return true;
+  };
+  
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!name.trim()) return;
+    
+    // Validate UID
+    if (!validateUid()) {
+      return;
+    }
     
     // Vérifier le mot de passe uniquement si c'est un nouvel employé ou si on a mis un mot de passe
     if ((isNewEmployee || password) && !validatePassword()) {
@@ -66,6 +83,7 @@ export function EmployeeForm({
     const updatedEmployee: Employee = {
       id: employee?.id || '',
       name: name.trim(),
+      uid: uid.trim(),
       email: email.trim() || undefined,
       position: position.trim() || undefined,
       department: department.trim() || undefined,
@@ -84,12 +102,14 @@ export function EmployeeForm({
   
   const resetForm = () => {
     setName(employee?.name || '');
+    setUid(employee?.uid || '');
     setEmail(employee?.email || '');
     setPosition(employee?.position || '');
     setDepartment(employee?.department || '');
     setPassword('');
     setConfirmPassword('');
     setPasswordError('');
+    setUidError('');
   };
   
   useEffect(() => {
@@ -123,7 +143,25 @@ export function EmployeeForm({
           </div>
           
           <div className="grid gap-2">
-            <Label htmlFor="email">Email *</Label>
+            <Label htmlFor="uid">UID *</Label>
+            <div className="flex items-center gap-2 relative">
+              <Fingerprint className="h-4 w-4 absolute left-3 text-muted-foreground" />
+              <Input
+                id="uid"
+                value={uid}
+                onChange={(e) => setUid(e.target.value)}
+                placeholder="Identifiant unique"
+                className="pl-10"
+                required
+              />
+            </div>
+            {uidError && (
+              <p className="text-sm font-medium text-destructive">{uidError}</p>
+            )}
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="email">Email</Label>
             <div className="flex items-center gap-2 relative">
               <Mail className="h-4 w-4 absolute left-3 text-muted-foreground" />
               <Input
@@ -133,7 +171,6 @@ export function EmployeeForm({
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email de l'employé"
                 className="pl-10"
-                required
               />
             </div>
           </div>

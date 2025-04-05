@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -53,6 +53,20 @@ export function StatusManager({ statuses, onStatusesChange }: StatusManagerProps
   const [code, setCode] = useState<StatusCode>('');
   const [label, setLabel] = useState('');
   const [color, setColor] = useState('bg-green-500 text-white');
+  
+  useEffect(() => {
+    // Mettre à jour les STATUS_LABELS et STATUS_COLORS globaux
+    if (statuses && statuses.length > 0) {
+      statuses.forEach((status) => {
+        if (status.code) {
+          // @ts-ignore - Mise à jour dynamique
+          STATUS_LABELS[status.code] = status.label;
+          // @ts-ignore - Mise à jour dynamique
+          STATUS_COLORS[status.code] = status.color;
+        }
+      });
+    }
+  }, [statuses]);
   
   const handleAddStatus = () => {
     setCurrentStatus(null);
@@ -123,6 +137,13 @@ export function StatusManager({ statuses, onStatusesChange }: StatusManagerProps
         color
       };
       updatedStatuses = [...statuses, newStatus];
+      
+      // Mettre à jour les STATUS_LABELS et STATUS_COLORS globaux
+      // @ts-ignore - Mise à jour dynamique
+      STATUS_LABELS[code] = label;
+      // @ts-ignore - Mise à jour dynamique
+      STATUS_COLORS[code] = color;
+      
       toast.success('Statut ajouté avec succès');
     }
     

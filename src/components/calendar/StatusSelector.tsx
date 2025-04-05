@@ -12,7 +12,22 @@ interface StatusSelectorProps {
 }
 
 export function StatusSelector({ value, onChange }: StatusSelectorProps) {
-  const statuses: StatusCode[] = ['assistance', 'vigi', 'formation', 'projet', 'conges', 'management', 'tp', 'coordinateur', 'absence', 'regisseur', 'demenagement', ''];
+  // Récupérer les statuts disponibles depuis localStorage
+  const getAvailableStatuses = (): StatusCode[] => {
+    const savedData = localStorage.getItem('planningData');
+    const data = savedData ? JSON.parse(savedData) : { statuses: [] };
+    
+    // Si nous avons des statuts personnalisés, extraire les codes
+    if (data.statuses && data.statuses.length > 0) {
+      return [...data.statuses.map((s: any) => s.code as StatusCode), ''];
+    }
+    
+    // Statuts par défaut
+    return ['assistance', 'vigi', 'formation', 'projet', 'conges', 'management', 
+            'tp', 'coordinateur', 'absence', 'regisseur', 'demenagement', ''];
+  };
+  
+  const statuses = getAvailableStatuses();
   
   return (
     <Popover>
@@ -41,12 +56,14 @@ export function StatusSelector({ value, onChange }: StatusSelectorProps) {
             >
               {status ? (
                 <div className="flex items-center">
-                  <div 
-                    className={cn(
-                      "h-3 w-3 rounded-full mr-2",
-                      STATUS_COLORS[status].split(' ')[0]
-                    )} 
-                  />
+                  {STATUS_COLORS[status] && (
+                    <div 
+                      className={cn(
+                        "h-3 w-3 rounded-full mr-2",
+                        STATUS_COLORS[status].split(' ')[0]
+                      )} 
+                    />
+                  )}
                   {STATUS_LABELS[status]}
                 </div>
               ) : (

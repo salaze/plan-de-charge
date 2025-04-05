@@ -40,21 +40,40 @@ export function StatusSelectorEnhanced({
     onChange(selectedStatus, highlightedStatus, projectToUse);
   };
   
-  // Liste des statuts disponibles
-  const statuses: { value: StatusCode; label: string }[] = [
-    { value: '', label: 'Aucun' },
-    { value: 'assistance', label: 'Assistance' },
-    { value: 'vigi', label: 'Vigi' },
-    { value: 'formation', label: 'Formation' },
-    { value: 'projet', label: 'Projet' },
-    { value: 'conges', label: 'Congés' },
-    { value: 'management', label: 'Management' },
-    { value: 'tp', label: 'Temps Partiel' },
-    { value: 'coordinateur', label: 'Coordinateur Vigi Ticket' },
-    { value: 'absence', label: 'Autre Absence' },
-    { value: 'regisseur', label: 'Régisseur' },
-    { value: 'demenagement', label: 'Déménagements' },
-  ];
+  // Récupérer les statuts disponibles depuis localStorage
+  const getAvailableStatuses = (): { value: StatusCode; label: string }[] => {
+    const savedData = localStorage.getItem('planningData');
+    const data = savedData ? JSON.parse(savedData) : { statuses: [] };
+    
+    // Si nous avons des statuts personnalisés, les utiliser
+    if (data.statuses && data.statuses.length > 0) {
+      return [
+        { value: '', label: 'Aucun' },
+        ...data.statuses.map((status: any) => ({
+          value: status.code as StatusCode,
+          label: status.label
+        }))
+      ];
+    }
+    
+    // Sinon, utiliser les statuts par défaut
+    return [
+      { value: '', label: 'Aucun' },
+      { value: 'assistance', label: 'Assistance' },
+      { value: 'vigi', label: 'Vigi' },
+      { value: 'formation', label: 'Formation' },
+      { value: 'projet', label: 'Projet' },
+      { value: 'conges', label: 'Congés' },
+      { value: 'management', label: 'Management' },
+      { value: 'tp', label: 'Temps Partiel' },
+      { value: 'coordinateur', label: 'Coordinateur Vigi Ticket' },
+      { value: 'absence', label: 'Autre Absence' },
+      { value: 'regisseur', label: 'Régisseur' },
+      { value: 'demenagement', label: 'Déménagements' },
+    ];
+  };
+  
+  const statuses = getAvailableStatuses();
   
   return (
     <div className="space-y-6">
@@ -73,7 +92,7 @@ export function StatusSelectorEnhanced({
               <RadioGroupItem value={status.value} id={`status-${status.value}`} />
               <Label htmlFor={`status-${status.value}`} className="flex-1 cursor-pointer">
                 <div className="flex items-center gap-2">
-                  {status.value && (
+                  {status.value && STATUS_COLORS[status.value] && (
                     <div 
                       className="w-3 h-3 rounded-full" 
                       style={{ 

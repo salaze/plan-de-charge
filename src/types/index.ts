@@ -110,3 +110,10 @@ export const STATUS_COLORS: Record<string, string> = {
   permanence: 'bg-pink-600 text-white',
   '': 'bg-transparent text-foreground'
 };
+
+export interface Status {
+  id: string;
+  code: StatusCode;
+  label: string;
+  color: string;
+}

@@ -2,10 +2,11 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ProjectManager } from '@/components/admin/ProjectManager';
+import { Project } from '@/types';
 
 interface ProjectsTabProps {
-  projects: any[];
-  onProjectsChange: (projects: any[]) => void;
+  projects: Project[];
+  onProjectsChange: (projects: Project[]) => void;
 }
 
 export function ProjectsTab({ projects, onProjectsChange }: ProjectsTabProps) {

@@ -1,3 +1,4 @@
+
 export type StatusCode = 
   | 'assistance' 
   | 'vigi'

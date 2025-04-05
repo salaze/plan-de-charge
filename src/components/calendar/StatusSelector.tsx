@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { ChevronDown } from 'lucide-react';
@@ -12,22 +12,43 @@ interface StatusSelectorProps {
 }
 
 export function StatusSelector({ value, onChange }: StatusSelectorProps) {
-  // Récupérer les statuts disponibles depuis localStorage
-  const getAvailableStatuses = (): StatusCode[] => {
+  const [statuses, setStatuses] = useState<StatusCode[]>([]);
+  const [statusLabels, setStatusLabels] = useState<Record<string, string>>({...STATUS_LABELS});
+  const [statusColors, setStatusColors] = useState<Record<string, string>>({...STATUS_COLORS});
+  
+  // Load statuses from localStorage on component mount
+  useEffect(() => {
     const savedData = localStorage.getItem('planningData');
     const data = savedData ? JSON.parse(savedData) : { statuses: [] };
     
-    // Si nous avons des statuts personnalisés, extraire les codes
+    // Update local state with custom statuses
     if (data.statuses && data.statuses.length > 0) {
-      return [...data.statuses.map((s: any) => s.code as StatusCode), ''];
+      // Extract status codes
+      const statusCodes = [...data.statuses.map((s: any) => s.code as StatusCode), ''];
+      setStatuses(statusCodes);
+      
+      // Update labels and colors
+      const newLabels = {...STATUS_LABELS};
+      const newColors = {...STATUS_COLORS};
+      
+      data.statuses.forEach((s: any) => {
+        if (s.code) {
+          newLabels[s.code] = s.label;
+          newColors[s.code] = s.color;
+        }
+      });
+      
+      setStatusLabels(newLabels);
+      setStatusColors(newColors);
+    } else {
+      // Default statuses if no custom ones exist
+      setStatuses([
+        'assistance', 'vigi', 'formation', 'projet', 'conges', 
+        'management', 'tp', 'coordinateur', 'absence', 
+        'regisseur', 'demenagement', 'permanence', ''
+      ]);
     }
-    
-    // Statuts par défaut
-    return ['assistance', 'vigi', 'formation', 'projet', 'conges', 'management', 
-            'tp', 'coordinateur', 'absence', 'regisseur', 'demenagement', ''];
-  };
-  
-  const statuses = getAvailableStatuses();
+  }, []);
   
   return (
     <Popover>
@@ -36,10 +57,10 @@ export function StatusSelector({ value, onChange }: StatusSelectorProps) {
           variant="outline" 
           className={cn(
             "w-full justify-between",
-            value && STATUS_COLORS[value]
+            value && statusColors[value]
           )}
         >
-          {value ? STATUS_LABELS[value] : "Sélectionner un statut"}
+          {value ? statusLabels[value] || value : "Sélectionner un statut"}
           <ChevronDown className="ml-2 h-4 w-4" />
         </Button>
       </PopoverTrigger>
@@ -56,15 +77,15 @@ export function StatusSelector({ value, onChange }: StatusSelectorProps) {
             >
               {status ? (
                 <div className="flex items-center">
-                  {STATUS_COLORS[status] && (
+                  {statusColors[status] && (
                     <div 
                       className={cn(
                         "h-3 w-3 rounded-full mr-2",
-                        STATUS_COLORS[status].split(' ')[0]
+                        statusColors[status].split(' ')[0]
                       )} 
                     />
                   )}
-                  {STATUS_LABELS[status]}
+                  {statusLabels[status] || status}
                 </div>
               ) : (
                 <span className="text-muted-foreground">Effacer</span>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Card,
@@ -59,12 +58,18 @@ export function StatusManager({ statuses, onStatusesChange }: StatusManagerProps
     if (statuses && statuses.length > 0) {
       statuses.forEach((status) => {
         if (status.code) {
-          // @ts-ignore - Mise à jour dynamique
           STATUS_LABELS[status.code] = status.label;
-          // @ts-ignore - Mise à jour dynamique
           STATUS_COLORS[status.code] = status.color;
         }
       });
+      
+      // Sauvegarder immédiatement les changements dans localStorage pour être sûr
+      const savedData = localStorage.getItem('planningData');
+      const data = savedData ? JSON.parse(savedData) : {};
+      localStorage.setItem('planningData', JSON.stringify({
+        ...data,
+        statuses
+      }));
     }
   }, [statuses]);
   
@@ -127,6 +132,11 @@ export function StatusManager({ statuses, onStatusesChange }: StatusManagerProps
           ? { ...status, code, label, color } 
           : status
       );
+      
+      // Mise à jour des objets globaux
+      STATUS_LABELS[code] = label;
+      STATUS_COLORS[code] = color;
+      
       toast.success('Statut modifié avec succès');
     } else {
       // Ajouter un nouveau statut
@@ -139,9 +149,7 @@ export function StatusManager({ statuses, onStatusesChange }: StatusManagerProps
       updatedStatuses = [...statuses, newStatus];
       
       // Mettre à jour les STATUS_LABELS et STATUS_COLORS globaux
-      // @ts-ignore - Mise à jour dynamique
       STATUS_LABELS[code] = label;
-      // @ts-ignore - Mise à jour dynamique
       STATUS_COLORS[code] = color;
       
       toast.success('Statut ajouté avec succès');
@@ -149,6 +157,14 @@ export function StatusManager({ statuses, onStatusesChange }: StatusManagerProps
     
     onStatusesChange(updatedStatuses);
     setFormOpen(false);
+    
+    // Forcer la mise à jour du localStorage immédiatement
+    const savedData = localStorage.getItem('planningData');
+    const data = savedData ? JSON.parse(savedData) : {};
+    localStorage.setItem('planningData', JSON.stringify({
+      ...data,
+      statuses: updatedStatuses
+    }));
   };
   
   // Liste prédéfinie de classes Tailwind pour les couleurs

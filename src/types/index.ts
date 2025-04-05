@@ -1,4 +1,3 @@
-
 export type StatusCode = 
   | 'assistance' 
   | 'vigi'
@@ -12,7 +11,7 @@ export type StatusCode =
   | 'regisseur'
   | 'demenagement'
   | 'permanence'
-  | '';
+  | string;
 
 export type DayPeriod = 'AM' | 'PM' | 'FULL';
 
@@ -80,7 +79,7 @@ export interface SummaryStats {
   employeeName?: string;
 }
 
-export const STATUS_LABELS: Record<StatusCode, string> = {
+export const STATUS_LABELS: Record<string, string> = {
   assistance: 'Assistance',
   vigi: 'Vigi',
   formation: 'Formation',
@@ -96,7 +95,7 @@ export const STATUS_LABELS: Record<StatusCode, string> = {
   '': '-'
 };
 
-export const STATUS_COLORS: Record<StatusCode, string> = {
+export const STATUS_COLORS: Record<string, string> = {
   assistance: 'bg-yellow-300 text-yellow-800',
   vigi: 'bg-red-500 text-white',
   formation: 'bg-blue-500 text-white',

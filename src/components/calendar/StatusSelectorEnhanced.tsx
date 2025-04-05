@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -25,6 +25,8 @@ export function StatusSelectorEnhanced({
   const [highlightedStatus, setHighlightedStatus] = useState(isHighlighted);
   const [selectedProject, setSelectedProject] = useState(projectCode);
   const [selectedStatus, setSelectedStatus] = useState<StatusCode>(value);
+  const [statusLabels, setStatusLabels] = useState<Record<string, string>>({...STATUS_LABELS});
+  const [statusColors, setStatusColors] = useState<Record<string, string>>({...STATUS_COLORS});
   
   const handleStatusChange = (newStatus: StatusCode) => {
     setSelectedStatus(newStatus);
@@ -39,6 +41,28 @@ export function StatusSelectorEnhanced({
     const projectToUse = selectedStatus === 'projet' ? selectedProject : undefined;
     onChange(selectedStatus, highlightedStatus, projectToUse);
   };
+  
+  // Get available statuses from localStorage and update local state on component mount
+  useEffect(() => {
+    const savedData = localStorage.getItem('planningData');
+    const data = savedData ? JSON.parse(savedData) : { statuses: [] };
+    
+    if (data.statuses && data.statuses.length > 0) {
+      // Update labels and colors
+      const newLabels = {...STATUS_LABELS};
+      const newColors = {...STATUS_COLORS};
+      
+      data.statuses.forEach((s: any) => {
+        if (s.code) {
+          newLabels[s.code] = s.label;
+          newColors[s.code] = s.color;
+        }
+      });
+      
+      setStatusLabels(newLabels);
+      setStatusColors(newColors);
+    }
+  }, []);
   
   // Récupérer les statuts disponibles depuis localStorage
   const getAvailableStatuses = (): { value: StatusCode; label: string }[] => {
@@ -70,6 +94,7 @@ export function StatusSelectorEnhanced({
       { value: 'absence', label: 'Autre Absence' },
       { value: 'regisseur', label: 'Régisseur' },
       { value: 'demenagement', label: 'Déménagements' },
+      { value: 'permanence', label: 'Permanences' },
     ];
   };
   
@@ -92,11 +117,11 @@ export function StatusSelectorEnhanced({
               <RadioGroupItem value={status.value} id={`status-${status.value}`} />
               <Label htmlFor={`status-${status.value}`} className="flex-1 cursor-pointer">
                 <div className="flex items-center gap-2">
-                  {status.value && STATUS_COLORS[status.value] && (
+                  {status.value && statusColors[status.value] && (
                     <div 
                       className="w-3 h-3 rounded-full" 
                       style={{ 
-                        backgroundColor: status.value ? STATUS_COLORS[status.value].split(' ')[0].replace('bg-', '') : 'transparent',
+                        backgroundColor: statusColors[status.value].split(' ')[0].replace('bg-', ''),
                       }}
                     />
                   )}

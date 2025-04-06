@@ -1,7 +1,7 @@
 
+import { ThemeProvider } from '@/components/theme-provider';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { Toaster } from 'sonner';
-import { ThemeProvider } from '@/components/theme-provider';
 import AdminLogin from '@/pages/AdminLogin';
 import NotFound from '@/pages/NotFound';
 import Index from '@/pages/Index';
@@ -18,9 +18,11 @@ import InitApp from '@/pages/InitApp';
 function App() {
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <div className="app">
-          <BrowserRouter>
+      {/* BrowserRouter must be outside the AuthProvider since 
+          AuthProvider no longer uses useNavigate */}
+      <BrowserRouter>
+        <AuthProvider>
+          <div className="app">
             <Routes>
               <Route path="/login" element={<AdminLogin />} />
               <Route path="/" element={<Index />} />
@@ -67,10 +69,10 @@ function App() {
               />
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </BrowserRouter>
-        </div>
-        <Toaster position="top-right" richColors />
-      </AuthProvider>
+          </div>
+          <Toaster position="top-right" richColors />
+        </AuthProvider>
+      </BrowserRouter>
     </ThemeProvider>
   );
 }

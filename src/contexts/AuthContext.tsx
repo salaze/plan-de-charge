@@ -1,6 +1,4 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { UserRole, Employee } from '@/types';
 import { toast } from 'sonner';
 
@@ -32,7 +30,6 @@ export const useAuth = () => {
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User>(null);
-  const navigate = useNavigate();
   
   useEffect(() => {
     const storedUser = localStorage.getItem('user');

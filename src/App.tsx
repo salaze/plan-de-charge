@@ -17,8 +17,8 @@ import InitApp from '@/pages/InitApp';
 
 function App() {
   return (
-    <BrowserRouter>
-      <ThemeProvider defaultTheme="light" attribute="class">
+    <ThemeProvider defaultTheme="light" attribute="class">
+      <BrowserRouter>
         <AuthProvider>
           <div className="app">
             <Routes>
@@ -70,8 +70,8 @@ function App() {
           </div>
           <Toaster position="top-right" richColors />
         </AuthProvider>
-      </ThemeProvider>
-    </BrowserRouter>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 

@@ -10,8 +10,8 @@ import Admin from '@/pages/Admin';
 import Export from '@/pages/Export';
 import Statistics from '@/pages/Statistics';
 import Settings from '@/pages/Settings';
-import AdminRoute from '@/components/AdminRoute';
-import EmployeeRoute from '@/components/EmployeeRoute';
+import { AdminRoute } from '@/components/AdminRoute';
+import { EmployeeRoute } from '@/components/EmployeeRoute';
 import { AuthProvider } from '@/contexts/AuthContext';
 import InitApp from '@/pages/InitApp'; // Import de la nouvelle page
 

@@ -173,7 +173,7 @@ export const employeeService = {
       schedule: updatedSchedule
     };
     
-    return Boolean(this.update(updatedEmployee));
+    return Boolean(employeeService.update(updatedEmployee));
   },
   
   updateRole: (employeeId: string, role: string): boolean => {

@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { UserRole, Employee } from '@/types';
 import { toast } from 'sonner';
@@ -36,15 +35,11 @@ const AuthContext = createContext<AuthContextType>({
 
 // Hook to use the auth context
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+  return useContext(AuthContext);
 };
 
 // Define AuthProvider as a React functional component
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User>(null);
 
   // Load user data from localStorage on initial render
@@ -167,7 +162,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return false;
   };
 
-  const contextValue = {
+  const contextValue: AuthContextType = {
     user,
     login,
     logout,
@@ -182,4 +177,4 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       {children}
     </AuthContext.Provider>
   );
-};
+}

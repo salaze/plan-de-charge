@@ -1,4 +1,3 @@
-
 export type StatusCode = 
   | 'assistance' 
   | 'vigi'
@@ -31,7 +30,6 @@ export interface Employee {
   id: string;
   name: string;
   uid?: string;
-  email?: string;
   position?: string;
   department?: string;
   role?: UserRole;
@@ -117,4 +115,5 @@ export interface Status {
   code: StatusCode;
   label: string;
   color: string;
+  displayOrder?: number;
 }

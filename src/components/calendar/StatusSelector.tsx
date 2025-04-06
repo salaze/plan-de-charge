@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { ChevronDown } from 'lucide-react';
-import { StatusCode, STATUS_COLORS, STATUS_LABELS } from '@/types';
+import { Status, StatusCode, STATUS_COLORS, STATUS_LABELS } from '@/types';
 import { cn } from '@/lib/utils';
 
 interface StatusSelectorProps {
@@ -23,15 +23,22 @@ export function StatusSelector({ value, onChange }: StatusSelectorProps) {
     
     // Update local state with custom statuses
     if (data.statuses && data.statuses.length > 0) {
+      // Trier les statuts par ordre d'affichage
+      const sortedStatuses = [...data.statuses].sort((a: any, b: any) => {
+        const orderA = a.displayOrder || 999;
+        const orderB = b.displayOrder || 999;
+        return orderA - orderB;
+      });
+      
       // Extract status codes
-      const statusCodes = [...data.statuses.map((s: any) => s.code as StatusCode), ''];
+      const statusCodes = [...sortedStatuses.map((s: any) => s.code as StatusCode), ''];
       setStatuses(statusCodes);
       
       // Update labels and colors
       const newLabels = {...STATUS_LABELS};
       const newColors = {...STATUS_COLORS};
       
-      data.statuses.forEach((s: any) => {
+      sortedStatuses.forEach((s: any) => {
         if (s.code) {
           newLabels[s.code] = s.label;
           newColors[s.code] = s.color;
@@ -65,7 +72,7 @@ export function StatusSelector({ value, onChange }: StatusSelectorProps) {
         </Button>
       </PopoverTrigger>
       <PopoverContent className="p-0 w-56" align="center">
-        <div className="flex flex-col divide-y divide-border">
+        <div className="flex flex-col divide-y divide-border max-h-[300px] overflow-y-auto">
           {statuses.map((status) => (
             <button
               key={status}

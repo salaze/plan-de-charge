@@ -1,14 +1,15 @@
 
 import React from 'react';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface DeleteStatusDialogProps {
   open: boolean;
@@ -22,27 +23,26 @@ export function DeleteStatusDialog({
   onConfirm 
 }: DeleteStatusDialogProps) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Confirmer la suppression</DialogTitle>
-          <DialogDescription>
-            Êtes-vous sûr de vouloir supprimer ce statut ? Cette action est irréversible.
-          </DialogDescription>
-        </DialogHeader>
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+          <AlertDialogDescription>
+            Êtes-vous sûr de vouloir supprimer ce statut ? Cette action est irréversible et pourrait 
+            affecter les plannings existants utilisant ce statut.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
         
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Annuler
-          </Button>
-          <Button 
-            variant="destructive" 
+        <AlertDialogFooter>
+          <AlertDialogCancel>Annuler</AlertDialogCancel>
+          <AlertDialogAction 
             onClick={onConfirm}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
             Supprimer
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

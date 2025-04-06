@@ -1,15 +1,8 @@
 
 import { useState, useEffect } from 'react';
-import { StatusCode, STATUS_LABELS, STATUS_COLORS } from '@/types';
+import { StatusCode, STATUS_LABELS, STATUS_COLORS, Status } from '@/types';
 import { generateId } from '@/utils';
 import { toast } from 'sonner';
-
-interface Status {
-  id: string;
-  code: StatusCode;
-  label: string;
-  color: string;
-}
 
 export function useStatusManager(
   statuses: Status[],
@@ -58,52 +51,64 @@ export function useStatusManager(
   const confirmDeleteStatus = () => {
     if (!statusToDelete) return;
     
+    const statusToBeDeleted = statuses.find(status => status.id === statusToDelete);
+    if (!statusToBeDeleted) {
+      toast.error('Statut non trouvé');
+      return;
+    }
+    
     const updatedStatuses = statuses.filter(status => status.id !== statusToDelete);
     onStatusesChange(updatedStatuses);
     
-    toast.success('Statut supprimé avec succès');
+    toast.success(`Le statut "${statusToBeDeleted.label}" a été supprimé avec succès`);
     setDeleteDialogOpen(false);
     setStatusToDelete('');
   };
 
   const handleSaveStatus = (status: Status) => {
-    let updatedStatuses: Status[];
-    
-    if (status.id) {
-      // Update existing status
-      updatedStatuses = statuses.map(s => 
-        s.id === status.id ? status : s
-      );
+    try {
+      let updatedStatuses: Status[];
       
-      // Update global objects
-      STATUS_LABELS[status.code] = status.label;
-      STATUS_COLORS[status.code] = status.color;
+      if (status.id) {
+        // Update existing status
+        updatedStatuses = statuses.map(s => 
+          s.id === status.id ? status : s
+        );
+        
+        // Update global objects
+        STATUS_LABELS[status.code] = status.label;
+        STATUS_COLORS[status.code] = status.color;
+        
+        toast.success(`Le statut "${status.label}" a été modifié avec succès`);
+      } else {
+        // Add new status with generated ID
+        const newStatus: Status = {
+          ...status,
+          id: generateId(),
+          displayOrder: status.displayOrder || statuses.length + 1
+        };
+        updatedStatuses = [...statuses, newStatus];
+        
+        // Update global STATUS_LABELS and STATUS_COLORS
+        STATUS_LABELS[status.code] = status.label;
+        STATUS_COLORS[status.code] = status.color;
+        
+        toast.success(`Le statut "${status.label}" a été ajouté avec succès`);
+      }
       
-      toast.success('Statut modifié avec succès');
-    } else {
-      // Add new status with generated ID
-      const newStatus: Status = {
-        ...status,
-        id: generateId()
-      };
-      updatedStatuses = [...statuses, newStatus];
+      onStatusesChange(updatedStatuses);
       
-      // Update global STATUS_LABELS and STATUS_COLORS
-      STATUS_LABELS[status.code] = status.label;
-      STATUS_COLORS[status.code] = status.color;
-      
-      toast.success('Statut ajouté avec succès');
+      // Force localStorage update immediately
+      const savedData = localStorage.getItem('planningData');
+      const data = savedData ? JSON.parse(savedData) : {};
+      localStorage.setItem('planningData', JSON.stringify({
+        ...data,
+        statuses: updatedStatuses
+      }));
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde du statut:', error);
+      toast.error('Une erreur est survenue lors de la sauvegarde du statut');
     }
-    
-    onStatusesChange(updatedStatuses);
-    
-    // Force localStorage update immediately
-    const savedData = localStorage.getItem('planningData');
-    const data = savedData ? JSON.parse(savedData) : {};
-    localStorage.setItem('planningData', JSON.stringify({
-      ...data,
-      statuses: updatedStatuses
-    }));
   };
   
   // Get all existing status codes except the current one being edited
@@ -111,6 +116,15 @@ export function useStatusManager(
     return statuses
       .filter(s => s.id !== currentStatus?.id)
       .map(s => s.code);
+  };
+  
+  // Fonction pour trier les statuts par ordre d'affichage
+  const getSortedStatuses = (): Status[] => {
+    return [...statuses].sort((a, b) => {
+      const orderA = a.displayOrder || 999;
+      const orderB = b.displayOrder || 999;
+      return orderA - orderB;
+    });
   };
 
   return {
@@ -124,6 +138,7 @@ export function useStatusManager(
     handleDeleteStatus,
     confirmDeleteStatus,
     handleSaveStatus,
-    getExistingCodes
+    getExistingCodes,
+    getSortedStatuses
   };
 }

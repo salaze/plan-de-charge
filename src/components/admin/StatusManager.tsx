@@ -11,14 +11,7 @@ import { StatusList } from './status/StatusList';
 import { StatusForm } from './status/StatusForm';
 import { DeleteStatusDialog } from './status/DeleteStatusDialog';
 import { useStatusManager } from '@/hooks/useStatusManager';
-import { StatusCode } from '@/types';
-
-interface Status {
-  id: string;
-  code: StatusCode;
-  label: string;
-  color: string;
-}
+import { Status } from '@/types';
 
 interface StatusManagerProps {
   statuses: Status[];
@@ -37,25 +30,21 @@ export function StatusManager({ statuses, onStatusesChange }: StatusManagerProps
     handleDeleteStatus,
     confirmDeleteStatus,
     handleSaveStatus,
-    getExistingCodes
+    getExistingCodes,
+    getSortedStatuses
   } = useStatusManager(statuses, onStatusesChange);
   
+  // On utilise getSortedStatuses pour afficher les statuts triés
+  const sortedStatuses = getSortedStatuses();
+  
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Gestion des statuts</CardTitle>
-        <CardDescription>
-          Ajouter, modifier ou supprimer des statuts et leur code associé
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <StatusList 
-          statuses={statuses}
-          onAddStatus={handleAddStatus}
-          onEditStatus={handleEditStatus}
-          onDeleteStatus={handleDeleteStatus}
-        />
-      </CardContent>
+    <div className="w-full">
+      <StatusList 
+        statuses={sortedStatuses}
+        onAddStatus={handleAddStatus}
+        onEditStatus={handleEditStatus}
+        onDeleteStatus={handleDeleteStatus}
+      />
       
       {/* Forms and dialogs */}
       <StatusForm 
@@ -71,6 +60,6 @@ export function StatusManager({ statuses, onStatusesChange }: StatusManagerProps
         onOpenChange={setDeleteDialogOpen}
         onConfirm={confirmDeleteStatus}
       />
-    </Card>
+    </div>
   );
 }

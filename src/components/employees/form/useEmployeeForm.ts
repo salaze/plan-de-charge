@@ -10,7 +10,6 @@ interface UseEmployeeFormProps {
 export function useEmployeeForm({ employee, open }: UseEmployeeFormProps) {
   const [name, setName] = useState(employee?.name || '');
   const [uid, setUid] = useState(employee?.uid || '');
-  const [email, setEmail] = useState(employee?.email || '');
   const [position, setPosition] = useState(employee?.position || '');
   const [department, setDepartment] = useState(employee?.department || '');
   const [password, setPassword] = useState('');
@@ -49,7 +48,6 @@ export function useEmployeeForm({ employee, open }: UseEmployeeFormProps) {
   const resetForm = () => {
     setName(employee?.name || '');
     setUid(employee?.uid || '');
-    setEmail(employee?.email || '');
     setPosition(employee?.position || '');
     setDepartment(employee?.department || '');
     setPassword('');
@@ -81,7 +79,6 @@ export function useEmployeeForm({ employee, open }: UseEmployeeFormProps) {
       id: employee?.id || '',
       name: name.trim(),
       uid: uid.trim(),
-      email: email.trim() || undefined,
       position: position.trim() || undefined,
       department: department.trim() || undefined,
       password: password || employee?.password,
@@ -99,7 +96,6 @@ export function useEmployeeForm({ employee, open }: UseEmployeeFormProps) {
   return {
     name,
     uid,
-    email,
     position,
     department,
     password,
@@ -109,7 +105,6 @@ export function useEmployeeForm({ employee, open }: UseEmployeeFormProps) {
     isNewEmployee,
     setName,
     setUid,
-    setEmail,
     setPosition,
     setDepartment,
     setPassword,

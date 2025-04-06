@@ -14,7 +14,6 @@ import { Employee } from '@/types';
 // Import our new components
 import { EmployeeNameField } from './form/EmployeeNameField';
 import { EmployeeUidField } from './form/EmployeeUidField';
-import { EmployeeContactField } from './form/EmployeeContactField';
 import { EmployeeJobField } from './form/EmployeeJobField';
 import { EmployeePasswordFields } from './form/EmployeePasswordFields';
 import { useEmployeeForm } from './form/useEmployeeForm';
@@ -35,7 +34,6 @@ export function EmployeeForm({
   const {
     name,
     uid,
-    email,
     position,
     department,
     password,
@@ -45,7 +43,6 @@ export function EmployeeForm({
     isNewEmployee,
     setName,
     setUid,
-    setEmail,
     setPosition,
     setDepartment,
     setPassword,
@@ -85,11 +82,6 @@ export function EmployeeForm({
             uid={uid} 
             onChange={setUid} 
             error={uidError} 
-          />
-
-          <EmployeeContactField 
-            uid={email} 
-            onChange={setEmail} 
           />
           
           <EmployeeJobField 

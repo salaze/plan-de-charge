@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { UserRole, Employee } from '@/types';
 import { toast } from 'sonner';
@@ -38,7 +39,7 @@ export const useAuth = () => {
   return useContext(AuthContext);
 };
 
-// Define AuthProvider as a React functional component
+// Define AuthProvider as a normal React functional component, not a variable
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User>(null);
 

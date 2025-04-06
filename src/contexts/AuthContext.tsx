@@ -31,8 +31,12 @@ export function useAuth() {
   return context;
 }
 
+interface AuthProviderProps {
+  children: React.ReactNode;
+}
+
 // Define AuthProvider as a proper React functional component
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User>(null);
 
   // Load user data from localStorage on initial render
@@ -156,7 +160,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Create the context value object
-  const value = {
+  const value: AuthContextType = {
     user,
     login,
     logout,

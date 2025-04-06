@@ -1,107 +1,105 @@
 
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { migrateFromLocalStorage } from '@/utils/dataMigrationUtils';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, AlertTriangle, ArrowRight } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle, CheckCircle, AlertTriangle, ArrowRight, Database, Upload } from 'lucide-react';
+import { toast } from 'sonner';
+import { migrateLocalDataToSupabase } from '@/services/supabaseServices';
+import { useNavigate } from 'react-router-dom';
 
 const InitApp = () => {
-  const navigate = useNavigate();
-  const [progress, setProgress] = useState(0);
-  const [status, setStatus] = useState('');
+  const [isMigrating, setIsMigrating] = useState(false);
   const [migrationComplete, setMigrationComplete] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  
-  useEffect(() => {
-    const performMigration = async () => {
-      try {
-        setStatus('Vérification des données...');
-        setProgress(10);
-        
-        // Petite pause pour l'affichage de l'UI
-        await new Promise(resolve => setTimeout(resolve, 500));
-        setProgress(30);
-        
-        setStatus('Migration des données...');
-        const success = migrateFromLocalStorage();
-        
-        // Petite pause pour l'affichage de l'UI
-        await new Promise(resolve => setTimeout(resolve, 500));
-        setProgress(70);
-        
-        setStatus('Finalisation...');
-        
-        // Petite pause pour l'affichage de l'UI
-        await new Promise(resolve => setTimeout(resolve, 500));
-        setProgress(100);
-        
-        if (success) {
-          setStatus('Migration terminée avec succès!');
-          setMigrationComplete(true);
-        } else {
-          setStatus('Aucune donnée à migrer, initialisation terminée.');
-          setMigrationComplete(true);
-        }
-      } catch (error) {
-        console.error('Erreur lors de l\'initialisation:', error);
-        setError(error instanceof Error ? error.message : 'Erreur inconnue');
-        setStatus('Échec de la migration');
+  const navigate = useNavigate();
+
+  const handleMigration = async () => {
+    setIsMigrating(true);
+    try {
+      const success = await migrateLocalDataToSupabase();
+      
+      if (success) {
+        toast.success('Migration des données réussie');
+        setMigrationComplete(true);
+      } else {
+        toast.error('Erreur lors de la migration des données');
       }
-    };
-    
-    performMigration();
-  }, []);
-  
-  const handleContinue = () => {
-    navigate('/');
+    } catch (error) {
+      console.error('Erreur non gérée:', error);
+      toast.error('Une erreur est survenue lors de la migration');
+    } finally {
+      setIsMigrating(false);
+    }
   };
-  
+
   return (
     <Layout>
-      <div className="max-w-md mx-auto space-y-6 animate-fade-in py-12">
-        <Card>
-          <CardHeader>
-            <CardTitle>Initialisation de l'application</CardTitle>
-            <CardDescription>
-              Migration des données vers le nouveau format JSON
-            </CardDescription>
-          </CardHeader>
-          
-          <CardContent className="space-y-4">
-            <Progress value={progress} className="w-full" />
-            
-            <div className="flex items-center space-x-2 text-sm">
+      <div className="max-w-3xl mx-auto py-8">
+        <h1 className="text-3xl font-bold mb-6">Initialisation de l'application</h1>
+        
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Database className="h-6 w-6" />
+                <span>Migration vers Supabase</span>
+              </CardTitle>
+              <CardDescription>
+                Migrez les données existantes du stockage local vers Supabase
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
               {migrationComplete ? (
-                <CheckCircle className="h-5 w-5 text-green-500" />
-              ) : error ? (
-                <AlertTriangle className="h-5 w-5 text-red-500" />
+                <Alert className="bg-success/20 text-success border-success">
+                  <CheckCircle className="h-4 w-4" />
+                  <AlertTitle>Migration terminée</AlertTitle>
+                  <AlertDescription>
+                    Toutes les données ont été migrées avec succès vers Supabase.
+                  </AlertDescription>
+                </Alert>
               ) : (
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Migration des données</AlertTitle>
+                  <AlertDescription>
+                    Cette opération migrera vos données locales (statuts et employés) vers Supabase.
+                    Les données existantes dans Supabase ne seront pas écrasées.
+                  </AlertDescription>
+                </Alert>
               )}
-              <span>{status}</span>
-            </div>
-            
-            {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-800 text-sm">
-                {error}
-              </div>
-            )}
-          </CardContent>
-          
-          <CardFooter>
-            <Button 
-              onClick={handleContinue} 
-              disabled={!migrationComplete}
-              className="w-full"
-            >
-              Continuer vers l'application
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </CardFooter>
-        </Card>
+              
+              <Alert className="mt-4 bg-warning/20 text-warning border-warning">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Important</AlertTitle>
+                <AlertDescription>
+                  Assurez-vous d'avoir une connexion Internet stable avant de lancer la migration.
+                  Cette opération peut prendre plusieurs minutes selon la quantité de données à migrer.
+                </AlertDescription>
+              </Alert>
+            </CardContent>
+            <CardFooter className="flex justify-between">
+              <Button variant="outline" onClick={() => navigate('/')}>
+                Retour
+              </Button>
+              {migrationComplete ? (
+                <Button onClick={() => navigate('/')} className="gap-2">
+                  <span>Aller à l'application</span>
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              ) : (
+                <Button 
+                  onClick={handleMigration} 
+                  disabled={isMigrating}
+                  className="gap-2"
+                >
+                  <Upload className="h-4 w-4" />
+                  {isMigrating ? 'Migration en cours...' : 'Lancer la migration'}
+                </Button>
+              )}
+            </CardFooter>
+          </Card>
+        </div>
       </div>
     </Layout>
   );

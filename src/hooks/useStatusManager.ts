@@ -1,117 +1,119 @@
 
-import { useState } from 'react';
-import { StatusCode, STATUS_LABELS, STATUS_COLORS, Status } from '@/types';
-import { generateId } from '@/utils';
+import { useState, useMemo } from 'react';
+import { Status, StatusCode } from '@/types';
 import { toast } from 'sonner';
-import { statusService } from '@/services/jsonStorage';
+import { statusService } from '@/services/supabaseServices';
+import { generateId } from '@/utils';
 
-export function useStatusManager(
-  statuses: Status[],
-  onStatusesChange: (statuses: Status[]) => void
-) {
+export function useStatusManager(initialStatuses: Status[], onStatusesChange: (statuses: Status[]) => void) {
+  const [statuses, setStatuses] = useState<Status[]>(initialStatuses);
   const [formOpen, setFormOpen] = useState(false);
   const [currentStatus, setCurrentStatus] = useState<Status | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [statusToDelete, setStatusToDelete] = useState<string>('');
+  const [statusToDelete, setStatusToDelete] = useState<string | null>(null);
 
-  // Mettre à jour les labels et couleurs globaux
-  const updateGlobalStatusConfig = (status: Status) => {
-    if (status.code) {
-      STATUS_LABELS[status.code] = status.label;
-      STATUS_COLORS[status.code] = status.color;
-    }
-  };
-
+  // Ouvrir le formulaire pour ajouter un nouveau statut
   const handleAddStatus = () => {
     setCurrentStatus(null);
     setFormOpen(true);
   };
 
+  // Ouvrir le formulaire pour éditer un statut existant
   const handleEditStatus = (status: Status) => {
     setCurrentStatus(status);
     setFormOpen(true);
   };
 
+  // Ouvrir la boîte de dialogue de confirmation de suppression
   const handleDeleteStatus = (statusId: string) => {
     setStatusToDelete(statusId);
     setDeleteDialogOpen(true);
   };
 
-  const confirmDeleteStatus = () => {
+  // Confirmer la suppression d'un statut
+  const confirmDeleteStatus = async () => {
     if (!statusToDelete) return;
-    
-    const statusToBeDeleted = statuses.find(status => status.id === statusToDelete);
-    if (!statusToBeDeleted) {
-      toast.error('Statut non trouvé');
-      return;
-    }
-    
-    // Suppression via le service
-    const success = statusService.delete(statusToDelete);
-    
-    if (success) {
-      const updatedStatuses = statuses.filter(status => status.id !== statusToDelete);
-      onStatusesChange(updatedStatuses);
+
+    try {
+      const success = await statusService.delete(statusToDelete);
       
-      toast.success(`Le statut "${statusToBeDeleted.label}" a été supprimé avec succès`);
+      if (success) {
+        // Mettre à jour l'état local
+        const updatedStatuses = statuses.filter(s => s.id !== statusToDelete);
+        setStatuses(updatedStatuses);
+        onStatusesChange(updatedStatuses);
+        toast.success('Statut supprimé avec succès');
+      } else {
+        toast.error('Erreur lors de la suppression du statut');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+      toast.error('Une erreur est survenue');
+    } finally {
       setDeleteDialogOpen(false);
-      setStatusToDelete('');
-    } else {
-      toast.error('Erreur lors de la suppression du statut');
+      setStatusToDelete(null);
     }
   };
 
-  const handleSaveStatus = (status: Status) => {
+  // Sauvegarder un statut (nouveau ou existant)
+  const handleSaveStatus = async (status: Status) => {
     try {
-      let updatedStatuses: Status[];
-      
       if (status.id) {
-        // Mise à jour via le service
-        const updatedStatus = statusService.update(status);
+        // Mettre à jour un statut existant
+        const updatedStatus = await statusService.update(status);
         
-        updatedStatuses = statuses.map(s => 
-          s.id === status.id ? updatedStatus : s
-        );
-        
-        updateGlobalStatusConfig(updatedStatus);
-        toast.success(`Le statut "${status.label}" a été modifié avec succès`);
+        if (updatedStatus) {
+          const updatedStatuses = statuses.map(s => 
+            s.id === status.id ? updatedStatus : s
+          );
+          setStatuses(updatedStatuses);
+          onStatusesChange(updatedStatuses);
+          toast.success('Statut mis à jour avec succès');
+        } else {
+          toast.error('Erreur lors de la mise à jour du statut');
+        }
       } else {
-        // Création via le service
-        const newStatus: Status = {
+        // Créer un nouveau statut
+        const newStatus = await statusService.create({
           ...status,
-          id: generateId(),
-          displayOrder: status.displayOrder || statuses.length + 1
-        };
+          id: generateId()
+        });
         
-        const createdStatus = statusService.create(newStatus);
-        updatedStatuses = [...statuses, createdStatus];
-        
-        updateGlobalStatusConfig(createdStatus);
-        toast.success(`Le statut "${status.label}" a été ajouté avec succès`);
+        if (newStatus) {
+          const updatedStatuses = [...statuses, newStatus];
+          setStatuses(updatedStatuses);
+          onStatusesChange(updatedStatuses);
+          toast.success('Statut ajouté avec succès');
+        } else {
+          toast.error('Erreur lors de l\'ajout du statut');
+        }
       }
-      
-      onStatusesChange(updatedStatuses);
     } catch (error) {
-      console.error('Erreur lors de la sauvegarde du statut:', error);
-      toast.error('Une erreur est survenue lors de la sauvegarde du statut');
+      console.error('Erreur lors de la sauvegarde:', error);
+      toast.error('Une erreur est survenue');
     }
   };
-  
-  // Obtenir tous les codes de statut existants sauf celui en cours d'édition
+
+  // Obtenir la liste des codes de statut existants (pour validation)
   const getExistingCodes = (): string[] => {
     return statuses
       .filter(s => s.id !== currentStatus?.id)
       .map(s => s.code);
   };
-  
-  // Fonction pour trier les statuts par ordre d'affichage
-  const getSortedStatuses = (): Status[] => {
-    return [...statuses].sort((a, b) => {
-      const orderA = a.displayOrder || 999;
-      const orderB = b.displayOrder || 999;
-      return orderA - orderB;
-    });
-  };
+
+  // Trier les statuts par ordre d'affichage
+  const getSortedStatuses = useMemo(() => {
+    return () => {
+      return [...statuses].sort((a, b) => {
+        const orderA = a.displayOrder || 0;
+        const orderB = b.displayOrder || 0;
+        if (orderA !== orderB) {
+          return orderA - orderB;
+        }
+        return a.label.localeCompare(b.label);
+      });
+    };
+  }, [statuses]);
 
   return {
     formOpen,

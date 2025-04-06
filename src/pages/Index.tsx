@@ -1,14 +1,16 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Layout } from '@/components/layout/Layout';
 import { PlanningGrid } from '@/components/calendar/PlanningGrid';
 import { MonthSelector } from '@/components/calendar/MonthSelector';
-import { planningService, employeeService, projectService } from '@/services/jsonStorage';
+import { planningService, projectService } from '@/services/jsonStorage';
+import { employeeService } from '@/services/supabaseServices';
 import { useAuth } from '@/contexts/AuthContext';
+import { Employee, Project } from '@/types';
+import { toast } from 'sonner';
 
-// Page d'accueil principale
 const Index = () => {
   // Get current month and year from planning service or default to current date
   const planningData = planningService.getData();
@@ -16,11 +18,30 @@ const Index = () => {
   const [month, setMonth] = useState(planningData.month || new Date().getMonth());
   
   // Get employees and projects
-  const employees = employeeService.getAll();
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const projects = projectService.getAll();
   
   // Get authentication context to check if user is admin
   const { isAdmin } = useAuth();
+  
+  // Charger les employés
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      setIsLoading(true);
+      try {
+        const data = await employeeService.getAll();
+        setEmployees(data);
+      } catch (error) {
+        console.error('Erreur lors du chargement des employés:', error);
+        toast.error('Erreur lors du chargement des employés');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchEmployees();
+  }, []);
   
   // Handle month change
   const handleMonthChange = (newYear: number, newMonth: number) => {
@@ -30,7 +51,7 @@ const Index = () => {
   };
   
   // Handle status change
-  const handleStatusChange = (
+  const handleStatusChange = async (
     employeeId: string, 
     date: string, 
     status: string, 
@@ -38,14 +59,58 @@ const Index = () => {
     isHighlighted?: boolean,
     projectCode?: string
   ) => {
-    employeeService.updateStatus(employeeId, {
-      date,
-      status,
-      period,
-      isHighlighted,
-      projectCode
-    });
+    try {
+      // Mettre à jour dans Supabase
+      const success = await employeeService.updateStatus(employeeId, {
+        date,
+        status,
+        period,
+        isHighlighted,
+        projectCode
+      });
+      
+      if (!success) {
+        toast.error('Erreur lors de la mise à jour du statut');
+        return;
+      }
+      
+      // Mettre à jour la liste locale
+      setEmployees(prevEmployees => 
+        prevEmployees.map(emp => {
+          if (emp.id !== employeeId) return emp;
+          
+          // Filtrer les statuts existants pour cette date/période
+          const filteredSchedule = emp.schedule.filter(
+            ds => ds.date !== date || ds.period !== period
+          );
+          
+          // Si le statut n'est pas vide, ajouter le nouvel état
+          let newSchedule = filteredSchedule;
+          if (status) {
+            newSchedule = [
+              ...filteredSchedule, 
+              { date, status, period, isHighlighted, projectCode }
+            ];
+          }
+          
+          return { ...emp, schedule: newSchedule };
+        })
+      );
+    } catch (error) {
+      console.error('Erreur:', error);
+      toast.error('Une erreur est survenue');
+    }
   };
+  
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="flex justify-center items-center h-[80vh]">
+          <p>Chargement du planning...</p>
+        </div>
+      </Layout>
+    );
+  }
   
   return (
     <Layout>

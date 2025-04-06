@@ -3,10 +3,9 @@ import { useState, useEffect } from 'react';
 import { Employee, Status, Project } from '@/types';
 import { 
   employeeService, 
-  projectService, 
-  statusService, 
-  saveData 
-} from '@/services/jsonStorage';
+  statusService 
+} from '@/services/supabaseServices';
+import { projectService } from '@/services/jsonStorage';
 
 interface AdminData {
   projects: Project[];
@@ -15,40 +14,66 @@ interface AdminData {
 }
 
 export function useAdminData() {
-  const [data, setData] = useState<AdminData>(() => {
-    return { 
-      projects: projectService.getAll(), 
-      employees: employeeService.getAll(),
-      statuses: statusService.getAll() 
-    };
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [data, setData] = useState<AdminData>({
+    projects: [],
+    employees: [],
+    statuses: []
   });
 
+  // Charger les données au démarrage
   useEffect(() => {
-    if (data) {
-      // Sauvegarder les modifications dans notre service JSON
-      saveData({
-        projects: data.projects,
-        employees: data.employees,
-        statuses: data.statuses
-      });
-    }
-  }, [data]);
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        // Les projets restent dans le localStorage pour l'instant
+        const projects = projectService.getAll();
+        
+        // Récupérer les employés de Supabase
+        const employees = await employeeService.getAll();
+        
+        // Récupérer les statuts de Supabase
+        const statuses = await statusService.getAll();
+        
+        setData({
+          projects,
+          employees,
+          statuses
+        });
+      } catch (error) {
+        console.error("Erreur lors du chargement des données:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, []);
 
   const handleProjectsChange = (projects: Project[]) => {
+    // Sauvegarder dans localStorage (inchangé)
+    projectService.saveAll(projects);
+    
     setData(prevData => ({
       ...prevData,
       projects
     }));
   };
   
-  const handleStatusesChange = (statuses: Status[]) => {
+  const handleStatusesChange = async (statuses: Status[]) => {
+    // Nous n'implémentons pas de mise à jour en masse ici,
+    // car les mises à jour sont gérées individuellement 
+    // dans les composants via les services
     setData(prevData => ({
       ...prevData,
       statuses
     }));
   };
   
-  const handleEmployeesChange = (employees: Employee[]) => {
+  const handleEmployeesChange = async (employees: Employee[]) => {
+    // Nous n'implémentons pas de mise à jour en masse ici,
+    // car les mises à jour sont gérées individuellement
+    // dans les composants via les services
     setData(prevData => ({
       ...prevData,
       employees
@@ -57,6 +82,7 @@ export function useAdminData() {
 
   return {
     data,
+    isLoading,
     handleProjectsChange,
     handleStatusesChange,
     handleEmployeesChange

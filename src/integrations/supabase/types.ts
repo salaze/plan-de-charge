@@ -9,6 +9,119 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      employe_schedule: {
+        Row: {
+          created_at: string | null
+          date: string
+          employe_id: string | null
+          id: string
+          is_highlighted: boolean | null
+          note: string | null
+          period: string
+          project_code: string | null
+          statut_code: string
+        }
+        Insert: {
+          created_at?: string | null
+          date: string
+          employe_id?: string | null
+          id?: string
+          is_highlighted?: boolean | null
+          note?: string | null
+          period: string
+          project_code?: string | null
+          statut_code: string
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          employe_id?: string | null
+          id?: string
+          is_highlighted?: boolean | null
+          note?: string | null
+          period?: string
+          project_code?: string | null
+          statut_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employe_schedule_employe_id_fkey"
+            columns: ["employe_id"]
+            isOneToOne: false
+            referencedRelation: "employes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employes: {
+        Row: {
+          created_at: string | null
+          departement: string | null
+          fonction: string | null
+          id: string
+          nom: string
+          password: string | null
+          prenom: string | null
+          role: string | null
+          uid: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          departement?: string | null
+          fonction?: string | null
+          id?: string
+          nom: string
+          password?: string | null
+          prenom?: string | null
+          role?: string | null
+          uid?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          departement?: string | null
+          fonction?: string | null
+          id?: string
+          nom?: string
+          password?: string | null
+          prenom?: string | null
+          role?: string | null
+          uid?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      statuts: {
+        Row: {
+          code: string
+          couleur: string
+          created_at: string | null
+          display_order: number | null
+          id: string
+          libelle: string
+          updated_at: string | null
+        }
+        Insert: {
+          code: string
+          couleur: string
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          libelle: string
+          updated_at?: string | null
+        }
+        Update: {
+          code?: string
+          couleur?: string
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          libelle?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       Taches: {
         Row: {
           created_at: string

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Layout } from '@/components/layout/Layout';
@@ -14,22 +15,33 @@ import {
   AlertDialogTitle
 } from '@/components/ui/alert-dialog';
 import { Employee } from '@/types';
-import { employeeService } from '@/services/jsonStorage';
+import { employeeService } from '@/services/supabaseServices';
 
 const Employees = () => {
-  // Récupérer les employés du service JSON
-  const [employees, setEmployees] = useState<Employee[]>(() => {
-    return employeeService.getAll();
-  });
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
   const [formOpen, setFormOpen] = useState(false);
   const [currentEmployee, setCurrentEmployee] = useState<Employee | undefined>(undefined);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<string>('');
   
-  // Rafraîchir la liste quand nécessaire
+  // Charger les employés depuis Supabase
   useEffect(() => {
-    setEmployees(employeeService.getAll());
+    const fetchEmployees = async () => {
+      setIsLoading(true);
+      try {
+        const data = await employeeService.getAll();
+        setEmployees(data);
+      } catch (error) {
+        console.error('Erreur lors du chargement des employés:', error);
+        toast.error('Erreur lors du chargement des employés');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchEmployees();
   }, []);
   
   const handleAddEmployee = () => {
@@ -47,49 +59,71 @@ const Employees = () => {
     setDeleteDialogOpen(true);
   };
   
-  const confirmDeleteEmployee = () => {
+  const confirmDeleteEmployee = async () => {
     if (!employeeToDelete) return;
     
-    // Supprimer via le service
-    const success = employeeService.delete(employeeToDelete);
-    
-    if (success) {
-      // Mise à jour locale après suppression réussie
-      const updatedEmployees = employees.filter(emp => emp.id !== employeeToDelete);
-      setEmployees(updatedEmployees);
+    try {
+      const success = await employeeService.delete(employeeToDelete);
       
-      toast.success('Employé supprimé avec succès');
-    } else {
-      toast.error('Erreur lors de la suppression de l\'employé');
+      if (success) {
+        // Mettre à jour l'état local
+        const updatedEmployees = employees.filter(emp => emp.id !== employeeToDelete);
+        setEmployees(updatedEmployees);
+        toast.success('Employé supprimé avec succès');
+      } else {
+        toast.error('Erreur lors de la suppression de l\'employé');
+      }
+    } catch (error) {
+      console.error('Erreur:', error);
+      toast.error('Une erreur est survenue');
+    } finally {
+      setDeleteDialogOpen(false);
+      setEmployeeToDelete('');
     }
-    
-    setDeleteDialogOpen(false);
-    setEmployeeToDelete('');
   };
   
-  const handleSaveEmployee = (employee: Employee) => {
-    if (employee.id) {
-      // Mise à jour via le service
-      const updatedEmployee = employeeService.update(employee);
-      
-      // Mettre à jour la liste locale
-      const updatedEmployees = employees.map(emp => 
-        emp.id === employee.id ? updatedEmployee : emp
-      );
-      
-      setEmployees(updatedEmployees);
-      toast.success('Employé modifié avec succès');
-    } else {
-      // Créer via le service (le service génère l'ID)
-      const newEmployee = employeeService.create(employee);
-      
-      // Ajouter à la liste locale
-      setEmployees(prev => [...prev, newEmployee]);
-      toast.success('Employé ajouté avec succès');
+  const handleSaveEmployee = async (employee: Employee) => {
+    try {
+      if (employee.id) {
+        // Mettre à jour un employé existant
+        const updatedEmployee = await employeeService.update(employee);
+        
+        if (updatedEmployee) {
+          setEmployees(prev => prev.map(emp => 
+            emp.id === employee.id ? updatedEmployee : emp
+          ));
+          setFormOpen(false);
+          toast.success('Employé modifié avec succès');
+        } else {
+          toast.error('Erreur lors de la modification de l\'employé');
+        }
+      } else {
+        // Ajouter un nouvel employé
+        const newEmployee = await employeeService.create(employee);
+        
+        if (newEmployee) {
+          setEmployees(prev => [...prev, newEmployee]);
+          setFormOpen(false);
+          toast.success('Employé ajouté avec succès');
+        } else {
+          toast.error('Erreur lors de l\'ajout de l\'employé');
+        }
+      }
+    } catch (error) {
+      console.error('Erreur:', error);
+      toast.error('Une erreur est survenue');
     }
-    
-    setFormOpen(false);
   };
+  
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="flex justify-center items-center h-[80vh]">
+          <p>Chargement des employés...</p>
+        </div>
+      </Layout>
+    );
+  }
   
   return (
     <Layout>

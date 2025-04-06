@@ -31,9 +31,8 @@ export const useAuth = () => {
   return context;
 };
 
-// AuthProvider component correctly defined as a React functional component
+// AuthProvider component
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // All hooks must be called at the top level
   const [user, setUser] = useState<User>(null);
 
   // Load user data from localStorage on initial render

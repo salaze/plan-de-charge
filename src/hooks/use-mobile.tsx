@@ -5,9 +5,8 @@ import { useState, useEffect } from "react"
 const MOBILE_BREAKPOINT = 768
 
 export function useIsMobile() {
-  // Initialize with false to avoid hydration mismatch
+  // Initialize with default value that won't cause hydration mismatch
   const [isMobile, setIsMobile] = useState(false)
-  // Track if component is mounted
   const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {

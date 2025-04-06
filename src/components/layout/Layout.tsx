@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Menu, X } from 'lucide-react';
 import { SidebarMenu } from './SidebarMenu';
@@ -9,7 +8,6 @@ interface LayoutProps {
 }
 
 export function Layout({ children }: LayoutProps) {
-  // Initialize sidebarOpen state before using the hook
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isMobile = useIsMobile();
   const sidebarRef = useRef<HTMLDivElement>(null);
@@ -19,39 +17,32 @@ export function Layout({ children }: LayoutProps) {
     setSidebarOpen(!sidebarOpen);
   };
   
-  // Function to handle mouse enter in the detection zone on the left
   const handleMouseEnter = () => {
-    if (isMobile) return; // Don't activate on mobile
+    if (isMobile) return;
     
-    // Clear previous timeout if it exists
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
       hoverTimeoutRef.current = null;
     }
     
-    // Set a small delay to avoid fluctuations
     hoverTimeoutRef.current = setTimeout(() => {
       setSidebarOpen(true);
     }, 200);
   };
   
-  // Function to handle mouse leaving the sidebar
   const handleMouseLeave = () => {
-    if (isMobile) return; // Don't activate on mobile
+    if (isMobile) return;
     
-    // Clear previous timeout if it exists
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
       hoverTimeoutRef.current = null;
     }
     
-    // Set a delay before closing to avoid fluctuations
     hoverTimeoutRef.current = setTimeout(() => {
       setSidebarOpen(false);
     }, 300);
   };
   
-  // Clean up timeouts when unmounting component
   useEffect(() => {
     return () => {
       if (hoverTimeoutRef.current) {
@@ -62,13 +53,11 @@ export function Layout({ children }: LayoutProps) {
   
   return (
     <div className="min-h-screen flex">
-      {/* Detection zone for sidebar hover appearance */}
       <div 
         className="hidden md:block fixed top-0 left-0 w-4 h-full z-40"
         onMouseEnter={handleMouseEnter}
       />
       
-      {/* Sidebar for desktop - appears on hover */}
       <aside 
         ref={sidebarRef}
         className={`hidden md:flex flex-col w-64 bg-sidebar fixed inset-y-0 z-50 transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
@@ -82,7 +71,6 @@ export function Layout({ children }: LayoutProps) {
         </div>
       </aside>
       
-      {/* Mobile sidebar */}
       <aside
         className={`fixed inset-y-0 left-0 z-50 w-80 bg-sidebar transform transition-transform duration-300 ease-in-out 
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:hidden`}
@@ -102,9 +90,7 @@ export function Layout({ children }: LayoutProps) {
         </div>
       </aside>
       
-      {/* Main content */}
       <div className="flex-1 md:ml-0 w-full">
-        {/* Mobile header */}
         <header className="bg-background p-4 border-b border-border md:hidden sticky top-0 z-10">
           <div className="flex items-center justify-between">
             <button
@@ -115,11 +101,10 @@ export function Layout({ children }: LayoutProps) {
               <Menu size={24} />
             </button>
             <h1 className="text-xl font-semibold">Planning Manager</h1>
-            <div className="w-10"></div> {/* Spacer for center alignment */}
+            <div className="w-10"></div>
           </div>
         </header>
         
-        {/* Desktop header */}
         <header className="bg-background p-4 border-b border-border hidden md:block sticky top-0 z-10">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
@@ -135,7 +120,6 @@ export function Layout({ children }: LayoutProps) {
           </div>
         </header>
         
-        {/* Main content */}
         <main className="p-2 sm:p-4">
           <div className="layout-container space-y-4 sm:space-y-6 max-w-full">
             {children}
@@ -143,7 +127,6 @@ export function Layout({ children }: LayoutProps) {
         </main>
       </div>
       
-      {/* Mobile overlay */}
       {sidebarOpen && isMobile && (
         <div 
           className="fixed inset-0 bg-black/30 z-40 md:hidden"

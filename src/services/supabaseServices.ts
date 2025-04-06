@@ -128,7 +128,7 @@ export const statusService = {
         return [];
       }
 
-      return (data as SupabaseStatus[]).map(mapSupabaseStatusToStatus);
+      return (data as unknown as SupabaseStatus[]).map(mapSupabaseStatusToStatus);
     } catch (error) {
       console.error('Erreur non gérée:', error);
       return [];
@@ -140,7 +140,7 @@ export const statusService = {
       const supabaseStatus = mapStatusToSupabaseStatus(status as Status);
       const { data, error } = await supabase
         .from('statuts')
-        .insert(supabaseStatus)
+        .insert(supabaseStatus as any)
         .select()
         .single();
 
@@ -149,7 +149,7 @@ export const statusService = {
         return null;
       }
 
-      return mapSupabaseStatusToStatus(data as SupabaseStatus);
+      return mapSupabaseStatusToStatus(data as unknown as SupabaseStatus);
     } catch (error) {
       console.error('Erreur non gérée:', error);
       return null;
@@ -161,7 +161,7 @@ export const statusService = {
       const supabaseStatus = mapStatusToSupabaseStatus(status);
       const { data, error } = await supabase
         .from('statuts')
-        .update(supabaseStatus)
+        .update(supabaseStatus as any)
         .eq('id', status.id)
         .select()
         .single();
@@ -171,7 +171,7 @@ export const statusService = {
         return null;
       }
 
-      return mapSupabaseStatusToStatus(data as SupabaseStatus);
+      return mapSupabaseStatusToStatus(data as unknown as SupabaseStatus);
     } catch (error) {
       console.error('Erreur non gérée:', error);
       return null;
@@ -223,8 +223,8 @@ export const employeeService = {
       }
 
       // Convertir et associer les données
-      return (employees as SupabaseEmployee[]).map(employee => {
-        const employeeSchedules = (schedules as SupabaseSchedule[]).filter(
+      return (employees as unknown as SupabaseEmployee[]).map(employee => {
+        const employeeSchedules = (schedules as unknown as SupabaseSchedule[]).filter(
           schedule => schedule.employe_id === employee.id
         );
         return mapSupabaseEmployeeToEmployee(employee, employeeSchedules);
@@ -245,7 +245,7 @@ export const employeeService = {
 
       const { data, error } = await supabase
         .from('employes')
-        .insert(supabaseEmployee)
+        .insert(supabaseEmployee as any)
         .select()
         .single();
 
@@ -254,7 +254,7 @@ export const employeeService = {
         return null;
       }
 
-      return mapSupabaseEmployeeToEmployee(data as SupabaseEmployee);
+      return mapSupabaseEmployeeToEmployee(data as unknown as SupabaseEmployee);
     } catch (error) {
       console.error('Erreur non gérée:', error);
       return null;
@@ -266,7 +266,7 @@ export const employeeService = {
       const supabaseEmployee = mapEmployeeToSupabaseEmployee(employee);
       const { data, error } = await supabase
         .from('employes')
-        .update(supabaseEmployee)
+        .update(supabaseEmployee as any)
         .eq('id', employee.id)
         .select()
         .single();
@@ -276,7 +276,7 @@ export const employeeService = {
         return null;
       }
 
-      return mapSupabaseEmployeeToEmployee(data as SupabaseEmployee);
+      return mapSupabaseEmployeeToEmployee(data as unknown as SupabaseEmployee);
     } catch (error) {
       console.error('Erreur non gérée:', error);
       return null;
@@ -287,7 +287,7 @@ export const employeeService = {
     try {
       const { error } = await supabase
         .from('employes')
-        .update({ role })
+        .update({ role } as any)
         .eq('id', employeeId);
 
       if (error) {
@@ -306,7 +306,7 @@ export const employeeService = {
     try {
       const { error } = await supabase
         .from('employes')
-        .update({ password })
+        .update({ password } as any)
         .eq('id', employeeId);
 
       if (error) {
@@ -364,7 +364,7 @@ export const employeeService = {
           const { error: deleteError } = await supabase
             .from('employe_schedule')
             .delete()
-            .eq('id', existingEntries[0].id);
+            .eq('id', (existingEntries[0] as any).id);
             
           if (deleteError) {
             console.error('Erreur lors de la suppression du statut:', deleteError);
@@ -378,8 +378,8 @@ export const employeeService = {
       if (existingEntries && existingEntries.length > 0) {
         const { error: updateError } = await supabase
           .from('employe_schedule')
-          .update(supabaseSchedule)
-          .eq('id', existingEntries[0].id);
+          .update(supabaseSchedule as any)
+          .eq('id', (existingEntries[0] as any).id);
           
         if (updateError) {
           console.error('Erreur lors de la mise à jour du statut:', updateError);
@@ -388,7 +388,7 @@ export const employeeService = {
       } else {
         const { error: insertError } = await supabase
           .from('employe_schedule')
-          .insert(supabaseSchedule);
+          .insert(supabaseSchedule as any);
           
         if (insertError) {
           console.error('Erreur lors de l\'ajout du statut:', insertError);
@@ -427,7 +427,7 @@ export const migrateLocalDataToSupabase = async (): Promise<boolean> => {
         
         const { error } = await supabase
           .from('statuts')
-          .insert(supabaseStatus);
+          .insert(supabaseStatus as any);
           
         if (error && error.code !== '23505') { // Ignorer les erreurs de duplication
           console.error('Erreur lors de la migration du statut:', error);
@@ -443,7 +443,7 @@ export const migrateLocalDataToSupabase = async (): Promise<boolean> => {
         
         const { data: insertedEmployee, error: employeeError } = await supabase
           .from('employes')
-          .insert(supabaseEmployee)
+          .insert(supabaseEmployee as any)
           .select()
           .single();
           
@@ -456,11 +456,14 @@ export const migrateLocalDataToSupabase = async (): Promise<boolean> => {
         if (employee.schedule && employee.schedule.length > 0) {
           for (const dayStatus of employee.schedule) {
             if (dayStatus.status) {
-              const supabaseSchedule = mapDayStatusToSupabaseSchedule(insertedEmployee.id, dayStatus);
+              const supabaseSchedule = mapDayStatusToSupabaseSchedule(
+                (insertedEmployee as any).id, 
+                dayStatus
+              );
               
               const { error: scheduleError } = await supabase
                 .from('employe_schedule')
-                .insert(supabaseSchedule);
+                .insert(supabaseSchedule as any);
                 
               if (scheduleError) {
                 console.error('Erreur lors de la migration du planning:', scheduleError);

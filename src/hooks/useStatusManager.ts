@@ -73,11 +73,15 @@ export function useStatusManager(initialStatuses: Status[], onStatusesChange: (s
           toast.error('Erreur lors de la mise à jour du statut');
         }
       } else {
-        // Créer un nouveau statut
-        const newStatus = await statusService.create({
-          ...status,
-          id: generateId()
-        });
+        // Créer un nouveau statut avec un id généré côté client
+        const newStatusData: Omit<Status, "id"> = {
+          code: status.code,
+          label: status.label,
+          color: status.color,
+          displayOrder: status.displayOrder
+        };
+        
+        const newStatus = await statusService.create(newStatusData);
         
         if (newStatus) {
           const updatedStatuses = [...statuses, newStatus];

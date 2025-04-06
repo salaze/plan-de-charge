@@ -51,8 +51,23 @@ export function useAdminData() {
   }, []);
 
   const handleProjectsChange = (projects: Project[]) => {
-    // Sauvegarder dans localStorage (inchangé)
-    projectService.saveAll(projects);
+    // Sauvegarde manuelle des projets au lieu d'utiliser saveAll
+    projects.forEach(project => {
+      if (projectService.getById(project.id)) {
+        projectService.update(project);
+      } else {
+        projectService.create(project);
+      }
+    });
+    
+    // Suppression des projets qui ne sont plus présents
+    const currentProjects = projectService.getAll();
+    const projectIds = projects.map(p => p.id);
+    currentProjects.forEach(project => {
+      if (!projectIds.includes(project.id)) {
+        projectService.delete(project.id);
+      }
+    });
     
     setData(prevData => ({
       ...prevData,

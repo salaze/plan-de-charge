@@ -17,10 +17,8 @@ import InitApp from '@/pages/InitApp';
 
 function App() {
   return (
-    <ThemeProvider>
-      {/* BrowserRouter must be outside the AuthProvider since 
-          AuthProvider no longer uses useNavigate */}
-      <BrowserRouter>
+    <BrowserRouter>
+      <ThemeProvider defaultTheme="light" attribute="class">
         <AuthProvider>
           <div className="app">
             <Routes>
@@ -72,8 +70,8 @@ function App() {
           </div>
           <Toaster position="top-right" richColors />
         </AuthProvider>
-      </BrowserRouter>
-    </ThemeProvider>
+      </ThemeProvider>
+    </BrowserRouter>
   );
 }
 

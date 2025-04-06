@@ -18,39 +18,39 @@ export function Layout({ children }: LayoutProps) {
     setSidebarOpen(!sidebarOpen);
   };
   
-  // Fonction pour gérer l'entrée de la souris dans la zone de détection à gauche
+  // Function to handle mouse enter in the detection zone on the left
   const handleMouseEnter = () => {
-    if (isMobile) return; // Ne pas activer sur mobile
+    if (isMobile) return; // Don't activate on mobile
     
-    // Effacer le timeout précédent s'il existe
+    // Clear previous timeout if it exists
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
       hoverTimeoutRef.current = null;
     }
     
-    // Définir un petit délai pour éviter les fluctuations
+    // Set a small delay to avoid fluctuations
     hoverTimeoutRef.current = setTimeout(() => {
       setSidebarOpen(true);
     }, 200);
   };
   
-  // Fonction pour gérer la sortie de la souris du sidebar
+  // Function to handle mouse leaving the sidebar
   const handleMouseLeave = () => {
-    if (isMobile) return; // Ne pas activer sur mobile
+    if (isMobile) return; // Don't activate on mobile
     
-    // Effacer le timeout précédent s'il existe
+    // Clear previous timeout if it exists
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
       hoverTimeoutRef.current = null;
     }
     
-    // Définir un délai avant de fermer pour éviter les fluctuations
+    // Set a delay before closing to avoid fluctuations
     hoverTimeoutRef.current = setTimeout(() => {
       setSidebarOpen(false);
     }, 300);
   };
   
-  // Nettoyage des timeouts lors du démontage du composant
+  // Clean up timeouts when unmounting component
   useEffect(() => {
     return () => {
       if (hoverTimeoutRef.current) {
@@ -61,13 +61,13 @@ export function Layout({ children }: LayoutProps) {
   
   return (
     <div className="min-h-screen flex">
-      {/* Zone de détection pour l'apparition du sidebar au survol */}
+      {/* Detection zone for sidebar hover appearance */}
       <div 
         className="hidden md:block fixed top-0 left-0 w-4 h-full z-40"
         onMouseEnter={handleMouseEnter}
       />
       
-      {/* Sidebar pour desktop - apparaît au survol */}
+      {/* Sidebar for desktop - appears on hover */}
       <aside 
         ref={sidebarRef}
         className={`hidden md:flex flex-col w-64 bg-sidebar fixed inset-y-0 z-50 transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
@@ -91,7 +91,7 @@ export function Layout({ children }: LayoutProps) {
           <button 
             className="text-sidebar-foreground p-1 rounded-full hover:bg-sidebar-accent/30"
             onClick={toggleSidebar}
-            aria-label="Fermer le menu"
+            aria-label="Close menu"
           >
             <X size={24} />
           </button>
@@ -109,7 +109,7 @@ export function Layout({ children }: LayoutProps) {
             <button
               className="text-foreground p-2 rounded-md hover:bg-secondary"
               onClick={toggleSidebar}
-              aria-label="Ouvrir le menu"
+              aria-label="Open menu"
             >
               <Menu size={24} />
             </button>
@@ -125,7 +125,7 @@ export function Layout({ children }: LayoutProps) {
               <button
                 className="text-foreground p-2 mr-2 rounded-md hover:bg-secondary md:flex"
                 onClick={toggleSidebar}
-                aria-label="Ouvrir/Fermer le menu"
+                aria-label="Open/Close menu"
               >
                 <Menu size={24} />
               </button>

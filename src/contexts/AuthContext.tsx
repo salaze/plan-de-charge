@@ -32,7 +32,9 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User>(null);
   
+  // All localStorage interactions moved inside useEffect to avoid issues
   useEffect(() => {
+    // Load user data from localStorage on initial render
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       try {

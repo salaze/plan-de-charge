@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { UserRole, Employee } from '@/types';
 import { toast } from 'sonner';
 
@@ -19,24 +19,32 @@ interface AuthContextType {
   updatePassword: (employeeId: string, newPassword: string) => boolean;
 }
 
-// Create context with a default undefined value
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// Create context with a default value
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  login: () => false,
+  logout: () => {},
+  isAuthenticated: false,
+  isAdmin: false,
+  updateUserRoles: () => {},
+  updatePassword: () => false
+});
 
 // Hook to use the auth context
-export function useAuth() {
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-}
+};
 
 interface AuthProviderProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
-// Define AuthProvider as a proper React functional component
-export function AuthProvider({ children }: AuthProviderProps) {
+// Define AuthProvider as a React functional component
+const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User>(null);
 
   // Load user data from localStorage on initial render
@@ -159,8 +167,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return false;
   };
 
-  // Create the context value object
-  const value: AuthContextType = {
+  const contextValue: AuthContextType = {
     user,
     login,
     logout,
@@ -170,6 +177,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     updatePassword
   };
 
-  // Return the provider with the value
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
+  return (
+    <AuthContext.Provider value={contextValue}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export { AuthProvider };

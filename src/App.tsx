@@ -13,7 +13,7 @@ import Settings from '@/pages/Settings';
 import { AdminRoute } from '@/components/AdminRoute';
 import { EmployeeRoute } from '@/components/EmployeeRoute';
 import { AuthProvider } from '@/contexts/AuthContext';
-import InitApp from '@/pages/InitApp'; // Import de la nouvelle page
+import InitApp from '@/pages/InitApp';
 
 function App() {
   return (
@@ -24,7 +24,7 @@ function App() {
             <Routes>
               <Route path="/login" element={<AdminLogin />} />
               <Route path="/" element={<Index />} />
-              <Route path="/init" element={<InitApp />} /> {/* Nouvelle route pour l'initialisation */}
+              <Route path="/init" element={<InitApp />} />
               <Route
                 path="/employees"
                 element={

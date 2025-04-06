@@ -115,10 +115,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const updatedUser = { ...user, role: updatedEmployee.role };
           setUser(updatedUser);
           localStorage.setItem('user', JSON.stringify(updatedUser));
-          
-          if (updatedUser.role !== 'admin') {
-            navigate('/');
-          }
         }
       }
     }

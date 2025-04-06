@@ -9,6 +9,7 @@ interface LayoutProps {
 }
 
 export function Layout({ children }: LayoutProps) {
+  // Initialize sidebarOpen state before using the hook
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isMobile = useIsMobile();
   const sidebarRef = useRef<HTMLDivElement>(null);

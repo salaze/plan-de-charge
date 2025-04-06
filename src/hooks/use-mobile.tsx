@@ -5,10 +5,15 @@ import { useState, useEffect } from "react"
 const MOBILE_BREAKPOINT = 768
 
 export function useIsMobile() {
-  // Initialize with undefined to prevent hydration mismatch
-  const [isMobile, setIsMobile] = useState<boolean | null>(null)
+  // Initialize with false to avoid hydration mismatch
+  const [isMobile, setIsMobile] = useState(false)
+  // Track if component is mounted
+  const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {
+    // Mark component as mounted
+    setIsMounted(true)
+    
     // Function to check if window is mobile size
     const checkMobile = () => {
       setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
@@ -24,6 +29,6 @@ export function useIsMobile() {
     return () => window.removeEventListener("resize", checkMobile)
   }, [])
 
-  // Return false as a default if not yet determined
-  return isMobile === null ? false : isMobile
+  // Only return the actual value if component is mounted
+  return isMounted ? isMobile : false
 }

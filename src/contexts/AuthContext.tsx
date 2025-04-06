@@ -31,8 +31,8 @@ export const useAuth = () => {
   return context;
 };
 
-// AuthProvider component
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+// Define a proper function component for AuthProvider
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User>(null);
 
   // Load user data from localStorage on initial render

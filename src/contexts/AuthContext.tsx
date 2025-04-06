@@ -36,7 +36,7 @@ export const useAuth = (): AuthContextType => {
 };
 
 // Define AuthProvider as a proper React functional component
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User>(null);
 
   // Load user data from localStorage on initial render
@@ -175,3 +175,5 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     </AuthContext.Provider>
   );
 };
+
+export default AuthProvider;

@@ -19,8 +19,10 @@ interface AuthContextType {
   updatePassword: (employeeId: string, newPassword: string) => boolean;
 }
 
+// Create context with a default undefined value
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Hook to use the auth context
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -29,12 +31,13 @@ export const useAuth = () => {
   return context;
 };
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+// AuthProvider component correctly defined as a React functional component
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // All hooks must be called at the top level
   const [user, setUser] = useState<User>(null);
-  
-  // All localStorage interactions moved inside useEffect to avoid issues
+
+  // Load user data from localStorage on initial render
   useEffect(() => {
-    // Load user data from localStorage on initial render
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       try {
@@ -153,6 +156,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return false;
   };
 
+  // Create the context value object
   const value = {
     user,
     login,
@@ -163,5 +167,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     updatePassword
   };
 
+  // Return the provider with the value
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

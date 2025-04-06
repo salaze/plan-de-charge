@@ -35,7 +35,7 @@ export const useAuth = (): AuthContextType => {
   return context;
 };
 
-// Define AuthProvider as a proper React component
+// Define AuthProvider as a proper React functional component
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User>(null);
 

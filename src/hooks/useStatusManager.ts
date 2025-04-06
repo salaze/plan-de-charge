@@ -1,8 +1,9 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { StatusCode, STATUS_LABELS, STATUS_COLORS, Status } from '@/types';
 import { generateId } from '@/utils';
 import { toast } from 'sonner';
+import { statusService } from '@/services/jsonStorage';
 
 export function useStatusManager(
   statuses: Status[],
@@ -13,25 +14,13 @@ export function useStatusManager(
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [statusToDelete, setStatusToDelete] = useState<string>('');
 
-  // Update global STATUS_LABELS and STATUS_COLORS
-  useEffect(() => {
-    if (statuses && statuses.length > 0) {
-      statuses.forEach((status) => {
-        if (status.code) {
-          STATUS_LABELS[status.code] = status.label;
-          STATUS_COLORS[status.code] = status.color;
-        }
-      });
-      
-      // Save changes to localStorage immediately
-      const savedData = localStorage.getItem('planningData');
-      const data = savedData ? JSON.parse(savedData) : {};
-      localStorage.setItem('planningData', JSON.stringify({
-        ...data,
-        statuses
-      }));
+  // Mettre à jour les labels et couleurs globaux
+  const updateGlobalStatusConfig = (status: Status) => {
+    if (status.code) {
+      STATUS_LABELS[status.code] = status.label;
+      STATUS_COLORS[status.code] = status.color;
     }
-  }, [statuses]);
+  };
 
   const handleAddStatus = () => {
     setCurrentStatus(null);
@@ -57,12 +46,19 @@ export function useStatusManager(
       return;
     }
     
-    const updatedStatuses = statuses.filter(status => status.id !== statusToDelete);
-    onStatusesChange(updatedStatuses);
+    // Suppression via le service
+    const success = statusService.delete(statusToDelete);
     
-    toast.success(`Le statut "${statusToBeDeleted.label}" a été supprimé avec succès`);
-    setDeleteDialogOpen(false);
-    setStatusToDelete('');
+    if (success) {
+      const updatedStatuses = statuses.filter(status => status.id !== statusToDelete);
+      onStatusesChange(updatedStatuses);
+      
+      toast.success(`Le statut "${statusToBeDeleted.label}" a été supprimé avec succès`);
+      setDeleteDialogOpen(false);
+      setStatusToDelete('');
+    } else {
+      toast.error('Erreur lors de la suppression du statut');
+    }
   };
 
   const handleSaveStatus = (status: Status) => {
@@ -70,48 +66,38 @@ export function useStatusManager(
       let updatedStatuses: Status[];
       
       if (status.id) {
-        // Update existing status
+        // Mise à jour via le service
+        const updatedStatus = statusService.update(status);
+        
         updatedStatuses = statuses.map(s => 
-          s.id === status.id ? status : s
+          s.id === status.id ? updatedStatus : s
         );
         
-        // Update global objects
-        STATUS_LABELS[status.code] = status.label;
-        STATUS_COLORS[status.code] = status.color;
-        
+        updateGlobalStatusConfig(updatedStatus);
         toast.success(`Le statut "${status.label}" a été modifié avec succès`);
       } else {
-        // Add new status with generated ID
+        // Création via le service
         const newStatus: Status = {
           ...status,
           id: generateId(),
           displayOrder: status.displayOrder || statuses.length + 1
         };
-        updatedStatuses = [...statuses, newStatus];
         
-        // Update global STATUS_LABELS and STATUS_COLORS
-        STATUS_LABELS[status.code] = status.label;
-        STATUS_COLORS[status.code] = status.color;
+        const createdStatus = statusService.create(newStatus);
+        updatedStatuses = [...statuses, createdStatus];
         
+        updateGlobalStatusConfig(createdStatus);
         toast.success(`Le statut "${status.label}" a été ajouté avec succès`);
       }
       
       onStatusesChange(updatedStatuses);
-      
-      // Force localStorage update immediately
-      const savedData = localStorage.getItem('planningData');
-      const data = savedData ? JSON.parse(savedData) : {};
-      localStorage.setItem('planningData', JSON.stringify({
-        ...data,
-        statuses: updatedStatuses
-      }));
     } catch (error) {
       console.error('Erreur lors de la sauvegarde du statut:', error);
       toast.error('Une erreur est survenue lors de la sauvegarde du statut');
     }
   };
   
-  // Get all existing status codes except the current one being edited
+  // Obtenir tous les codes de statut existants sauf celui en cours d'édition
   const getExistingCodes = (): string[] => {
     return statuses
       .filter(s => s.id !== currentStatus?.id)

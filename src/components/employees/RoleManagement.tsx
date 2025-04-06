@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { EmployeeRoleSelector } from './EmployeeRoleSelector';
 import { useAuth } from '@/contexts/AuthContext';
+import { employeeService } from '@/services/jsonStorage';
 
 interface RoleManagementProps {
   employees: Employee[];
@@ -18,6 +19,9 @@ export function RoleManagement({ employees, onEmployeesChange }: RoleManagementP
   const handleRoleChange = (employeeId: string, newRole: UserRole) => {
     // Mettre à jour le rôle dans le contexte d'authentification
     updateUserRoles(employeeId, newRole);
+    
+    // Mettre à jour le rôle via notre service JSON
+    employeeService.updateRole(employeeId, newRole);
     
     // Mettre à jour la liste des employés localement
     const updatedEmployees = employees.map(emp => {

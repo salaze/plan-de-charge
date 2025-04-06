@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { generateId } from '@/utils';
 import { toast } from 'sonner';
 import { Project } from '@/types';
+import { projectService } from '@/services/jsonStorage';
 
 export function useProjectManager(projects: Project[], onProjectsChange: (projects: Project[]) => void) {
   const [formOpen, setFormOpen] = useState(false);
@@ -38,12 +39,19 @@ export function useProjectManager(projects: Project[], onProjectsChange: (projec
   const confirmDeleteProject = () => {
     if (!projectToDelete) return;
     
-    const updatedProjects = projects.filter(project => project.id !== projectToDelete);
-    onProjectsChange(updatedProjects);
+    // Suppression via le service
+    const success = projectService.delete(projectToDelete);
     
-    toast.success('Projet supprimé avec succès');
-    setDeleteDialogOpen(false);
-    setProjectToDelete('');
+    if (success) {
+      const updatedProjects = projects.filter(project => project.id !== projectToDelete);
+      onProjectsChange(updatedProjects);
+      
+      toast.success('Projet supprimé avec succès');
+      setDeleteDialogOpen(false);
+      setProjectToDelete('');
+    } else {
+      toast.error('Erreur lors de la suppression du projet');
+    }
   };
   
   const handleSaveProject = (e: React.FormEvent) => {
@@ -67,21 +75,27 @@ export function useProjectManager(projects: Project[], onProjectsChange: (projec
     let updatedProjects: Project[];
     
     if (currentProject) {
-      // Mettre à jour un projet existant
-      updatedProjects = projects.map(project => 
-        project.id === currentProject.id 
-          ? { ...project, code, name, color } 
-          : project
-      );
-      toast.success('Projet modifié avec succès');
-    } else {
-      // Ajouter un nouveau projet
-      const newProject: Project = {
-        id: generateId(),
+      // Mise à jour via le service
+      const updatedProject = projectService.update({
+        ...currentProject,
         code,
         name,
         color
-      };
+      });
+      
+      updatedProjects = projects.map(project => 
+        project.id === currentProject.id ? updatedProject : project
+      );
+      
+      toast.success('Projet modifié avec succès');
+    } else {
+      // Création via le service
+      const newProject = projectService.create({
+        code,
+        name,
+        color
+      });
+      
       updatedProjects = [...projects, newProject];
       toast.success('Projet ajouté avec succès');
     }

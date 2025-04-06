@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Layout } from '@/components/layout/Layout';
@@ -7,74 +6,33 @@ import { PlanningGrid } from '@/components/calendar/PlanningGrid';
 import { Button } from '@/components/ui/button';
 import { LegendModal } from '@/components/calendar/LegendModal';
 import { Filter, Info } from 'lucide-react';
-import { 
-  createSampleData,
-  handleFileImport
-} from '@/utils';
 import { DayPeriod, StatusCode, MonthData, FilterOptions } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
+import { 
+  employeeService, 
+  projectService, 
+  planningService 
+} from '@/services/jsonStorage';
 
 const Index = () => {
   const { isAdmin } = useAuth();
 
   const [data, setData] = useState<MonthData>(() => {
-    // Récupérer les données depuis le localStorage ou créer des données de démo
-    const savedData = localStorage.getItem('planningData');
-    
-    if (savedData) {
-      try {
-        const parsedData = JSON.parse(savedData);
-        
-        // Assurer que les données ont la structure correcte
-        if (!parsedData.year) parsedData.year = new Date().getFullYear();
-        if (!parsedData.month && parsedData.month !== 0) parsedData.month = new Date().getMonth();
-        if (!Array.isArray(parsedData.employees)) parsedData.employees = [];
-        
-        // Assurer que la structure contient des projets
-        if (!parsedData.projects) {
-          parsedData.projects = [
-            { id: '1', code: 'P001', name: 'Développement interne', color: '#4CAF50' },
-            { id: '2', code: 'P002', name: 'Client A', color: '#2196F3' },
-            { id: '3', code: 'P003', name: 'Client B', color: '#FF9800' },
-            { id: '4', code: 'P004', name: 'Maintenance préventive', color: '#9C27B0' },
-            { id: '5', code: 'P005', name: 'Mission externe', color: '#00BCD4' },
-          ];
-        }
-        
-        return parsedData;
-      } catch (error) {
-        console.error("Erreur lors de la lecture des données:", error);
-        return createDefaultData();
-      }
-    } else {
-      return createDefaultData();
-    }
+    // Récupérer les données depuis notre service JSON
+    const planningData = planningService.getData();
+    return planningData;
   });
-  
-  function createDefaultData() {
-    const sampleData = createSampleData();
-    
-    // Ajouter des projets aux données de démo
-    sampleData.projects = [
-      { id: '1', code: 'P001', name: 'Développement interne', color: '#4CAF50' },
-      { id: '2', code: 'P002', name: 'Client A', color: '#2196F3' },
-      { id: '3', code: 'P003', name: 'Client B', color: '#FF9800' },
-      { id: '4', code: 'P004', name: 'Maintenance préventive', color: '#9C27B0' },
-      { id: '5', code: 'P005', name: 'Mission externe', color: '#00BCD4' },
-    ];
-    
-    return sampleData;
-  }
   
   const [currentYear, setCurrentYear] = useState(data.year || new Date().getFullYear());
   const [currentMonth, setCurrentMonth] = useState(typeof data.month === 'number' ? data.month : new Date().getMonth());
   const [filters, setFilters] = useState<FilterOptions>({});
   const [isLegendOpen, setIsLegendOpen] = useState(false);
   
-  // Sauvegarde automatique des données
+  // Sauvegarde automatique des données quand elles changent
   useEffect(() => {
-    localStorage.setItem('planningData', JSON.stringify(data));
-  }, [data]);
+    // Mettre à jour le service de planification
+    planningService.updateMonth(currentYear, currentMonth);
+  }, [data, currentYear, currentMonth]);
   
   const handleMonthChange = (year: number, month: number) => {
     setCurrentYear(year);
@@ -94,6 +52,19 @@ const Index = () => {
       return;
     }
     
+    // Créer l'objet de statut pour la journée
+    const dayStatus = {
+      date,
+      status,
+      period,
+      isHighlighted,
+      projectCode: status === 'projet' ? projectCode : undefined
+    };
+    
+    // Utiliser le service employé pour mettre à jour le statut
+    employeeService.updateStatus(employeeId, dayStatus);
+    
+    // Mettre à jour l'état local pour refléter le changement
     setData((prevData) => {
       const updatedEmployees = prevData.employees.map((employee) => {
         if (employee.id === employeeId) {
@@ -150,6 +121,18 @@ const Index = () => {
     const periodLabel = period === 'AM' ? 'matin' : period === 'PM' ? 'après-midi' : 'journée';
     toast.success(`Statut ${periodLabel} modifié avec succès`);
   };
+  
+  // Récupérer les données fraîches des employés et des projets
+  useEffect(() => {
+    const employees = employeeService.getAll();
+    const projects = projectService.getAll();
+    
+    setData(prevData => ({
+      ...prevData,
+      employees,
+      projects
+    }));
+  }, []);
   
   return (
     <Layout>

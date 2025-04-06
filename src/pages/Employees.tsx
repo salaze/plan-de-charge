@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Layout } from '@/components/layout/Layout';
 import { EmployeeList } from '@/components/employees/EmployeeList';
@@ -15,19 +14,23 @@ import {
   AlertDialogTitle
 } from '@/components/ui/alert-dialog';
 import { Employee } from '@/types';
-import { generateId } from '@/utils';
+import { employeeService } from '@/services/jsonStorage';
 
 const Employees = () => {
-  // Récupérer les employés du localStorage
+  // Récupérer les employés du service JSON
   const [employees, setEmployees] = useState<Employee[]>(() => {
-    const savedData = localStorage.getItem('planningData');
-    return savedData ? JSON.parse(savedData).employees || [] : [];
+    return employeeService.getAll();
   });
   
   const [formOpen, setFormOpen] = useState(false);
   const [currentEmployee, setCurrentEmployee] = useState<Employee | undefined>(undefined);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<string>('');
+  
+  // Rafraîchir la liste quand nécessaire
+  useEffect(() => {
+    setEmployees(employeeService.getAll());
+  }, []);
   
   const handleAddEmployee = () => {
     setCurrentEmployee(undefined);
@@ -47,55 +50,45 @@ const Employees = () => {
   const confirmDeleteEmployee = () => {
     if (!employeeToDelete) return;
     
-    const updatedEmployees = employees.filter(emp => emp.id !== employeeToDelete);
-    setEmployees(updatedEmployees);
+    // Supprimer via le service
+    const success = employeeService.delete(employeeToDelete);
     
-    // Mettre à jour le localStorage
-    const savedData = localStorage.getItem('planningData');
-    if (savedData) {
-      const data = JSON.parse(savedData);
-      data.employees = updatedEmployees;
-      localStorage.setItem('planningData', JSON.stringify(data));
+    if (success) {
+      // Mise à jour locale après suppression réussie
+      const updatedEmployees = employees.filter(emp => emp.id !== employeeToDelete);
+      setEmployees(updatedEmployees);
+      
+      toast.success('Employé supprimé avec succès');
     } else {
-      localStorage.setItem('planningData', JSON.stringify({ employees: updatedEmployees }));
+      toast.error('Erreur lors de la suppression de l\'employé');
     }
     
-    toast.success('Employé supprimé avec succès');
     setDeleteDialogOpen(false);
     setEmployeeToDelete('');
   };
   
   const handleSaveEmployee = (employee: Employee) => {
-    let updatedEmployees: Employee[];
-    
     if (employee.id) {
-      // Mettre à jour un employé existant
-      updatedEmployees = employees.map(emp => 
-        emp.id === employee.id ? employee : emp
+      // Mise à jour via le service
+      const updatedEmployee = employeeService.update(employee);
+      
+      // Mettre à jour la liste locale
+      const updatedEmployees = employees.map(emp => 
+        emp.id === employee.id ? updatedEmployee : emp
       );
+      
+      setEmployees(updatedEmployees);
       toast.success('Employé modifié avec succès');
     } else {
-      // Ajouter un nouvel employé
-      const newEmployee = {
-        ...employee,
-        id: generateId(),
-        schedule: []
-      };
-      updatedEmployees = [...employees, newEmployee];
+      // Créer via le service (le service génère l'ID)
+      const newEmployee = employeeService.create(employee);
+      
+      // Ajouter à la liste locale
+      setEmployees(prev => [...prev, newEmployee]);
       toast.success('Employé ajouté avec succès');
     }
     
-    setEmployees(updatedEmployees);
-    
-    // Mettre à jour le localStorage
-    const savedData = localStorage.getItem('planningData');
-    if (savedData) {
-      const data = JSON.parse(savedData);
-      data.employees = updatedEmployees;
-      localStorage.setItem('planningData', JSON.stringify(data));
-    } else {
-      localStorage.setItem('planningData', JSON.stringify({ employees: updatedEmployees }));
-    }
+    setFormOpen(false);
   };
   
   return (

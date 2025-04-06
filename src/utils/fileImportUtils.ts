@@ -2,6 +2,7 @@
 import { MonthData } from '@/types';
 import { toast } from 'sonner';
 import { importFromExcel } from './exportUtils';
+import { saveData } from '@/services/jsonStorage';
 
 /**
  * Handle file import from an input element
@@ -19,10 +20,15 @@ export const handleFileImport = (event: React.ChangeEvent<HTMLInputElement>, onS
         const importedData = await importFromExcel(result);
         
         if (importedData) {
-          // Save to localStorage
-          localStorage.setItem('planningData', JSON.stringify(importedData));
+          // Sauvegarder via notre service JSON
+          saveData({
+            planningData: importedData,
+            employees: importedData.employees,
+            projects: importedData.projects,
+            statuses: [] // Si les statuts sont gérés ailleurs
+          });
           
-          // Callback if provided
+          // Callback si fourni
           if (onSuccess) {
             onSuccess(importedData);
           }

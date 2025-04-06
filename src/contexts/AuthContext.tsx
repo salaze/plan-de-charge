@@ -29,12 +29,19 @@ export const useAuth = () => {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Ensure useState is only called during component rendering
   const [user, setUser] = useState<User>(null);
   
+  // Use useEffect for side effects like localStorage access
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (e) {
+        console.error('Failed to parse stored user data:', e);
+        localStorage.removeItem('user');
+      }
     }
   }, []);
 
@@ -109,13 +116,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         employees: updatedEmployees
       }));
       
-      if (user && user.username) {
-        const updatedEmployee = updatedEmployees.find(emp => emp.name === user.username);
-        if (updatedEmployee && updatedEmployee.role !== user.role) {
-          const updatedUser = { ...user, role: updatedEmployee.role };
-          setUser(updatedUser);
-          localStorage.setItem('user', JSON.stringify(updatedUser));
-        }
+      if (user && user.employeeId === employeeId) {
+        const updatedUser = { ...user, role: newRole };
+        setUser(updatedUser);
+        localStorage.setItem('user', JSON.stringify(updatedUser));
       }
     }
   };

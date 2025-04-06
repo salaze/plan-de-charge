@@ -24,23 +24,19 @@ interface AuthProviderProps {
 }
 
 // Create context with a default value
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  login: () => false,
-  logout: () => {},
-  isAuthenticated: false,
-  isAdmin: false,
-  updateUserRoles: () => {},
-  updatePassword: () => false
-});
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Hook to use the auth context
-export const useAuth = () => {
-  return useContext(AuthContext);
+export const useAuth = (): AuthContextType => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 };
 
-// Define AuthProvider as a normal React functional component, not a variable
-export function AuthProvider({ children }: AuthProviderProps) {
+// Define AuthProvider as a proper React component
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User>(null);
 
   // Load user data from localStorage on initial render
@@ -178,4 +174,4 @@ export function AuthProvider({ children }: AuthProviderProps) {
       {children}
     </AuthContext.Provider>
   );
-}
+};

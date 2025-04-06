@@ -23,16 +23,16 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Hook to use the auth context
-export const useAuth = () => {
+export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-};
+}
 
 // Define AuthProvider as a proper React functional component
-const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User>(null);
 
   // Load user data from localStorage on initial render
@@ -168,6 +168,4 @@ const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
 
   // Return the provider with the value
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
-
-export { AuthProvider };
+}

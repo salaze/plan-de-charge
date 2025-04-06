@@ -7,6 +7,11 @@ interface EmployeeRouteProps {
 }
 
 export const EmployeeRoute = ({ children }: EmployeeRouteProps) => {
-  // The existing component just returns children without any authentication check
+  const { isAuthenticated } = useAuth();
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  
   return <>{children}</>;
 };

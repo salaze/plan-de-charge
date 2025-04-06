@@ -19,6 +19,10 @@ interface AuthContextType {
   updatePassword: (employeeId: string, newPassword: string) => boolean;
 }
 
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
 // Create context with a default value
 const AuthContext = createContext<AuthContextType>({
   user: null,
@@ -39,12 +43,8 @@ export const useAuth = () => {
   return context;
 };
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
-
 // Define AuthProvider as a React functional component
-export const AuthProvider = ({ children }: AuthProviderProps) => {
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User>(null);
 
   // Load user data from localStorage on initial render
@@ -167,7 +167,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return false;
   };
 
-  const contextValue: AuthContextType = {
+  const contextValue = {
     user,
     login,
     logout,

@@ -7,6 +7,6 @@ interface EmployeeRouteProps {
 }
 
 export const EmployeeRoute = ({ children }: EmployeeRouteProps) => {
-  // Plus besoin de vérifier l'authentification pour accéder au planning
+  // The existing component just returns children without any authentication check
   return <>{children}</>;
 };

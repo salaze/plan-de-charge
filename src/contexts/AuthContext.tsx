@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { UserRole, Employee } from '@/types';
 import { toast } from 'sonner';
@@ -29,10 +30,8 @@ export const useAuth = () => {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Ensure useState is only called during component rendering
   const [user, setUser] = useState<User>(null);
   
-  // Use useEffect for side effects like localStorage access
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {

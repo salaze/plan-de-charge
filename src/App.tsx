@@ -18,9 +18,7 @@ import InitApp from '@/pages/InitApp';
 function App() {
   return (
     <BrowserRouter>
-      {/* Make sure ThemeProvider is outside AuthProvider */}
       <ThemeProvider defaultTheme="light" attribute="class">
-        {/* Ensure AuthProvider is properly instantiated */}
         <AuthProvider>
           <div className="app">
             <Routes>

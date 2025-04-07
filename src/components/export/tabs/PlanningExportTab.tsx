@@ -8,18 +8,20 @@ import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Separator } from '@/components/ui/separator';
 import { handleFileImport } from '@/utils/fileImportUtils';
 import { StatusCell } from '@/components/calendar/StatusCell';
-import { StatusCode } from '@/types';
+import { Status, StatusCode } from '@/types';
 
 interface PlanningExportTabProps {
   handleExport: () => void;
   handleImportSuccess: (data: any) => void;
   importedData: any | null;
+  statuses?: Status[];  // Ajout des statuts dynamiques
 }
 
 const PlanningExportTab: React.FC<PlanningExportTabProps> = ({
   handleExport,
   handleImportSuccess,
-  importedData
+  importedData,
+  statuses = []  // Valeur par défaut
 }) => {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [exportFormat, setExportFormat] = useState<string>("excel");
@@ -43,7 +45,10 @@ const PlanningExportTab: React.FC<PlanningExportTabProps> = ({
     }
   };
   
-  const statuses: StatusCode[] = ['assistance', 'absence', 'conges', 'formation', 'permanence'];
+  // Utiliser les statuts fournis ou préparer ceux de secours si non disponibles
+  const statusCodes: StatusCode[] = statuses.length > 0 
+    ? statuses.map(s => s.code as StatusCode)
+    : ['assistance', 'absence', 'conges', 'formation', 'permanence'];
   
   return (
     <div className="space-y-4">
@@ -167,10 +172,13 @@ const PlanningExportTab: React.FC<PlanningExportTabProps> = ({
 };
 
 type StatusLegendCardProps = {
-  statuses: StatusCode[];
+  statuses: Status[];
 };
 
 const StatusLegendCard: React.FC<StatusLegendCardProps> = ({ statuses }) => {
+  // Si aucun statut n'est fourni, nous n'affichons pas la carte de légende
+  if (statuses.length === 0) return null;
+
   return (
     <Card>
       <CardHeader>
@@ -182,12 +190,14 @@ const StatusLegendCard: React.FC<StatusLegendCardProps> = ({ statuses }) => {
       <CardContent>
         <div className="space-y-4">
           {statuses.map((status) => (
-            <div key={status} className="flex items-center justify-between">
+            <div key={status.id} className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <StatusCell status={status} isBadge={true} />
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${status.color}`}>
+                  {status.code}
+                </span>
               </div>
               <div className="text-sm text-muted-foreground">
-                Code: {status.toUpperCase()}
+                {status.label}
               </div>
             </div>
           ))}

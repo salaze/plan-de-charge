@@ -3,12 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Layout } from '@/components/layout/Layout';
-import { PlanningGrid } from '@/components/calendar/PlanningGrid';
+import { PlanningGridEnhanced } from '@/components/calendar/PlanningGridEnhanced';
 import { MonthSelector } from '@/components/calendar/MonthSelector';
 import { planningService, projectService } from '@/services/jsonStorage';
-import { employeeService } from '@/services/supabaseServices';
+import { employeeService, statusService } from '@/services/supabaseServices';
 import { useAuth } from '@/contexts/AuthContext';
-import { Employee, Project } from '@/types';
+import { Employee, Project, Status } from '@/types';
 import { toast } from 'sonner';
 
 const Index = () => {
@@ -17,30 +17,34 @@ const Index = () => {
   const [year, setYear] = useState(planningData.year || new Date().getFullYear());
   const [month, setMonth] = useState(planningData.month || new Date().getMonth());
   
-  // Get employees and projects
+  // Get employees, projects and statuses
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [statuses, setStatuses] = useState<Status[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const projects = projectService.getAll();
   
   // Get authentication context to check if user is admin
   const { isAdmin } = useAuth();
   
-  // Charger les employés
+  // Charger les employés et les statuts
   useEffect(() => {
-    const fetchEmployees = async () => {
+    const fetchData = async () => {
       setIsLoading(true);
       try {
-        const data = await employeeService.getAll();
-        setEmployees(data);
+        const employeesData = await employeeService.getAll();
+        setEmployees(employeesData);
+        
+        const statusesData = await statusService.getAll();
+        setStatuses(statusesData);
       } catch (error) {
-        console.error('Erreur lors du chargement des employés:', error);
-        toast.error('Erreur lors du chargement des employés');
+        console.error('Erreur lors du chargement des données:', error);
+        toast.error('Erreur lors du chargement des données');
       } finally {
         setIsLoading(false);
       }
     };
     
-    fetchEmployees();
+    fetchData();
   }, []);
   
   // Handle month change
@@ -130,11 +134,12 @@ const Index = () => {
         </div>
         
         <div className="bg-card rounded-lg shadow-md">
-          <PlanningGrid
+          <PlanningGridEnhanced
             year={year}
             month={month}
             employees={employees}
             projects={projects}
+            statuses={statuses}
             onStatusChange={handleStatusChange}
             isAdmin={isAdmin}
           />

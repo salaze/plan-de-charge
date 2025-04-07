@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Layout } from '@/components/layout/Layout';
@@ -7,6 +6,7 @@ import { exportEmployeesToExcel, importEmployeesFromExcel } from '@/utils/employ
 import { exportStatsToExcel } from '@/utils/statsExportUtils';
 import { MonthData, Employee } from '@/types';
 import { calculateEmployeeStats } from '@/utils/statsUtils';
+import { statusService } from '@/services/supabaseServices';
 
 // Import our new components
 import SupabaseAlert from '@/components/export/SupabaseAlert';
@@ -22,14 +22,21 @@ const Export = () => {
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [date, setDate] = useState<Date | undefined>(new Date());
-  
+  const [statuses, setStatuses] = useState<Status[]>([]);
+
   useEffect(() => {
     const savedData = localStorage.getItem('planningData');
     if (savedData) {
       setPlanningData(JSON.parse(savedData));
     }
   }, []);
-  
+
+  useEffect(() => {
+    statusService.getAll().then((data) => {
+      setStatuses(data);
+    });
+  }, []);
+
   const handleExport = () => {
     try {
       const savedData = localStorage.getItem('planningData');
@@ -215,6 +222,7 @@ const Export = () => {
           handleExport={handleExport}
           handleExportEmployees={handleExportEmployees}
           handleExportStats={handleExportStats}
+          statuses={statuses}
         />
       </div>
     </Layout>

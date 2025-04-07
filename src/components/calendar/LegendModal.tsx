@@ -9,7 +9,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { STATUS_LABELS, STATUS_COLORS, StatusCode } from '@/types';
+import { Status, StatusCode } from '@/types';
 import { StatusCell } from './StatusCell';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
@@ -25,11 +25,11 @@ interface LegendModalProps {
   isOpen: boolean;
   onClose: () => void;
   projects: Project[];
+  statuses: Status[];  // Ajout des statuts dynamiques
 }
 
-export function LegendModal({ isOpen, onClose, projects }: LegendModalProps) {
+export function LegendModal({ isOpen, onClose, projects, statuses }: LegendModalProps) {
   const { isAdmin } = useAuth();
-  const statuses = Object.keys(STATUS_LABELS).filter(status => status !== '') as StatusCode[];
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -47,9 +47,13 @@ export function LegendModal({ isOpen, onClose, projects }: LegendModalProps) {
               <h3 className="text-sm font-medium">Types d'activités</h3>
               <div className="grid gap-2">
                 {statuses.map((status) => (
-                  <div key={status} className="flex items-center justify-between">
-                    <StatusCell status={status} isBadge={true} />
-                    <span className="text-sm text-muted-foreground">{STATUS_LABELS[status]}</span>
+                  <div key={status.id} className="flex items-center justify-between">
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${status.color}`}
+                    >
+                      {status.code}
+                    </span>
+                    <span className="text-sm text-muted-foreground">{status.label}</span>
                   </div>
                 ))}
               </div>

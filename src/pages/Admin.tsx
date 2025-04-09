@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileSpreadsheet, Users, Settings as SettingsIcon, Shield, LayoutList, Activity } from 'lucide-react';
@@ -12,17 +12,27 @@ import { RolesTab } from '@/components/admin/tabs/RolesTab';
 import { SettingsTab } from '@/components/admin/tabs/SettingsTab';
 import { ConnectionLogsTab } from '@/components/admin/tabs/ConnectionLogsTab';
 import { useAdminData } from '@/hooks/useAdminData';
+import { useSearchParams } from 'react-router-dom';
 
 const Admin = () => {
   const { logout } = useAuth();
   const { data, handleProjectsChange, handleStatusesChange, handleEmployeesChange } = useAdminData();
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState('projects');
+  
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam && ['projects', 'statuses', 'employees', 'roles', 'logs', 'settings'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
   
   return (
     <Layout>
       <div className="space-y-6 animate-fade-in">
         <AdminHeader onLogout={logout} />
         
-        <Tabs defaultValue="projects" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid grid-cols-6 mb-4">
             <TabsTrigger value="projects" className="flex items-center gap-2">
               <FileSpreadsheet className="h-4 w-4" />

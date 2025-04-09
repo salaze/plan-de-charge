@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Calendar, Users, BarChart, FileSpreadsheet, Settings, LogIn, LogOut, Shield } from 'lucide-react';
+import { Calendar, Users, BarChart, FileSpreadsheet, Settings, LogIn, LogOut, Shield, Activity } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -53,6 +53,12 @@ export function SidebarMenu() {
       label: 'Administration',
       path: '/admin',
       adminOnly: true
+    },
+    {
+      icon: Activity,
+      label: 'Logs de connexion',
+      path: '/admin?tab=logs',
+      adminOnly: true
     }
   ];
   
@@ -77,7 +83,8 @@ export function SidebarMenu() {
               to={item.path}
               className={cn(
                 "flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-all duration-300",
-                location.pathname === item.path
+                location.pathname === item.path || 
+                (item.path.includes('?tab=') && location.pathname + location.search === item.path)
                   ? "bg-sidebar-accent text-sidebar-accent-foreground"
                   : "text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent/30"
               )}

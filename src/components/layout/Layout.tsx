@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Menu, X } from 'lucide-react';
 import { SidebarMenu } from './SidebarMenu';
@@ -60,7 +61,7 @@ export function Layout({ children }: LayoutProps) {
       
       <aside 
         ref={sidebarRef}
-        className={`hidden md:flex flex-col w-64 bg-sidebar fixed inset-y-0 z-50 transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        className={`hidden md:flex flex-col w-64 bg-sidebar fixed inset-y-0 z-50 transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-60'}`}
         onMouseLeave={handleMouseLeave}
       >
         <div className="p-4 border-b border-sidebar-border">

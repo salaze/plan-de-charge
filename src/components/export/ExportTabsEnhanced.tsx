@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { ExportTabs } from './ExportTabs';
+import ExportTabs from './ExportTabs';
 import { statusService } from '@/services/supabaseServices';
 import { Status } from '@/types';
 

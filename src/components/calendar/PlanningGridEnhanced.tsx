@@ -56,6 +56,7 @@ export function PlanningGridEnhanced({
         month={month}
         employees={employees}
         projects={projects}
+        statuses={statuses}
         onStatusChange={onStatusChange}
         isAdmin={isAdmin}
       />

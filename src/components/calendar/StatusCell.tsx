@@ -10,6 +10,7 @@ interface StatusCellProps {
   period?: 'AM' | 'PM' | 'FULL';
   isHighlighted?: boolean;
   projectCode?: string;
+  size?: 'sm' | 'md' | 'lg';
 }
 
 export function StatusCell({ 
@@ -18,7 +19,8 @@ export function StatusCell({
   className, 
   period,
   isHighlighted = false,
-  projectCode
+  projectCode,
+  size
 }: StatusCellProps) {
   if (!status) return <span className="text-muted-foreground">-</span>;
   
@@ -33,6 +35,7 @@ export function StatusCell({
   }
   
   const highlightClass = isHighlighted ? 'border-2 border-black' : '';
+  const sizeClass = size === 'sm' ? 'text-xs py-0.5' : '';
   
   if (isBadge) {
     return (
@@ -41,6 +44,7 @@ export function StatusCell({
           "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
           STATUS_COLORS[status],
           highlightClass,
+          sizeClass,
           className
         )}
       >
@@ -55,6 +59,7 @@ export function StatusCell({
         "inline-block w-full text-center py-1 rounded",
         STATUS_COLORS[status],
         highlightClass,
+        sizeClass,
         className
       )}
     >

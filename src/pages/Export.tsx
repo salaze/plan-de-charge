@@ -4,14 +4,14 @@ import { Layout } from '@/components/layout/Layout';
 import { exportToExcel } from '@/utils/exportUtils';
 import { exportEmployeesToExcel, importEmployeesFromExcel } from '@/utils/employeeExportUtils';
 import { exportStatsToExcel } from '@/utils/statsExportUtils';
-import { MonthData, Employee } from '@/types';
+import { MonthData, Employee, Status } from '@/types';
 import { calculateEmployeeStats } from '@/utils/statsUtils';
 import { statusService } from '@/services/supabaseServices';
 
 // Import our new components
 import SupabaseAlert from '@/components/export/SupabaseAlert';
 import DepartmentFilter from '@/components/export/DepartmentFilter';
-import ExportTabs from '@/components/export/ExportTabs';
+import { ExportTabsEnhanced } from '@/components/export/ExportTabsEnhanced';
 
 const Export = () => {
   const [activeTab, setActiveTab] = useState("planning");
@@ -207,23 +207,7 @@ const Export = () => {
           setSelectedDepartment={setSelectedDepartment}
         />
         
-        <ExportTabs 
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          selectedDepartment={selectedDepartment}
-          currentYear={currentYear}
-          currentMonth={currentMonth}
-          setCurrentYear={setCurrentYear}
-          setCurrentMonth={setCurrentMonth}
-          importedData={importedData}
-          importedEmployees={importedEmployees}
-          handleImportSuccess={handleImportSuccess}
-          handleImportEmployees={handleImportEmployees}
-          handleExport={handleExport}
-          handleExportEmployees={handleExportEmployees}
-          handleExportStats={handleExportStats}
-          statuses={statuses}
-        />
+        <ExportTabsEnhanced activeTab={activeTab} />
       </div>
     </Layout>
   );

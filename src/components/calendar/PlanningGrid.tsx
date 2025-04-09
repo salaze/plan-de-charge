@@ -4,7 +4,7 @@ import { fr } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { Calendar, Info, HelpCircle } from 'lucide-react';
 import { StatusCell } from './StatusCell';
-import { StatusSelector } from './StatusSelector';
+import { StatusSelectorEnhanced } from './StatusSelectorEnhanced';
 import { LegendModal } from './LegendModal';
 import { Employee, Project, Status } from '@/types';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -42,20 +42,17 @@ export function PlanningGrid({
   const [legendModalOpen, setLegendModalOpen] = useState(false);
   const isMobile = useIsMobile();
 
-  // Réinitialiser la sélection lorsque le mois ou l'année change
   useEffect(() => {
     setSelectedDate(null);
     setSelectedEmployee(null);
     setStatusSelectorOpen(false);
   }, [month, year]);
 
-  // Générer les jours du mois
   const generateDays = () => {
     const firstDay = startOfMonth(new Date(year, month));
     const lastDay = endOfMonth(firstDay);
     const days = [];
 
-    // Ajouter les jours du mois
     for (let day = 0; day < lastDay.getDate(); day++) {
       const date = addDays(firstDay, day);
       days.push(date);
@@ -66,17 +63,14 @@ export function PlanningGrid({
 
   const days = generateDays();
 
-  // Formater la date pour l'affichage
   const formatDate = (date: Date) => {
     return format(date, 'yyyy-MM-dd');
   };
 
-  // Vérifier si un jour est un jour de week-end
   const isWeekendDay = (date: Date) => {
     return isWeekend(date);
   };
 
-  // Gérer le clic sur une cellule
   const handleCellClick = (employeeId: string, date: Date, period: 'AM' | 'PM' | 'FULL') => {
     if (!isAdmin) return;
 
@@ -86,7 +80,6 @@ export function PlanningGrid({
     setStatusSelectorOpen(true);
   };
 
-  // Obtenir le statut d'un employé pour une date et une période données
   const getEmployeeStatus = (employeeId: string, date: string, period: 'AM' | 'PM' | 'FULL') => {
     const employee = employees.find(e => e.id === employeeId);
     if (!employee) return null;
@@ -98,7 +91,6 @@ export function PlanningGrid({
     return dayStatus || null;
   };
 
-  // Gérer la sélection d'un statut
   const handleStatusSelect = (
     status: string,
     isHighlighted: boolean = false,
@@ -117,12 +109,10 @@ export function PlanningGrid({
     setStatusSelectorOpen(false);
   };
 
-  // Afficher la légende
   const handleShowLegend = () => {
     setLegendModalOpen(true);
   };
 
-  // Rendre l'en-tête du tableau
   const renderHeader = () => {
     return (
       <div className="sticky top-0 z-10 bg-background">
@@ -161,7 +151,6 @@ export function PlanningGrid({
     );
   };
 
-  // Rendre les lignes du tableau
   const renderRows = () => {
     return employees.map((employee) => (
       <div
@@ -177,7 +166,6 @@ export function PlanningGrid({
             selectedEmployee === employee.id &&
             isSameDay(selectedDate, day);
 
-          // Si c'est un mobile, on n'affiche qu'une seule cellule par jour
           if (isMobile) {
             const status = getEmployeeStatus(employee.id, dateStr, 'FULL');
             return (
@@ -193,7 +181,6 @@ export function PlanningGrid({
                     status={status.status}
                     isHighlighted={status.isHighlighted}
                     projectCode={status.projectCode}
-                    projects={projects}
                   />
                 ) : (
                   <div className="w-6 h-6"></div>
@@ -202,7 +189,6 @@ export function PlanningGrid({
             );
           }
 
-          // Sur desktop, on affiche AM et PM
           const amStatus = getEmployeeStatus(employee.id, dateStr, 'AM');
           const pmStatus = getEmployeeStatus(employee.id, dateStr, 'PM');
 
@@ -222,7 +208,6 @@ export function PlanningGrid({
                     status={amStatus.status}
                     isHighlighted={amStatus.isHighlighted}
                     projectCode={amStatus.projectCode}
-                    projects={projects}
                     size="sm"
                   />
                 ) : (
@@ -240,7 +225,6 @@ export function PlanningGrid({
                     status={pmStatus.status}
                     isHighlighted={pmStatus.isHighlighted}
                     projectCode={pmStatus.projectCode}
-                    projects={projects}
                     size="sm"
                   />
                 ) : (
@@ -260,11 +244,12 @@ export function PlanningGrid({
         {renderHeader()}
         <div className="relative">
           {renderRows()}
-          <StatusSelector
+          <StatusSelectorEnhanced
             open={statusSelectorOpen}
             onOpenChange={setStatusSelectorOpen}
             onSelect={handleStatusSelect}
             projects={projects}
+            statuses={statuses}
           />
         </div>
       </div>

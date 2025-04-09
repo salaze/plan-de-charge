@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
@@ -12,21 +11,17 @@ import { toast } from 'sonner';
 import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
 
 const Index = () => {
-  // Get current month and year from planning service or default to current date
   const planningData = planningService.getData();
   const [year, setYear] = useState(planningData.year || new Date().getFullYear());
   const [month, setMonth] = useState(planningData.month || new Date().getMonth());
   
-  // Get employees, projects and statuses
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [statuses, setStatuses] = useState<Status[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   
-  // Get authentication context to check if user is admin
   const { isAdmin, isAuthenticated } = useAuth();
   
-  // Function to fetch data
   const fetchData = async () => {
     setIsLoading(true);
     try {
@@ -50,26 +45,22 @@ const Index = () => {
     }
   };
   
-  // Charger les employés et les statuts
   useEffect(() => {
     fetchData();
   }, []);
   
-  // Set up real-time updates
   useRealtimeUpdates({
     tables: ['employes', 'employe_schedule', 'statuts'],
     onDataChange: fetchData,
     showToasts: true
   });
   
-  // Handle month change
   const handleMonthChange = (newYear: number, newMonth: number) => {
     setYear(newYear);
     setMonth(newMonth);
     planningService.updateMonth(newYear, newMonth);
   };
   
-  // Handle status change
   const handleStatusChange = async (
     employeeId: string, 
     date: string, 
@@ -78,7 +69,6 @@ const Index = () => {
     isHighlighted?: boolean,
     projectCode?: string
   ) => {
-    // Only allow status change if user is authenticated
     if (!isAuthenticated) {
       toast.error('Vous devez être connecté pour modifier le planning');
       return;
@@ -87,7 +77,6 @@ const Index = () => {
     try {
       console.log('Changing status:', { employeeId, date, status, period, isHighlighted, projectCode });
       
-      // Mettre à jour dans Supabase
       const success = await employeeService.updateStatus(employeeId, {
         date,
         status,
@@ -101,17 +90,14 @@ const Index = () => {
         return;
       }
       
-      // Mettre à jour la liste locale
       setEmployees(prevEmployees => 
         prevEmployees.map(emp => {
           if (emp.id !== employeeId) return emp;
           
-          // Filtrer les statuts existants pour cette date/période
           const filteredSchedule = emp.schedule.filter(
             ds => ds.date !== date || ds.period !== period
           );
           
-          // Si le statut n'est pas vide, ajouter le nouvel état
           let newSchedule = filteredSchedule;
           if (status) {
             newSchedule = [

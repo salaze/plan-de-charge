@@ -27,15 +27,15 @@ export function useTheme() {
   const [mounted, setMounted] = React.useState(false)
   
   // Create a safe way to access the ThemeContext
-  let themeContext: ThemeContextType;
+  let themeContext: ThemeContextType = defaultThemeContext;
   
   try {
     // Only try to access ThemeContext on the client side
     const { ThemeContext } = require("next-themes");
-    themeContext = React.useContext(ThemeContext as React.Context<ThemeContextType>);
+    themeContext = React.useContext(ThemeContext as React.Context<ThemeContextType>) || defaultThemeContext;
   } catch (e) {
     // If we're on the server or there's an error, use default context
-    themeContext = defaultThemeContext;
+    console.error("Error accessing ThemeContext:", e);
   }
   
   const { resolvedTheme, setTheme, theme } = themeContext;

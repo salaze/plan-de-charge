@@ -175,10 +175,14 @@ export const ToastProvider = ({ children }: { children: React.ReactNode }) => {
 
 // Toast hook
 export function useToast() {
-  const { state } = React.useContext(ToastContext)
+  const context = React.useContext(ToastContext)
+  
+  if (!context) {
+    throw new Error("useToast must be used within a ToastProvider")
+  }
 
   return {
-    toasts: state.toasts,
+    toasts: context.state.toasts,
     toast,
     dismiss: (toastId?: string) => dispatch({ type: "DISMISS_TOAST", toastId }),
   }

@@ -44,11 +44,35 @@ export function EmployeeRow({
     return dayStatus || null;
   };
 
+  // Guard against empty or invalid days array
+  if (!days || !Array.isArray(days) || days.length === 0) {
+    return (
+      <div className="flex border-b">
+        <div className="min-w-[150px] w-[150px] p-2 border-r truncate">{employee.name}</div>
+        <div className="flex-1 flex justify-center items-center p-2">
+          Aucune donnée disponible
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex border-b">
       <div className="min-w-[150px] w-[150px] p-2 border-r truncate">{employee.name}</div>
       <div className="flex-1 flex">
         {days.map((day, index) => {
+          // Skip invalid date objects
+          if (!day || !(day instanceof Date)) {
+            return (
+              <div 
+                key={`invalid-day-${index}`}
+                className="w-[40px] min-w-[40px] border-r"
+              >
+                <div className="h-full flex items-center justify-center">-</div>
+              </div>
+            );
+          }
+          
           const dateStr = formatDate(day);
           const isWeekend = isWeekendDay(day);
           const isSelected =

@@ -17,7 +17,6 @@ export function PlanningGridHeader({ days, handleShowLegend }: PlanningGridHeade
 
   return (
     <div className="sticky top-0 z-10 bg-background">
-      {/* Modification de la classe grid pour assurer un affichage horizontal */}
       <div className="flex border-b">
         <div className="min-w-[150px] w-[150px] p-2 font-medium text-center border-r flex items-center justify-between">
           <span>Employés</span>
@@ -32,7 +31,16 @@ export function PlanningGridHeader({ days, handleShowLegend }: PlanningGridHeade
           </Button>
         </div>
         <div className="flex-1 flex">
-          {days.map((day, index) => {
+          {days && days.length > 0 ? days.map((day, index) => {
+            if (!day || !(day instanceof Date)) {
+              return (
+                <div key={`empty-day-${index}`} className="w-[40px] min-w-[40px] p-1 text-center border-r text-xs">
+                  <div className="font-medium">-</div>
+                  <div className="text-muted-foreground uppercase">-</div>
+                </div>
+              );
+            }
+            
             const isWeekend = isWeekendDay(day);
             const dayNumber = format(day, 'd');
             const dayName = format(day, 'EEE', { locale: fr });
@@ -48,7 +56,9 @@ export function PlanningGridHeader({ days, handleShowLegend }: PlanningGridHeade
                 <div className="text-muted-foreground uppercase">{dayName}</div>
               </div>
             );
-          })}
+          }) : (
+            <div className="w-full p-4 text-center">Aucune date à afficher</div>
+          )}
         </div>
       </div>
     </div>

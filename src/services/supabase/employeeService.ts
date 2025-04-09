@@ -185,9 +185,5 @@ export const employeeService = {
 };
 
 // Ré-exporter les types et fonctions de mappers pour assurer la compatibilité
-export { 
-  mapSupabaseEmployeeToEmployee,
-  mapEmployeeToSupabaseEmployee,
-  SupabaseEmployee,
-  SupabaseSchedule 
-};
+export type { SupabaseEmployee, SupabaseSchedule };
+export { mapSupabaseEmployeeToEmployee, mapEmployeeToSupabaseEmployee };

@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { mapEmployeeToSupabaseEmployee } from './employeeService';
+import { mapEmployeeToSupabaseEmployee } from './mappers/employeeMappers';
 
 // Fonction pour migrer les données du localStorage vers Supabase
 export const migrateLocalDataToSupabase = async (): Promise<boolean> => {

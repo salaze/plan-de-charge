@@ -1,52 +1,54 @@
 
-import React, { lazy, Suspense } from 'react';
+import React, { Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { ThemeProvider } from '@/components/ui/theme-provider';
 import { Toaster } from '@/components/ui/toaster';
-import { Toaster as SonnerToaster } from "@/components/ui/sonner";
-import { AdminRoute } from '@/components/AdminRoute';
-import { EmployeeRoute } from '@/components/EmployeeRoute';
-import { ThemeProvider } from '@/components/theme-provider';
-import { AuthProvider } from '@/contexts/AuthContext';
-import { ToastProvider } from '@/hooks/toast';
-import './App.css';
+import { Toaster as SonnerToaster } from '@/components/ui/sonner';
 
-// Import components directly instead of using lazy loading for problematic ones
-import Index from '@/pages/Index';
-import Settings from '@/pages/Settings';
-import Employees from '@/pages/Employees';
+// Auth context
+import { AuthProvider } from '@/contexts/auth';
 
-// Lazy-loaded components for other routes
-const Admin = lazy(() => import('@/pages/Admin'));
-const Export = lazy(() => import('@/pages/Export'));
-const Statistics = lazy(() => import('@/pages/Statistics'));
-const Login = lazy(() => import('@/pages/AdminLogin'));
-const InitApp = lazy(() => import('@/pages/InitApp'));
-const NotFound = lazy(() => import('@/pages/NotFound'));
+// Protected routes
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+
+// Pages (import main pages directly for better performance)
+import Dashboard from '@/pages/dashboard';
+import Login from '@/pages/login';
+import NotFound from '@/pages/not-found';
+
+// Lazy-loaded pages
+const Employees = React.lazy(() => import('@/pages/employees'));
+const Planning = React.lazy(() => import('@/pages/planning'));
+const Statistics = React.lazy(() => import('@/pages/statistics'));
+const Export = React.lazy(() => import('@/pages/export'));
+const Settings = React.lazy(() => import('@/pages/settings'));
 
 function App() {
   return (
-    <ThemeProvider defaultTheme="light" storageKey="planning-theme" attribute="class" enableSystem>
-      <ToastProvider>
-        <AuthProvider>
-          <BrowserRouter>
-            <Suspense fallback={<div className="flex items-center justify-center h-screen">Chargement...</div>}>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
-                <Route path="/employees" element={<AdminRoute><Employees /></AdminRoute>} />
-                <Route path="/export" element={<AdminRoute><Export /></AdminRoute>} />
-                <Route path="/statistics" element={<AdminRoute><Statistics /></AdminRoute>} />
-                <Route path="/settings" element={<AdminRoute><Settings /></AdminRoute>} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/init" element={<InitApp />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-            <SonnerToaster />
-            <Toaster />
-          </BrowserRouter>
-        </AuthProvider>
-      </ToastProvider>
+    <ThemeProvider defaultTheme="light" storageKey="planning-theme">
+      <AuthProvider>
+        <BrowserRouter>
+          <Suspense fallback={<div className="flex h-screen items-center justify-center">Chargement...</div>}>
+            <Routes>
+              {/* Public routes */}
+              <Route path="/login" element={<Login />} />
+              
+              {/* Protected routes */}
+              <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/employees" element={<ProtectedRoute><Employees /></ProtectedRoute>} />
+              <Route path="/planning" element={<ProtectedRoute><Planning /></ProtectedRoute>} />
+              <Route path="/statistics" element={<ProtectedRoute><Statistics /></ProtectedRoute>} />
+              <Route path="/export" element={<ProtectedRoute><Export /></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+              
+              {/* Fallback route */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
+          <SonnerToaster />
+          <Toaster />
+        </BrowserRouter>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

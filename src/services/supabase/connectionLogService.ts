@@ -15,6 +15,7 @@ export const connectionLogService = {
         return [];
       }
 
+      // Safely convert the data to ConnectionLog[] type
       return (Array.isArray(data) ? data : []) as ConnectionLog[];
     } catch (error) {
       console.error('Unexpected error in getAll connection logs:', error);

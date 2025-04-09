@@ -2,10 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { ConnectionLog } from '@/types';
 import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
+import { connectionLogService } from '@/services/supabase/connectionLogService';
 
 export function ConnectionLogsTab() {
   const [logs, setLogs] = useState<ConnectionLog[]>([]);
@@ -14,27 +14,8 @@ export function ConnectionLogsTab() {
   const fetchLogs = async () => {
     try {
       setLoading(true);
-      // Using the any type as a workaround until types are updated
-      const { data, error } = await supabase
-        .from('connection_logs' as any)
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching connection logs:', error);
-        return;
-      }
-
-      // Properly validate and transform the data before setting state
-      if (data && Array.isArray(data)) {
-        const validLogs = data.filter(item => 
-          item && typeof item === 'object' && 'id' in item
-        ) as ConnectionLog[];
-        
-        setLogs(validLogs);
-      } else {
-        setLogs([]);
-      }
+      const logData = await connectionLogService.getAll();
+      setLogs(logData);
     } catch (err) {
       console.error('Unexpected error:', err);
     } finally {

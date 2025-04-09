@@ -23,7 +23,7 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   
   // Get authentication context to check if user is admin
-  const { isAdmin } = useAuth();
+  const { isAdmin, isAuthenticated } = useAuth();
   
   // Charger les employés et les statuts
   useEffect(() => {
@@ -69,6 +69,12 @@ const Index = () => {
     isHighlighted?: boolean,
     projectCode?: string
   ) => {
+    // Only allow status change if user is authenticated
+    if (!isAuthenticated) {
+      toast.error('Vous devez être connecté pour modifier le planning');
+      return;
+    }
+    
     try {
       console.log('Changing status:', { employeeId, date, status, period, isHighlighted, projectCode });
       
@@ -131,6 +137,11 @@ const Index = () => {
         <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
           <h1 className="text-2xl font-bold">Planning</h1>
           <div className="flex items-center gap-2">
+            {!isAuthenticated && (
+              <Link to="/login" className="bg-primary text-primary-foreground hover:bg-primary/90 px-3 py-2 rounded-md text-sm">
+                Se connecter
+              </Link>
+            )}
             {isAdmin && (
               <Link to="/init" className="text-sm text-muted-foreground hover:text-primary">
                 Initialisation/Migration
@@ -162,8 +173,14 @@ const Index = () => {
               projects={projects}
               statuses={statuses}
               onStatusChange={handleStatusChange}
-              isAdmin={isAdmin}
+              isAdmin={isAuthenticated && isAdmin}
             />
+          )}
+          
+          {!isAuthenticated && (
+            <div className="p-4 bg-muted/20 text-center border-t">
+              <p>Vous consultez le planning en mode lecture seule. Pour apporter des modifications, veuillez vous connecter.</p>
+            </div>
           )}
         </div>
       </div>

@@ -28,7 +28,7 @@ function App() {
         <BrowserRouter>
           <Suspense fallback={<div className="flex items-center justify-center h-screen">Chargement...</div>}>
             <Routes>
-              <Route path="/" element={<EmployeeRoute><Index /></EmployeeRoute>} />
+              <Route path="/" element={<Index />} />
               <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
               <Route path="/employees" element={<AdminRoute><Employees /></AdminRoute>} />
               <Route path="/export" element={<AdminRoute><Export /></AdminRoute>} />

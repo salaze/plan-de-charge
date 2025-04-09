@@ -56,7 +56,7 @@ export function PlanningGrid({
   }, [employees]);
 
   const handleCellClick = (employeeId: string, date: Date, period: 'AM' | 'PM' | 'FULL') => {
-    if (!isAdmin) return;
+    if (!isAdmin) return; // Disallow cell clicks if not admin
 
     setSelectedDate(date);
     setSelectedEmployee(employeeId);
@@ -110,7 +110,7 @@ export function PlanningGrid({
               selectedDate={selectedDate}
               selectedEmployee={selectedEmployee}
               selectedPeriod={selectedPeriod}
-              handleCellClick={handleCellClick}
+              handleCellClick={isAdmin ? handleCellClick : () => {}}
               formatDate={formatDate}
             />
           ))}

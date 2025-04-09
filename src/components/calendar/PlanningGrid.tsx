@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { StatusSelectorEnhanced } from './StatusSelectorEnhanced';
-import { LegendModal } from './LegendModal';
 import { Employee, Project, Status } from '@/types';
 import { usePlanningCalendar } from '@/hooks/usePlanningCalendar';
 import { PlanningGridHeader } from './grid/PlanningGridHeader';
@@ -37,7 +36,6 @@ export function PlanningGrid({
   const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<'AM' | 'PM' | 'FULL'>('FULL');
   const [statusSelectorOpen, setStatusSelectorOpen] = useState(false);
-  const [legendModalOpen, setLegendModalOpen] = useState(false);
   
   console.log(`PlanningGrid: Rendering for ${year}-${month+1}`);
   console.log(`PlanningGrid: Received employees count: ${employees?.length || 0}`);
@@ -83,7 +81,9 @@ export function PlanningGrid({
   };
 
   const handleShowLegend = () => {
-    setLegendModalOpen(true);
+    if (window.showLegendModal) {
+      window.showLegendModal();
+    }
   };
 
   if (!employees || employees.length === 0) {
@@ -123,12 +123,6 @@ export function PlanningGrid({
           />
         </div>
       </div>
-      <LegendModal 
-        isOpen={legendModalOpen} 
-        onClose={() => setLegendModalOpen(false)} 
-        projects={projects}
-        statuses={statuses}
-      />
     </div>
   );
 }

@@ -1,15 +1,24 @@
 
 import React, { useState, useEffect } from 'react';
-import { StatusSelector } from './StatusSelector';
-import { Status, StatusCode } from '@/types';
-import { Project } from '@/types';
+import { Status, StatusCode, Project } from '@/types';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 
 interface StatusSelectorEnhancedProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSelect: (status: string, isHighlighted?: boolean, projectCode?: string) => void;
   projects: Project[];
-  statuses?: Status[];
+  statuses: Status[];
 }
 
 export function StatusSelectorEnhanced({
@@ -34,98 +43,107 @@ export function StatusSelectorEnhanced({
 
   const handleStatusChange = (status: StatusCode) => {
     setSelectedStatus(status);
-    
-    // Si on sélectionne un projet, on ouvre la sélection de projet
-    if (status === 'projet') {
-      return;
+    if (status !== 'project') {
+      setProjectCode('');
     }
-    
-    // Sinon on applique directement le statut
-    onSelect(status, isHighlighted);
+  };
+
+  const handleApply = () => {
+    if (selectedStatus === 'project' && projectCode) {
+      onSelect('project', isHighlighted, projectCode);
+    } else if (selectedStatus) {
+      onSelect(selectedStatus, isHighlighted);
+    }
     onOpenChange(false);
   };
 
-  const handleProjectSelect = (code: string) => {
-    onSelect('projet', isHighlighted, code);
+  const handleClear = () => {
+    onSelect('', false);
     onOpenChange(false);
   };
 
-  const handleToggleHighlight = () => {
-    setIsHighlighted(!isHighlighted);
-  };
-
-  if (!open) return null;
+  const sortedStatuses = [...statuses].sort((a, b) => {
+    const orderA = a.displayOrder || 0;
+    const orderB = b.displayOrder || 0;
+    return orderA - orderB;
+  });
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-      <div className="bg-card p-4 rounded-lg shadow-lg max-w-md w-full">
-        <h3 className="font-medium text-lg mb-4">Sélectionner un statut</h3>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Modifier le statut</DialogTitle>
+        </DialogHeader>
         
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Statut</label>
-            <StatusSelector value={selectedStatus} onChange={handleStatusChange} />
-          </div>
-          
-          {selectedStatus === 'projet' && (
-            <div>
-              <label className="block text-sm font-medium mb-1">Projet</label>
-              <select
-                className="w-full p-2 border rounded"
-                value={projectCode}
-                onChange={(e) => setProjectCode(e.target.value)}
-              >
-                <option value="">Sélectionner un projet</option>
-                {projects.map((project) => (
-                  <option key={project.id} value={project.code}>
-                    {project.code} - {project.name}
-                  </option>
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="status">Statut</Label>
+            <Select value={selectedStatus} onValueChange={handleStatusChange}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner un statut" />
+              </SelectTrigger>
+              <SelectContent>
+                {sortedStatuses.map((status) => (
+                  <SelectItem key={status.code} value={status.code}>
+                    <div className="flex items-center gap-2">
+                      <div 
+                        className="w-3 h-3 rounded-full" 
+                        style={{ backgroundColor: status.color }}
+                      />
+                      <span>{status.label}</span>
+                    </div>
+                  </SelectItem>
                 ))}
-              </select>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {selectedStatus === 'project' && (
+            <div className="space-y-2">
+              <Label htmlFor="project">Projet</Label>
+              <Select value={projectCode} onValueChange={setProjectCode}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un projet" />
+                </SelectTrigger>
+                <SelectContent>
+                  {projects.map((project) => (
+                    <SelectItem key={project.code} value={project.code}>
+                      {project.code} - {project.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           )}
-          
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="highlight"
-              checked={isHighlighted}
-              onChange={handleToggleHighlight}
-              className="mr-2"
+
+          <div className="flex items-center space-x-2 pt-2">
+            <Checkbox 
+              id="highlight" 
+              checked={isHighlighted} 
+              onCheckedChange={(checked) => setIsHighlighted(!!checked)} 
             />
-            <label htmlFor="highlight" className="text-sm">
+            <Label htmlFor="highlight" className="text-sm">
               Mettre en évidence (bordure noire)
-            </label>
-          </div>
-          
-          <div className="flex justify-end space-x-2">
-            <button
-              className="px-4 py-2 border rounded hover:bg-muted"
-              onClick={() => onOpenChange(false)}
-            >
-              Annuler
-            </button>
-            
-            {selectedStatus === 'projet' ? (
-              <button
-                className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90"
-                onClick={() => projectCode && handleProjectSelect(projectCode)}
-                disabled={!projectCode}
-              >
-                Appliquer
-              </button>
-            ) : (
-              <button
-                className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90"
-                onClick={() => handleStatusChange(selectedStatus)}
-                disabled={!selectedStatus}
-              >
-                Appliquer
-              </button>
-            )}
+            </Label>
           </div>
         </div>
-      </div>
-    </div>
+        
+        <DialogFooter className="sm:justify-end space-x-2">
+          <Button variant="outline" type="button" onClick={handleClear}>
+            Effacer
+          </Button>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            Annuler
+          </Button>
+          <Button 
+            type="button" 
+            onClick={handleApply}
+            disabled={(selectedStatus === 'project' && !projectCode) || !selectedStatus}
+          >
+            Appliquer
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

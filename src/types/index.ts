@@ -26,6 +26,9 @@ export interface Employee {
   schedule: Schedule[];
   createdAt?: string;
   color?: string;
+  // These are compatibility fields for existing code
+  uid?: string;
+  department?: string;
 }
 
 export type StatusCode = 
@@ -48,6 +51,17 @@ export interface Schedule {
   note?: string;
   projectId?: string;
   highlight?: boolean;
+  // Compatibility fields
+  projectCode?: string;
+  isHighlighted?: boolean;
+}
+
+export interface Status {
+  id?: string;
+  code: StatusCode;
+  label: string;
+  color: string;
+  displayOrder?: number;
 }
 
 export interface Project {
@@ -59,13 +73,6 @@ export interface Project {
   startDate?: string;
   endDate?: string;
   status?: 'active' | 'completed' | 'planned';
-}
-
-export interface Status {
-  code: StatusCode;
-  label: string;
-  color: string;
-  displayOrder?: number;
 }
 
 export interface Client {
@@ -80,3 +87,58 @@ export interface DateRange {
   start: Date;
   end: Date;
 }
+
+export type DayStatus = Schedule;
+
+export interface ConnectionLog {
+  id: string;
+  userId: string;
+  userName: string;
+  eventType: string;
+  createdAt: string;
+  ipAddress?: string;
+  userAgent?: string;
+}
+
+export interface MonthData {
+  year: number;
+  month: number;
+  employees: Employee[];
+}
+
+export interface FilterOptions {
+  departments: string[];
+  statuses: string[];
+  projects: string[];
+  employees: string[];
+}
+
+export interface SummaryStats {
+  byStatus: Record<string, number>;
+  byProject: Record<string, number>;
+  highlighted: number;
+  total: number;
+}
+
+// Constants for status colors and labels
+export const STATUS_COLORS: Record<string, string> = {
+  present: 'bg-green-500 text-white',
+  absent: 'bg-red-500 text-white',
+  vacation: 'bg-blue-500 text-white',
+  sick: 'bg-yellow-500 text-black',
+  training: 'bg-purple-500 text-white',
+  remote: 'bg-teal-500 text-white',
+  mission: 'bg-indigo-500 text-white',
+  project: 'bg-orange-500 text-white',
+};
+
+export const STATUS_LABELS: Record<string, string> = {
+  present: 'Présent',
+  absent: 'Absent',
+  vacation: 'Congés',
+  sick: 'Maladie',
+  training: 'Formation',
+  remote: 'Télétravail',
+  mission: 'Mission',
+  project: 'Projet',
+};

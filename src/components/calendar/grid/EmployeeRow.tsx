@@ -2,7 +2,7 @@
 import React from 'react';
 import { isSameDay, isWeekend } from 'date-fns';
 import { StatusCell } from '../StatusCell';
-import { Employee, DayStatus } from '@/types';
+import { Employee, Schedule } from '@/types';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface EmployeeRowProps {
@@ -90,8 +90,8 @@ export function EmployeeRow({
                 {status ? (
                   <StatusCell
                     status={status.status}
-                    isHighlighted={status.isHighlighted}
-                    projectCode={status.projectCode}
+                    isHighlighted={status.highlight || status.isHighlighted}
+                    projectCode={status.projectId || status.projectCode}
                   />
                 ) : (
                   <div className="w-6 h-6"></div>
@@ -117,8 +117,8 @@ export function EmployeeRow({
                 {amStatus ? (
                   <StatusCell
                     status={amStatus.status}
-                    isHighlighted={amStatus.isHighlighted}
-                    projectCode={amStatus.projectCode}
+                    isHighlighted={amStatus.highlight || amStatus.isHighlighted}
+                    projectCode={amStatus.projectId || amStatus.projectCode}
                     size="sm"
                   />
                 ) : (
@@ -134,8 +134,8 @@ export function EmployeeRow({
                 {pmStatus ? (
                   <StatusCell
                     status={pmStatus.status}
-                    isHighlighted={pmStatus.isHighlighted}
-                    projectCode={pmStatus.projectCode}
+                    isHighlighted={pmStatus.highlight || pmStatus.isHighlighted}
+                    projectCode={pmStatus.projectId || pmStatus.projectCode}
                     size="sm"
                   />
                 ) : (

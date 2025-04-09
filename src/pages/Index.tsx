@@ -10,7 +10,7 @@ import {
   projectService, 
   planningService 
 } from '@/services/supabaseServices';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/auth';
 import { Employee, Project, Status } from '@/types';
 import { toast } from 'sonner';
 
@@ -111,7 +111,15 @@ const Index = () => {
           if (status) {
             newSchedule = [
               ...filteredSchedule, 
-              { date, status, period, isHighlighted, projectCode }
+              { 
+                date, 
+                status, 
+                period, 
+                highlight: isHighlighted, 
+                isHighlighted, // compatibilité
+                projectId: projectCode, 
+                projectCode // compatibilité
+              }
             ];
           }
           
@@ -194,6 +202,6 @@ const Index = () => {
       </div>
     </Layout>
   );
-};
+}
 
 export default Index;

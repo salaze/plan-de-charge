@@ -15,13 +15,9 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import Dashboard from '@/pages/dashboard';
 import Login from '@/pages/login';
 import NotFound from '@/pages/not-found';
-
-// Lazy-loaded pages
-const Employees = React.lazy(() => import('@/pages/employees'));
-const Planning = React.lazy(() => import('@/pages/planning'));
-const Statistics = React.lazy(() => import('@/pages/statistics'));
-const Export = React.lazy(() => import('@/pages/export'));
-const Settings = React.lazy(() => import('@/pages/settings'));
+import Planning from '@/pages/planning';
+import Export from '@/pages/export';
+import Settings from '@/pages/settings';
 
 function App() {
   return (
@@ -35,9 +31,9 @@ function App() {
               
               {/* Protected routes */}
               <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-              <Route path="/employees" element={<ProtectedRoute><Employees /></ProtectedRoute>} />
+              <Route path="/employees" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/planning" element={<ProtectedRoute><Planning /></ProtectedRoute>} />
-              <Route path="/statistics" element={<ProtectedRoute><Statistics /></ProtectedRoute>} />
+              <Route path="/statistics" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/export" element={<ProtectedRoute><Export /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               

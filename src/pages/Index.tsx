@@ -30,10 +30,13 @@ const Index = () => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
+        console.log('Fetching employees data...');
         const employeesData = await employeeService.getAll();
+        console.log('Employees data fetched:', employeesData);
         setEmployees(employeesData);
         
         const statusesData = await statusService.getAll();
+        console.log('Statuses data fetched:', statusesData);
         setStatuses(statusesData);
       } catch (error) {
         console.error('Erreur lors du chargement des données:', error);
@@ -133,15 +136,24 @@ const Index = () => {
         </div>
         
         <div className="bg-card rounded-lg shadow-md">
-          <PlanningGridEnhanced
-            year={year}
-            month={month}
-            employees={employees}
-            projects={projects}
-            statuses={statuses}
-            onStatusChange={handleStatusChange}
-            isAdmin={isAdmin}
-          />
+          {employees.length === 0 ? (
+            <div className="p-4 text-center">
+              <p>Aucun employé trouvé. Veuillez ajouter des employés depuis la page Employés.</p>
+              <Link to="/employees" className="text-primary hover:underline mt-2 inline-block">
+                Aller à la page Employés
+              </Link>
+            </div>
+          ) : (
+            <PlanningGridEnhanced
+              year={year}
+              month={month}
+              employees={employees}
+              projects={projects}
+              statuses={statuses}
+              onStatusChange={handleStatusChange}
+              isAdmin={isAdmin}
+            />
+          )}
         </div>
       </div>
     </Layout>

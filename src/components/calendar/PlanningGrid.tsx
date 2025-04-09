@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import { isSameDay } from 'date-fns';
 import { StatusSelectorEnhanced } from './StatusSelectorEnhanced';
 import { LegendModal } from './LegendModal';
 import { Employee, Project, Status } from '@/types';
@@ -41,14 +40,20 @@ export function PlanningGrid({
   const [legendModalOpen, setLegendModalOpen] = useState(false);
   
   console.log(`PlanningGrid: Rendering for ${year}-${month+1}`);
+  console.log(`PlanningGrid: Received employees count: ${employees?.length || 0}`);
   const { days, formatDate } = usePlanningCalendar(year, month);
-  console.log(`PlanningGrid: Got ${days.length} days from usePlanningCalendar`);
+  console.log(`PlanningGrid: Got ${days?.length || 0} days from usePlanningCalendar`);
 
   useEffect(() => {
     setSelectedDate(null);
     setSelectedEmployee(null);
     setStatusSelectorOpen(false);
   }, [month, year]);
+
+  // Add debugging for employees data
+  useEffect(() => {
+    console.log('PlanningGrid - Employees data:', employees);
+  }, [employees]);
 
   const handleCellClick = (employeeId: string, date: Date, period: 'AM' | 'PM' | 'FULL') => {
     if (!isAdmin) return;
@@ -80,6 +85,14 @@ export function PlanningGrid({
   const handleShowLegend = () => {
     setLegendModalOpen(true);
   };
+
+  if (!employees || employees.length === 0) {
+    return (
+      <div className="p-4 text-center border rounded-md bg-muted/20">
+        <p>Aucun employé à afficher. Veuillez ajouter des employés depuis la page Employés.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="overflow-auto">

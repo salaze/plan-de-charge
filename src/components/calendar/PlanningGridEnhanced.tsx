@@ -39,7 +39,8 @@ export function PlanningGridEnhanced({
 }: PlanningGridEnhancedProps) {
   const [legendModalOpen, setLegendModalOpen] = useState(false);
   
-  console.log(`PlanningGridEnhanced: year=${year}, month=${month}, employees=${employees.length}`);
+  console.log(`PlanningGridEnhanced: year=${year}, month=${month}, employees=${employees?.length || 0}`);
+  console.log('Employees data in PlanningGridEnhanced:', employees);
 
   // Initialize the window.showLegendModal function
   useEffect(() => {
@@ -59,6 +60,15 @@ export function PlanningGridEnhanced({
     };
   }, []);
 
+  if (!employees || employees.length === 0) {
+    console.log('No employees to display in PlanningGridEnhanced');
+    return (
+      <div className="p-4 text-center">
+        <p>Aucun employé à afficher dans le planning.</p>
+      </div>
+    );
+  }
+
   return (
     <>
       <PlanningGrid
@@ -71,7 +81,6 @@ export function PlanningGridEnhanced({
         isAdmin={isAdmin}
       />
 
-      {/* Notre modal de légende personnalisée avec statuts */}
       <LegendModal 
         isOpen={legendModalOpen} 
         onClose={() => setLegendModalOpen(false)} 

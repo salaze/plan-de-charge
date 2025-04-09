@@ -20,10 +20,11 @@ export function usePlanningCalendar(year: number, month: number) {
     setDays(generatedDays);
   }, [year, month]);
 
-  const formatDate = (date: Date) => {
+  const formatDate = (date: Date): string => {
     try {
-      if (!(date instanceof Date) || isNaN(date.getTime())) {
-        throw new Error('Invalid date object');
+      if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
+        console.warn('Invalid date object provided to formatDate:', date);
+        return '';
       }
       return format(date, 'yyyy-MM-dd');
     } catch (error) {

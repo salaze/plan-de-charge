@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Employee, Status, DayStatus } from "@/types";
 import { generateId } from "@/utils";
@@ -212,6 +211,14 @@ export const employeeService = {
         return [];
       }
 
+      console.log('Employees data from Supabase:', employees);
+
+      // Si aucun employé n'est trouvé dans Supabase, retourner un tableau vide
+      if (!employees || employees.length === 0) {
+        console.warn('Aucun employé trouvé dans la base de données Supabase');
+        return [];
+      }
+
       // Récupérer tous les plannings
       const { data: schedules, error: schedulesError } = await supabase
         .from('employe_schedule')
@@ -219,18 +226,24 @@ export const employeeService = {
 
       if (schedulesError) {
         console.error('Erreur lors de la récupération des plannings:', schedulesError);
-        return [];
+        // Si on ne peut pas récupérer les plannings, retourner les employés sans planning
+        return (employees as unknown as SupabaseEmployee[]).map(employee => 
+          mapSupabaseEmployeeToEmployee(employee, [])
+        );
       }
 
       // Convertir et associer les données
-      return (employees as unknown as SupabaseEmployee[]).map(employee => {
-        const employeeSchedules = (schedules as unknown as SupabaseSchedule[]).filter(
+      const mappedEmployees = (employees as unknown as SupabaseEmployee[]).map(employee => {
+        const employeeSchedules = (schedules as unknown as SupabaseSchedule[])?.filter(
           schedule => schedule.employe_id === employee.id
-        );
+        ) || [];
         return mapSupabaseEmployeeToEmployee(employee, employeeSchedules);
       });
+
+      console.log('Mapped employees:', mappedEmployees);
+      return mappedEmployees;
     } catch (error) {
-      console.error('Erreur non gérée:', error);
+      console.error('Erreur non gérée dans employeeService.getAll():', error);
       return [];
     }
   },

@@ -45,23 +45,29 @@ export function PlanningGridEnhanced({
   // Initialize the window.showLegendModal function
   useEffect(() => {
     // Make sure we initialize it only once
-    if (!window.showLegendModal) {
-      window.showLegendModal = () => {
-        setLegendModalOpen(true);
-      };
-    }
+    window.showLegendModal = () => {
+      setLegendModalOpen(true);
+    };
     
     // Cleanup function to prevent memory leaks
     return () => {
-      // Only cleanup if it's our function
       if (window.showLegendModal === (() => setLegendModalOpen(true))) {
         window.showLegendModal = undefined;
       }
     };
   }, []);
 
-  if (!employees || employees.length === 0) {
-    console.log('No employees to display in PlanningGridEnhanced');
+  if (!employees) {
+    console.log('No employees data provided to PlanningGridEnhanced');
+    return (
+      <div className="p-4 text-center">
+        <p>Erreur: Aucune donnée d'employés n'a été fournie.</p>
+      </div>
+    );
+  }
+
+  if (employees.length === 0) {
+    console.log('Empty employees array in PlanningGridEnhanced');
     return (
       <div className="p-4 text-center">
         <p>Aucun employé à afficher dans le planning.</p>

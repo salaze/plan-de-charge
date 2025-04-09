@@ -11,8 +11,6 @@ interface RolesTabProps {
 }
 
 export function RolesTab({ employees, onEmployeesChange }: RolesTabProps) {
-  // Nous pouvons ajouter ici un hook useEffect pour rafraîchir les données si nécessaire
-  
   return (
     <Card>
       <CardHeader>

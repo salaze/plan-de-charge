@@ -35,6 +35,7 @@ export function useStatusManager(initialStatuses: Status[], onStatusesChange: (s
     if (!statusToDelete) return;
 
     try {
+      console.log('Deleting status with ID:', statusToDelete);
       const success = await statusService.delete(statusToDelete);
       
       if (success) {
@@ -58,21 +59,27 @@ export function useStatusManager(initialStatuses: Status[], onStatusesChange: (s
   // Sauvegarder un statut (nouveau ou existant)
   const handleSaveStatus = async (status: Status) => {
     try {
+      console.log('Saving status:', status);
+      
       if (status.id) {
+        console.log('Updating existing status');
         // Mettre à jour un statut existant
         const updatedStatus = await statusService.update(status);
         
         if (updatedStatus) {
+          console.log('Status updated successfully:', updatedStatus);
           const updatedStatuses = statuses.map(s => 
             s.id === status.id ? updatedStatus : s
           );
           setStatuses(updatedStatuses);
           onStatusesChange(updatedStatuses);
+          setFormOpen(false);
           toast.success('Statut mis à jour avec succès');
         } else {
           toast.error('Erreur lors de la mise à jour du statut');
         }
       } else {
+        console.log('Creating new status');
         // Créer un nouveau statut avec un id généré côté client
         const newStatusData: Omit<Status, "id"> = {
           code: status.code,
@@ -84,9 +91,11 @@ export function useStatusManager(initialStatuses: Status[], onStatusesChange: (s
         const newStatus = await statusService.create(newStatusData);
         
         if (newStatus) {
+          console.log('Status created successfully:', newStatus);
           const updatedStatuses = [...statuses, newStatus];
           setStatuses(updatedStatuses);
           onStatusesChange(updatedStatuses);
+          setFormOpen(false);
           toast.success('Statut ajouté avec succès');
         } else {
           toast.error('Erreur lors de l\'ajout du statut');
@@ -105,7 +114,7 @@ export function useStatusManager(initialStatuses: Status[], onStatusesChange: (s
       .map(s => s.code);
   };
 
-  // Trier les statuts par ordre d'affichage
+  // Trier les statuses par ordre d'affichage
   const getSortedStatuses = useMemo(() => {
     return () => {
       return [...statuses].sort((a, b) => {

@@ -1,76 +1,45 @@
 
-import { ThemeProvider } from '@/components/theme-provider';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import { Toaster } from 'sonner';
-import AdminLogin from '@/pages/AdminLogin';
-import NotFound from '@/pages/NotFound';
-import Index from '@/pages/Index';
-import Employees from '@/pages/Employees';
-import Admin from '@/pages/Admin';
-import Export from '@/pages/Export';
-import Statistics from '@/pages/Statistics';
-import Settings from '@/pages/Settings';
+import React, { Suspense, lazy } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Toaster } from '@/components/ui/toaster';
 import { AdminRoute } from '@/components/AdminRoute';
 import { EmployeeRoute } from '@/components/EmployeeRoute';
+import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider } from '@/contexts/AuthContext';
-import InitApp from '@/pages/InitApp';
+import './App.css';
+
+// Lazy-loaded components
+const Index = lazy(() => import('@/pages/Index'));
+const Admin = lazy(() => import('@/pages/Admin'));
+const Employees = lazy(() => import('@/pages/Employees'));
+const Export = lazy(() => import('@/pages/Export'));
+const Settings = lazy(() => import('@/pages/Settings'));
+const Statistics = lazy(() => import('@/pages/Statistics'));
+const Login = lazy(() => import('@/pages/AdminLogin'));
+const InitApp = lazy(() => import('@/pages/InitApp'));
+const NotFound = lazy(() => import('@/pages/NotFound'));
 
 function App() {
   return (
-    <ThemeProvider defaultTheme="light" attribute="class">
-      <BrowserRouter>
-        <AuthProvider>
-          <div className="app">
+    <ThemeProvider defaultTheme="light" storageKey="planning-theme">
+      <AuthProvider>
+        <BrowserRouter>
+          <Suspense fallback={<div className="flex items-center justify-center h-screen">Chargement...</div>}>
             <Routes>
-              <Route path="/login" element={<AdminLogin />} />
-              <Route path="/" element={<Index />} />
-              <Route path="/init" element={<InitApp />} />
-              <Route
-                path="/employees"
-                element={
-                  <AdminRoute>
-                    <Employees />
-                  </AdminRoute>
-                }
-              />
-              <Route
-                path="/admin"
-                element={
-                  <AdminRoute>
-                    <Admin />
-                  </AdminRoute>
-                }
-              />
-              <Route
-                path="/export"
-                element={
-                  <AdminRoute>
-                    <Export />
-                  </AdminRoute>
-                }
-              />
-              <Route
-                path="/statistics"
-                element={
-                  <EmployeeRoute>
-                    <Statistics />
-                  </EmployeeRoute>
-                }
-              />
-              <Route
-                path="/settings"
-                element={
-                  <AdminRoute>
-                    <Settings />
-                  </AdminRoute>
-                }
-              />
+              <Route path="/" element={<EmployeeRoute><Index /></EmployeeRoute>} />
+              <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
+              <Route path="/employees" element={<AdminRoute><Employees /></AdminRoute>} />
+              <Route path="/export" element={<AdminRoute><Export /></AdminRoute>} />
+              <Route path="/statistics" element={<AdminRoute><Statistics /></AdminRoute>} />
+              <Route path="/settings" element={<AdminRoute><Settings /></AdminRoute>} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/init" element={<AdminRoute><InitApp /></AdminRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </div>
-          <Toaster position="top-right" richColors />
-        </AuthProvider>
-      </BrowserRouter>
+          </Suspense>
+        </BrowserRouter>
+        <Toaster />
+      </AuthProvider>
     </ThemeProvider>
   );
 }

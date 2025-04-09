@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -41,8 +41,9 @@ export function StatusForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Reset form when dialog opens
-  React.useEffect(() => {
+  useEffect(() => {
     if (open) {
+      console.log('Status form opened with current status:', currentStatus);
       setCode(currentStatus?.code || '' as StatusCode);
       setLabel(currentStatus?.label || '');
       setColor(currentStatus?.color || 'bg-green-500 text-white');
@@ -71,15 +72,17 @@ export function StatusForm({
         return;
       }
       
-      onSave({
+      const statusData: Status = {
         id: currentStatus?.id || '',
         code,
         label,
         color,
         displayOrder: displayOrder || 0
-      });
+      };
+
+      console.log('Saving status:', statusData);
+      onSave(statusData);
       
-      onOpenChange(false);
     } catch (error) {
       console.error('Erreur lors de la soumission du formulaire:', error);
       toast.error('Une erreur est survenue lors de l\'enregistrement');
@@ -106,7 +109,7 @@ export function StatusForm({
   ];
 
   return (
-    <Dialog open={open} onOpenChange={(open) => !isSubmitting && onOpenChange(open)}>
+    <Dialog open={open} onOpenChange={(isOpen) => !isSubmitting && onOpenChange(isOpen)}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>

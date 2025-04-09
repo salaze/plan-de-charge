@@ -13,11 +13,31 @@ export function usePlanningCalendar(year: number, month: number) {
     
     console.log(`Generating days for: ${validYear}-${validMonth+1}`);
     
-    // Generate days using the utility function
-    const generatedDays = generateDaysInMonth(validYear, validMonth);
-    console.log('Generated days count:', generatedDays.length);
-    
-    setDays(generatedDays);
+    try {
+      // Generate days using the utility function
+      const generatedDays = generateDaysInMonth(validYear, validMonth);
+      console.log('Generated days count:', generatedDays.length);
+      
+      if (!generatedDays || generatedDays.length === 0) {
+        console.error('Failed to generate days for the month');
+        setDays([]);
+        return;
+      }
+      
+      // Verify all generated dates are valid Date objects
+      const validDays = generatedDays.filter(date => 
+        date instanceof Date && !isNaN(date.getTime())
+      );
+      
+      if (validDays.length !== generatedDays.length) {
+        console.warn('Some generated days were invalid and filtered out');
+      }
+      
+      setDays(validDays);
+    } catch (error) {
+      console.error('Error generating days for the month:', error);
+      setDays([]);
+    }
   }, [year, month]);
 
   const formatDate = (date: Date): string => {

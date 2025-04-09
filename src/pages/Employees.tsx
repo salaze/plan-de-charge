@@ -31,7 +31,9 @@ const Employees = () => {
     const fetchEmployees = async () => {
       setIsLoading(true);
       try {
+        console.log('Fetching employees...');
         const data = await employeeService.getAll();
+        console.log('Employees fetched:', data);
         setEmployees(data);
       } catch (error) {
         console.error('Erreur lors du chargement des employés:', error);
@@ -63,6 +65,7 @@ const Employees = () => {
     if (!employeeToDelete) return;
     
     try {
+      console.log('Deleting employee with ID:', employeeToDelete);
       const success = await employeeService.delete(employeeToDelete);
       
       if (success) {
@@ -85,6 +88,7 @@ const Employees = () => {
   const handleSaveEmployee = async (employee: Employee) => {
     try {
       if (employee.id) {
+        console.log('Updating employee:', employee);
         // Mettre à jour un employé existant
         const updatedEmployee = await employeeService.update(employee);
         
@@ -98,10 +102,12 @@ const Employees = () => {
           toast.error('Erreur lors de la modification de l\'employé');
         }
       } else {
+        console.log('Creating new employee:', employee);
         // Ajouter un nouvel employé
         const newEmployee = await employeeService.create(employee);
         
         if (newEmployee) {
+          console.log('Employee created successfully:', newEmployee);
           setEmployees(prev => [...prev, newEmployee]);
           setFormOpen(false);
           toast.success('Employé ajouté avec succès');

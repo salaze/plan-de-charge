@@ -19,8 +19,8 @@ const Index = () => {
   // Get employees, projects and statuses
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [statuses, setStatuses] = useState<Status[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const projects = projectService.getAll();
   
   // Get authentication context to check if user is admin
   const { isAdmin } = useAuth();
@@ -38,6 +38,10 @@ const Index = () => {
         const statusesData = await statusService.getAll();
         console.log('Statuses data fetched:', statusesData);
         setStatuses(statusesData);
+        
+        const projectsData = projectService.getAll();
+        console.log('Projects data fetched:', projectsData);
+        setProjects(projectsData);
       } catch (error) {
         console.error('Erreur lors du chargement des données:', error);
         toast.error('Erreur lors du chargement des données');
@@ -66,6 +70,8 @@ const Index = () => {
     projectCode?: string
   ) => {
     try {
+      console.log('Changing status:', { employeeId, date, status, period, isHighlighted, projectCode });
+      
       // Mettre à jour dans Supabase
       const success = await employeeService.updateStatus(employeeId, {
         date,
@@ -102,6 +108,7 @@ const Index = () => {
           return { ...emp, schedule: newSchedule };
         })
       );
+      toast.success('Statut mis à jour avec succès');
     } catch (error) {
       console.error('Erreur:', error);
       toast.error('Une erreur est survenue');
@@ -124,9 +131,11 @@ const Index = () => {
         <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
           <h1 className="text-2xl font-bold">Planning</h1>
           <div className="flex items-center gap-2">
-            <Link to="/init" className="text-sm text-muted-foreground hover:text-primary">
-              Initialisation/Migration
-            </Link>
+            {isAdmin && (
+              <Link to="/init" className="text-sm text-muted-foreground hover:text-primary">
+                Initialisation/Migration
+              </Link>
+            )}
             <MonthSelector 
               year={year} 
               month={month} 
@@ -138,10 +147,12 @@ const Index = () => {
         <div className="bg-card rounded-lg shadow-md">
           {employees.length === 0 ? (
             <div className="p-4 text-center">
-              <p>Aucun employé trouvé. Veuillez ajouter des employés depuis la page Employés.</p>
-              <Link to="/employees" className="text-primary hover:underline mt-2 inline-block">
-                Aller à la page Employés
-              </Link>
+              <p>Aucun employé trouvé. {isAdmin ? 'Veuillez ajouter des employés depuis la page Employés.' : 'Contactez votre administrateur.'}</p>
+              {isAdmin && (
+                <Link to="/employees" className="text-primary hover:underline mt-2 inline-block">
+                  Aller à la page Employés
+                </Link>
+              )}
             </div>
           ) : (
             <PlanningGridEnhanced

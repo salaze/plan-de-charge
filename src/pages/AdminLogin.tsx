@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -8,6 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Label } from '@/components/ui/label';
 import { Lock, User, KeyRound, Info } from 'lucide-react';
+import { connectionLogService } from '@/services/supabase/connectionLogService';
 
 const AdminLogin = () => {
   const [username, setUsername] = useState('');
@@ -16,7 +16,7 @@ const AdminLogin = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     
@@ -28,7 +28,31 @@ const AdminLogin = () => {
     const success = login(username, password);
     
     if (success) {
+      try {
+        // Log the successful login
+        await connectionLogService.create({
+          user_name: username,
+          event_type: 'login_success',
+          ip_address: 'client-ip', // In a real app, you would get the actual IP
+          user_agent: navigator.userAgent
+        });
+      } catch (err) {
+        console.error('Failed to log connection:', err);
+      }
+      
       navigate('/admin');
+    } else {
+      try {
+        // Log the failed login attempt
+        await connectionLogService.create({
+          user_name: username,
+          event_type: 'login_failed',
+          ip_address: 'client-ip', // In a real app, you would get the actual IP
+          user_agent: navigator.userAgent
+        });
+      } catch (err) {
+        console.error('Failed to log connection attempt:', err);
+      }
     }
   };
 

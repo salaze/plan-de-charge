@@ -1,7 +1,7 @@
 
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
-import { MonthData } from '@/types';
+import { MonthData, Employee } from '@/types';
 import { getExistingProjects } from './excel/projectsHelper';
 
 /**
@@ -39,9 +39,10 @@ export const handleFileImport = (
         year: new Date().getFullYear(),
         month: new Date().getMonth(),
         employees: jsonData.map((row: any) => ({
+          id: row.ID || `emp-${Math.random().toString(36).substr(2, 9)}`,
           name: row.Employé || row.Employe || row.Nom || '',
           schedule: []
-        })),
+        })) as Employee[],
         projects: getExistingProjects() // Add existing projects
       };
       

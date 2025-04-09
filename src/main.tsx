@@ -11,6 +11,6 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   </React.StrictMode>
 );
 
-// Si vous voulez que votre application fonctionne hors ligne et se charge plus rapidement, 
-// vous pouvez changer unregister() en register().
+// If you want your app to work offline and load faster, you can change
+// unregister() to register() below.
 serviceWorkerRegistration.register();

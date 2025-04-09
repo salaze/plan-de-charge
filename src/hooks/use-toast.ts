@@ -163,10 +163,10 @@ export const ToastProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [dispatchState])
 
-  return (
-    <ToastContext.Provider value={{ state, dispatch: dispatchState }}>
-      {children}
-    </ToastContext.Provider>
+  return React.createElement(
+    ToastContext.Provider,
+    { value: { state, dispatch: dispatchState } },
+    children
   )
 }
 

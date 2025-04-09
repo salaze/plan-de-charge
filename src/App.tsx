@@ -8,8 +8,10 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider } from '@/contexts/AuthContext';
 import './App.css';
 
-// Lazy-loaded components
-const Index = lazy(() => import('@/pages/Index'));
+// Import Index directly instead of using lazy loading
+import Index from '@/pages/Index';
+
+// Lazy-loaded components for other routes
 const Admin = lazy(() => import('@/pages/Admin'));
 const Employees = lazy(() => import('@/pages/Employees'));
 const Export = lazy(() => import('@/pages/Export'));

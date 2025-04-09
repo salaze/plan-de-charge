@@ -29,7 +29,7 @@ export function ConnectionLogsTab() {
 
   // Use the realtimeUpdates hook for the connection_logs table
   useRealtimeUpdates({
-    tables: ['employes', 'statuts', 'connection_logs' as any],
+    tables: ['employes', 'statuts', 'connection_logs'],
     onDataChange: fetchLogs,
     showToasts: false
   });

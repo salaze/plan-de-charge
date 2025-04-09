@@ -30,7 +30,7 @@ export function useRealtimeUpdates({
           { 
             event: '*', 
             schema: 'public', 
-            table: table 
+            table 
           },
           (payload: RealtimePostgresChangesPayload<any>) => {
             console.log(`Realtime update on ${table}:`, payload);

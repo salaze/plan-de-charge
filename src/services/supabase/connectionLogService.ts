@@ -17,7 +17,7 @@ export const connectionLogService = {
   async getAll(): Promise<ConnectionLog[]> {
     try {
       const { data, error } = await supabase
-        .from('connection_logs' as any)
+        .from('connection_logs')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -41,8 +41,8 @@ export const connectionLogService = {
   async create(logData: Omit<ConnectionLog, 'id' | 'created_at'>): Promise<ConnectionLog | null> {
     try {
       const { data, error } = await supabase
-        .from('connection_logs' as any)
-        .insert([logData as any])
+        .from('connection_logs')
+        .insert([logData])
         .select()
         .single();
 

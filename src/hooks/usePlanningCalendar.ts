@@ -7,27 +7,17 @@ export function usePlanningCalendar(year: number, month: number) {
   const [days, setDays] = useState<Date[]>([]);
   
   useEffect(() => {
-    try {
-      // Ensure valid year and month values
-      const validYear = Number.isInteger(year) && year > 0 ? year : new Date().getFullYear();
-      const validMonth = Number.isInteger(month) && month >= 0 && month <= 11 ? month : new Date().getMonth();
-      
-      console.log(`Generating days for: ${validYear}-${validMonth+1}`);
-      
-      // Generate days using the utility function
-      const generatedDays = generateDaysInMonth(validYear, validMonth);
-      
-      console.log('Generated days:', generatedDays);
-      
-      // Verify we have valid Date objects
-      const validDays = generatedDays.filter(day => day instanceof Date && !isNaN(day.getTime()));
-      
-      console.log('Valid days:', validDays);
-      setDays(validDays);
-    } catch (error) {
-      console.error('Error generating days:', error);
-      setDays([]);
-    }
+    // Ensure valid year and month values
+    const validYear = Number.isInteger(year) && year > 0 ? year : new Date().getFullYear();
+    const validMonth = Number.isInteger(month) && month >= 0 && month <= 11 ? month : new Date().getMonth();
+    
+    console.log(`Generating days for: ${validYear}-${validMonth+1}`);
+    
+    // Generate days using the utility function
+    const generatedDays = generateDaysInMonth(validYear, validMonth);
+    console.log('Generated days count:', generatedDays.length);
+    
+    setDays(generatedDays);
   }, [year, month]);
 
   const formatDate = (date: Date) => {

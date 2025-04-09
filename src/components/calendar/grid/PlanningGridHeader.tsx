@@ -11,11 +11,7 @@ interface PlanningGridHeaderProps {
 }
 
 export function PlanningGridHeader({ days, handleShowLegend }: PlanningGridHeaderProps) {
-  const isWeekendDay = (date: Date) => {
-    return isWeekend(date);
-  };
-
-  console.log('PlanningGridHeader days:', days);
+  console.log('PlanningGridHeader days count:', days?.length || 0);
 
   return (
     <div className="sticky top-0 z-10 bg-background">
@@ -32,33 +28,36 @@ export function PlanningGridHeader({ days, handleShowLegend }: PlanningGridHeade
             <HelpCircle className="h-4 w-4" />
           </Button>
         </div>
-        <div className="flex-1 flex">
-          {days && days.length > 0 ? days.map((day, index) => {
-            if (!day || !(day instanceof Date) || isNaN(day.getTime())) {
+        <div className="flex-1 flex flex-row">
+          {days && days.length > 0 ? (
+            days.map((day, index) => {
+              if (!day || !(day instanceof Date) || isNaN(day.getTime())) {
+                console.log(`Invalid day at index ${index}`);
+                return (
+                  <div key={`invalid-${index}`} className="w-[40px] min-w-[40px] p-1 text-center border-r text-xs">
+                    <div className="font-medium">-</div>
+                    <div className="text-muted-foreground uppercase">-</div>
+                  </div>
+                );
+              }
+              
+              const isWeekendDay = isWeekend(day);
+              const dayNumber = format(day, 'd');
+              const dayName = format(day, 'EEE', { locale: fr });
+  
               return (
-                <div key={`empty-day-${index}`} className="w-[40px] min-w-[40px] p-1 text-center border-r text-xs">
-                  <div className="font-medium">-</div>
-                  <div className="text-muted-foreground uppercase">-</div>
+                <div
+                  key={`day-${index}`}
+                  className={`w-[40px] min-w-[40px] p-1 text-center border-r text-xs ${
+                    isWeekendDay ? 'bg-muted' : ''
+                  }`}
+                >
+                  <div className="font-medium">{dayNumber}</div>
+                  <div className="text-muted-foreground uppercase">{dayName}</div>
                 </div>
               );
-            }
-            
-            const isWeekend = isWeekendDay(day);
-            const dayNumber = format(day, 'd');
-            const dayName = format(day, 'EEE', { locale: fr });
-
-            return (
-              <div
-                key={index}
-                className={`w-[40px] min-w-[40px] p-1 text-center border-r text-xs ${
-                  isWeekend ? 'bg-muted' : ''
-                }`}
-              >
-                <div className="font-medium">{dayNumber}</div>
-                <div className="text-muted-foreground uppercase">{dayName}</div>
-              </div>
-            );
-          }) : (
+            })
+          ) : (
             <div className="w-full p-4 text-center">Aucune date à afficher</div>
           )}
         </div>

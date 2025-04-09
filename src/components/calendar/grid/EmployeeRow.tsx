@@ -26,10 +26,6 @@ export function EmployeeRow({
 }: EmployeeRowProps) {
   const isMobile = useIsMobile();
 
-  const isWeekendDay = (date: Date) => {
-    return isWeekend(date);
-  };
-
   const getEmployeeStatus = (
     employeeId: string,
     date: string,
@@ -46,7 +42,7 @@ export function EmployeeRow({
 
   // Guard against empty or invalid days array
   if (!days || !Array.isArray(days) || days.length === 0) {
-    console.log('EmployeeRow: No valid days array for', employee.name);
+    console.log(`EmployeeRow: No valid days array for ${employee.name}`);
     return (
       <div className="flex border-b">
         <div className="min-w-[150px] w-[150px] p-2 border-r truncate">{employee.name}</div>
@@ -57,16 +53,13 @@ export function EmployeeRow({
     );
   }
 
-  console.log(`EmployeeRow for ${employee.name}: ${days.length} days`);
-
   return (
     <div className="flex border-b">
       <div className="min-w-[150px] w-[150px] p-2 border-r truncate">{employee.name}</div>
-      <div className="flex-1 flex">
+      <div className="flex-1 flex flex-row">
         {days.map((day, index) => {
           // Skip invalid date objects
           if (!day || !(day instanceof Date) || isNaN(day.getTime())) {
-            console.log(`Invalid day at index ${index}`);
             return (
               <div 
                 key={`invalid-day-${index}`}
@@ -78,7 +71,7 @@ export function EmployeeRow({
           }
           
           const dateStr = formatDate(day);
-          const isWeekend = isWeekendDay(day);
+          const isWeekendDay = isWeekend(day);
           const isSelected =
             selectedDate &&
             selectedEmployee === employee.id &&
@@ -88,9 +81,9 @@ export function EmployeeRow({
             const status = getEmployeeStatus(employee.id, dateStr, 'FULL');
             return (
               <div
-                key={index}
+                key={`day-${index}`}
                 className={`w-[40px] min-w-[40px] p-1 border-r flex items-center justify-center ${
-                  isWeekend ? 'bg-muted' : ''
+                  isWeekendDay ? 'bg-muted' : ''
                 } ${isSelected ? 'ring-2 ring-primary' : ''}`}
                 onClick={() => handleCellClick(employee.id, day, 'FULL')}
               >
@@ -112,8 +105,8 @@ export function EmployeeRow({
 
           return (
             <div
-              key={index}
-              className={`w-[40px] min-w-[40px] border-r ${isWeekend ? 'bg-muted' : ''}`}
+              key={`day-${index}`}
+              className={`w-[40px] min-w-[40px] border-r ${isWeekendDay ? 'bg-muted' : ''}`}
             >
               <div
                 className={`h-1/2 p-0.5 border-b flex items-center justify-center ${

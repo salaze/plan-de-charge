@@ -1,4 +1,3 @@
-
 /**
  * Creates an array of dates for a given month
  */
@@ -13,6 +12,7 @@ export const generateDaysInMonth = (year: number, month: number): Date[] => {
     }
     
     const daysInMonth = new Date(year, month + 1, 0).getDate();
+    console.log(`Month ${month+1}/${year} has ${daysInMonth} days`);
     
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(year, month, day);
@@ -22,8 +22,6 @@ export const generateDaysInMonth = (year: number, month: number): Date[] => {
       }
       days.push(date);
     }
-    
-    console.log(`Generated ${days.length} days for ${year}-${month+1}`);
     
     return days;
   } catch (error) {

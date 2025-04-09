@@ -29,8 +29,6 @@ const SidebarProviderWithTooltip = React.forwardRef<
     },
     ref
   ) => {
-    const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
-
     return (
       <SidebarProvider defaultOpen={defaultOpen} open={openProp} onOpenChange={setOpenProp}>
         <div

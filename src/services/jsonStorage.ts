@@ -1,8 +1,6 @@
-
 import { MonthData, Employee, Project, Status, DayStatus } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 
-// Interface de base pour tous les types de données stockées
 interface JsonData {
   employees: Employee[];
   projects: Project[];
@@ -10,7 +8,6 @@ interface JsonData {
   planningData: MonthData;
 }
 
-// Initialisation des données par défaut
 const defaultData: JsonData = {
   employees: [],
   projects: [],
@@ -23,12 +20,8 @@ const defaultData: JsonData = {
   }
 };
 
-// Cache mémoire des données
 let dataCache: JsonData | null = null;
 
-/**
- * Charge les données depuis le stockage local ou initialise avec les valeurs par défaut
- */
 export const loadData = (): JsonData => {
   if (dataCache) return dataCache;
   
@@ -40,7 +33,6 @@ export const loadData = (): JsonData => {
     
     const parsedData = JSON.parse(savedData);
     
-    // Structurer les données selon notre modèle
     const jsonData: JsonData = {
       employees: parsedData.employees || [],
       projects: parsedData.projects || [],
@@ -61,44 +53,30 @@ export const loadData = (): JsonData => {
   }
 };
 
-/**
- * Sauvegarde les données dans le stockage local
- */
 export const saveData = (data: Partial<JsonData>): void => {
   try {
-    // Charger les données existantes
     const currentData = loadData();
     
-    // Mettre à jour avec les nouvelles données
     const updatedData: JsonData = {
       ...currentData,
       ...data,
-      // Mise à jour spécifique pour planningData qui contient des sous-propriétés
       planningData: {
         ...currentData.planningData,
         ...(data.planningData || {}),
-        // Si employees ou projects sont fournis directement, les mettre à jour dans planningData aussi
         employees: data.employees || currentData.planningData.employees,
         projects: data.projects || currentData.planningData.projects
       }
     };
     
-    // Mettre à jour le cache
     dataCache = updatedData;
-    
-    // Sauvegarder dans localStorage
     localStorage.setItem('planningData', JSON.stringify(updatedData));
     
-    // Option: synchroniser avec Supabase si configuré
     syncWithSupabase(updatedData);
   } catch (error) {
     console.error("Erreur lors de la sauvegarde des données:", error);
   }
 };
 
-/**
- * Fonctions CRUD pour les employés
- */
 export const employeeService = {
   getAll: (): Employee[] => {
     return loadData().employees;
@@ -149,7 +127,6 @@ export const employeeService = {
     
     if (!employee) return false;
     
-    // Trouver si un statut existe déjà pour cette date et période
     const existingStatusIndex = employee.schedule.findIndex(
       (day) => day.date === dayStatus.date && day.period === dayStatus.period
     );
@@ -157,14 +134,12 @@ export const employeeService = {
     let updatedSchedule = [...employee.schedule];
     
     if (existingStatusIndex >= 0) {
-      // Mettre à jour le statut existant ou le supprimer si le statut est vide
       if (dayStatus.status === '') {
         updatedSchedule.splice(existingStatusIndex, 1);
       } else {
         updatedSchedule[existingStatusIndex] = dayStatus;
       }
     } else if (dayStatus.status !== '') {
-      // Ajouter un nouveau statut
       updatedSchedule.push(dayStatus);
     }
     
@@ -190,12 +165,25 @@ export const employeeService = {
     
     saveData({ employees: updatedEmployees });
     return true;
+  },
+  
+  updatePassword: (employeeId: string, password: string): boolean => {
+    const data = loadData();
+    const employeeIndex = data.employees.findIndex(emp => emp.id === employeeId);
+    
+    if (employeeIndex === -1) return false;
+    
+    const updatedEmployees = [...data.employees];
+    updatedEmployees[employeeIndex] = {
+      ...updatedEmployees[employeeIndex],
+      password
+    };
+    
+    saveData({ employees: updatedEmployees });
+    return true;
   }
 };
 
-/**
- * Fonctions CRUD pour les projets
- */
 export const projectService = {
   getAll: (): Project[] => {
     return loadData().projects;
@@ -240,9 +228,6 @@ export const projectService = {
   }
 };
 
-/**
- * Fonctions CRUD pour les statuts
- */
 export const statusService = {
   getAll: (): Status[] => {
     return loadData().statuses;
@@ -295,9 +280,6 @@ export const statusService = {
   }
 };
 
-/**
- * Fonctions pour gérer le planning et les données temporelles
- */
 export const planningService = {
   getData: (): MonthData => {
     return loadData().planningData;
@@ -320,12 +302,8 @@ export const planningService = {
   }
 };
 
-/**
- * Synchronisation facultative avec Supabase
- */
 const syncWithSupabase = async (data: JsonData): Promise<void> => {
   try {
-    // Vérifier si Supabase est configuré
     if (supabase) {
       // Cette fonction pourrait être développée pour synchroniser les données avec Supabase
       // Par exemple, sauvegarder les données JSON dans une table spécifique
@@ -342,16 +320,10 @@ const syncWithSupabase = async (data: JsonData): Promise<void> => {
   }
 };
 
-/**
- * Fonction d'exportation des données pour sauvegarde externe
- */
 export const exportAllData = (): string => {
   return JSON.stringify(loadData(), null, 2);
 };
 
-/**
- * Fonction d'importation des données depuis une sauvegarde
- */
 export const importAllData = (jsonData: string): boolean => {
   try {
     const parsedData = JSON.parse(jsonData);

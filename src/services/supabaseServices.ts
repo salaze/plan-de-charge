@@ -72,4 +72,3 @@ export const employeeScheduleService = {
     return Promise.resolve(employee?.schedule || []);
   }
 };
-

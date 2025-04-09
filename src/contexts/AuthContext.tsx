@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { UserRole, Employee } from '@/types';
 import { toast } from 'sonner';
@@ -42,15 +43,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const userAgent = navigator.userAgent;
       const ipAddress = '127.0.0.1'; // Placeholder - would be fetched server-side
       
-      const logData = {
+      // Since we're not using Supabase, we'll just log to console
+      console.log('Connection log:', {
         user_id: userId,
         user_name: userName,
         event_type: eventType,
         ip_address: ipAddress,
         user_agent: userAgent
-      };
-      
-      await supabase.from('connection_logs' as any).insert(logData as any);
+      });
     } catch (error) {
       console.error('Failed to log connection:', error);
     }
@@ -89,21 +89,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return true;
       }
       
-      const { data: employees, error } = await supabase
-        .from('employes')
-        .select('*')
-        .or(`uid.eq.${username},nom.eq.${username}`);
-        
-      if (error) {
-        console.error('Error fetching employee:', error);
-        toast.error('Erreur lors de la vérification des identifiants');
-        return false;
-      }
+      // Get employees from localStorage instead of Supabase
+      const employees = employeeService.getAll();
       
-      const employee = employees && employees.length > 0 ? employees[0] : null;
+      // Find employee by username or uid
+      const employee = employees.find(emp => 
+        emp.name === username || emp.uid === username
+      );
       
       if (employee) {
-        if (employee.password && password === employee.password) {
+        // Use default password if not set
+        const employeePassword = employee.password || 'employee123';
+        
+        if (password === employeePassword) {
           const userRole = employee.role || 'employee';
           const employeeUser = { 
             username, 
@@ -113,9 +111,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
           setUser(employeeUser);
           localStorage.setItem('user', JSON.stringify(employeeUser));
           
-          logConnection(employee.id, `${employee.nom}${employee.prenom ? ' ' + employee.prenom : ''}`, 'login');
+          logConnection(employee.id, employee.name, 'login');
           
-          toast.success(`Bienvenue, ${employee.nom}${employee.prenom ? ' ' + employee.prenom : ''}`);
+          toast.success(`Bienvenue, ${employee.name}`);
           return true;
         } else {
           toast.error('Mot de passe incorrect');
@@ -141,17 +139,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const updateUserRoles = (employeeId: string, newRole: UserRole) => {
-    employeeService.updateRole(employeeId, newRole)
-      .then(success => {
-        if (success && user && user.employeeId === employeeId) {
-          const updatedUser = { ...user, role: newRole };
-          setUser(updatedUser);
-          localStorage.setItem('user', JSON.stringify(updatedUser));
-        }
-      })
-      .catch(error => {
-        console.error('Error updating user role:', error);
-      });
+    const success = employeeService.updateRole(employeeId, newRole);
+    
+    if (success && user && user.employeeId === employeeId) {
+      const updatedUser = { ...user, role: newRole };
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+    }
   };
 
   const updatePassword = (employeeId: string, newPassword: string): boolean => {
@@ -159,21 +153,35 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return false;
     }
 
-    employeeService.updatePassword(employeeId, newPassword)
-      .then(success => {
-        if (success) {
-          toast.success('Mot de passe mis à jour avec succès');
-        } else {
-          toast.error('Échec de la mise à jour du mot de passe');
-        }
-        return success;
-      })
-      .catch(error => {
-        console.error('Error updating password:', error);
+    try {
+      // Find the employee in localStorage
+      const employee = employeeService.getById(employeeId);
+      
+      if (!employee) {
+        toast.error('Employé non trouvé');
         return false;
-      });
-    
-    return true;
+      }
+      
+      // Update the employee with the new password
+      const updatedEmployee = {
+        ...employee,
+        password: newPassword
+      };
+      
+      const success = employeeService.update(updatedEmployee);
+      
+      if (success) {
+        toast.success('Mot de passe mis à jour avec succès');
+        return true;
+      } else {
+        toast.error('Échec de la mise à jour du mot de passe');
+        return false;
+      }
+    } catch (error) {
+      console.error('Error updating password:', error);
+      toast.error('Une erreur est survenue');
+      return false;
+    }
   };
 
   const contextValue: AuthContextType = {

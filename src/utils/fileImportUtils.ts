@@ -1,49 +1,51 @@
 
-import { MonthData } from '@/types';
 import { toast } from 'sonner';
-import { importFromExcel } from './excel';
-import { saveData } from '@/services/jsonStorage';
+import * as XLSX from 'xlsx';
 
 /**
- * Handle file import from an input element
+ * Handles file import from Excel
  */
-export const handleFileImport = (event: React.ChangeEvent<HTMLInputElement>, onSuccess?: (data: MonthData) => void): void => {
-  const file = event.target.files?.[0];
+export const handleFileImport = (
+  e: React.ChangeEvent<HTMLInputElement>, 
+  onSuccess: (data: any) => void
+) => {
+  const file = e.target.files?.[0];
   if (!file) return;
-
-  const reader = new FileReader();
   
-  reader.onload = async (e) => {
+  // Check file type
+  const fileType = file.name.split('.').pop()?.toLowerCase();
+  if (fileType !== 'xlsx') {
+    toast.error('Format de fichier non supporté. Veuillez utiliser un fichier Excel (.xlsx)');
+    return;
+  }
+  
+  const reader = new FileReader();
+  reader.onload = (event) => {
     try {
-      const result = e.target?.result;
-      if (typeof result === 'string' || result instanceof ArrayBuffer) {
-        const importedData = await importFromExcel(result);
-        
-        if (importedData) {
-          // Sauvegarder via notre service JSON
-          saveData({
-            planningData: importedData,
-            employees: importedData.employees,
-            projects: importedData.projects,
-            statuses: [] // Si les statuts sont gérés ailleurs
-          });
-          
-          // Callback si fourni
-          if (onSuccess) {
-            onSuccess(importedData);
-          }
-          
-          toast.success('Données importées avec succès');
-        }
+      if (!event.target?.result) {
+        throw new Error('Failed to read file');
       }
+      
+      // Read the file
+      const workbook = XLSX.read(event.target.result, { type: 'array' });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+      
+      // Process the data (simplified version)
+      const processedData = {
+        year: new Date().getFullYear(),
+        month: new Date().getMonth(),
+        employees: jsonData.map((row: any) => ({
+          name: row.Employé || row.Employe || row.Nom || '',
+          schedule: []
+        }))
+      };
+      
+      onSuccess(processedData);
     } catch (error) {
-      console.error('Erreur lors de l\'import:', error);
-      toast.error('Erreur lors de l\'import du fichier');
-    }
-    
-    // Reset the input file
-    if (event.target) {
-      event.target.value = '';
+      console.error('Error importing file:', error);
+      toast.error('Erreur lors de l\'importation du fichier');
     }
   };
   

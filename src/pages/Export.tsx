@@ -6,7 +6,6 @@ import DepartmentFilter from '@/components/export/DepartmentFilter';
 import { ExportTabsEnhanced } from '@/components/export/ExportTabsEnhanced';
 
 const Export = () => {
-  const [activeTab, setActiveTab] = useState("planning");
   const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
 
   return (
@@ -21,7 +20,7 @@ const Export = () => {
           setSelectedDepartment={setSelectedDepartment}
         />
         
-        <ExportTabsEnhanced activeTab={activeTab} />
+        <ExportTabsEnhanced />
       </div>
     </Layout>
   );

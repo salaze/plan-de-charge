@@ -10,6 +10,12 @@ interface ExportTabsEnhancedProps {
 
 export function ExportTabsEnhanced({ activeTab }: ExportTabsEnhancedProps) {
   const [statuses, setStatuses] = useState<Status[]>([]);
+  const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
+  const [importedData, setImportedData] = useState<any | null>(null);
+  const [importedEmployees, setImportedEmployees] = useState<any[] | null>(null);
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
+  const [activeTabState, setActiveTabState] = useState(activeTab || "planning");
   
   // Récupérer les statuts depuis Supabase
   useEffect(() => {
@@ -25,13 +31,47 @@ export function ExportTabsEnhanced({ activeTab }: ExportTabsEnhancedProps) {
     fetchStatuses();
   }, []);
   
-  // Méthode pour injecter les statuts dans les props des onglets
-  const enhanceTabProps = (tabName: string, originalProps: any) => {
-    if (tabName === 'planning') {
-      return { ...originalProps, statuses };
-    }
-    return originalProps;
+  // Placeholder functions for the required handlers
+  const handleImportSuccess = (data: any) => {
+    setImportedData(data);
   };
   
-  return <ExportTabs activeTab={activeTab} enhanceTabProps={enhanceTabProps} />;
+  const handleImportEmployees = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // This is just a placeholder
+    console.log('Import employees', e);
+  };
+  
+  const handleExport = () => {
+    // This is just a placeholder
+    console.log('Export');
+  };
+  
+  const handleExportEmployees = () => {
+    // This is just a placeholder
+    console.log('Export employees');
+  };
+  
+  const handleExportStats = () => {
+    // This is just a placeholder
+    console.log('Export stats');
+  };
+  
+  return (
+    <ExportTabs
+      activeTab={activeTabState}
+      setActiveTab={setActiveTabState}
+      selectedDepartment={selectedDepartment}
+      currentYear={currentYear}
+      currentMonth={currentMonth}
+      setCurrentYear={setCurrentYear}
+      setCurrentMonth={setCurrentMonth}
+      importedData={importedData}
+      importedEmployees={importedEmployees}
+      handleImportSuccess={handleImportSuccess}
+      handleImportEmployees={handleImportEmployees}
+      handleExport={handleExport}
+      handleExportEmployees={handleExportEmployees}
+      handleExportStats={handleExportStats}
+    />
+  );
 }

@@ -4,6 +4,13 @@ import { PlanningGrid } from './PlanningGrid';
 import { LegendModal } from './LegendModal';
 import { Employee, Project, Status } from '@/types';
 
+// Define the showLegendModal function to the global window object
+declare global {
+  interface Window {
+    showLegendModal?: () => void;
+  }
+}
+
 interface PlanningGridEnhancedProps {
   year: number;
   month: number;
@@ -32,20 +39,21 @@ export function PlanningGridEnhanced({
 }: PlanningGridEnhancedProps) {
   const [legendModalOpen, setLegendModalOpen] = useState(false);
 
-  // Hook pour intercepter l'ouverture de la LegendModal dans le PlanningGrid
-  // et afficher notre propre modal à la place
+  // Initialize the window.showLegendModal function
   useEffect(() => {
-    // Méthode originale qui sera appelée par PlanningGrid
-    const originalShowModal = window.showLegendModal;
+    // Make sure we initialize it only once
+    if (!window.showLegendModal) {
+      window.showLegendModal = () => {
+        setLegendModalOpen(true);
+      };
+    }
     
-    // On redéfinit la méthode pour afficher notre modal avec les statuts
-    window.showLegendModal = () => {
-      setLegendModalOpen(true);
-    };
-    
-    // Nettoyage au démontage
+    // Cleanup function to prevent memory leaks
     return () => {
-      window.showLegendModal = originalShowModal;
+      // Only cleanup if it's our function
+      if (window.showLegendModal === (() => setLegendModalOpen(true))) {
+        window.showLegendModal = undefined;
+      }
     };
   }, []);
 

@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
 import { Layout } from '@/components/layout/Layout';
 import { PlanningGridEnhanced } from '@/components/calendar/PlanningGridEnhanced';
 import { MonthSelector } from '@/components/calendar/MonthSelector';

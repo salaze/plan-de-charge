@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StatusSelector } from './StatusSelector';
 import { Status, StatusCode } from '@/types';
 import { Project } from '@/types';
@@ -22,6 +22,15 @@ export function StatusSelectorEnhanced({
   const [selectedStatus, setSelectedStatus] = useState<StatusCode>('');
   const [isHighlighted, setIsHighlighted] = useState(false);
   const [projectCode, setProjectCode] = useState<string>('');
+
+  // Reset state when the modal is opened
+  useEffect(() => {
+    if (open) {
+      setSelectedStatus('');
+      setIsHighlighted(false);
+      setProjectCode('');
+    }
+  }, [open]);
 
   const handleStatusChange = (status: StatusCode) => {
     setSelectedStatus(status);

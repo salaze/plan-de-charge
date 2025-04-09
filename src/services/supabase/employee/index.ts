@@ -59,9 +59,14 @@ export const employeeService = {
 };
 
 // Re-export types from the employee mappers for backwards compatibility
-export { 
+// Using 'export type' when re-exporting types with 'isolatedModules' enabled
+export type { 
   SupabaseEmployee, 
-  SupabaseSchedule,
+  SupabaseSchedule 
+} from "../mappers/employeeMappers";
+
+// Re-export functions from the employee mappers
+export { 
   mapSupabaseEmployeeToEmployee, 
   mapEmployeeToSupabaseEmployee 
 } from "../mappers/employeeMappers";

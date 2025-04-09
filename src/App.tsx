@@ -10,14 +10,14 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { ToastProvider } from '@/hooks/toast';
 import './App.css';
 
-// Import Index directly instead of using lazy loading
+// Import components directly instead of using lazy loading for problematic ones
 import Index from '@/pages/Index';
+import Settings from '@/pages/Settings';
 
 // Lazy-loaded components for other routes
 const Admin = lazy(() => import('@/pages/Admin'));
 const Employees = lazy(() => import('@/pages/Employees'));
 const Export = lazy(() => import('@/pages/Export'));
-const Settings = lazy(() => import('@/pages/Settings'));
 const Statistics = lazy(() => import('@/pages/Statistics'));
 const Login = lazy(() => import('@/pages/AdminLogin'));
 const InitApp = lazy(() => import('@/pages/InitApp'));

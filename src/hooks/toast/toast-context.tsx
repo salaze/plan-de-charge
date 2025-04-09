@@ -15,13 +15,13 @@ export const ToastContext = React.createContext<{
 } | undefined>(undefined);
 
 // This allows us to manually add/remove toasts outside of React components
-export let listeners: Array<React.Dispatch<Action>> = [];
+export let listeners: Array<(state: State) => void> = [];
 export let memoryState: State = initialState;
 
 export function dispatch(action: Action) {
   memoryState = reducer(memoryState, action);
   listeners.forEach((listener) => {
-    listener(action);
+    listener(memoryState);
   });
 }
 
@@ -30,9 +30,14 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [state, dispatchState] = React.useReducer(reducer, initialState);
 
   React.useEffect(() => {
-    listeners.push(dispatchState);
+    listeners.push(() => {
+      dispatchState({ type: "ADD_TOAST", toast: { ...memoryState.toasts[0], id: memoryState.toasts[0]?.id || "" } });
+    });
+    
     return () => {
-      const index = listeners.indexOf(dispatchState);
+      const index = listeners.findIndex(listener => 
+        listener.toString().includes("dispatchState")
+      );
       if (index > -1) {
         listeners.splice(index, 1);
       }

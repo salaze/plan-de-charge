@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Layout } from '@/components/layout/Layout';
@@ -15,7 +14,7 @@ import {
   AlertDialogTitle
 } from '@/components/ui/alert-dialog';
 import { Employee } from '@/types';
-import { employeeService } from '@/services/supabaseServices';
+import { employeeService } from '@/services/supabase';
 
 const Employees = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -26,7 +25,6 @@ const Employees = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<string>('');
   
-  // Charger les employés depuis Supabase
   useEffect(() => {
     const fetchEmployees = async () => {
       setIsLoading(true);
@@ -69,7 +67,6 @@ const Employees = () => {
       const success = await employeeService.delete(employeeToDelete);
       
       if (success) {
-        // Mettre à jour l'état local
         const updatedEmployees = employees.filter(emp => emp.id !== employeeToDelete);
         setEmployees(updatedEmployees);
         toast.success('Employé supprimé avec succès');
@@ -89,7 +86,6 @@ const Employees = () => {
     try {
       if (employee.id) {
         console.log('Updating employee:', employee);
-        // Mettre à jour un employé existant
         const updatedEmployee = await employeeService.update(employee);
         
         if (updatedEmployee) {
@@ -103,7 +99,6 @@ const Employees = () => {
         }
       } else {
         console.log('Creating new employee:', employee);
-        // Ajouter un nouvel employé
         const newEmployee = await employeeService.create(employee);
         
         if (newEmployee) {

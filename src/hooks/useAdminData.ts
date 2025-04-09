@@ -4,7 +4,7 @@ import { Employee, Status, Project } from '@/types';
 import { 
   employeeService, 
   statusService 
-} from '@/services/supabaseServices';
+} from '@/services/supabase';
 import { projectService } from '@/services/jsonStorage';
 
 interface AdminData {

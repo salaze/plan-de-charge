@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { toast } from 'sonner';
 import { Employee, UserRole } from '@/types';
@@ -6,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { EmployeeRoleSelector } from './EmployeeRoleSelector';
 import { useAuth } from '@/contexts/AuthContext';
-import { employeeService } from '@/services/supabaseServices';
+import { employeeService } from '@/services/supabase';
 
 interface RoleManagementProps {
   employees: Employee[];

@@ -1,8 +1,7 @@
-
 import { useState, useMemo } from 'react';
 import { Status, StatusCode } from '@/types';
 import { toast } from 'sonner';
-import { statusService } from '@/services/supabaseServices';
+import { statusService } from '@/services/supabase';
 import { generateId } from '@/utils';
 
 export function useStatusManager(initialStatuses: Status[], onStatusesChange: (statuses: Status[]) => void) {
@@ -12,25 +11,21 @@ export function useStatusManager(initialStatuses: Status[], onStatusesChange: (s
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [statusToDelete, setStatusToDelete] = useState<string | null>(null);
 
-  // Ouvrir le formulaire pour ajouter un nouveau statut
   const handleAddStatus = () => {
     setCurrentStatus(null);
     setFormOpen(true);
   };
 
-  // Ouvrir le formulaire pour éditer un statut existant
   const handleEditStatus = (status: Status) => {
     setCurrentStatus(status);
     setFormOpen(true);
   };
 
-  // Ouvrir la boîte de dialogue de confirmation de suppression
   const handleDeleteStatus = (statusId: string) => {
     setStatusToDelete(statusId);
     setDeleteDialogOpen(true);
   };
 
-  // Confirmer la suppression d'un statut
   const confirmDeleteStatus = async () => {
     if (!statusToDelete) return;
 
@@ -39,7 +34,6 @@ export function useStatusManager(initialStatuses: Status[], onStatusesChange: (s
       const success = await statusService.delete(statusToDelete);
       
       if (success) {
-        // Mettre à jour l'état local
         const updatedStatuses = statuses.filter(s => s.id !== statusToDelete);
         setStatuses(updatedStatuses);
         onStatusesChange(updatedStatuses);
@@ -56,14 +50,12 @@ export function useStatusManager(initialStatuses: Status[], onStatusesChange: (s
     }
   };
 
-  // Sauvegarder un statut (nouveau ou existant)
   const handleSaveStatus = async (status: Status) => {
     try {
       console.log('Saving status:', status);
       
       if (status.id) {
         console.log('Updating existing status');
-        // Mettre à jour un statut existant
         const updatedStatus = await statusService.update(status);
         
         if (updatedStatus) {
@@ -80,7 +72,6 @@ export function useStatusManager(initialStatuses: Status[], onStatusesChange: (s
         }
       } else {
         console.log('Creating new status');
-        // Créer un nouveau statut avec un id généré côté client
         const newStatusData: Omit<Status, "id"> = {
           code: status.code,
           label: status.label,
@@ -107,14 +98,12 @@ export function useStatusManager(initialStatuses: Status[], onStatusesChange: (s
     }
   };
 
-  // Obtenir la liste des codes de statut existants (pour validation)
   const getExistingCodes = (): string[] => {
     return statuses
       .filter(s => s.id !== currentStatus?.id)
       .map(s => s.code);
   };
 
-  // Trier les statuses par ordre d'affichage
   const getSortedStatuses = useMemo(() => {
     return () => {
       return [...statuses].sort((a, b) => {

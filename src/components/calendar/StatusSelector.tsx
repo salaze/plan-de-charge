@@ -1,11 +1,10 @@
-
 import React, { useEffect, useState } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { ChevronDown } from 'lucide-react';
 import { Status, StatusCode, STATUS_COLORS, STATUS_LABELS } from '@/types';
 import { cn } from '@/lib/utils';
-import { statusService } from '@/services/supabaseServices';
+import { statusService } from '@/services/supabase';
 
 interface StatusSelectorProps {
   value: StatusCode;
@@ -17,14 +16,12 @@ export function StatusSelector({ value, onChange }: StatusSelectorProps) {
   const [statusLabels, setStatusLabels] = useState<Record<string, string>>({...STATUS_LABELS});
   const [statusColors, setStatusColors] = useState<Record<string, string>>({...STATUS_COLORS});
   
-  // Load statuses from Supabase on component mount
   useEffect(() => {
     const fetchStatuses = async () => {
       try {
         const fetchedStatuses = await statusService.getAll();
         
         if (fetchedStatuses && fetchedStatuses.length > 0) {
-          // Sort statuses by display order
           const sortedStatuses = [...fetchedStatuses].sort((a, b) => {
             const orderA = a.displayOrder || 999;
             const orderB = b.displayOrder || 999;
@@ -33,7 +30,6 @@ export function StatusSelector({ value, onChange }: StatusSelectorProps) {
           
           setStatuses(sortedStatuses);
           
-          // Update labels and colors
           const newLabels = {...STATUS_LABELS};
           const newColors = {...STATUS_COLORS};
           
@@ -47,7 +43,6 @@ export function StatusSelector({ value, onChange }: StatusSelectorProps) {
           setStatusLabels(newLabels);
           setStatusColors(newColors);
         } else {
-          // Use default statuses if no custom ones exist
           console.log('No statuses found in Supabase, using defaults');
         }
       } catch (error) {

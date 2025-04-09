@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Employee } from "@/types";
 import { generateId } from "@/utils";
@@ -14,6 +15,7 @@ export const employeeService = {
   async getAll(): Promise<Employee[]> {
     try {
       console.log('Attempting to fetch all employees');
+      
       // Récupérer tous les employés
       const { data: employees, error: employeesError } = await supabase
         .from('employes')
@@ -65,12 +67,9 @@ export const employeeService = {
     try {
       console.log('Creating employee with data:', employee);
       
-      // Créer un ID pour le nouvel employé
-      const employeeId = generateId();
-      
       const supabaseEmployee = mapEmployeeToSupabaseEmployee({
         ...employee, 
-        id: employeeId, 
+        id: generateId(), 
         schedule: []
       });
 
@@ -80,13 +79,12 @@ export const employeeService = {
       const { data, error } = await supabase
         .from('employes')
         .insert({
-          id: employeeId,
           nom: employee.name,
           uid: employee.uid,
           fonction: employee.position,
           departement: employee.department,
           password: employee.password || 'employee123'
-        } as any)
+        })
         .select()
         .single();
 
@@ -118,7 +116,7 @@ export const employeeService = {
           fonction: employee.position,
           departement: employee.department,
           password: employee.password
-        } as any)
+        })
         .eq('id', employee.id)
         .select()
         .single();
@@ -141,7 +139,7 @@ export const employeeService = {
     try {
       const { error } = await supabase
         .from('employes')
-        .update({ role } as any)
+        .update({ role })
         .eq('id', employeeId);
 
       if (error) {
@@ -160,7 +158,7 @@ export const employeeService = {
     try {
       const { error } = await supabase
         .from('employes')
-        .update({ password } as any)
+        .update({ password })
         .eq('id', employeeId);
 
       if (error) {

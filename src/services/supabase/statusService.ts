@@ -57,7 +57,12 @@ export const statusService = {
       const supabaseStatus = mapStatusToSupabaseStatus(status as Status);
       const { data, error } = await supabase
         .from('statuts')
-        .insert(supabaseStatus as any)
+        .insert({
+          code: status.code,
+          libelle: status.label,
+          couleur: status.color,
+          display_order: status.displayOrder || 0
+        })
         .select()
         .single();
 
@@ -75,10 +80,14 @@ export const statusService = {
 
   async update(status: Status): Promise<Status | null> {
     try {
-      const supabaseStatus = mapStatusToSupabaseStatus(status);
       const { data, error } = await supabase
         .from('statuts')
-        .update(supabaseStatus as any)
+        .update({
+          code: status.code,
+          libelle: status.label,
+          couleur: status.color,
+          display_order: status.displayOrder || 0
+        })
         .eq('id', status.id)
         .select()
         .single();

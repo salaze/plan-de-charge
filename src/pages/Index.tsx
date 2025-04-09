@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { PlanningGridEnhanced } from '@/components/calendar/PlanningGridEnhanced';
 import { MonthSelector } from '@/components/calendar/MonthSelector';
 import { planningService, projectService } from '@/services/jsonStorage';
-import { employeeService, statusService } from '@/services/supabaseServices';
+import { employeeService, statusService } from '@/services/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Employee, Project, Status } from '@/types';
 import { toast } from 'sonner';

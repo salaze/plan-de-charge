@@ -6,7 +6,6 @@ import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
 // Using a flexible type to accommodate the connection_logs table until types are updated
 type TableName = 'employes' | 'employe_schedule' | 'statuts' | 'connection_logs' | string;
-type EventType = 'INSERT' | 'UPDATE' | 'DELETE';
 
 interface UseRealtimeUpdatesProps {
   tables: TableName[];

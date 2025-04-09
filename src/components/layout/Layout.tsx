@@ -54,14 +54,18 @@ export function Layout({ children }: LayoutProps) {
   
   return (
     <div className="min-h-screen flex">
+      {/* Zone sensible pour l'apparition au hover */}
       <div 
         className="hidden md:block fixed top-0 left-0 w-4 h-full z-40"
         onMouseEnter={handleMouseEnter}
       />
       
+      {/* Sidebar desktop */}
       <aside 
         ref={sidebarRef}
-        className={`hidden md:flex flex-col w-64 bg-sidebar fixed inset-y-0 z-50 transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-60'}`}
+        className="hidden md:flex flex-col w-64 bg-sidebar fixed inset-y-0 z-50 transition-transform duration-300 ease-in-out"
+        style={{ transform: sidebarOpen ? 'translateX(0)' : 'translateX(-95%)' }}
+        onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
         <div className="p-4 border-b border-sidebar-border">
@@ -72,6 +76,7 @@ export function Layout({ children }: LayoutProps) {
         </div>
       </aside>
       
+      {/* Sidebar mobile */}
       <aside
         className={`fixed inset-y-0 left-0 z-50 w-80 bg-sidebar transform transition-transform duration-300 ease-in-out 
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:hidden`}

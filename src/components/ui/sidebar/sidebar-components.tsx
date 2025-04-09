@@ -1,4 +1,3 @@
-
 import * as React from "react"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
@@ -6,19 +5,16 @@ import { TooltipProvider } from "@/components/ui/tooltip"
 import { useSidebar } from "./sidebar-context"
 import { PanelLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { SIDEBAR_WIDTH, SIDEBAR_WIDTH_MOBILE, SIDEBAR_WIDTH_ICON } from "@/lib/sidebar-constants"
 
-// Constants
-export const SIDEBAR_WIDTH = "16rem"
-export const SIDEBAR_WIDTH_MOBILE = "18rem"
-export const SIDEBAR_WIDTH_ICON = "3rem"
-
-export interface SidebarProps extends React.ComponentProps<"div"> {
-  side?: "left" | "right"
-  variant?: "sidebar" | "floating" | "inset"
-  collapsible?: "offcanvas" | "icon" | "none"
-}
-
-export const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
+export const Sidebar = React.forwardRef<
+  HTMLDivElement,
+  React.ComponentProps<"div"> & {
+    side?: "left" | "right"
+    variant?: "sidebar" | "floating" | "inset"
+    collapsible?: "offcanvas" | "icon" | "none"
+  }
+>(
   (
     {
       side = "left",
@@ -76,7 +72,6 @@ export const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
         data-variant={variant}
         data-side={side}
       >
-        {/* This is what handles the sidebar gap on desktop */}
         <div
           className={cn(
             "duration-200 relative h-svh w-[--sidebar-width] bg-transparent transition-[width] ease-linear",
@@ -93,7 +88,6 @@ export const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
             side === "left"
               ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
               : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
-            // Adjust the padding for floating and inset variants.
             variant === "floating" || variant === "inset"
               ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4)_+2px)]"
               : "group-data-[collapsible=icon]:w-[--sidebar-width-icon] group-data-[side=left]:border-r group-data-[side=right]:border-l",

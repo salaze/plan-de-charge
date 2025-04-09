@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { mapEmployeeToSupabaseEmployee } from './mappers/employeeMappers';
+import { toast } from "sonner";
 
 // Fonction pour migrer les données du localStorage vers Supabase
 export const migrateLocalDataToSupabase = async (): Promise<boolean> => {
@@ -80,6 +81,77 @@ export const migrateLocalDataToSupabase = async (): Promise<boolean> => {
     return true;
   } catch (error) {
     console.error('Erreur lors de la migration des données:', error);
+    return false;
+  }
+};
+
+// Fonction pour vider complètement les tables Supabase
+export const clearSupabaseTables = async (): Promise<boolean> => {
+  try {
+    console.log('Début de la suppression des données...');
+    
+    // Supprimer d'abord les plannings (table dépendante)
+    const { error: scheduleError } = await supabase
+      .from('employe_schedule')
+      .delete()
+      .neq('id', '00000000-0000-0000-0000-000000000000'); // Astuce pour supprimer toutes les lignes
+    
+    if (scheduleError) {
+      console.error('Erreur lors de la suppression des plannings:', scheduleError);
+      return false;
+    }
+    
+    // Supprimer les employés
+    const { error: employeesError } = await supabase
+      .from('employes')
+      .delete()
+      .neq('id', '00000000-0000-0000-0000-000000000000');
+    
+    if (employeesError) {
+      console.error('Erreur lors de la suppression des employés:', employeesError);
+      return false;
+    }
+    
+    // Supprimer les statuts
+    const { error: statusesError } = await supabase
+      .from('statuts')
+      .delete()
+      .neq('id', '00000000-0000-0000-0000-000000000000');
+    
+    if (statusesError) {
+      console.error('Erreur lors de la suppression des statuts:', statusesError);
+      return false;
+    }
+    
+    console.log('Toutes les données ont été supprimées avec succès');
+    return true;
+  } catch (error) {
+    console.error('Erreur lors de la suppression des données:', error);
+    return false;
+  }
+};
+
+// Fonction pour réinitialiser complètement les données
+export const resetSupabaseData = async (): Promise<boolean> => {
+  try {
+    // Étape 1: Supprimer toutes les données existantes
+    const clearResult = await clearSupabaseTables();
+    if (!clearResult) {
+      toast.error('Erreur lors de la suppression des données existantes');
+      return false;
+    }
+    
+    // Étape 2: Migrer à nouveau depuis localStorage
+    const migrateResult = await migrateLocalDataToSupabase();
+    if (!migrateResult) {
+      toast.error('Erreur lors de la migration des nouvelles données');
+      return false;
+    }
+    
+    toast.success('Réinitialisation des données réussie');
+    return true;
+  } catch (error) {
+    console.error('Erreur lors de la réinitialisation des données:', error);
     return false;
   }
 };

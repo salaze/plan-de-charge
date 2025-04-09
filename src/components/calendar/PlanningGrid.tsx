@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { isSameDay } from 'date-fns';
 import { StatusSelectorEnhanced } from './StatusSelectorEnhanced';
@@ -39,7 +40,9 @@ export function PlanningGrid({
   const [statusSelectorOpen, setStatusSelectorOpen] = useState(false);
   const [legendModalOpen, setLegendModalOpen] = useState(false);
   
+  console.log(`PlanningGrid: Rendering for ${year}-${month+1}`);
   const { days, formatDate } = usePlanningCalendar(year, month);
+  console.log(`PlanningGrid: Got ${days.length} days from usePlanningCalendar`);
 
   useEffect(() => {
     setSelectedDate(null);

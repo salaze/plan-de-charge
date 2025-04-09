@@ -15,6 +15,8 @@ export function PlanningGridHeader({ days, handleShowLegend }: PlanningGridHeade
     return isWeekend(date);
   };
 
+  console.log('PlanningGridHeader days:', days);
+
   return (
     <div className="sticky top-0 z-10 bg-background">
       <div className="flex border-b">
@@ -32,7 +34,7 @@ export function PlanningGridHeader({ days, handleShowLegend }: PlanningGridHeade
         </div>
         <div className="flex-1 flex">
           {days && days.length > 0 ? days.map((day, index) => {
-            if (!day || !(day instanceof Date)) {
+            if (!day || !(day instanceof Date) || isNaN(day.getTime())) {
               return (
                 <div key={`empty-day-${index}`} className="w-[40px] min-w-[40px] p-1 text-center border-r text-xs">
                   <div className="font-medium">-</div>

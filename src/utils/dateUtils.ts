@@ -4,13 +4,32 @@
  */
 export const generateDaysInMonth = (year: number, month: number): Date[] => {
   const days: Date[] = [];
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
   
-  for (let day = 1; day <= daysInMonth; day++) {
-    days.push(new Date(year, month, day));
+  try {
+    if (!Number.isInteger(year) || !Number.isInteger(month) || 
+        year < 1900 || year > 2100 || month < 0 || month > 11) {
+      console.error(`Invalid date parameters: year=${year}, month=${month}`);
+      return [];
+    }
+    
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, month, day);
+      if (isNaN(date.getTime())) {
+        console.error(`Invalid date created: ${year}-${month+1}-${day}`);
+        continue;
+      }
+      days.push(date);
+    }
+    
+    console.log(`Generated ${days.length} days for ${year}-${month+1}`);
+    
+    return days;
+  } catch (error) {
+    console.error('Error in generateDaysInMonth:', error);
+    return [];
   }
-  
-  return days;
 };
 
 /**

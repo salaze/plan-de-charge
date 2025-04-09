@@ -38,6 +38,8 @@ export function PlanningGridEnhanced({
   isAdmin
 }: PlanningGridEnhancedProps) {
   const [legendModalOpen, setLegendModalOpen] = useState(false);
+  
+  console.log(`PlanningGridEnhanced: year=${year}, month=${month}, employees=${employees.length}`);
 
   // Initialize the window.showLegendModal function
   useEffect(() => {

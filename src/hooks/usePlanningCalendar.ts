@@ -12,12 +12,17 @@ export function usePlanningCalendar(year: number, month: number) {
       const validYear = Number.isInteger(year) && year > 0 ? year : new Date().getFullYear();
       const validMonth = Number.isInteger(month) && month >= 0 && month <= 11 ? month : new Date().getMonth();
       
+      console.log(`Generating days for: ${validYear}-${validMonth+1}`);
+      
       // Generate days using the utility function
       const generatedDays = generateDaysInMonth(validYear, validMonth);
       
-      // Verify we have valid Date objects
-      const validDays = generatedDays.filter(day => day instanceof Date);
+      console.log('Generated days:', generatedDays);
       
+      // Verify we have valid Date objects
+      const validDays = generatedDays.filter(day => day instanceof Date && !isNaN(day.getTime()));
+      
+      console.log('Valid days:', validDays);
       setDays(validDays);
     } catch (error) {
       console.error('Error generating days:', error);

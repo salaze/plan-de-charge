@@ -46,6 +46,7 @@ export function EmployeeRow({
 
   // Guard against empty or invalid days array
   if (!days || !Array.isArray(days) || days.length === 0) {
+    console.log('EmployeeRow: No valid days array for', employee.name);
     return (
       <div className="flex border-b">
         <div className="min-w-[150px] w-[150px] p-2 border-r truncate">{employee.name}</div>
@@ -56,13 +57,16 @@ export function EmployeeRow({
     );
   }
 
+  console.log(`EmployeeRow for ${employee.name}: ${days.length} days`);
+
   return (
     <div className="flex border-b">
       <div className="min-w-[150px] w-[150px] p-2 border-r truncate">{employee.name}</div>
       <div className="flex-1 flex">
         {days.map((day, index) => {
           // Skip invalid date objects
-          if (!day || !(day instanceof Date)) {
+          if (!day || !(day instanceof Date) || isNaN(day.getTime())) {
+            console.log(`Invalid day at index ${index}`);
             return (
               <div 
                 key={`invalid-day-${index}`}

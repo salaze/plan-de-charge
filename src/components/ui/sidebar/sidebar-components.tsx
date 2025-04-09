@@ -1,8 +1,7 @@
-
 import * as React from "react"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
-import { useSidebar } from "@/hooks/use-sidebar"
+import { useSidebar } from "./sidebar-context"
 import { PanelLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { SIDEBAR_WIDTH, SIDEBAR_WIDTH_MOBILE, SIDEBAR_WIDTH_ICON } from "@/lib/sidebar-constants"

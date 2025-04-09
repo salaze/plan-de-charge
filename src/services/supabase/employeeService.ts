@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Employee } from "@/types";
 import { generateId } from "@/utils";

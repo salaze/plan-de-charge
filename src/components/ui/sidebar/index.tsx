@@ -2,14 +2,14 @@
 import * as React from "react"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
-import { SidebarContext as SidebarContextType, useSidebar } from "@/hooks/use-sidebar"
 import { SIDEBAR_WIDTH, SIDEBAR_WIDTH_ICON, SIDEBAR_WIDTH_MOBILE } from "@/lib/sidebar-constants"
 import { Sidebar, SidebarInset, SidebarRail, SidebarTrigger } from "./sidebar-components"
 import { SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupAction, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarInput, SidebarSeparator } from "./sidebar-sections"
 import { SidebarMenu, SidebarMenuAction, SidebarMenuBadge, SidebarMenuButton, SidebarMenuItem, SidebarMenuSkeleton, SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem, sidebarMenuButtonVariants } from "./sidebar-menu"
+import { SidebarProvider, useSidebar, type SidebarContext as SidebarContextType } from "./sidebar-context"
 
 // Re-export the sidebar provider with the TooltipProvider
-const SidebarProvider = React.forwardRef<
+const SidebarProviderWithTooltip = React.forwardRef<
   HTMLDivElement,
   React.ComponentPropsWithoutRef<"div"> & {
     defaultOpen?: boolean
@@ -55,7 +55,7 @@ const SidebarProvider = React.forwardRef<
   }
 )
 
-SidebarProvider.displayName = "SidebarProvider"
+SidebarProviderWithTooltip.displayName = "SidebarProvider"
 
 export {
   Sidebar,
@@ -78,6 +78,7 @@ export {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   SidebarProvider,
+  SidebarProviderWithTooltip as SidebarProviderTooltip,
   SidebarRail,
   SidebarSeparator,
   SidebarTrigger,

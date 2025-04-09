@@ -74,6 +74,29 @@ const addToRemoveQueue = (toastId: string) => {
   toastTimeouts.set(toastId, timeout)
 }
 
+// Initial state
+const initialState: State = { toasts: [] }
+
+// Create a React context to store the state
+const ToastContext = React.createContext<{
+  state: State
+  dispatch: React.Dispatch<Action>
+}>({
+  state: initialState,
+  dispatch: () => null,
+})
+
+// This allows us to manually add/remove toasts outside of React components
+let listeners: Array<(state: State) => void> = []
+let memoryState: State = initialState
+
+function dispatch(action: Action) {
+  memoryState = reducer(memoryState, action)
+  listeners.forEach((listener) => {
+    listener(memoryState)
+  })
+}
+
 const reducer = (state: State, action: Action): State => {
   switch (action.type) {
     case "ADD_TOAST":
@@ -93,8 +116,7 @@ const reducer = (state: State, action: Action): State => {
     case "DISMISS_TOAST": {
       const { toastId } = action
 
-      // ! Side effects ! - This could be extracted into a dismissToast() action,
-      // but I'll keep it here for simplicity
+      // Side effects
       if (toastId) {
         addToRemoveQueue(toastId)
       } else {
@@ -126,23 +148,46 @@ const reducer = (state: State, action: Action): State => {
         ...state,
         toasts: state.toasts.filter((t) => t.id !== action.toastId),
       }
+    default:
+      return state
   }
 }
 
-const listeners: Array<(state: State) => void> = []
+export const ToastProvider = ({ children }: { children: React.ReactNode }) => {
+  const [state, dispatchState] = React.useReducer(reducer, initialState)
 
-let memoryState: State = { toasts: [] }
+  React.useEffect(() => {
+    listeners.push(dispatchState)
+    return () => {
+      const index = listeners.indexOf(dispatchState)
+      if (index > -1) {
+        listeners.splice(index, 1)
+      }
+    }
+  }, [dispatchState])
 
-function dispatch(action: Action) {
-  memoryState = reducer(memoryState, action)
-  listeners.forEach((listener) => {
-    listener(memoryState)
-  })
+  return (
+    <ToastContext.Provider value={{ state, dispatch: dispatchState }}>
+      {children}
+    </ToastContext.Provider>
+  )
+}
+
+// Toast hook
+export function useToast() {
+  const { state } = React.useContext(ToastContext)
+
+  return {
+    toasts: state.toasts,
+    toast,
+    dismiss: (toastId?: string) => dispatch({ type: "DISMISS_TOAST", toastId }),
+  }
 }
 
 type Toast = Omit<ToasterToast, "id">
 
-function toast({ ...props }: Toast) {
+// Toast function that can be called outside of React components
+export function toast({ ...props }: Toast) {
   const id = genId()
 
   const update = (props: ToasterToast) =>
@@ -170,29 +215,3 @@ function toast({ ...props }: Toast) {
     update,
   }
 }
-
-function useToast() {
-  // Create a local state that will be updated when the global state changes
-  const [state, setState] = React.useState<State>(memoryState)
-
-  React.useEffect(() => {
-    // Subscribe to state changes
-    listeners.push(setState)
-    
-    // Return cleanup function to unsubscribe when component unmounts
-    return () => {
-      const index = listeners.indexOf(setState)
-      if (index > -1) {
-        listeners.splice(index, 1)
-      }
-    }
-  }, [])
-
-  return {
-    ...state,
-    toast,
-    dismiss: (toastId?: string) => dispatch({ type: "DISMISS_TOAST", toastId }),
-  }
-}
-
-export { useToast, toast }

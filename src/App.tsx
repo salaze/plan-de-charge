@@ -1,5 +1,5 @@
 
-import React, { Suspense, lazy } from 'react';
+import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
@@ -28,7 +28,7 @@ function App() {
       <ThemeProvider defaultTheme="system" storageKey="planning-theme" attribute="class" enableSystem>
         <AuthProvider>
           <BrowserRouter>
-            <Suspense fallback={<div className="flex items-center justify-center h-screen">Chargement...</div>}>
+            <React.Suspense fallback={<div className="flex items-center justify-center h-screen">Chargement...</div>}>
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
@@ -40,7 +40,7 @@ function App() {
                 <Route path="/init" element={<InitApp />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
-            </Suspense>
+            </React.Suspense>
             <SonnerToaster />
             <Toaster />
           </BrowserRouter>

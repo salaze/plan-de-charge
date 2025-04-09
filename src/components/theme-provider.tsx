@@ -5,19 +5,18 @@ import * as React from "react"
 import { ThemeProvider as NextThemesProvider } from "next-themes"
 import { type ThemeProviderProps } from "next-themes/dist/types"
 
-// Create a proper theme context with default values
-const ThemeProviderContext = React.createContext<{
-  theme?: string;
-  setTheme?: (theme: string) => void;
+export const ThemeProviderContext = React.createContext<{
+  theme: string | undefined;
+  setTheme: (theme: string) => void;
 }>({
   theme: undefined,
   setTheme: () => {},
 })
 
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
-  const [theme, setTheme] = React.useState<string | undefined>(undefined)
+  // Use React.useState to properly initialize state
+  const [theme, setTheme] = React.useState<string | undefined>(props.defaultTheme)
   
-  // Use NextThemesProvider directly
   return (
     <NextThemesProvider {...props}>
       <ThemeProviderContext.Provider value={{ theme, setTheme }}>

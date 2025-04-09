@@ -1,13 +1,15 @@
 
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
+import { MonthData } from '@/types';
+import { getExistingProjects } from './excel/projectsHelper';
 
 /**
  * Handles file import from Excel
  */
 export const handleFileImport = (
   e: React.ChangeEvent<HTMLInputElement>, 
-  onSuccess: (data: any) => void
+  onSuccess: (data: MonthData) => void
 ) => {
   const file = e.target.files?.[0];
   if (!file) return;
@@ -32,14 +34,15 @@ export const handleFileImport = (
       const worksheet = workbook.Sheets[sheetName];
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
       
-      // Process the data (simplified version)
-      const processedData = {
+      // Process the data
+      const processedData: MonthData = {
         year: new Date().getFullYear(),
         month: new Date().getMonth(),
         employees: jsonData.map((row: any) => ({
           name: row.Employé || row.Employe || row.Nom || '',
           schedule: []
-        }))
+        })),
+        projects: getExistingProjects() // Add existing projects
       };
       
       onSuccess(processedData);

@@ -1,21 +1,26 @@
 
 import React, { useState, useEffect } from 'react';
 import ExportTabs from './ExportTabs';
-import { Status } from '@/types';
+import { Status, MonthData } from '@/types';
 import { statusService } from '@/services/supabaseServices';
 import { toast } from 'sonner';
 import { exportToExcel } from '@/utils/excel/exportToExcel';
 import { importEmployeesFromExcel, exportEmployeesToExcel } from '@/utils/employeeExportUtils';
 import { exportStatsToExcel } from '@/utils/statsExportUtils';
+import { getExistingProjects } from '@/utils/excel/projectsHelper';
 
 interface ExportTabsEnhancedProps {
   activeTab?: string;
+  selectedDepartment?: string;
 }
 
-export function ExportTabsEnhanced({ activeTab }: ExportTabsEnhancedProps) {
+export function ExportTabsEnhanced({ 
+  activeTab,
+  selectedDepartment: initialSelectedDepartment = "all"
+}: ExportTabsEnhancedProps) {
   const [statuses, setStatuses] = useState<Status[]>([]);
-  const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
-  const [importedData, setImportedData] = useState<any | null>(null);
+  const [selectedDepartment, setSelectedDepartment] = useState<string>(initialSelectedDepartment);
+  const [importedData, setImportedData] = useState<MonthData | null>(null);
   const [importedEmployees, setImportedEmployees] = useState<any[] | null>(null);
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
@@ -38,7 +43,12 @@ export function ExportTabsEnhanced({ activeTab }: ExportTabsEnhancedProps) {
   
   // Handlers for import/export functionality
   const handleImportSuccess = (data: any) => {
-    setImportedData(data);
+    // Make sure we include projects in the imported data
+    const completeData: MonthData = {
+      ...data,
+      projects: getExistingProjects()
+    };
+    setImportedData(completeData);
     toast.success(`Successfully imported data for ${data.employees.length} employees`);
   };
   
@@ -64,11 +74,12 @@ export function ExportTabsEnhanced({ activeTab }: ExportTabsEnhancedProps) {
   
   const handleExport = () => {
     try {
-      // This is just a placeholder implementation
-      const dummyData = {
+      // Create a valid MonthData object with all required properties
+      const dummyData: MonthData = {
         year: currentYear,
         month: currentMonth,
-        employees: []
+        employees: [],
+        projects: getExistingProjects()
       };
       exportToExcel(dummyData);
       toast.success('Planning exported successfully');

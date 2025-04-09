@@ -20,7 +20,7 @@ const Export = () => {
           setSelectedDepartment={setSelectedDepartment}
         />
         
-        <ExportTabsEnhanced />
+        <ExportTabsEnhanced selectedDepartment={selectedDepartment} />
       </div>
     </Layout>
   );

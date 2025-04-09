@@ -10,7 +10,7 @@ import {
 import { MonthSelector } from '@/components/calendar/MonthSelector';
 import { StatusCell } from '@/components/calendar/StatusCell';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { calculateEmployeeStats } from '@/utils/statsUtils';
+import { calculateEmployeeStats } from '@/utils/stats/calculateStats';
 import { Employee, MonthData, SummaryStats, StatusCode, STATUS_LABELS } from '@/types';
 import {
   Table,

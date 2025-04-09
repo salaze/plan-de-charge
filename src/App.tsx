@@ -25,7 +25,7 @@ const NotFound = lazy(() => import('@/pages/NotFound'));
 function App() {
   return (
     <AuthProvider>
-      <ThemeProvider attribute="class" defaultTheme="system" storageKey="planning-theme">
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem storageKey="planning-theme">
         <BrowserRouter>
           <Suspense fallback={<div className="flex items-center justify-center h-screen">Chargement...</div>}>
             <Routes>

@@ -18,6 +18,8 @@ import NotFound from '@/pages/not-found';
 import Planning from '@/pages/planning';
 import Export from '@/pages/export';
 import Settings from '@/pages/settings';
+import Employees from '@/pages/Employees';
+import Statistics from '@/pages/Statistics';
 
 function App() {
   return (
@@ -31,9 +33,9 @@ function App() {
               
               {/* Protected routes */}
               <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-              <Route path="/employees" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/employees" element={<ProtectedRoute><Employees /></ProtectedRoute>} />
               <Route path="/planning" element={<ProtectedRoute><Planning /></ProtectedRoute>} />
-              <Route path="/statistics" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/statistics" element={<ProtectedRoute><Statistics /></ProtectedRoute>} />
               <Route path="/export" element={<ProtectedRoute><Export /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               

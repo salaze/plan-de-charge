@@ -25,8 +25,8 @@ const NotFound = lazy(() => import('@/pages/NotFound'));
 
 function App() {
   return (
-    <ToastProvider>
-      <ThemeProvider defaultTheme="system" storageKey="planning-theme" attribute="class" enableSystem>
+    <ThemeProvider defaultTheme="system" storageKey="planning-theme" attribute="class" enableSystem>
+      <ToastProvider>
         <AuthProvider>
           <BrowserRouter>
             <React.Suspense fallback={<div className="flex items-center justify-center h-screen">Chargement...</div>}>
@@ -46,8 +46,8 @@ function App() {
             <Toaster />
           </BrowserRouter>
         </AuthProvider>
-      </ThemeProvider>
-    </ToastProvider>
+      </ToastProvider>
+    </ThemeProvider>
   );
 }
 

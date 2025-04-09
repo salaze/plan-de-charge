@@ -84,7 +84,6 @@ const ToastContext = React.createContext<{
 } | undefined>(undefined)
 
 // This allows us to manually add/remove toasts outside of React components
-// Fix: Change type to match React.Dispatch<Action>
 let listeners: Array<React.Dispatch<Action>> = []
 let memoryState: State = initialState
 
@@ -151,11 +150,13 @@ const reducer = (state: State, action: Action): State => {
   }
 }
 
-export const ToastProvider = ({ children }: { children: React.ReactNode }) => {
+// Export the ToastProvider component as a function component to ensure proper hook usage
+export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ 
+  children 
+}) => {
   const [state, dispatchState] = React.useReducer(reducer, initialState)
 
   React.useEffect(() => {
-    // Fix: TypeScript will now accept this as the types match
     listeners.push(dispatchState)
     return () => {
       const index = listeners.indexOf(dispatchState)

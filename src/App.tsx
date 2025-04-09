@@ -24,29 +24,27 @@ const NotFound = lazy(() => import('@/pages/NotFound'));
 
 function App() {
   return (
-    <React.StrictMode>
+    <AuthProvider>
       <ThemeProvider defaultTheme="light" storageKey="planning-theme">
-        <AuthProvider>
-          <BrowserRouter>
-            <Suspense fallback={<div className="flex items-center justify-center h-screen">Chargement...</div>}>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
-                <Route path="/employees" element={<AdminRoute><Employees /></AdminRoute>} />
-                <Route path="/export" element={<AdminRoute><Export /></AdminRoute>} />
-                <Route path="/statistics" element={<AdminRoute><Statistics /></AdminRoute>} />
-                <Route path="/settings" element={<AdminRoute><Settings /></AdminRoute>} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/init" element={<InitApp />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </BrowserRouter>
-          <SonnerToaster />
-          <Toaster />
-        </AuthProvider>
+        <BrowserRouter>
+          <Suspense fallback={<div className="flex items-center justify-center h-screen">Chargement...</div>}>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
+              <Route path="/employees" element={<AdminRoute><Employees /></AdminRoute>} />
+              <Route path="/export" element={<AdminRoute><Export /></AdminRoute>} />
+              <Route path="/statistics" element={<AdminRoute><Statistics /></AdminRoute>} />
+              <Route path="/settings" element={<AdminRoute><Settings /></AdminRoute>} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/init" element={<InitApp />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
+        </BrowserRouter>
+        <SonnerToaster />
+        <Toaster />
       </ThemeProvider>
-    </React.StrictMode>
+    </AuthProvider>
   );
 }
 

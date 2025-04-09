@@ -7,7 +7,7 @@ import { AdminRoute } from '@/components/AdminRoute';
 import { EmployeeRoute } from '@/components/EmployeeRoute';
 import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider } from '@/contexts/AuthContext';
-import { ToastProvider } from '@/hooks/use-toast';
+import { ToastProvider } from '@/hooks/toast';
 import './App.css';
 
 // Import Index directly instead of using lazy loading

@@ -35,7 +35,7 @@ const Settings = () => {
   }, [autoSave]);
   
   const resetData = () => {
-    if (confirm('Êtes-vous sûr de vouloir réinitialiser toutes les données ? Cette action est irréversible.')) {
+    if (window.confirm('Êtes-vous sûr de vouloir réinitialiser toutes les données ? Cette action est irréversible.')) {
       const sampleData = createSampleData();
       localStorage.setItem('planningData', JSON.stringify(sampleData));
       toast.success('Données réinitialisées avec succès');
@@ -43,7 +43,7 @@ const Settings = () => {
   };
   
   const clearData = () => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer toutes les données ? Cette action est irréversible.')) {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer toutes les données ? Cette action est irréversible.')) {
       const emptyData = {
         year: new Date().getFullYear(),
         month: new Date().getMonth(),

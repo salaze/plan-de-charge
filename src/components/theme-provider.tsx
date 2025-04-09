@@ -11,13 +11,13 @@ const ThemeProviderContext = React.createContext<{
   setTheme?: (theme: string) => void;
 }>({
   theme: undefined,
-  setTheme: () => null,
+  setTheme: () => {},
 })
 
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   const [theme, setTheme] = React.useState<string | undefined>(undefined)
   
-  // Use NextThemesProvider with proper context values
+  // Use NextThemesProvider directly
   return (
     <NextThemesProvider {...props}>
       <ThemeProviderContext.Provider value={{ theme, setTheme }}>

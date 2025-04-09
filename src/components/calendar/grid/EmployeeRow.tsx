@@ -45,86 +45,86 @@ export function EmployeeRow({
   };
 
   return (
-    <div
-      className="grid grid-cols-[minmax(150px,1fr)_repeat(auto-fill,minmax(40px,1fr))] border-b"
-    >
-      <div className="p-2 border-r truncate">{employee.name}</div>
-      {days.map((day, index) => {
-        const dateStr = formatDate(day);
-        const isWeekend = isWeekendDay(day);
-        const isSelected =
-          selectedDate &&
-          selectedEmployee === employee.id &&
-          isSameDay(selectedDate, day);
+    <div className="flex border-b">
+      <div className="min-w-[150px] w-[150px] p-2 border-r truncate">{employee.name}</div>
+      <div className="flex-1 flex">
+        {days.map((day, index) => {
+          const dateStr = formatDate(day);
+          const isWeekend = isWeekendDay(day);
+          const isSelected =
+            selectedDate &&
+            selectedEmployee === employee.id &&
+            isSameDay(selectedDate, day);
 
-        if (isMobile) {
-          const status = getEmployeeStatus(employee.id, dateStr, 'FULL');
+          if (isMobile) {
+            const status = getEmployeeStatus(employee.id, dateStr, 'FULL');
+            return (
+              <div
+                key={index}
+                className={`w-[40px] min-w-[40px] p-1 border-r flex items-center justify-center ${
+                  isWeekend ? 'bg-muted' : ''
+                } ${isSelected ? 'ring-2 ring-primary' : ''}`}
+                onClick={() => handleCellClick(employee.id, day, 'FULL')}
+              >
+                {status ? (
+                  <StatusCell
+                    status={status.status}
+                    isHighlighted={status.isHighlighted}
+                    projectCode={status.projectCode}
+                  />
+                ) : (
+                  <div className="w-6 h-6"></div>
+                )}
+              </div>
+            );
+          }
+
+          const amStatus = getEmployeeStatus(employee.id, dateStr, 'AM');
+          const pmStatus = getEmployeeStatus(employee.id, dateStr, 'PM');
+
           return (
             <div
               key={index}
-              className={`p-1 border-r flex items-center justify-center ${
-                isWeekend ? 'bg-muted' : ''
-              } ${isSelected ? 'ring-2 ring-primary' : ''}`}
-              onClick={() => handleCellClick(employee.id, day, 'FULL')}
+              className={`w-[40px] min-w-[40px] border-r ${isWeekend ? 'bg-muted' : ''}`}
             >
-              {status ? (
-                <StatusCell
-                  status={status.status}
-                  isHighlighted={status.isHighlighted}
-                  projectCode={status.projectCode}
-                />
-              ) : (
-                <div className="w-6 h-6"></div>
-              )}
+              <div
+                className={`h-1/2 p-0.5 border-b flex items-center justify-center ${
+                  isSelected && selectedPeriod === 'AM' ? 'ring-2 ring-primary' : ''
+                }`}
+                onClick={() => handleCellClick(employee.id, day, 'AM')}
+              >
+                {amStatus ? (
+                  <StatusCell
+                    status={amStatus.status}
+                    isHighlighted={amStatus.isHighlighted}
+                    projectCode={amStatus.projectCode}
+                    size="sm"
+                  />
+                ) : (
+                  <div className="w-5 h-5"></div>
+                )}
+              </div>
+              <div
+                className={`h-1/2 p-0.5 flex items-center justify-center ${
+                  isSelected && selectedPeriod === 'PM' ? 'ring-2 ring-primary' : ''
+                }`}
+                onClick={() => handleCellClick(employee.id, day, 'PM')}
+              >
+                {pmStatus ? (
+                  <StatusCell
+                    status={pmStatus.status}
+                    isHighlighted={pmStatus.isHighlighted}
+                    projectCode={pmStatus.projectCode}
+                    size="sm"
+                  />
+                ) : (
+                  <div className="w-5 h-5"></div>
+                )}
+              </div>
             </div>
           );
-        }
-
-        const amStatus = getEmployeeStatus(employee.id, dateStr, 'AM');
-        const pmStatus = getEmployeeStatus(employee.id, dateStr, 'PM');
-
-        return (
-          <div
-            key={index}
-            className={`border-r ${isWeekend ? 'bg-muted' : ''}`}
-          >
-            <div
-              className={`h-1/2 p-0.5 border-b flex items-center justify-center ${
-                isSelected && selectedPeriod === 'AM' ? 'ring-2 ring-primary' : ''
-              }`}
-              onClick={() => handleCellClick(employee.id, day, 'AM')}
-            >
-              {amStatus ? (
-                <StatusCell
-                  status={amStatus.status}
-                  isHighlighted={amStatus.isHighlighted}
-                  projectCode={amStatus.projectCode}
-                  size="sm"
-                />
-              ) : (
-                <div className="w-5 h-5"></div>
-              )}
-            </div>
-            <div
-              className={`h-1/2 p-0.5 flex items-center justify-center ${
-                isSelected && selectedPeriod === 'PM' ? 'ring-2 ring-primary' : ''
-              }`}
-              onClick={() => handleCellClick(employee.id, day, 'PM')}
-            >
-              {pmStatus ? (
-                <StatusCell
-                  status={pmStatus.status}
-                  isHighlighted={pmStatus.isHighlighted}
-                  projectCode={pmStatus.projectCode}
-                  size="sm"
-                />
-              ) : (
-                <div className="w-5 h-5"></div>
-              )}
-            </div>
-          </div>
-        );
-      })}
+        })}
+      </div>
     </div>
   );
 }

@@ -17,8 +17,9 @@ export function PlanningGridHeader({ days, handleShowLegend }: PlanningGridHeade
 
   return (
     <div className="sticky top-0 z-10 bg-background">
-      <div className="grid grid-cols-[minmax(150px,1fr)_repeat(auto-fill,minmax(40px,1fr))] border-b">
-        <div className="p-2 font-medium text-center border-r flex items-center justify-between">
+      {/* Modification de la classe grid pour assurer un affichage horizontal */}
+      <div className="flex border-b">
+        <div className="min-w-[150px] w-[150px] p-2 font-medium text-center border-r flex items-center justify-between">
           <span>Employés</span>
           <Button
             variant="ghost"
@@ -30,23 +31,25 @@ export function PlanningGridHeader({ days, handleShowLegend }: PlanningGridHeade
             <HelpCircle className="h-4 w-4" />
           </Button>
         </div>
-        {days.map((day, index) => {
-          const isWeekend = isWeekendDay(day);
-          const dayNumber = format(day, 'd');
-          const dayName = format(day, 'EEE', { locale: fr });
+        <div className="flex-1 flex">
+          {days.map((day, index) => {
+            const isWeekend = isWeekendDay(day);
+            const dayNumber = format(day, 'd');
+            const dayName = format(day, 'EEE', { locale: fr });
 
-          return (
-            <div
-              key={index}
-              className={`p-1 text-center border-r text-xs ${
-                isWeekend ? 'bg-muted' : ''
-              }`}
-            >
-              <div className="font-medium">{dayNumber}</div>
-              <div className="text-muted-foreground uppercase">{dayName}</div>
-            </div>
-          );
-        })}
+            return (
+              <div
+                key={index}
+                className={`w-[40px] min-w-[40px] p-1 text-center border-r text-xs ${
+                  isWeekend ? 'bg-muted' : ''
+                }`}
+              >
+                <div className="font-medium">{dayNumber}</div>
+                <div className="text-muted-foreground uppercase">{dayName}</div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

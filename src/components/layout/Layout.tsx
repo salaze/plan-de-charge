@@ -1,16 +1,21 @@
+
 import React from 'react';
 import { Menu } from 'lucide-react';
 import { SidebarMenu } from './SidebarMenu';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Sidebar, SidebarProvider, SidebarContent, SidebarHeader, SidebarFooter, SidebarTrigger, SidebarInset } from '@/components/ui/sidebar';
+
 interface LayoutProps {
   children: React.ReactNode;
 }
+
 export function Layout({
   children
 }: LayoutProps) {
   const isMobile = useIsMobile();
-  return <SidebarProvider defaultOpen={false} showOnHover={true}>
+  
+  return (
+    <SidebarProvider defaultOpen={false} showOnHover={true}>
       <div className="min-h-screen flex w-full">
         <Sidebar>
           <SidebarHeader className="p-4 border-b border-sidebar-border">
@@ -25,8 +30,6 @@ export function Layout({
         </Sidebar>
         
         <SidebarInset>
-          
-          
           <main className="p-2 sm:p-4">
             <div className="layout-container space-y-4 sm:space-y-6 max-w-full">
               {children}
@@ -34,5 +37,6 @@ export function Layout({
           </main>
         </SidebarInset>
       </div>
-    </SidebarProvider>;
+    </SidebarProvider>
+  );
 }

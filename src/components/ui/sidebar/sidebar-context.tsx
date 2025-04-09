@@ -1,4 +1,3 @@
-
 import * as React from "react"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { SIDEBAR_COOKIE_NAME, SIDEBAR_COOKIE_MAX_AGE, SIDEBAR_KEYBOARD_SHORTCUT } from "@/lib/sidebar-constants"
@@ -50,9 +49,8 @@ export const SidebarProvider = React.forwardRef<
     const isMobile = useIsMobile()
     const [openMobile, setOpenMobile] = React.useState(false)
 
-    // This is the internal state of the sidebar.
-    // We use openProp and setOpenProp for control from outside the component.
-    const [_open, _setOpen] = React.useState(defaultOpen)
+    // Always start with the sidebar collapsed (false)
+    const [_open, _setOpen] = React.useState(false)
     const open = openProp ?? _open
     const setOpen = React.useCallback(
       (value: boolean | ((value: boolean) => boolean)) => {

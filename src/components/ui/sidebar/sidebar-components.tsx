@@ -30,16 +30,16 @@ export const Sidebar = React.forwardRef<
     const [isHovering, setIsHovering] = React.useState(false)
 
     const handleMouseEnter = React.useCallback(() => {
-      if (showOnHover && !open) {
+      if (showOnHover) {
         setIsHovering(true);
       }
-    }, [showOnHover, open]);
+    }, [showOnHover]);
 
     const handleMouseLeave = React.useCallback(() => {
-      if (showOnHover && !open) {
+      if (showOnHover) {
         setIsHovering(false);
       }
-    }, [showOnHover, open]);
+    }, [showOnHover]);
 
     if (collapsible === "none") {
       return (
@@ -99,15 +99,15 @@ export const Sidebar = React.forwardRef<
         />
         <div
           className={cn(
-            "duration-200 fixed inset-y-0 z-10 hidden h-svh w-[--sidebar-width] transition-[left,right,width] ease-linear md:flex",
+            "duration-300 fixed inset-y-0 z-10 hidden h-svh w-[--sidebar-width] transition-[left,right,width,transform] ease-in-out md:flex",
             side === "left"
-              ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
+              ? "left-0 -translate-x-full group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
               : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
             variant === "floating" || variant === "inset"
               ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4)_+2px)]"
               : "group-data-[collapsible=icon]:w-[--sidebar-width-icon] group-data-[side=left]:border-r group-data-[side=right]:border-l",
             className,
-            isHovering && "!left-0 shadow-lg"
+            isHovering && "!translate-x-0 shadow-lg"
           )}
           {...props}
         >
@@ -120,13 +120,11 @@ export const Sidebar = React.forwardRef<
         </div>
 
         {/* Hover trigger zone */}
-        {showOnHover && !open && (
-          <div 
-            className="fixed inset-y-0 left-0 w-6 z-10"
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
-          />
-        )}
+        <div 
+          className="fixed inset-y-0 left-0 w-6 z-10"
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+        />
       </div>
     )
   }

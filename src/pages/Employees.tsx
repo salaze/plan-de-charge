@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
 import { Layout } from '@/components/layout/Layout';
 import { EmployeeList } from '@/components/employees/EmployeeList';
@@ -14,13 +14,22 @@ import {
   AlertDialogHeader,
   AlertDialogTitle
 } from '@/components/ui/alert-dialog';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Employee } from '@/types';
 import { employeeService } from '@/services/supabase';
 import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
+import { Search, SortAsc } from 'lucide-react';
+
+type SortOption = 'name' | 'position' | 'department';
+type SortDirection = 'asc' | 'desc';
 
 const Employees = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState<SortOption>('name');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   
   const [formOpen, setFormOpen] = useState(false);
   const [currentEmployee, setCurrentEmployee] = useState<Employee | undefined>(undefined);
@@ -124,6 +133,35 @@ const Employees = () => {
       toast.error('Une erreur est survenue');
     }
   };
+
+  const toggleSortDirection = () => {
+    setSortDirection(prevDirection => prevDirection === 'asc' ? 'desc' : 'asc');
+  };
+
+  const filteredAndSortedEmployees = useMemo(() => {
+    // Filter employees based on search term
+    const filtered = employees.filter(employee => {
+      const searchTermLower = searchTerm.toLowerCase();
+      return (
+        employee.name.toLowerCase().includes(searchTermLower) ||
+        (employee.position?.toLowerCase().includes(searchTermLower) || false) ||
+        (employee.department?.toLowerCase().includes(searchTermLower) || false) ||
+        (employee.uid?.toLowerCase().includes(searchTermLower) || false)
+      );
+    });
+
+    // Sort employees
+    return filtered.sort((a, b) => {
+      const aValue = a[sortBy] || '';
+      const bValue = b[sortBy] || '';
+      
+      if (sortDirection === 'asc') {
+        return aValue.localeCompare(bValue);
+      } else {
+        return bValue.localeCompare(aValue);
+      }
+    });
+  }, [employees, searchTerm, sortBy, sortDirection]);
   
   if (isLoading) {
     return (
@@ -141,8 +179,40 @@ const Employees = () => {
         <h1 className="text-3xl font-bold mb-6">Gestion des employés</h1>
         
         <div className="glass-panel p-6 animate-scale-in">
+          {/* Barre de recherche et options de tri */}
+          <div className="flex flex-col md:flex-row gap-4 mb-6">
+            <div className="relative flex-grow">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
+              <Input
+                placeholder="Rechercher un employé..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Trier par" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="name">Nom</SelectItem>
+                  <SelectItem value="position">Fonction</SelectItem>
+                  <SelectItem value="department">Département</SelectItem>
+                </SelectContent>
+              </Select>
+              <button
+                onClick={toggleSortDirection}
+                className="px-3 py-2 border rounded-md hover:bg-accent flex items-center justify-center"
+                aria-label={sortDirection === 'asc' ? 'Trier par ordre décroissant' : 'Trier par ordre croissant'}
+              >
+                <SortAsc className={`h-5 w-5 ${sortDirection === 'desc' ? 'rotate-180' : ''} transition-transform`} />
+              </button>
+            </div>
+          </div>
+
           <EmployeeList 
-            employees={employees}
+            employees={filteredAndSortedEmployees}
             onAddEmployee={handleAddEmployee}
             onEditEmployee={handleEditEmployee}
             onDeleteEmployee={handleDeleteEmployee}

@@ -25,7 +25,7 @@ const NotFound = lazy(() => import('@/pages/NotFound'));
 
 function App() {
   return (
-    <ThemeProvider defaultTheme="system" storageKey="planning-theme" attribute="class" enableSystem>
+    <ThemeProvider defaultTheme="light" storageKey="planning-theme" attribute="class" enableSystem>
       <ToastProvider>
         <AuthProvider>
           <BrowserRouter>

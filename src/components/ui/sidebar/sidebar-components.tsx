@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
@@ -25,7 +26,20 @@ export const Sidebar = React.forwardRef<
     },
     ref
   ) => {
-    const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
+    const { isMobile, state, open, openMobile, setOpenMobile, setOpen, showOnHover } = useSidebar()
+    const [isHovering, setIsHovering] = React.useState(false)
+
+    const handleMouseEnter = React.useCallback(() => {
+      if (showOnHover && !open) {
+        setIsHovering(true);
+      }
+    }, [showOnHover, open]);
+
+    const handleMouseLeave = React.useCallback(() => {
+      if (showOnHover && !open) {
+        setIsHovering(false);
+      }
+    }, [showOnHover, open]);
 
     if (collapsible === "none") {
       return (
@@ -70,6 +84,8 @@ export const Sidebar = React.forwardRef<
         data-collapsible={state === "collapsed" ? collapsible : ""}
         data-variant={variant}
         data-side={side}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
         <div
           className={cn(
@@ -90,7 +106,8 @@ export const Sidebar = React.forwardRef<
             variant === "floating" || variant === "inset"
               ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4)_+2px)]"
               : "group-data-[collapsible=icon]:w-[--sidebar-width-icon] group-data-[side=left]:border-r group-data-[side=right]:border-l",
-            className
+            className,
+            isHovering && "!left-0 shadow-lg"
           )}
           {...props}
         >
@@ -101,6 +118,15 @@ export const Sidebar = React.forwardRef<
             {children}
           </div>
         </div>
+
+        {/* Hover trigger zone */}
+        {showOnHover && !open && (
+          <div 
+            className="fixed inset-y-0 left-0 w-6 z-10"
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+          />
+        )}
       </div>
     )
   }

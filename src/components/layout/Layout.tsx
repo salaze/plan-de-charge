@@ -21,7 +21,7 @@ export function Layout({ children }: LayoutProps) {
   const isMobile = useIsMobile();
   
   return (
-    <SidebarProvider defaultOpen={false}>
+    <SidebarProvider defaultOpen={false} showOnHover={true}>
       <div className="min-h-screen flex w-full">
         <Sidebar>
           <SidebarHeader className="p-4 border-b border-sidebar-border">

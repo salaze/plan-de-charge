@@ -14,6 +14,7 @@ import { employeeScheduleService } from "./employeeScheduleService";
 export const employeeService = {
   async getAll(): Promise<Employee[]> {
     try {
+      console.log('Attempting to fetch all employees');
       // Récupérer tous les employés
       const { data: employees, error: employeesError } = await supabase
         .from('employes')
@@ -63,15 +64,30 @@ export const employeeService = {
 
   async create(employee: Omit<Employee, 'id' | 'schedule'>): Promise<Employee | null> {
     try {
+      console.log('Creating employee with data:', employee);
+      
+      // Créer un ID pour le nouvel employé
+      const employeeId = generateId();
+      
       const supabaseEmployee = mapEmployeeToSupabaseEmployee({
         ...employee, 
-        id: generateId(), 
+        id: employeeId, 
         schedule: []
       });
 
+      console.log('Mapped to Supabase employee format:', supabaseEmployee);
+
+      // Insérer dans la table employes
       const { data, error } = await supabase
         .from('employes')
-        .insert(supabaseEmployee as any)
+        .insert({
+          id: employeeId,
+          nom: employee.name,
+          uid: employee.uid,
+          fonction: employee.position,
+          departement: employee.department,
+          password: employee.password || 'employee123'
+        } as any)
         .select()
         .single();
 
@@ -80,9 +96,11 @@ export const employeeService = {
         return null;
       }
 
+      console.log('Employee created successfully, response:', data);
+      
       return mapSupabaseEmployeeToEmployee(data as unknown as SupabaseEmployee);
     } catch (error) {
-      console.error('Erreur non gérée:', error);
+      console.error('Erreur non gérée lors de la création:', error);
       return null;
     }
   },
@@ -90,9 +108,18 @@ export const employeeService = {
   async update(employee: Employee): Promise<Employee | null> {
     try {
       const supabaseEmployee = mapEmployeeToSupabaseEmployee(employee);
+      
+      console.log('Updating employee:', employee.id, supabaseEmployee);
+
       const { data, error } = await supabase
         .from('employes')
-        .update(supabaseEmployee as any)
+        .update({
+          nom: employee.name,
+          uid: employee.uid,
+          fonction: employee.position,
+          departement: employee.department,
+          password: employee.password
+        } as any)
         .eq('id', employee.id)
         .select()
         .single();
@@ -102,9 +129,11 @@ export const employeeService = {
         return null;
       }
 
+      console.log('Employee updated successfully, response:', data);
+      
       return mapSupabaseEmployeeToEmployee(data as unknown as SupabaseEmployee);
     } catch (error) {
-      console.error('Erreur non gérée:', error);
+      console.error('Erreur non gérée lors de la mise à jour:', error);
       return null;
     }
   },
@@ -168,7 +197,6 @@ export const employeeService = {
   },
 
   // Méthode de compatibilité pour ne pas casser les fonctionnalités existantes
-  // Elle délègue simplement au nouveau service employeeScheduleService
   async updateStatus(
     employeeId: string, 
     dayStatus: { 

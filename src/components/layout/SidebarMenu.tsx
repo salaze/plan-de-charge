@@ -5,6 +5,7 @@ import { Calendar, Users, BarChart, FileSpreadsheet, Settings, LogIn, LogOut, Sh
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { SidebarMenu as UIMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
 
 interface MenuItem {
   icon: React.ElementType;
@@ -74,59 +75,62 @@ export function SidebarMenu() {
     navigate('/login');
   };
   
+  const isActive = (path: string) => {
+    if (path.includes('?tab=')) {
+      const [pathname, search] = path.split('?');
+      return location.pathname === pathname && location.search.includes(search);
+    }
+    return location.pathname === path;
+  };
+  
   return (
     <div className="py-4">
-      <ul className="space-y-1">
-        {filteredMenuItems.map((item) => {
-          const isActive = 
-            location.pathname === item.path || 
-            (item.path.includes('?tab=') && 
-            location.pathname + location.search === item.path);
-            
-          return (
-            <li key={item.path}>
-              <Link
-                to={item.path}
-                className={cn(
-                  "flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-all duration-300",
-                  isActive
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                    : "text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent/30"
-                )}
-              >
-                <item.icon className="mr-2 h-5 w-5" />
-                {item.label}
+      <UIMenu>
+        {filteredMenuItems.map((item) => (
+          <SidebarMenuItem key={item.path}>
+            <SidebarMenuButton
+              asChild
+              className={cn(
+                isActive(item.path)
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                  : "text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent/30"
+              )}
+            >
+              <Link to={item.path} className="flex items-center gap-2">
+                <item.icon className="h-5 w-5" />
+                <span>{item.label}</span>
               </Link>
-            </li>
-          );
-        })}
-        
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        ))}
+      
         {/* Séparateur avant boutons d'authentification */}
-        <li className="mt-6 mb-2 px-3">
+        <div className="my-2 px-3">
           <div className="h-px bg-sidebar-border/50"></div>
-        </li>
+        </div>
         
         {/* Bouton de connexion/déconnexion selon l'état */}
-        <li>
-          {isAuthenticated ? (
-            <button
-              onClick={handleLogout}
-              className="flex w-full items-center px-3 py-2.5 text-sm font-medium rounded-md transition-all duration-300 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent/30"
-            >
-              <LogOut className="mr-2 h-5 w-5" />
-              Déconnexion
-            </button>
-          ) : (
-            <button
-              onClick={handleLogin}
-              className="flex w-full items-center px-3 py-2.5 text-sm font-medium rounded-md transition-all duration-300 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent/30"
-            >
-              <LogIn className="mr-2 h-5 w-5" />
-              Connexion Admin
-            </button>
-          )}
-        </li>
-      </ul>
+        <SidebarMenuItem>
+          <SidebarMenuButton
+            onClick={isAuthenticated ? handleLogout : handleLogin}
+            className="text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent/30"
+          >
+            <div className="flex items-center gap-2">
+              {isAuthenticated ? (
+                <>
+                  <LogOut className="h-5 w-5" />
+                  <span>Déconnexion</span>
+                </>
+              ) : (
+                <>
+                  <LogIn className="h-5 w-5" />
+                  <span>Connexion Admin</span>
+                </>
+              )}
+            </div>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </UIMenu>
     </div>
   );
 }

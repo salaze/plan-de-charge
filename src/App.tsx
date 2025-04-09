@@ -1,12 +1,12 @@
 
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { ThemeProvider } from '@/components/theme-provider';
+import { AuthProvider } from '@/contexts/AuthContext';
 import { Toaster } from '@/components/ui/toaster';
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { AdminRoute } from '@/components/AdminRoute';
 import { EmployeeRoute } from '@/components/EmployeeRoute';
-import { ThemeProvider } from '@/components/theme-provider';
-import { AuthProvider } from '@/contexts/AuthContext';
 import './App.css';
 
 // Import Index directly instead of using lazy loading
@@ -25,8 +25,8 @@ const NotFound = lazy(() => import('@/pages/NotFound'));
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <ThemeProvider defaultTheme="system" storageKey="planning-theme" attribute="class" enableSystem>
+      <ThemeProvider defaultTheme="system" storageKey="planning-theme" attribute="class" enableSystem>
+        <BrowserRouter>
           <Suspense fallback={<div className="flex items-center justify-center h-screen">Chargement...</div>}>
             <Routes>
               <Route path="/" element={<Index />} />
@@ -42,8 +42,8 @@ function App() {
           </Suspense>
           <SonnerToaster />
           <Toaster />
-        </ThemeProvider>
-      </BrowserRouter>
+        </BrowserRouter>
+      </ThemeProvider>
     </AuthProvider>
   );
 }

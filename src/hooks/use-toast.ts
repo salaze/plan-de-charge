@@ -1,3 +1,6 @@
+
+"use client"
+
 import * as React from "react"
 
 import type {
@@ -71,7 +74,7 @@ const addToRemoveQueue = (toastId: string) => {
   toastTimeouts.set(toastId, timeout)
 }
 
-export const reducer = (state: State, action: Action): State => {
+const reducer = (state: State, action: Action): State => {
   switch (action.type) {
     case "ADD_TOAST":
       return {
@@ -169,17 +172,21 @@ function toast({ ...props }: Toast) {
 }
 
 function useToast() {
+  // Create a local state that will be updated when the global state changes
   const [state, setState] = React.useState<State>(memoryState)
 
   React.useEffect(() => {
+    // Subscribe to state changes
     listeners.push(setState)
+    
+    // Return cleanup function to unsubscribe when component unmounts
     return () => {
       const index = listeners.indexOf(setState)
       if (index > -1) {
         listeners.splice(index, 1)
       }
     }
-  }, [state])
+  }, [])
 
   return {
     ...state,

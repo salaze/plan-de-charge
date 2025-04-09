@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Employee, DayStatus } from "@/types";
 import { generateId } from "@/utils";
@@ -50,7 +49,8 @@ export const mapSupabaseEmployeeToEmployee = (employee: SupabaseEmployee, schedu
   };
 };
 
-const mapEmployeeToSupabaseEmployee = (employee: Employee): Omit<SupabaseEmployee, "id"> => {
+// Exporter cette fonction pour qu'elle soit disponible dans d'autres modules
+export const mapEmployeeToSupabaseEmployee = (employee: Employee): Omit<SupabaseEmployee, "id"> => {
   // Extraire prénom du nom complet si possible
   let nom = employee.name;
   let prenom: string | null = null;
@@ -235,6 +235,76 @@ export const employeeService = {
       if (error) {
         console.error('Erreur lors de la suppression de l\'employé:', error);
         return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Erreur non gérée:', error);
+      return false;
+    }
+  },
+
+  // Ajout de la méthode updateStatus qui manquait
+  async updateStatus(
+    employeeId: string, 
+    dayStatus: { 
+      date: string; 
+      status: string; 
+      period: 'AM' | 'PM' | 'FULL'; 
+      isHighlighted?: boolean;
+      projectCode?: string;
+      note?: string;
+    }
+  ): Promise<boolean> {
+    try {
+      // D'abord, vérifier si un enregistrement existe déjà pour cette date et période
+      const { data: existingRecords, error: fetchError } = await supabase
+        .from('employe_schedule')
+        .select('*')
+        .eq('employe_id', employeeId)
+        .eq('date', dayStatus.date)
+        .eq('period', dayStatus.period);
+
+      if (fetchError) {
+        console.error('Erreur lors de la vérification du planning existant:', fetchError);
+        return false;
+      }
+
+      // Si un statut existe déjà, le mettre à jour
+      if (existingRecords && existingRecords.length > 0) {
+        const { error } = await supabase
+          .from('employe_schedule')
+          .update({
+            statut_code: dayStatus.status,
+            note: dayStatus.note || null,
+            project_code: dayStatus.projectCode || null,
+            is_highlighted: dayStatus.isHighlighted || false
+          })
+          .eq('id', existingRecords[0].id);
+
+        if (error) {
+          console.error('Erreur lors de la mise à jour du statut:', error);
+          return false;
+        }
+      } else {
+        // Sinon, créer un nouveau statut
+        const supabaseSchedule = mapDayStatusToSupabaseSchedule(employeeId, {
+          date: dayStatus.date,
+          status: dayStatus.status,
+          period: dayStatus.period,
+          note: dayStatus.note,
+          projectCode: dayStatus.projectCode,
+          isHighlighted: dayStatus.isHighlighted
+        });
+
+        const { error } = await supabase
+          .from('employe_schedule')
+          .insert(supabaseSchedule as any);
+
+        if (error) {
+          console.error('Erreur lors de la création du statut:', error);
+          return false;
+        }
       }
 
       return true;

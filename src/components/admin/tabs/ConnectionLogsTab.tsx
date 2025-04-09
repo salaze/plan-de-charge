@@ -25,7 +25,16 @@ export function ConnectionLogsTab() {
         return;
       }
 
-      setLogs(data as ConnectionLog[] || []);
+      // Properly validate and transform the data before setting state
+      if (data && Array.isArray(data)) {
+        const validLogs = data.filter(item => 
+          item && typeof item === 'object' && 'id' in item
+        ) as ConnectionLog[];
+        
+        setLogs(validLogs);
+      } else {
+        setLogs([]);
+      }
     } catch (err) {
       console.error('Unexpected error:', err);
     } finally {

@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { UserRole, Employee } from '@/types';
 import { toast } from 'sonner';
@@ -44,19 +43,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const logConnection = async (userId: string, userName: string, eventType: string) => {
     try {
       const userAgent = navigator.userAgent;
-      
-      // We don't have direct access to IP in the browser
-      // A real production app would use a server endpoint to get this
       const ipAddress = '127.0.0.1'; // Placeholder - would be fetched server-side
       
-      // Using the any type as a workaround until types are updated
-      await supabase.from('connection_logs' as any).insert({
+      const logData = {
         user_id: userId,
         user_name: userName,
         event_type: eventType,
         ip_address: ipAddress,
         user_agent: userAgent
-      } as any);
+      };
+      
+      await supabase.from('connection_logs' as any).insert(logData as any);
     } catch (error) {
       console.error('Failed to log connection:', error);
     }
@@ -69,7 +66,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       try {
         const parsedUser = JSON.parse(storedUser);
         setUser(parsedUser);
-        // Log user session restored
         if (parsedUser) {
           logConnection(
             parsedUser.employeeId || parsedUser.username, 
@@ -86,20 +82,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
-      // Admin hardcoded credentials check
       if (username === 'admin' && password === 'admin123') {
         const adminUser = { username, role: 'admin' as UserRole };
         setUser(adminUser);
         localStorage.setItem('user', JSON.stringify(adminUser));
         
-        // Log admin login
         logConnection('admin', 'admin', 'login');
         
         toast.success('Connexion réussie en tant qu\'administrateur');
         return true;
       }
       
-      // Supabase employee check by UID/name
       const { data: employees, error } = await supabase
         .from('employes')
         .select('*')
@@ -124,7 +117,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
           setUser(employeeUser);
           localStorage.setItem('user', JSON.stringify(employeeUser));
           
-          // Log employee login
           logConnection(employee.id, `${employee.nom}${employee.prenom ? ' ' + employee.prenom : ''}`, 'login');
           
           toast.success(`Bienvenue, ${employee.nom}${employee.prenom ? ' ' + employee.prenom : ''}`);
@@ -144,7 +136,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const logout = () => {
-    // Log logout event if we have a user
     if (user) {
       logConnection(user.employeeId || user.username, user.username, 'logout');
     }

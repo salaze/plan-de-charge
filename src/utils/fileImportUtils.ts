@@ -1,7 +1,7 @@
 
 import { MonthData } from '@/types';
 import { toast } from 'sonner';
-import { importFromExcel } from './exportUtils';
+import { importFromExcel } from './excel';
 import { saveData } from '@/services/jsonStorage';
 
 /**

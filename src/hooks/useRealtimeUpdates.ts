@@ -30,7 +30,7 @@ export function useRealtimeUpdates({
           { 
             event: '*', 
             schema: 'public', 
-            table: table as any // Type assertion as workaround
+            table: table 
           },
           (payload: RealtimePostgresChangesPayload<any>) => {
             console.log(`Realtime update on ${table}:`, payload);

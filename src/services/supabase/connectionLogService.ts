@@ -2,6 +2,17 @@
 import { supabase } from '@/integrations/supabase/client';
 import { ConnectionLog } from '@/types';
 
+// Helper function to validate a ConnectionLog object
+const isValidConnectionLog = (data: any): data is ConnectionLog => {
+  return (
+    data &&
+    typeof data === 'object' &&
+    'id' in data &&
+    typeof data.id === 'string' &&
+    'created_at' in data
+  );
+};
+
 export const connectionLogService = {
   async getAll(): Promise<ConnectionLog[]> {
     try {
@@ -15,8 +26,12 @@ export const connectionLogService = {
         return [];
       }
 
-      // Safely convert the data to ConnectionLog[] type
-      return (Array.isArray(data) ? data : []) as ConnectionLog[];
+      // Filter and validate each item before returning
+      if (Array.isArray(data)) {
+        return data.filter(isValidConnectionLog);
+      }
+      
+      return [];
     } catch (error) {
       console.error('Unexpected error in getAll connection logs:', error);
       return [];
@@ -36,7 +51,12 @@ export const connectionLogService = {
         return null;
       }
 
-      return data as ConnectionLog;
+      // Validate the returned data
+      if (isValidConnectionLog(data)) {
+        return data;
+      }
+      
+      return null;
     } catch (error) {
       console.error('Unexpected error in create connection log:', error);
       return null;

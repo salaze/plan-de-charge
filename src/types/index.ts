@@ -117,3 +117,13 @@ export interface Status {
   color: string;
   displayOrder?: number;
 }
+
+export interface ConnectionLog {
+  id: string;
+  user_id: string | null;
+  user_name: string | null;
+  ip_address: string | null;
+  user_agent: string | null;
+  event_type: string | null;
+  created_at: string;
+}

@@ -4,61 +4,45 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
-
-interface ConnectionLog {
-  id: string;
-  user_id: string | null;
-  user_name: string | null;
-  ip_address: string | null;
-  user_agent: string | null;
-  event_type: string | null;
-  created_at: string;
-}
+import { ConnectionLog } from '@/types';
+import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
 
 export function ConnectionLogsTab() {
   const [logs, setLogs] = useState<ConnectionLog[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchLogs = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('connection_logs')
-          .select('*')
-          .order('created_at', { ascending: false });
+  const fetchLogs = async () => {
+    try {
+      setLoading(true);
+      // Using the any type as a workaround until types are updated
+      const { data, error } = await supabase
+        .from('connection_logs' as any)
+        .select('*')
+        .order('created_at', { ascending: false });
 
-        if (error) {
-          console.error('Error fetching connection logs:', error);
-          return;
-        }
-
-        setLogs(data || []);
-      } catch (err) {
-        console.error('Unexpected error:', err);
-      } finally {
-        setLoading(false);
+      if (error) {
+        console.error('Error fetching connection logs:', error);
+        return;
       }
-    };
 
+      setLogs(data as ConnectionLog[] || []);
+    } catch (err) {
+      console.error('Unexpected error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchLogs();
-
-    // Subscribe to real-time changes
-    const channel = supabase
-      .channel('connection_logs_changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'connection_logs' },
-        (payload) => {
-          console.log('Connection logs real-time update:', payload);
-          fetchLogs(); // Refresh data when changes occur
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, []);
+
+  // Use the realtimeUpdates hook for the connection_logs table
+  useRealtimeUpdates({
+    tables: ['employes', 'statuts', 'connection_logs' as any],
+    onDataChange: fetchLogs,
+    showToasts: false
+  });
 
   return (
     <Card>

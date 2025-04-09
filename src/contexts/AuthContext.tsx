@@ -49,13 +49,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // A real production app would use a server endpoint to get this
       const ipAddress = '127.0.0.1'; // Placeholder - would be fetched server-side
       
-      await supabase.from('connection_logs').insert({
+      // Using the any type as a workaround until types are updated
+      await supabase.from('connection_logs' as any).insert({
         user_id: userId,
         user_name: userName,
         event_type: eventType,
         ip_address: ipAddress,
         user_agent: userAgent
-      });
+      } as any);
     } catch (error) {
       console.error('Failed to log connection:', error);
     }

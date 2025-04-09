@@ -4,7 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
-type TableName = 'employes' | 'employe_schedule' | 'statuts';
+// Using a flexible type to accommodate the connection_logs table until types are updated
+type TableName = 'employes' | 'employe_schedule' | 'statuts' | 'connection_logs' | string;
 type EventType = 'INSERT' | 'UPDATE' | 'DELETE';
 
 interface UseRealtimeUpdatesProps {
@@ -29,7 +30,7 @@ export function useRealtimeUpdates({
           { 
             event: '*', 
             schema: 'public', 
-            table
+            table: table as any // Type assertion as workaround
           },
           (payload: RealtimePostgresChangesPayload<any>) => {
             console.log(`Realtime update on ${table}:`, payload);

@@ -24,10 +24,8 @@ interface AuthProviderProps {
   children: React.ReactNode;
 }
 
-// Create context with a default value
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Hook to use the auth context
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
@@ -39,7 +37,6 @@ export function useAuth() {
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User>(null);
 
-  // Log connection data
   const logConnection = async (userId: string, userName: string, eventType: string) => {
     try {
       const userAgent = navigator.userAgent;
@@ -59,7 +56,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  // Load user data from localStorage on initial render
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {

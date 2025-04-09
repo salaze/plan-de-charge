@@ -38,7 +38,7 @@ export const connectionLogService = {
     }
   },
 
-  async create(logData: Omit<ConnectionLog, 'id' | 'created_at'>): Promise<ConnectionLog | null> {
+  async create(logData: Partial<Omit<ConnectionLog, 'id' | 'created_at'>>): Promise<ConnectionLog | null> {
     try {
       const { data, error } = await supabase
         .from('connection_logs')

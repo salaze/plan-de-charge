@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -25,7 +26,7 @@ const AdminLogin = () => {
       return;
     }
     
-    const success = login(username, password);
+    const success = await login(username, password);
     
     if (success) {
       try {

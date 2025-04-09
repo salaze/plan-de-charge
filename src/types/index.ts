@@ -120,10 +120,10 @@ export interface Status {
 
 export interface ConnectionLog {
   id: string;
-  user_id: string | null;
-  user_name: string | null;
-  ip_address: string | null;
-  user_agent: string | null;
-  event_type: string | null;
+  user_id?: string;
+  user_name?: string;
+  ip_address?: string;
+  user_agent?: string;
+  event_type?: string;
   created_at: string;
 }

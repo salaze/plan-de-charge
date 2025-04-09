@@ -35,7 +35,7 @@ function App() {
               <Route path="/statistics" element={<AdminRoute><Statistics /></AdminRoute>} />
               <Route path="/settings" element={<AdminRoute><Settings /></AdminRoute>} />
               <Route path="/login" element={<Login />} />
-              <Route path="/init" element={<AdminRoute><InitApp /></AdminRoute>} />
+              <Route path="/init" element={<InitApp />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>

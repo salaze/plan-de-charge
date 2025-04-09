@@ -1,7 +1,7 @@
 
-"use client"
+"use client";
 
 // Re-export hooks from the actual implementation
-import { toast, useToast } from "@/hooks/use-toast"
+import { toast, useToast } from "@/hooks/toast";
 
-export { useToast, toast }
+export { useToast, toast };

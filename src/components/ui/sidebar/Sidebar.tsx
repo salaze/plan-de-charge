@@ -1,6 +1,7 @@
+
 import * as React from "react"
 import { cn } from "@/lib/utils"
-import { useSidebar } from "@/hooks/use-sidebar"
+import { useSidebar } from "./sidebar-context"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { SIDEBAR_WIDTH_MOBILE } from "@/lib/sidebar-constants"
 

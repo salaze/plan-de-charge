@@ -1,4 +1,3 @@
-
 import * as React from "react"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
@@ -101,8 +100,8 @@ export const Sidebar = React.forwardRef<
           className={cn(
             "duration-300 fixed inset-y-0 z-10 hidden h-svh w-[--sidebar-width] transition-[left,right,width,transform] ease-in-out md:flex",
             side === "left"
-              ? "left-0 -translate-x-full group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
-              : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
+              ? "left-0 -translate-x-full"
+              : "right-0 translate-x-full",
             variant === "floating" || variant === "inset"
               ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4)_+2px)]"
               : "group-data-[collapsible=icon]:w-[--sidebar-width-icon] group-data-[side=left]:border-r group-data-[side=right]:border-l",
@@ -119,11 +118,10 @@ export const Sidebar = React.forwardRef<
           </div>
         </div>
 
-        {/* Hover trigger zone */}
+        {/* Improved hover trigger zone */}
         <div 
           className="fixed inset-y-0 left-0 w-6 z-10"
           onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
         />
       </div>
     )

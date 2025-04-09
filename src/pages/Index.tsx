@@ -4,12 +4,15 @@ import { Link } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { PlanningGridEnhanced } from '@/components/calendar/PlanningGridEnhanced';
 import { MonthSelector } from '@/components/calendar/MonthSelector';
-import { planningService, projectService } from '@/services/jsonStorage';
-import { employeeService, statusService } from '@/services/supabase';
+import { 
+  employeeService, 
+  statusService, 
+  projectService, 
+  planningService 
+} from '@/services/supabaseServices';
 import { useAuth } from '@/contexts/AuthContext';
 import { Employee, Project, Status } from '@/types';
 import { toast } from 'sonner';
-import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
 
 const Index = () => {
   const planningData = planningService.getData();
@@ -23,15 +26,15 @@ const Index = () => {
   
   const { isAdmin, isAuthenticated } = useAuth();
   
-  const fetchData = async () => {
+  const fetchData = () => {
     setIsLoading(true);
     try {
       console.log('Fetching employees data...');
-      const employeesData = await employeeService.getAll();
+      const employeesData = employeeService.getAll();
       console.log('Employees data fetched:', employeesData);
       setEmployees(employeesData);
       
-      const statusesData = await statusService.getAll();
+      const statusesData = statusService.getAll();
       console.log('Statuses data fetched:', statusesData);
       setStatuses(statusesData);
       
@@ -48,13 +51,18 @@ const Index = () => {
   
   useEffect(() => {
     fetchData();
+    
+    // Ajouter un écouteur d'événement pour détecter les changements dans localStorage
+    const handleStorageChange = () => {
+      fetchData();
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
-  
-  useRealtimeUpdates({
-    tables: ['employes', 'employe_schedule', 'statuts'],
-    onDataChange: fetchData,
-    showToasts: true
-  });
   
   const handleMonthChange = (newYear: number, newMonth: number) => {
     setYear(newYear);
@@ -62,7 +70,7 @@ const Index = () => {
     planningService.updateMonth(newYear, newMonth);
   };
   
-  const handleStatusChange = async (
+  const handleStatusChange = (
     employeeId: string, 
     date: string, 
     status: string, 
@@ -78,7 +86,7 @@ const Index = () => {
     try {
       console.log('Changing status:', { employeeId, date, status, period, isHighlighted, projectCode });
       
-      const success = await employeeService.updateStatus(employeeId, {
+      const success = employeeService.updateStatus(employeeId, {
         date,
         status,
         period,
@@ -111,6 +119,10 @@ const Index = () => {
         })
       );
       toast.success('Statut mis à jour avec succès');
+      
+      // Déclencher un événement de stockage pour informer les autres onglets
+      window.dispatchEvent(new Event('storage'));
+      
     } catch (error) {
       console.error('Erreur:', error);
       toast.error('Une erreur est survenue');

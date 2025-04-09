@@ -3,10 +3,9 @@ import { useState, useEffect } from 'react';
 import { Employee, Status, Project } from '@/types';
 import { 
   employeeService, 
-  statusService 
-} from '@/services/supabase';
-import { projectService } from '@/services/jsonStorage';
-import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
+  statusService,
+  projectService 
+} from '@/services/supabaseServices';
 
 interface AdminData {
   projects: Project[];
@@ -26,14 +25,14 @@ export function useAdminData() {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      // Les projets restent dans le localStorage pour l'instant
+      // Récupérer les projets du localStorage
       const projects = projectService.getAll();
       
-      // Récupérer les employés de Supabase
-      const employees = await employeeService.getAll();
+      // Récupérer les employés du localStorage (via le service réexporté)
+      const employees = employeeService.getAll();
       
-      // Récupérer les statuts de Supabase
-      const statuses = await statusService.getAll();
+      // Récupérer les statuts du localStorage (via le service réexporté)
+      const statuses = statusService.getAll();
       
       setData({
         projects,
@@ -52,15 +51,8 @@ export function useAdminData() {
     fetchData();
   }, []);
 
-  // Set up real-time updates
-  useRealtimeUpdates({
-    tables: ['employes', 'statuts'],
-    onDataChange: fetchData,
-    showToasts: true
-  });
-
   const handleProjectsChange = (projects: Project[]) => {
-    // Sauvegarde manuelle des projets au lieu d'utiliser saveAll
+    // Sauvegarde des projets
     projects.forEach(project => {
       if (projectService.getById(project.id)) {
         projectService.update(project);
@@ -84,20 +76,16 @@ export function useAdminData() {
     }));
   };
   
-  const handleStatusesChange = async (statuses: Status[]) => {
-    // Nous n'implémentons pas de mise à jour en masse ici,
-    // car les mises à jour sont gérées individuellement 
-    // dans les composants via les services
+  const handleStatusesChange = (statuses: Status[]) => {
+    // Mise à jour des statuts
     setData(prevData => ({
       ...prevData,
       statuses
     }));
   };
   
-  const handleEmployeesChange = async (employees: Employee[]) => {
-    // Nous n'implémentons pas de mise à jour en masse ici,
-    // car les mises à jour sont gérées individuellement
-    // dans les composants via les services
+  const handleEmployeesChange = (employees: Employee[]) => {
+    // Mise à jour des employés
     setData(prevData => ({
       ...prevData,
       employees

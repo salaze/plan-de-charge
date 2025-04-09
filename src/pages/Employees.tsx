@@ -17,8 +17,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Employee } from '@/types';
-import { employeeService } from '@/services/supabase';
-import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
+import { employeeService } from '@/services/supabaseServices';
 import { Search, SortAsc } from 'lucide-react';
 
 type SortOption = 'name' | 'position' | 'department';
@@ -36,11 +35,11 @@ const Employees = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<string>('');
   
-  const fetchEmployees = async () => {
+  const fetchEmployees = () => {
     setIsLoading(true);
     try {
       console.log('Fetching employees...');
-      const data = await employeeService.getAll();
+      const data = employeeService.getAll();
       console.log('Employees fetched:', data);
       setEmployees(data);
     } catch (error) {
@@ -53,14 +52,18 @@ const Employees = () => {
   
   useEffect(() => {
     fetchEmployees();
+    
+    // Ajouter un écouteur d'événement pour détecter les changements dans localStorage
+    const handleStorageChange = () => {
+      fetchEmployees();
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
-  
-  // Set up real-time updates
-  useRealtimeUpdates({
-    tables: ['employes'],
-    onDataChange: fetchEmployees,
-    showToasts: true
-  });
   
   const handleAddEmployee = () => {
     setCurrentEmployee(undefined);
@@ -77,17 +80,20 @@ const Employees = () => {
     setDeleteDialogOpen(true);
   };
   
-  const confirmDeleteEmployee = async () => {
+  const confirmDeleteEmployee = () => {
     if (!employeeToDelete) return;
     
     try {
       console.log('Deleting employee with ID:', employeeToDelete);
-      const success = await employeeService.delete(employeeToDelete);
+      const success = employeeService.delete(employeeToDelete);
       
       if (success) {
         const updatedEmployees = employees.filter(emp => emp.id !== employeeToDelete);
         setEmployees(updatedEmployees);
         toast.success('Employé supprimé avec succès');
+        
+        // Déclencher un événement de stockage pour informer les autres onglets
+        window.dispatchEvent(new Event('storage'));
       } else {
         toast.error('Erreur lors de la suppression de l\'employé');
       }
@@ -100,11 +106,11 @@ const Employees = () => {
     }
   };
   
-  const handleSaveEmployee = async (employee: Employee) => {
+  const handleSaveEmployee = (employee: Employee) => {
     try {
       if (employee.id) {
         console.log('Updating employee:', employee);
-        const updatedEmployee = await employeeService.update(employee);
+        const updatedEmployee = employeeService.update(employee);
         
         if (updatedEmployee) {
           setEmployees(prev => prev.map(emp => 
@@ -112,18 +118,24 @@ const Employees = () => {
           ));
           setFormOpen(false);
           toast.success('Employé modifié avec succès');
+          
+          // Déclencher un événement de stockage pour informer les autres onglets
+          window.dispatchEvent(new Event('storage'));
         } else {
           toast.error('Erreur lors de la modification de l\'employé');
         }
       } else {
         console.log('Creating new employee:', employee);
-        const newEmployee = await employeeService.create(employee);
+        const newEmployee = employeeService.create(employee);
         
         if (newEmployee) {
           console.log('Employee created successfully:', newEmployee);
           setEmployees(prev => [...prev, newEmployee]);
           setFormOpen(false);
           toast.success('Employé ajouté avec succès');
+          
+          // Déclencher un événement de stockage pour informer les autres onglets
+          window.dispatchEvent(new Event('storage'));
         } else {
           toast.error('Erreur lors de l\'ajout de l\'employé');
         }

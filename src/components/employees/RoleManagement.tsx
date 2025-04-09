@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { toast } from 'sonner';
 import { Employee, UserRole } from '@/types';
@@ -5,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { EmployeeRoleSelector } from './EmployeeRoleSelector';
 import { useAuth } from '@/contexts/AuthContext';
-import { employeeService } from '@/services/supabase';
+import { employeeService } from '@/services/supabaseServices';
 
 interface RoleManagementProps {
   employees: Employee[];
@@ -15,10 +16,10 @@ interface RoleManagementProps {
 export function RoleManagement({ employees, onEmployeesChange }: RoleManagementProps) {
   const { updateUserRoles } = useAuth();
   
-  const handleRoleChange = async (employeeId: string, newRole: UserRole) => {
+  const handleRoleChange = (employeeId: string, newRole: UserRole) => {
     try {
-      // Mettre à jour le rôle dans Supabase
-      const success = await employeeService.updateRole(employeeId, newRole);
+      // Mettre à jour le rôle avec le service JSON
+      const success = employeeService.updateRole(employeeId, newRole);
       
       if (!success) {
         toast.error('Erreur lors de la mise à jour du rôle');
@@ -38,6 +39,9 @@ export function RoleManagement({ employees, onEmployeesChange }: RoleManagementP
       
       onEmployeesChange(updatedEmployees);
       toast.success('Rôle mis à jour avec succès');
+      
+      // Déclencher un événement de stockage pour informer les autres onglets
+      window.dispatchEvent(new Event('storage'));
       
     } catch (error) {
       console.error('Erreur lors de la mise à jour du rôle:', error);

@@ -1,7 +1,8 @@
+
 import { useState, useMemo } from 'react';
 import { Status, StatusCode } from '@/types';
 import { toast } from 'sonner';
-import { statusService } from '@/services/supabase';
+import { statusService } from '@/services/supabaseServices';
 import { generateId } from '@/utils';
 
 export function useStatusManager(initialStatuses: Status[], onStatusesChange: (statuses: Status[]) => void) {
@@ -26,12 +27,12 @@ export function useStatusManager(initialStatuses: Status[], onStatusesChange: (s
     setDeleteDialogOpen(true);
   };
 
-  const confirmDeleteStatus = async () => {
+  const confirmDeleteStatus = () => {
     if (!statusToDelete) return;
 
     try {
       console.log('Deleting status with ID:', statusToDelete);
-      const success = await statusService.delete(statusToDelete);
+      const success = statusService.delete(statusToDelete);
       
       if (success) {
         const updatedStatuses = statuses.filter(s => s.id !== statusToDelete);
@@ -50,13 +51,13 @@ export function useStatusManager(initialStatuses: Status[], onStatusesChange: (s
     }
   };
 
-  const handleSaveStatus = async (status: Status) => {
+  const handleSaveStatus = (status: Status) => {
     try {
       console.log('Saving status:', status);
       
       if (status.id) {
         console.log('Updating existing status');
-        const updatedStatus = await statusService.update(status);
+        const updatedStatus = statusService.update(status);
         
         if (updatedStatus) {
           console.log('Status updated successfully:', updatedStatus);
@@ -79,7 +80,7 @@ export function useStatusManager(initialStatuses: Status[], onStatusesChange: (s
           displayOrder: status.displayOrder
         };
         
-        const newStatus = await statusService.create(newStatusData);
+        const newStatus = statusService.create(newStatusData);
         
         if (newStatus) {
           console.log('Status created successfully:', newStatus);

@@ -81,10 +81,7 @@ const initialState: State = { toasts: [] }
 const ToastContext = React.createContext<{
   state: State
   dispatch: React.Dispatch<Action>
-}>({
-  state: initialState,
-  dispatch: () => null,
-})
+} | undefined>(undefined)
 
 // This allows us to manually add/remove toasts outside of React components
 let listeners: Array<(state: State) => void> = []

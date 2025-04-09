@@ -40,12 +40,42 @@ export function useAuth() {
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User>(null);
 
+  // Log connection data
+  const logConnection = async (userId: string, userName: string, eventType: string) => {
+    try {
+      const userAgent = navigator.userAgent;
+      
+      // We don't have direct access to IP in the browser
+      // A real production app would use a server endpoint to get this
+      const ipAddress = '127.0.0.1'; // Placeholder - would be fetched server-side
+      
+      await supabase.from('connection_logs').insert({
+        user_id: userId,
+        user_name: userName,
+        event_type: eventType,
+        ip_address: ipAddress,
+        user_agent: userAgent
+      });
+    } catch (error) {
+      console.error('Failed to log connection:', error);
+    }
+  };
+
   // Load user data from localStorage on initial render
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       try {
-        setUser(JSON.parse(storedUser));
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+        // Log user session restored
+        if (parsedUser) {
+          logConnection(
+            parsedUser.employeeId || parsedUser.username, 
+            parsedUser.username, 
+            'session_restored'
+          );
+        }
       } catch (e) {
         console.error('Failed to parse stored user data:', e);
         localStorage.removeItem('user');
@@ -60,6 +90,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const adminUser = { username, role: 'admin' as UserRole };
         setUser(adminUser);
         localStorage.setItem('user', JSON.stringify(adminUser));
+        
+        // Log admin login
+        logConnection('admin', 'admin', 'login');
+        
         toast.success('Connexion réussie en tant qu\'administrateur');
         return true;
       }
@@ -88,6 +122,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
           };
           setUser(employeeUser);
           localStorage.setItem('user', JSON.stringify(employeeUser));
+          
+          // Log employee login
+          logConnection(employee.id, `${employee.nom}${employee.prenom ? ' ' + employee.prenom : ''}`, 'login');
+          
           toast.success(`Bienvenue, ${employee.nom}${employee.prenom ? ' ' + employee.prenom : ''}`);
           return true;
         } else {
@@ -105,6 +143,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const logout = () => {
+    // Log logout event if we have a user
+    if (user) {
+      logConnection(user.employeeId || user.username, user.username, 'logout');
+    }
+    
     setUser(null);
     localStorage.removeItem('user');
   };

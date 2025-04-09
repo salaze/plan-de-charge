@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Layout } from '@/components/layout/Layout';
@@ -15,6 +16,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Employee } from '@/types';
 import { employeeService } from '@/services/supabase';
+import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
 
 const Employees = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -25,24 +27,31 @@ const Employees = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<string>('');
   
+  const fetchEmployees = async () => {
+    setIsLoading(true);
+    try {
+      console.log('Fetching employees...');
+      const data = await employeeService.getAll();
+      console.log('Employees fetched:', data);
+      setEmployees(data);
+    } catch (error) {
+      console.error('Erreur lors du chargement des employés:', error);
+      toast.error('Erreur lors du chargement des employés');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
   useEffect(() => {
-    const fetchEmployees = async () => {
-      setIsLoading(true);
-      try {
-        console.log('Fetching employees...');
-        const data = await employeeService.getAll();
-        console.log('Employees fetched:', data);
-        setEmployees(data);
-      } catch (error) {
-        console.error('Erreur lors du chargement des employés:', error);
-        toast.error('Erreur lors du chargement des employés');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
     fetchEmployees();
   }, []);
+  
+  // Set up real-time updates
+  useRealtimeUpdates({
+    tables: ['employes'],
+    onDataChange: fetchEmployees,
+    showToasts: true
+  });
   
   const handleAddEmployee = () => {
     setCurrentEmployee(undefined);

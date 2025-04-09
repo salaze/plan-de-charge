@@ -9,6 +9,7 @@ import { employeeService, statusService } from '@/services/supabaseServices';
 import { useAuth } from '@/contexts/AuthContext';
 import { Employee, Project, Status } from '@/types';
 import { toast } from 'sonner';
+import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
 
 const Index = () => {
   // Get current month and year from planning service or default to current date
@@ -25,33 +26,41 @@ const Index = () => {
   // Get authentication context to check if user is admin
   const { isAdmin, isAuthenticated } = useAuth();
   
+  // Function to fetch data
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      console.log('Fetching employees data...');
+      const employeesData = await employeeService.getAll();
+      console.log('Employees data fetched:', employeesData);
+      setEmployees(employeesData);
+      
+      const statusesData = await statusService.getAll();
+      console.log('Statuses data fetched:', statusesData);
+      setStatuses(statusesData);
+      
+      const projectsData = projectService.getAll();
+      console.log('Projects data fetched:', projectsData);
+      setProjects(projectsData);
+    } catch (error) {
+      console.error('Erreur lors du chargement des données:', error);
+      toast.error('Erreur lors du chargement des données');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
   // Charger les employés et les statuts
   useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        console.log('Fetching employees data...');
-        const employeesData = await employeeService.getAll();
-        console.log('Employees data fetched:', employeesData);
-        setEmployees(employeesData);
-        
-        const statusesData = await statusService.getAll();
-        console.log('Statuses data fetched:', statusesData);
-        setStatuses(statusesData);
-        
-        const projectsData = projectService.getAll();
-        console.log('Projects data fetched:', projectsData);
-        setProjects(projectsData);
-      } catch (error) {
-        console.error('Erreur lors du chargement des données:', error);
-        toast.error('Erreur lors du chargement des données');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
     fetchData();
   }, []);
+  
+  // Set up real-time updates
+  useRealtimeUpdates({
+    tables: ['employes', 'employe_schedule', 'statuts'],
+    onDataChange: fetchData,
+    showToasts: true
+  });
   
   // Handle month change
   const handleMonthChange = (newYear: number, newMonth: number) => {

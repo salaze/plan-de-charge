@@ -2,7 +2,7 @@
 import React from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileSpreadsheet, Users, Settings as SettingsIcon, Shield, LayoutList } from 'lucide-react';
+import { FileSpreadsheet, Users, Settings as SettingsIcon, Shield, LayoutList, Activity } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { ProjectsTab } from '@/components/admin/tabs/ProjectsTab';
@@ -10,6 +10,7 @@ import { StatusesTab } from '@/components/admin/tabs/StatusesTab';
 import { EmployeesTab } from '@/components/admin/tabs/EmployeesTab';
 import { RolesTab } from '@/components/admin/tabs/RolesTab';
 import { SettingsTab } from '@/components/admin/tabs/SettingsTab';
+import { ConnectionLogsTab } from '@/components/admin/tabs/ConnectionLogsTab';
 import { useAdminData } from '@/hooks/useAdminData';
 
 const Admin = () => {
@@ -22,7 +23,7 @@ const Admin = () => {
         <AdminHeader onLogout={logout} />
         
         <Tabs defaultValue="projects" className="w-full">
-          <TabsList className="grid grid-cols-5 mb-4">
+          <TabsList className="grid grid-cols-6 mb-4">
             <TabsTrigger value="projects" className="flex items-center gap-2">
               <FileSpreadsheet className="h-4 w-4" />
               <span>Projets</span>
@@ -38,6 +39,10 @@ const Admin = () => {
             <TabsTrigger value="roles" className="flex items-center gap-2">
               <Shield className="h-4 w-4" />
               <span>Rôles</span>
+            </TabsTrigger>
+            <TabsTrigger value="logs" className="flex items-center gap-2">
+              <Activity className="h-4 w-4" />
+              <span>Connexions</span>
             </TabsTrigger>
             <TabsTrigger value="settings" className="flex items-center gap-2">
               <SettingsIcon className="h-4 w-4" />
@@ -71,6 +76,10 @@ const Admin = () => {
               employees={data.employees || []}
               onEmployeesChange={handleEmployeesChange}
             />
+          </TabsContent>
+          
+          <TabsContent value="logs">
+            <ConnectionLogsTab />
           </TabsContent>
           
           <TabsContent value="settings">

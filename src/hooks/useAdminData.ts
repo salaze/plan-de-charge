@@ -6,6 +6,7 @@ import {
   statusService 
 } from '@/services/supabase';
 import { projectService } from '@/services/jsonStorage';
+import { useRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
 
 interface AdminData {
   projects: Project[];
@@ -21,34 +22,42 @@ export function useAdminData() {
     statuses: []
   });
 
+  // Function to fetch data
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      // Les projets restent dans le localStorage pour l'instant
+      const projects = projectService.getAll();
+      
+      // Récupérer les employés de Supabase
+      const employees = await employeeService.getAll();
+      
+      // Récupérer les statuts de Supabase
+      const statuses = await statusService.getAll();
+      
+      setData({
+        projects,
+        employees,
+        statuses
+      });
+    } catch (error) {
+      console.error("Erreur lors du chargement des données:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
   // Charger les données au démarrage
   useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        // Les projets restent dans le localStorage pour l'instant
-        const projects = projectService.getAll();
-        
-        // Récupérer les employés de Supabase
-        const employees = await employeeService.getAll();
-        
-        // Récupérer les statuts de Supabase
-        const statuses = await statusService.getAll();
-        
-        setData({
-          projects,
-          employees,
-          statuses
-        });
-      } catch (error) {
-        console.error("Erreur lors du chargement des données:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
     fetchData();
   }, []);
+
+  // Set up real-time updates
+  useRealtimeUpdates({
+    tables: ['employes', 'statuts'],
+    onDataChange: fetchData,
+    showToasts: true
+  });
 
   const handleProjectsChange = (projects: Project[]) => {
     // Sauvegarde manuelle des projets au lieu d'utiliser saveAll

@@ -1,5 +1,5 @@
 
-import React, { lazy } from 'react';
+import React, { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
@@ -13,10 +13,10 @@ import './App.css';
 // Import components directly instead of using lazy loading for problematic ones
 import Index from '@/pages/Index';
 import Settings from '@/pages/Settings';
+import Employees from '@/pages/Employees';
 
 // Lazy-loaded components for other routes
 const Admin = lazy(() => import('@/pages/Admin'));
-const Employees = lazy(() => import('@/pages/Employees'));
 const Export = lazy(() => import('@/pages/Export'));
 const Statistics = lazy(() => import('@/pages/Statistics'));
 const Login = lazy(() => import('@/pages/AdminLogin'));
@@ -29,7 +29,7 @@ function App() {
       <ToastProvider>
         <AuthProvider>
           <BrowserRouter>
-            <React.Suspense fallback={<div className="flex items-center justify-center h-screen">Chargement...</div>}>
+            <Suspense fallback={<div className="flex items-center justify-center h-screen">Chargement...</div>}>
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
@@ -41,7 +41,7 @@ function App() {
                 <Route path="/init" element={<InitApp />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
-            </React.Suspense>
+            </Suspense>
             <SonnerToaster />
             <Toaster />
           </BrowserRouter>

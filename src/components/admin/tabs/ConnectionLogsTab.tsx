@@ -67,13 +67,13 @@ export function ConnectionLogsTab() {
                 {logs.map((log) => (
                   <TableRow key={log.id}>
                     <TableCell className="whitespace-nowrap">
-                      {log.created_at ? format(new Date(log.created_at), 'dd/MM/yyyy HH:mm:ss') : '-'}
+                      {log.createdAt || log.created_at ? format(new Date(log.createdAt || log.created_at), 'dd/MM/yyyy HH:mm:ss') : '-'}
                     </TableCell>
-                    <TableCell>{log.user_name || log.user_id || '-'}</TableCell>
-                    <TableCell>{log.event_type || '-'}</TableCell>
-                    <TableCell>{log.ip_address || '-'}</TableCell>
+                    <TableCell>{log.userName || log.user_name || log.userId || log.user_id || '-'}</TableCell>
+                    <TableCell>{log.eventType || log.event_type || '-'}</TableCell>
+                    <TableCell>{log.ipAddress || log.ip_address || '-'}</TableCell>
                     <TableCell className="max-w-[200px] truncate">
-                      {log.user_agent || '-'}
+                      {log.userAgent || log.user_agent || '-'}
                     </TableCell>
                   </TableRow>
                 ))}

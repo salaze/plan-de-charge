@@ -32,10 +32,10 @@ const AdminLogin = () => {
       try {
         // Log the successful login
         await connectionLogService.create({
-          user_name: username,
-          event_type: 'login_success',
-          ip_address: 'client-ip', // In a real app, you would get the actual IP
-          user_agent: navigator.userAgent
+          userName: username,
+          eventType: 'login_success',
+          ipAddress: 'client-ip', // In a real app, you would get the actual IP
+          userAgent: navigator.userAgent
         });
       } catch (err) {
         console.error('Failed to log connection:', err);
@@ -46,10 +46,10 @@ const AdminLogin = () => {
       try {
         // Log the failed login attempt
         await connectionLogService.create({
-          user_name: username,
-          event_type: 'login_failed',
-          ip_address: 'client-ip', // In a real app, you would get the actual IP
-          user_agent: navigator.userAgent
+          userName: username,
+          eventType: 'login_failed',
+          ipAddress: 'client-ip', // In a real app, you would get the actual IP
+          userAgent: navigator.userAgent
         });
       } catch (err) {
         console.error('Failed to log connection attempt:', err);

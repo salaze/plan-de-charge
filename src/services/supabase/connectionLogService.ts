@@ -1,15 +1,33 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ConnectionLog } from '@/types';
 
+// Helper function to map database fields to ConnectionLog type
+const mapDbLogToConnectionLog = (dbLog: any): ConnectionLog => {
+  return {
+    id: dbLog.id,
+    userId: dbLog.user_id,
+    userName: dbLog.user_name,
+    eventType: dbLog.event_type,
+    createdAt: dbLog.created_at,
+    ipAddress: dbLog.ip_address,
+    userAgent: dbLog.user_agent,
+    // Keep original fields for backward compatibility
+    user_id: dbLog.user_id,
+    user_name: dbLog.user_name,
+    event_type: dbLog.event_type,
+    created_at: dbLog.created_at,
+    ip_address: dbLog.ip_address,
+    user_agent: dbLog.user_agent
+  };
+};
+
 // Helper function to validate a ConnectionLog object
-const isValidConnectionLog = (data: any): data is ConnectionLog => {
+const isValidConnectionLog = (data: any): boolean => {
   return (
     data &&
     typeof data === 'object' &&
     'id' in data &&
-    typeof data.id === 'string' &&
-    'created_at' in data
+    typeof data.id === 'string'
   );
 };
 
@@ -26,9 +44,9 @@ export const connectionLogService = {
         return [];
       }
 
-      // Filter and validate each item before returning
+      // Map and validate each item before returning
       if (Array.isArray(data)) {
-        return data.filter(isValidConnectionLog);
+        return data.filter(isValidConnectionLog).map(mapDbLogToConnectionLog);
       }
       
       return [];
@@ -38,11 +56,20 @@ export const connectionLogService = {
     }
   },
 
-  async create(logData: Partial<Omit<ConnectionLog, 'id' | 'created_at'>>): Promise<ConnectionLog | null> {
+  async create(logData: Partial<Omit<ConnectionLog, 'id' | 'createdAt'>>): Promise<ConnectionLog | null> {
     try {
+      // Convert from our app format to database format
+      const dbLogData = {
+        user_id: logData.userId,
+        user_name: logData.userName,
+        event_type: logData.eventType,
+        ip_address: logData.ipAddress,
+        user_agent: logData.userAgent
+      };
+
       const { data, error } = await supabase
         .from('connection_logs')
-        .insert([logData])
+        .insert([dbLogData])
         .select()
         .single();
 
@@ -51,9 +78,9 @@ export const connectionLogService = {
         return null;
       }
 
-      // Validate the returned data
+      // Map the response back to our app format
       if (isValidConnectionLog(data)) {
-        return data;
+        return mapDbLogToConnectionLog(data);
       }
       
       return null;

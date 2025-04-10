@@ -16,10 +16,11 @@ import Dashboard from '@/pages/dashboard';
 import Login from '@/pages/login';
 import NotFound from '@/pages/not-found';
 import Planning from '@/pages/planning';
-import Export from '@/pages/export';
-import Settings from '@/pages/settings';
+import Export from '@/pages/Export';
+import Settings from '@/pages/Settings';
 import Employees from '@/pages/Employees';
 import Statistics from '@/pages/Statistics';
+import Admin from '@/pages/Admin';
 
 function App() {
   return (
@@ -38,6 +39,7 @@ function App() {
               <Route path="/statistics" element={<ProtectedRoute><Statistics /></ProtectedRoute>} />
               <Route path="/export" element={<ProtectedRoute><Export /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+              <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
               
               {/* Fallback route */}
               <Route path="*" element={<NotFound />} />

@@ -1,35 +1,45 @@
 
 import React, { useEffect, useState } from 'react';
-import { Layout } from '@/components/layout/Layout';
+import { MainLayout } from '@/components/layout/MainLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileSpreadsheet, Users, Settings as SettingsIcon, Shield, LayoutList } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/auth';
 import { AdminHeader } from '@/components/admin/AdminHeader';
-import { ProjectsTab } from '@/components/admin/tabs/ProjectsTab';
-import { StatusesTab } from '@/components/admin/tabs/StatusesTab';
+import { ProjectManager } from '@/components/admin/ProjectManager';
+import { StatusManager } from '@/components/admin/StatusManager';
+import { ConnectionLogsTab } from '@/components/admin/tabs/ConnectionLogsTab';
 import { EmployeesTab } from '@/components/admin/tabs/EmployeesTab';
-import { RolesTab } from '@/components/admin/tabs/RolesTab';
-import { SettingsTab } from '@/components/admin/tabs/SettingsTab';
 import { useAdminData } from '@/hooks/useAdminData';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 
 const Admin = () => {
-  const { logout } = useAuth();
+  const navigate = useNavigate();
+  const { logout, isAdmin } = useAuth();
   const { data, handleProjectsChange, handleStatusesChange, handleEmployeesChange } = useAdminData();
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState('projects');
   
   useEffect(() => {
+    // Redirect if not admin
+    if (!isAdmin) {
+      navigate('/');
+    }
+    
     const tabParam = searchParams.get('tab');
-    if (tabParam && ['projects', 'statuses', 'employees', 'roles', 'settings'].includes(tabParam)) {
+    if (tabParam && ['projects', 'statuses', 'employees', 'logs', 'settings'].includes(tabParam)) {
       setActiveTab(tabParam);
     }
-  }, [searchParams]);
+  }, [searchParams, isAdmin, navigate]);
+  
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
   
   return (
-    <Layout>
+    <MainLayout>
       <div className="space-y-6 animate-fade-in">
-        <AdminHeader onLogout={logout} />
+        <AdminHeader onLogout={handleLogout} />
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid grid-cols-5 mb-4">
@@ -45,9 +55,9 @@ const Admin = () => {
               <Users className="h-4 w-4" />
               <span>Employés</span>
             </TabsTrigger>
-            <TabsTrigger value="roles" className="flex items-center gap-2">
+            <TabsTrigger value="logs" className="flex items-center gap-2">
               <Shield className="h-4 w-4" />
-              <span>Rôles</span>
+              <span>Journaux</span>
             </TabsTrigger>
             <TabsTrigger value="settings" className="flex items-center gap-2">
               <SettingsIcon className="h-4 w-4" />
@@ -56,14 +66,14 @@ const Admin = () => {
           </TabsList>
           
           <TabsContent value="projects" className="space-y-4">
-            <ProjectsTab
+            <ProjectManager
               projects={data.projects || []}
               onProjectsChange={handleProjectsChange}
             />
           </TabsContent>
           
           <TabsContent value="statuses" className="space-y-4">
-            <StatusesTab
+            <StatusManager
               statuses={data.statuses || []}
               onStatusesChange={handleStatusesChange}
             />
@@ -76,19 +86,18 @@ const Admin = () => {
             />
           </TabsContent>
           
-          <TabsContent value="roles">
-            <RolesTab
-              employees={data.employees || []}
-              onEmployeesChange={handleEmployeesChange}
-            />
+          <TabsContent value="logs">
+            <ConnectionLogsTab />
           </TabsContent>
           
           <TabsContent value="settings">
-            <SettingsTab />
+            <div className="p-4 bg-muted/20 rounded-md">
+              <p>Paramètres en cours de développement</p>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
-    </Layout>
+    </MainLayout>
   );
 };
 

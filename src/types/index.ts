@@ -98,12 +98,20 @@ export interface ConnectionLog {
   createdAt: string;
   ipAddress?: string;
   userAgent?: string;
+  // Compatibility fields for database records
+  user_id?: string;
+  user_name?: string;
+  event_type?: string;
+  created_at?: string;
+  ip_address?: string;
+  user_agent?: string;
 }
 
 export interface MonthData {
   year: number;
   month: number;
   employees: Employee[];
+  projects: Project[];
 }
 
 export interface FilterOptions {
@@ -111,6 +119,10 @@ export interface FilterOptions {
   statuses: string[];
   projects: string[];
   employees: string[];
+  statusCodes?: string[];
+  employeeId?: string;
+  startDate?: Date;
+  endDate?: Date;
 }
 
 export interface SummaryStats {
@@ -118,6 +130,23 @@ export interface SummaryStats {
   byProject: Record<string, number>;
   highlighted: number;
   total: number;
+  // Additional properties used in statistics
+  employeeName?: string;
+  totalDays?: number;
+  presentDays?: number;
+  absentDays?: number;
+  vacationDays?: number;
+  trainingDays?: number;
+  managementDays?: number;
+  projectDays?: number;
+  vigiDays?: number;
+  tpDays?: number;
+  coordinatorDays?: number;
+  otherAbsenceDays?: number;
+  regisseurDays?: number;
+  demenagementDays?: number;
+  permanenceDays?: number;
+  projectStats?: Record<string, number>;
 }
 
 // Constants for status colors and labels

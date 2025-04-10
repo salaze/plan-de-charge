@@ -17,11 +17,16 @@ import AdminLogin from "./pages/AdminLogin";
 
 const queryClient = new QueryClient();
 
+// Create a proper wrapper for TooltipProvider
+const TooltipWrapper = ({ children }: { children: React.ReactNode }) => {
+  return <TooltipProvider>{children}</TooltipProvider>;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <BrowserRouter>
       <AuthProvider>
-        <TooltipProvider>
+        <TooltipWrapper>
           <Routes>
             {/* Page principale accessible sans authentification */}
             <Route path="/" element={<Index />} />
@@ -71,7 +76,7 @@ const App = () => (
           </Routes>
           <Toaster />
           <Sonner />
-        </TooltipProvider>
+        </TooltipWrapper>
       </AuthProvider>
     </BrowserRouter>
   </QueryClientProvider>

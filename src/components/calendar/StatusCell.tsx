@@ -22,14 +22,19 @@ export function StatusCell({
 }: StatusCellProps) {
   if (!status) return <span className="text-muted-foreground">-</span>;
   
-  // Ajout du texte de la période si spécifié (AM/PM)
-  let displayText = period && period !== 'FULL' 
-    ? `${STATUS_LABELS[status]} (${period})` 
-    : STATUS_LABELS[status];
+  // Ajout du texte de la période si spécifié (AM/PM), mais pas pour FULL
+  let displayText = STATUS_LABELS[status];
+  
+  if (period && period !== 'FULL') {
+    displayText = `${displayText} (${period})`;
+  }
     
   // Ajout du code projet si c'est un projet
   if (status === 'projet' && projectCode) {
-    displayText = `${projectCode} (${period || 'FULL'})`;
+    // Pour les projets, on affiche le code projet suivi de la période si ce n'est pas FULL
+    displayText = period && period !== 'FULL' 
+      ? `${projectCode} (${period})` 
+      : projectCode;
   }
   
   const highlightClass = isHighlighted ? 'border-2 border-black' : '';

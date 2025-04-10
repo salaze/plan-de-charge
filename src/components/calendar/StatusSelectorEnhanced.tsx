@@ -3,11 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { RadioGroup } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { StatusCode } from '@/types';
+import { StatusCode, DayPeriod } from '@/types';
 import { useStatusOptions } from '@/hooks/useStatusOptions';
 import { StatusOption } from './StatusOption';
 import { ProjectSelector } from './ProjectSelector';
 import { HighlightOption } from './HighlightOption';
+import { toast } from 'sonner';
 
 interface StatusSelectorEnhancedProps {
   value: StatusCode;
@@ -15,6 +16,7 @@ interface StatusSelectorEnhancedProps {
   projects: { id: string; code: string; name: string; color: string }[];
   isHighlighted?: boolean;
   projectCode?: string;
+  selectedPeriod?: DayPeriod;
 }
 
 export function StatusSelectorEnhanced({ 
@@ -22,7 +24,8 @@ export function StatusSelectorEnhanced({
   onChange, 
   projects, 
   isHighlighted = false,
-  projectCode = ''
+  projectCode = '',
+  selectedPeriod = 'AM'
 }: StatusSelectorEnhancedProps) {
   const [highlightedStatus, setHighlightedStatus] = useState(isHighlighted);
   const [selectedProject, setSelectedProject] = useState(projectCode);
@@ -30,6 +33,13 @@ export function StatusSelectorEnhanced({
   
   // Use our custom hook to get available statuses
   const availableStatuses = useStatusOptions();
+  
+  // Reset form when dialog reopens with new values
+  useEffect(() => {
+    setSelectedStatus(value);
+    setHighlightedStatus(isHighlighted);
+    setSelectedProject(projectCode || '');
+  }, [value, isHighlighted, projectCode]);
   
   const handleStatusChange = (newStatus: StatusCode) => {
     setSelectedStatus(newStatus);
@@ -60,8 +70,15 @@ export function StatusSelectorEnhanced({
   };
   
   const handleSubmit = () => {
+    if (selectedStatus === 'projet' && !selectedProject) {
+      toast.error("Veuillez sélectionner un projet");
+      return;
+    }
+    
     const projectToUse = selectedStatus === 'projet' ? selectedProject : undefined;
     onChange(selectedStatus, highlightedStatus, projectToUse);
+    
+    toast.success(`Statut ${selectedPeriod === 'AM' ? 'matin' : 'après-midi'} enregistré avec succès`);
   };
   
   return (
@@ -96,11 +113,9 @@ export function StatusSelectorEnhanced({
         onHighlightChange={handleHighlightChange}
       />
       
-      {selectedStatus === 'projet' && !selectedProject && (
-        <Button onClick={handleSubmit} className="w-full">
-          Appliquer
-        </Button>
-      )}
+      <Button onClick={handleSubmit} className="w-full">
+        Appliquer
+      </Button>
     </div>
   );
 }

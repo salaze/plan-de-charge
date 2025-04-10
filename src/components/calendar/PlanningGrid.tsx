@@ -74,13 +74,8 @@ export function PlanningGrid({
       projectCode
     );
     
-    // Close dialog and show success toast
+    // Close dialog
     handleCloseDialog();
-    
-    const periodLabel = selectedCell.period === 'AM' ? 'matin' : selectedCell.period === 'PM' ? 'après-midi' : 'journée';
-    toast.success(`Statut ${periodLabel} modifié avec succès`, {
-      duration: 2000,
-    });
   };
   
   // Calculate statistics for an employee

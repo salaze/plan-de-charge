@@ -64,6 +64,7 @@ export function StatusChangeDialog({
             projects={projects}
             isHighlighted={isHighlighted}
             projectCode={projectCode}
+            selectedPeriod={selectedPeriod}
           />
         </div>
       </DialogContent>

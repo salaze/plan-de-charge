@@ -30,9 +30,8 @@ export const useAuth = () => {
   return context;
 };
 
-// Separate the AuthProvider component from the export
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Fix 1: Move useNavigate inside the component body
+// Create a separate component that will use the useNavigate hook
+const AuthProviderWithNavigate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User>(null);
   
@@ -168,4 +167,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
+
+// Export a wrapper component that doesn't use hooks directly
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return <AuthProviderWithNavigate>{children}</AuthProviderWithNavigate>;
 };

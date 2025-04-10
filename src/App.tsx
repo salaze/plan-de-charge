@@ -20,7 +20,6 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <BrowserRouter>
-      {/* Make sure AuthProvider is properly nested inside BrowserRouter */}
       <AuthProvider>
         <TooltipProvider>
           <Routes>

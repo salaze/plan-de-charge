@@ -29,7 +29,22 @@ interface LegendModalProps {
 
 export function LegendModal({ isOpen, onClose, projects }: LegendModalProps) {
   const { isAdmin } = useAuth();
-  const statuses = Object.keys(STATUS_LABELS).filter(status => status !== '') as StatusCode[];
+  
+  // Récupérer les statuts disponibles depuis localStorage
+  const getAvailableStatuses = (): StatusCode[] => {
+    const savedData = localStorage.getItem('planningData');
+    const data = savedData ? JSON.parse(savedData) : { statuses: [] };
+    
+    // Si nous avons des statuts personnalisés, extraire les codes
+    if (data.statuses && data.statuses.length > 0) {
+      return data.statuses.map((s: any) => s.code as StatusCode);
+    }
+    
+    // Statuts par défaut
+    return Object.keys(STATUS_LABELS).filter(status => status !== '') as StatusCode[];
+  };
+  
+  const statuses = getAvailableStatuses();
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

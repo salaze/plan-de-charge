@@ -43,7 +43,21 @@ const PlanningExportTab: React.FC<PlanningExportTabProps> = ({
     }
   };
   
-  const statuses: StatusCode[] = ['assistance', 'absence', 'conges', 'formation', 'permanence'];
+  // Récupérer les statuts disponibles depuis localStorage
+  const getAvailableStatuses = (): StatusCode[] => {
+    const savedData = localStorage.getItem('planningData');
+    const data = savedData ? JSON.parse(savedData) : { statuses: [] };
+    
+    // Si nous avons des statuts personnalisés, extraire les codes
+    if (data.statuses && data.statuses.length > 0) {
+      return data.statuses.map((s: any) => s.code as StatusCode);
+    }
+    
+    // Statuts par défaut (inclure uniquement les plus importants pour la légende de l'export)
+    return ['assistance', 'absence', 'conges', 'formation', 'permanence'];
+  };
+  
+  const statuses = getAvailableStatuses();
   
   return (
     <div className="space-y-4">

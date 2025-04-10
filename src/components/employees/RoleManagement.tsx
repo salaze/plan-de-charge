@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { toast } from 'sonner';
 import { Employee, UserRole } from '@/types';
@@ -44,7 +45,7 @@ export function RoleManagement({
           <TableHeader>
             <TableRow>
               <TableHead>Nom</TableHead>
-              <TableHead className="remplace Email par UID">Email</TableHead>
+              <TableHead>UID</TableHead>
               <TableHead>Poste</TableHead>
               <TableHead>Rôle</TableHead>
             </TableRow>

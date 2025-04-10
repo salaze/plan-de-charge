@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { EmployeeList } from '@/components/employees/EmployeeList';
 import { EmployeeForm } from '@/components/employees/EmployeeForm';
 import { Employee } from '@/types';
+import { generateId } from '@/lib/utils';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -127,6 +128,3 @@ export function EmployeesTab({ employees, onEmployeesChange }: EmployeesTabProps
     </>
   );
 }
-
-// Import the generateId function needed for creating new employees
-import { generateId } from '@/utils/idUtils';

@@ -42,7 +42,7 @@ export function isToday(date: Date): boolean {
   );
 }
 
-// Using the same implementation as in idUtils.ts for consistency
+// Generate a unique ID (same implementation as in idUtils.ts)
 export function generateId(): string {
   return Math.random().toString(36).substring(2, 11);
 }

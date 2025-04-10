@@ -4,48 +4,46 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { KeyRound, User, Shield } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Lock, User, KeyRound, Info } from 'lucide-react';
 
-export default function AdminLogin() {
+const AdminLogin = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const { login, isLoading } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     
     if (!username || !password) {
-      setError('Veuillez remplir tous les champs');
+      setError('Veuillez saisir un nom d\'utilisateur et un mot de passe');
       return;
     }
     
-    const success = await login(username, password);
+    const success = login(username, password);
     
     if (success) {
       navigate('/admin');
-    } else {
-      setError('Identifiants incorrects');
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <div className="flex justify-center mb-4">
             <div className="bg-primary/10 p-3 rounded-full">
-              <Shield className="h-6 w-6 text-primary" />
+              <Lock className="h-6 w-6 text-primary" />
             </div>
           </div>
-          <CardTitle className="text-center text-2xl">Administration</CardTitle>
+          <CardTitle className="text-center text-2xl">Connexion</CardTitle>
           <CardDescription className="text-center">
-            Connectez-vous en tant qu'administrateur
+            Connectez-vous pour accéder à l'application
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
@@ -56,8 +54,17 @@ export default function AdminLogin() {
               </Alert>
             )}
             
+            <Alert className="bg-muted/50">
+              <Info className="h-4 w-4" />
+              <AlertDescription>
+                <ul className="text-xs list-disc list-inside">
+                  <li>Employés: utilisez votre nom et le mot de passe défini</li>
+                </ul>
+              </AlertDescription>
+            </Alert>
+            
             <div className="space-y-2">
-              <Label htmlFor="username">Nom d'utilisateur</Label>
+              <Label htmlFor="username">Nom</Label>
               <div className="relative">
                 <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -65,12 +72,11 @@ export default function AdminLogin() {
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="admin"
+                  placeholder="Votre nom"
                   className="pl-10"
                 />
               </div>
             </div>
-            
             <div className="space-y-2">
               <Label htmlFor="password">Mot de passe</Label>
               <div className="relative">
@@ -87,16 +93,14 @@ export default function AdminLogin() {
             </div>
           </CardContent>
           <CardFooter>
-            <Button 
-              type="submit" 
-              className="w-full" 
-              disabled={isLoading}
-            >
-              {isLoading ? 'Connexion...' : 'Se connecter'}
+            <Button type="submit" className="w-full">
+              Se connecter
             </Button>
           </CardFooter>
         </form>
       </Card>
     </div>
   );
-}
+};
+
+export default AdminLogin;

@@ -8,9 +8,9 @@ import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <App />
-  </React.StrictMode>
+  </React.StrictMode>,
 );
 
-// If you want your app to work offline and load faster, you can change
-// unregister() to register() below.
+// Si vous voulez que votre application fonctionne hors ligne et se charge plus rapidement, 
+// vous pouvez changer unregister() en register().
 serviceWorkerRegistration.register();

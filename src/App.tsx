@@ -1,64 +1,80 @@
 
-import React, { Suspense } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { ThemeProvider } from '@/components/ui/theme-provider';
-import { Toaster } from '@/components/ui/toaster';
-import { Toaster as SonnerToaster } from '@/components/ui/sonner';
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { AdminRoute } from "@/components/AdminRoute";
+import Index from "./pages/Index";
+import Employees from "./pages/Employees";
+import Statistics from "./pages/Statistics";
+import Export from "./pages/Export";
+import Settings from "./pages/Settings";
+import NotFound from "./pages/NotFound";
+import Admin from "./pages/Admin";
+import AdminLogin from "./pages/AdminLogin";
 
-// Auth context
-import { AuthProvider } from '@/contexts/AuthContext';
+const queryClient = new QueryClient();
 
-// Protected routes
-import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
-
-// Pages (import main pages directly for better performance)
-import Dashboard from '@/pages/dashboard';
-import Login from '@/pages/login';
-import NotFound from '@/pages/not-found';
-import Planning from '@/pages/planning';
-import Export from '@/pages/Export'; // Keep using uppercase version
-import Settings from '@/pages/Settings'; // Keep using uppercase version
-import Employees from '@/pages/Employees';
-import Statistics from '@/pages/Statistics';
-import Admin from '@/pages/Admin';
-import AdminLogin from '@/pages/AdminLogin';
-
-// Import our toast provider
-import { ToastProvider } from '@/hooks/toast';
-
-function App() {
-  return (
-    <ThemeProvider defaultTheme="light" storageKey="planning-theme">
-      {/* Wrap everything in ToastProvider */}
-      <ToastProvider>
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
         <AuthProvider>
-          <BrowserRouter>
-            <Suspense fallback={<div className="flex h-screen items-center justify-center">Chargement...</div>}>
-              <Routes>
-                {/* Public routes */}
-                <Route path="/login" element={<Login />} />
-                <Route path="/admin-login" element={<AdminLogin />} />
-                
-                {/* Protected routes */}
-                <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-                <Route path="/employees" element={<ProtectedRoute><Employees /></ProtectedRoute>} />
-                <Route path="/planning" element={<ProtectedRoute><Planning /></ProtectedRoute>} />
-                <Route path="/statistics" element={<ProtectedRoute><Statistics /></ProtectedRoute>} />
-                <Route path="/export" element={<ProtectedRoute><Export /></ProtectedRoute>} />
-                <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-                <Route path="/admin" element={<ProtectedRoute adminOnly><Admin /></ProtectedRoute>} />
-                
-                {/* Fallback route */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-            <SonnerToaster />
-            <Toaster />
-          </BrowserRouter>
+          <Routes>
+            {/* Page principale accessible sans authentification */}
+            <Route path="/" element={<Index />} />
+            
+            <Route 
+              path="/employees" 
+              element={
+                <AdminRoute>
+                  <Employees />
+                </AdminRoute>
+              } 
+            />
+            <Route 
+              path="/statistics" 
+              element={
+                <AdminRoute>
+                  <Statistics />
+                </AdminRoute>
+              } 
+            />
+            <Route 
+              path="/export" 
+              element={
+                <AdminRoute>
+                  <Export />
+                </AdminRoute>
+              } 
+            />
+            <Route 
+              path="/settings" 
+              element={
+                <AdminRoute>
+                  <Settings />
+                </AdminRoute>
+              } 
+            />
+            <Route path="/login" element={<AdminLogin />} />
+            <Route 
+              path="/admin" 
+              element={
+                <AdminRoute>
+                  <Admin />
+                </AdminRoute>
+              } 
+            />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
         </AuthProvider>
-      </ToastProvider>
-    </ThemeProvider>
-  );
-}
+      </BrowserRouter>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
 
 export default App;

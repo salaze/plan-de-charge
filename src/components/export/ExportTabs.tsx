@@ -5,7 +5,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PlanningExportTab from '@/components/export/tabs/PlanningExportTab';
 import EmployeesExportTab from '@/components/export/tabs/EmployeesExportTab';
 import StatisticsExportTab from '@/components/export/tabs/StatisticsExportTab';
-import { Status } from '@/types';
 
 interface ExportTabsProps {
   activeTab: string;
@@ -22,7 +21,6 @@ interface ExportTabsProps {
   handleExport: () => void;
   handleExportEmployees: () => void;
   handleExportStats: () => void;
-  statuses?: Status[];  // Add optional statuses prop
 }
 
 const ExportTabs: React.FC<ExportTabsProps> = ({
@@ -39,8 +37,7 @@ const ExportTabs: React.FC<ExportTabsProps> = ({
   handleImportEmployees,
   handleExport,
   handleExportEmployees,
-  handleExportStats,
-  statuses = []  // Default to empty array
+  handleExportStats
 }) => {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -64,7 +61,6 @@ const ExportTabs: React.FC<ExportTabsProps> = ({
           handleExport={handleExport}
           handleImportSuccess={handleImportSuccess}
           importedData={importedData}
-          statuses={statuses}
         />
       </TabsContent>
       

@@ -1,9 +1,8 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { UserRole, Employee } from '@/types';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
-import { employeeService } from '@/services/supabaseServices';
 
 type User = {
   username: string;
@@ -13,51 +12,41 @@ type User = {
 
 interface AuthContextType {
   user: User;
-  login: (username: string, password: string) => Promise<boolean>;
+  login: (username: string, password: string) => boolean;
   logout: () => void;
   isAuthenticated: boolean;
   isAdmin: boolean;
-  isLoading: boolean; // Added missing property
   updateUserRoles: (employeeId: string, newRole: UserRole) => void;
   updatePassword: (employeeId: string, newPassword: string) => boolean;
 }
 
-interface AuthProviderProps {
-  children: React.ReactNode;
-}
-
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function useAuth() {
+export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-}
+};
 
-export function AuthProvider({ children }: AuthProviderProps) {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true); // Added loading state
-
+  const navigate = useNavigate();
+  
   useEffect(() => {
-    setIsLoading(true);
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
-      } catch (e) {
-        console.error('Failed to parse stored user data:', e);
-        localStorage.removeItem('user');
-      }
+      setUser(JSON.parse(storedUser));
     }
-    setIsLoading(false);
   }, []);
 
-  const login = async (username: string, password: string): Promise<boolean> => {
-    setIsLoading(true);
-    try {
+  const login = (username: string, password: string): boolean => {
+    const planningData = localStorage.getItem('planningData');
+    if (planningData) {
+      const data = JSON.parse(planningData);
+      const employees: Employee[] = data.employees || [];
+      
       if (username === 'admin' && password === 'admin123') {
         const adminUser = { username, role: 'admin' as UserRole };
         setUser(adminUser);
@@ -66,19 +55,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return true;
       }
       
-      // Get employees from localStorage instead of Supabase
-      const employees = employeeService.getAll();
-      
-      // Find employee by username or uid
-      const employee = employees.find(emp => 
-        emp.name === username || emp.uid === username
-      );
-      
+      const employee = employees.find(emp => emp.name === username);
       if (employee) {
-        // Use default password if not set
-        const employeePassword = employee.password || 'employee123';
-        
-        if (password === employeePassword) {
+        if (employee.password && password === employee.password) {
           const userRole = employee.role || 'employee';
           const employeeUser = { 
             username, 
@@ -95,11 +74,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
       } else {
         toast.error('Utilisateur non trouvé');
       }
-    } catch (error) {
-      console.error('Login error:', error);
-      toast.error('Une erreur est survenue lors de la connexion');
-    } finally {
-      setIsLoading(false);
+    } else {
+      if (username === 'admin' && password === 'admin123') {
+        const adminUser = { username, role: 'admin' as UserRole };
+        setUser(adminUser);
+        localStorage.setItem('user', JSON.stringify(adminUser));
+        toast.success('Connexion réussie en tant qu\'administrateur');
+        return true;
+      } else {
+        toast.error('Identifiants incorrects');
+      }
     }
     
     return false;
@@ -111,12 +95,35 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const updateUserRoles = (employeeId: string, newRole: UserRole) => {
-    const success = employeeService.updateRole(employeeId, newRole);
-    
-    if (success && user && user.employeeId === employeeId) {
-      const updatedUser = { ...user, role: newRole };
-      setUser(updatedUser);
-      localStorage.setItem('user', JSON.stringify(updatedUser));
+    const planningData = localStorage.getItem('planningData');
+    if (planningData) {
+      const data = JSON.parse(planningData);
+      const employees: Employee[] = data.employees || [];
+      
+      const updatedEmployees = employees.map(emp => {
+        if (emp.id === employeeId) {
+          return { ...emp, role: newRole };
+        }
+        return emp;
+      });
+      
+      localStorage.setItem('planningData', JSON.stringify({
+        ...data,
+        employees: updatedEmployees
+      }));
+      
+      if (user && user.username) {
+        const updatedEmployee = updatedEmployees.find(emp => emp.name === user.username);
+        if (updatedEmployee && updatedEmployee.role !== user.role) {
+          const updatedUser = { ...user, role: updatedEmployee.role };
+          setUser(updatedUser);
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+          
+          if (updatedUser.role !== 'admin') {
+            navigate('/');
+          }
+        }
+      }
     }
   };
 
@@ -125,53 +132,38 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return false;
     }
 
-    try {
-      // Find the employee in localStorage
-      const employee = employeeService.getById(employeeId);
+    const planningData = localStorage.getItem('planningData');
+    if (planningData) {
+      const data = JSON.parse(planningData);
+      const employees: Employee[] = data.employees || [];
       
-      if (!employee) {
-        toast.error('Employé non trouvé');
-        return false;
-      }
+      const updatedEmployees = employees.map(emp => {
+        if (emp.id === employeeId) {
+          return { ...emp, password: newPassword };
+        }
+        return emp;
+      });
       
-      // Update the employee with the new password
-      const updatedEmployee = {
-        ...employee,
-        password: newPassword
-      };
+      localStorage.setItem('planningData', JSON.stringify({
+        ...data,
+        employees: updatedEmployees
+      }));
       
-      const success = employeeService.update(updatedEmployee);
-      
-      if (success) {
-        toast.success('Mot de passe mis à jour avec succès');
-        return true;
-      } else {
-        toast.error('Échec de la mise à jour du mot de passe');
-        return false;
-      }
-    } catch (error) {
-      console.error('Error updating password:', error);
-      toast.error('Une erreur est survenue');
-      return false;
+      return true;
     }
+    
+    return false;
   };
 
-  const contextValue: AuthContextType = {
+  const value = {
     user,
     login,
     logout,
     isAuthenticated: !!user,
     isAdmin: user?.role === 'admin',
-    isLoading, // Added the isLoading property to the context value
     updateUserRoles,
     updatePassword
   };
 
-  return (
-    <AuthContext.Provider value={contextValue}>
-      {children}
-    </AuthContext.Provider>
-  );
-}
-
-export default AuthProvider;
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};

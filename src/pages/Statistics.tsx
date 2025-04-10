@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { 
@@ -9,8 +10,8 @@ import {
 import { MonthSelector } from '@/components/calendar/MonthSelector';
 import { StatusCell } from '@/components/calendar/StatusCell';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { calculateEmployeeStats } from '@/utils/stats/calculateStats';
-import { Employee, MonthData, SummaryStats, StatusCode, STATUS_LABELS, DateRange } from '@/types';
+import { calculateEmployeeStats } from '@/utils/statsUtils';
+import { Employee, MonthData, SummaryStats, StatusCode, STATUS_LABELS } from '@/types';
 import {
   Table,
   TableBody,
@@ -56,15 +57,9 @@ const Statistics = () => {
     const stats: SummaryStats[] = [];
     const statusCodes = new Set<StatusCode>();
     
-    // Create a DateRange object for the current month
-    const startDate = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0).getDate();
-    const endDate = new Date(year, month, lastDay);
-    const dateRange: DateRange = { start: startDate, end: endDate };
-    
     // Calculer les statistiques pour chaque employé
     employees.forEach((employee) => {
-      const employeeStats = calculateEmployeeStats(employee, dateRange, []);
+      const employeeStats = calculateEmployeeStats(employee, year, month);
       stats.push({
         ...employeeStats,
         employeeName: employee.name
@@ -80,7 +75,7 @@ const Statistics = () => {
     
     // Préparer les données pour le graphique
     const chartData: EmployeeStatusData[] = employees.map(employee => {
-      const employeeStats = calculateEmployeeStats(employee, dateRange, []);
+      const employeeStats = calculateEmployeeStats(employee, year, month);
       const dataPoint: EmployeeStatusData = { name: employee.name };
       
       // Ajouter chaque type de statut

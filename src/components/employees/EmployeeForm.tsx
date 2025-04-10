@@ -1,184 +1,121 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle,
+  DialogFooter,
+  DialogDescription
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Employee } from '@/types';
+
+// Import our new components
+import { EmployeeNameField } from './form/EmployeeNameField';
+import { EmployeeUidField } from './form/EmployeeUidField';
+import { EmployeeContactField } from './form/EmployeeContactField';
+import { EmployeeJobField } from './form/EmployeeJobField';
+import { EmployeePasswordFields } from './form/EmployeePasswordFields';
 import { useEmployeeForm } from './form/useEmployeeForm';
 
-export interface EmployeeFormProps {
-  employee?: Employee;
-  onSave: (employee: Employee) => void;
-  onClose: () => void;
+interface EmployeeFormProps {
   open: boolean;
+  onClose: () => void;
+  onSave: (employee: Employee) => void;
+  employee?: Employee;
 }
 
-export const EmployeeForm: React.FC<EmployeeFormProps> = ({ employee, onSave, onClose, open }) => {
+export function EmployeeForm({ 
+  open, 
+  onClose, 
+  onSave, 
+  employee 
+}: EmployeeFormProps) {
   const {
     name,
-    setName,
     uid,
-    setUid,
+    email,
     position,
-    setPosition,
     department,
-    setDepartment,
-    role,
-    setRole,
     password,
-    setPassword,
     confirmPassword,
-    setConfirmPassword,
     passwordError,
-    setPasswordError,
-    departments,
-    handleSubmit,
-    handleDepartmentChange,
-    handleRoleChange
-  } = useEmployeeForm({ employee, onSave, open });
-
+    uidError,
+    isNewEmployee,
+    setName,
+    setUid,
+    setEmail,
+    setPosition,
+    setDepartment,
+    setPassword,
+    setConfirmPassword,
+    prepareEmployeeData
+  } = useEmployeeForm({ employee, open });
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const updatedEmployee = prepareEmployeeData();
+    if (updatedEmployee) {
+      onSave(updatedEmployee);
+      onClose();
+    }
+  };
+  
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
             {employee ? 'Modifier un employé' : 'Ajouter un employé'}
           </DialogTitle>
+          <DialogDescription>
+            {employee ? 'Modifiez les informations de l\'employé' : 'Remplissez les informations du nouvel employé'}
+          </DialogDescription>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4 py-4">
-          <div className="grid gap-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">
-                Nom*
-              </Label>
-              <Input
-                id="name"
-                name="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Nom de l'employé"
-                className="col-span-3"
-                required
-              />
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="email" className="text-right">
-                Email
-              </Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                value={uid}
-                onChange={(e) => setUid(e.target.value)}
-                placeholder="Email de l'employé"
-                className="col-span-3"
-              />
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="position" className="text-right">
-                Poste
-              </Label>
-              <Input
-                id="position"
-                name="position"
-                value={position}
-                onChange={(e) => setPosition(e.target.value)}
-                placeholder="Poste occupé"
-                className="col-span-3"
-              />
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="department" className="text-right">
-                Département
-              </Label>
-              <Select 
-                value={department} 
-                onValueChange={handleDepartmentChange}
-              >
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Sélectionner un département" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Aucun département</SelectItem>
-                  {departments.map((dept) => (
-                    <SelectItem key={dept.id} value={dept.id}>
-                      {dept.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="role" className="text-right">
-                Rôle
-              </Label>
-              <Select 
-                value={role} 
-                onValueChange={handleRoleChange}
-              >
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Sélectionner un rôle" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="employee">Employé</SelectItem>
-                  <SelectItem value="admin">Administrateur</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="password" className="text-right">
-                {employee ? 'Nouveau mot de passe' : 'Mot de passe'}
-              </Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder={employee ? "Laisser vide pour ne pas changer" : "Mot de passe"}
-                className="col-span-3"
-              />
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="confirmPassword" className="text-right">
-                Confirmer
-              </Label>
-              <div className="col-span-3">
-                <Input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Confirmer le mot de passe"
-                />
-                {passwordError && (
-                  <p className="text-sm text-destructive mt-1">{passwordError}</p>
-                )}
-              </div>
-            </div>
-          </div>
+        <form onSubmit={handleSubmit} className="grid gap-4 py-4">
+          <EmployeeNameField 
+            name={name} 
+            onChange={setName} 
+          />
+          
+          <EmployeeUidField 
+            uid={uid} 
+            onChange={setUid} 
+            error={uidError} 
+          />
+
+          <EmployeeContactField 
+            uid={email} 
+            onChange={setEmail} 
+          />
+          
+          <EmployeeJobField 
+            position={position} 
+            department={department} 
+            onPositionChange={setPosition} 
+            onDepartmentChange={setDepartment} 
+          />
+          
+          <EmployeePasswordFields 
+            password={password}
+            confirmPassword={confirmPassword}
+            onPasswordChange={setPassword}
+            onConfirmPasswordChange={setConfirmPassword}
+            isNewEmployee={isNewEmployee}
+            error={passwordError}
+          />
           
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>
               Annuler
             </Button>
-            <Button type="submit">
-              {employee ? 'Mettre à jour' : 'Ajouter'}
-            </Button>
+            <Button type="submit">Enregistrer</Button>
           </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
   );
-};
+}

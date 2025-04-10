@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { EmployeeRoleSelector } from './EmployeeRoleSelector';
 import { useAuth } from '@/contexts/AuthContext';
-import { employeeService } from '@/services/supabaseServices';
 
 interface RoleManagementProps {
   employees: Employee[];
@@ -17,36 +16,18 @@ export function RoleManagement({ employees, onEmployeesChange }: RoleManagementP
   const { updateUserRoles } = useAuth();
   
   const handleRoleChange = (employeeId: string, newRole: UserRole) => {
-    try {
-      // Mettre à jour le rôle avec le service JSON
-      const success = employeeService.updateRole(employeeId, newRole);
-      
-      if (!success) {
-        toast.error('Erreur lors de la mise à jour du rôle');
-        return;
+    // Mettre à jour le rôle dans le contexte d'authentification
+    updateUserRoles(employeeId, newRole);
+    
+    // Mettre à jour la liste des employés localement
+    const updatedEmployees = employees.map(emp => {
+      if (emp.id === employeeId) {
+        return { ...emp, role: newRole };
       }
-      
-      // Mettre à jour le rôle dans le contexte d'authentification
-      updateUserRoles(employeeId, newRole);
-      
-      // Mettre à jour la liste des employés localement
-      const updatedEmployees = employees.map(emp => {
-        if (emp.id === employeeId) {
-          return { ...emp, role: newRole };
-        }
-        return emp;
-      });
-      
-      onEmployeesChange(updatedEmployees);
-      toast.success('Rôle mis à jour avec succès');
-      
-      // Déclencher un événement de stockage pour informer les autres onglets
-      window.dispatchEvent(new Event('storage'));
-      
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour du rôle:', error);
-      toast.error('Une erreur est survenue');
-    }
+      return emp;
+    });
+    
+    onEmployeesChange(updatedEmployees);
   };
   
   return (
@@ -62,7 +43,7 @@ export function RoleManagement({ employees, onEmployeesChange }: RoleManagementP
           <TableHeader>
             <TableRow>
               <TableHead>Nom</TableHead>
-              <TableHead>UID</TableHead>
+              <TableHead>Email</TableHead>
               <TableHead>Poste</TableHead>
               <TableHead>Rôle</TableHead>
             </TableRow>
@@ -71,7 +52,7 @@ export function RoleManagement({ employees, onEmployeesChange }: RoleManagementP
             {employees.map(employee => (
               <TableRow key={employee.id}>
                 <TableCell>{employee.name}</TableCell>
-                <TableCell>{employee.uid || '-'}</TableCell>
+                <TableCell>{employee.email || '-'}</TableCell>
                 <TableCell>{employee.position || '-'}</TableCell>
                 <TableCell>
                   <EmployeeRoleSelector 

@@ -10,7 +10,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { Employee } from '@/types';
 import { PasswordManager } from '@/components/employees/PasswordManager';
 
@@ -27,13 +26,14 @@ export function EmployeeList({
   onEditEmployee,
   onDeleteEmployee
 }: EmployeeListProps) {
+  const sortedEmployees = [...employees].sort((a, b) => a.name.localeCompare(b.name));
+  
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold flex items-center gap-2">
           <User className="h-5 w-5" />
           <span>Liste des employés</span>
-          <Badge variant="outline" className="ml-2">{employees.length}</Badge>
         </h2>
         <Button onClick={onAddEmployee} size="sm" className="flex items-center gap-1">
           <UserPlus className="h-4 w-4" />
@@ -41,27 +41,27 @@ export function EmployeeList({
         </Button>
       </div>
       
-      <div className="rounded-md border overflow-hidden">
+      <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="font-semibold">Nom</TableHead>
-              <TableHead className="font-semibold">UID</TableHead>
-              <TableHead className="font-semibold">Fonction</TableHead>
-              <TableHead className="font-semibold">Département</TableHead>
-              <TableHead className="text-right font-semibold">Actions</TableHead>
+              <TableHead>Nom</TableHead>
+              <TableHead>UID</TableHead>
+              <TableHead>Fonction</TableHead>
+              <TableHead>Département</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {employees.length === 0 ? (
+            {sortedEmployees.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="text-center py-4 text-muted-foreground">
                   Aucun employé trouvé
                 </TableCell>
               </TableRow>
             ) : (
-              employees.map((employee) => (
-                <TableRow key={employee.id} className="hover:bg-muted/30 transition-colors">
+              sortedEmployees.map((employee) => (
+                <TableRow key={employee.id}>
                   <TableCell className="font-medium">{employee.name}</TableCell>
                   <TableCell>
                     {employee.uid ? (
@@ -70,7 +70,7 @@ export function EmployeeList({
                         <span>{employee.uid}</span>
                       </div>
                     ) : (
-                      <Badge variant="destructive" className="text-xs font-normal">Non défini</Badge>
+                      <span className="text-muted-foreground text-sm font-bold text-red-500">Non défini</span>
                     )}
                   </TableCell>
                   <TableCell>
@@ -106,7 +106,7 @@ export function EmployeeList({
                       variant="ghost"
                       size="sm"
                       onClick={() => onDeleteEmployee(employee.id)}
-                      className="text-destructive hover:text-destructive/80"
+                      className="text-destructive"
                     >
                       <Trash className="h-4 w-4" />
                     </Button>

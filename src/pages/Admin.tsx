@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileSpreadsheet, Users, Settings as SettingsIcon, LayoutList } from 'lucide-react';
-import { useAuth } from '@/contexts/auth';
+import { useAuth } from '@/contexts/AuthContext';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { ProjectManager } from '@/components/admin/ProjectManager';
 import { StatusManager } from '@/components/admin/StatusManager';

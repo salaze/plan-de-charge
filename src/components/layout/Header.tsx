@@ -3,7 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ModeToggle } from '@/components/ui/mode-toggle';
-import { useAuth } from '@/contexts/auth';
+import { useAuth } from '@/contexts/AuthContext';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -50,7 +50,7 @@ export function Header() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{user?.name || 'Utilisateur'}</DropdownMenuLabel>
+              <DropdownMenuLabel>{user?.username || 'Utilisateur'}</DropdownMenuLabel>
               <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
                 {isAdmin ? 'Administrateur' : 'Employé'}
               </DropdownMenuLabel>

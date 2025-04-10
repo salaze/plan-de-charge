@@ -66,7 +66,7 @@ export function SidebarMenu() {
   };
   
   const handleLogin = () => {
-    navigate('/login');
+    navigate('/admin-login');
   };
   
   const isActive = (path: string) => {

@@ -6,7 +6,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { Toaster as SonnerToaster } from '@/components/ui/sonner';
 
 // Auth context
-import { AuthProvider } from '@/contexts/auth';
+import { AuthProvider } from '@/contexts/AuthContext';
 
 // Protected routes
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
@@ -21,6 +21,7 @@ import Settings from '@/pages/Settings'; // Keep using uppercase version
 import Employees from '@/pages/Employees';
 import Statistics from '@/pages/Statistics';
 import Admin from '@/pages/Admin';
+import AdminLogin from '@/pages/AdminLogin';
 
 // Import our toast provider
 import { ToastProvider } from '@/hooks/toast';
@@ -36,6 +37,7 @@ function App() {
               <Routes>
                 {/* Public routes */}
                 <Route path="/login" element={<Login />} />
+                <Route path="/admin-login" element={<AdminLogin />} />
                 
                 {/* Protected routes */}
                 <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
@@ -44,7 +46,7 @@ function App() {
                 <Route path="/statistics" element={<ProtectedRoute><Statistics /></ProtectedRoute>} />
                 <Route path="/export" element={<ProtectedRoute><Export /></ProtectedRoute>} />
                 <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-                <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
+                <Route path="/admin" element={<ProtectedRoute adminOnly><Admin /></ProtectedRoute>} />
                 
                 {/* Fallback route */}
                 <Route path="*" element={<NotFound />} />

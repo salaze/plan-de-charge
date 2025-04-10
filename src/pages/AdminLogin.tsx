@@ -29,6 +29,8 @@ const AdminLogin = () => {
     
     if (success) {
       navigate('/admin');
+    } else {
+      setError('Identifiants incorrects');
     }
   };
 

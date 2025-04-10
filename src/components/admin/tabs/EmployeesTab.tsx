@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -5,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { EmployeeList } from '@/components/employees/EmployeeList';
 import { EmployeeForm } from '@/components/employees/EmployeeForm';
 import { Employee } from '@/types';
-import { generateId } from '@/lib/utils';
+import { generateId } from '@/utils/idUtils';
 import {
   AlertDialog,
   AlertDialogAction,

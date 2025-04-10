@@ -48,25 +48,14 @@ export function StatusSelectorEnhanced({
     if (newStatus !== 'projet') {
       setSelectedProject('');
     }
-    
-    // Appliquer immédiatement si ce n'est pas un projet
-    if (newStatus !== 'projet') {
-      onChange(newStatus, highlightedStatus);
-    }
   };
   
   const handleProjectChange = (projectCode: string) => {
     setSelectedProject(projectCode);
-    
-    // Appliquer immédiatement le changement de projet
-    onChange(selectedStatus, highlightedStatus, projectCode);
   };
   
   const handleHighlightChange = (checked: boolean) => {
     setHighlightedStatus(checked);
-    
-    // Appliquer immédiatement la mise en évidence
-    onChange(selectedStatus, checked, selectedProject);
   };
   
   const handleSubmit = () => {

@@ -42,6 +42,7 @@ export function isToday(date: Date): boolean {
   );
 }
 
+// Using the same implementation as in idUtils.ts for consistency
 export function generateId(): string {
-  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+  return Math.random().toString(36).substring(2, 11);
 }

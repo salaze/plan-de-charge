@@ -1,7 +1,7 @@
 
 // Service pour gérer le stockage localStorage
 import { Employee, Project, Status, Department, Client } from '@/types';
-import { generateId } from '@/lib/utils';
+import { generateId } from '@/utils/idUtils';
 
 const STORAGE_KEYS = {
   EMPLOYEES: 'planning_employees',

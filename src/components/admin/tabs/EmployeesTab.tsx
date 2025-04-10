@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -130,4 +129,4 @@ export function EmployeesTab({ employees, onEmployeesChange }: EmployeesTabProps
 }
 
 // Import the generateId function needed for creating new employees
-import { generateId } from '@/utils';
+import { generateId } from '@/utils/idUtils';

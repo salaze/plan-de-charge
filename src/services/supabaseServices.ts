@@ -34,17 +34,6 @@ export const resetSupabaseData = async (): Promise<boolean> => {
   return true;
 };
 
-// Service de connexion factice
-export const connectionLogService = {
-  create: async (data: any): Promise<boolean> => {
-    console.log('Journalisation de connexion désactivée:', data);
-    return true;
-  },
-  getAll: async (): Promise<any[]> => {
-    return [];
-  }
-};
-
 // Service de planning factice qui utilise le localStorage
 export const employeeScheduleService = {
   updateStatus: (

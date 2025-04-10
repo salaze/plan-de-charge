@@ -2,12 +2,11 @@
 import React, { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileSpreadsheet, Users, Settings as SettingsIcon, Shield, LayoutList } from 'lucide-react';
+import { FileSpreadsheet, Users, Settings as SettingsIcon, LayoutList } from 'lucide-react';
 import { useAuth } from '@/contexts/auth';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { ProjectManager } from '@/components/admin/ProjectManager';
 import { StatusManager } from '@/components/admin/StatusManager';
-import { ConnectionLogsTab } from '@/components/admin/tabs/ConnectionLogsTab';
 import { EmployeesTab } from '@/components/admin/tabs/EmployeesTab';
 import { useAdminData } from '@/hooks/useAdminData';
 import { useSearchParams, useNavigate } from 'react-router-dom';
@@ -26,7 +25,7 @@ const Admin = () => {
     }
     
     const tabParam = searchParams.get('tab');
-    if (tabParam && ['projects', 'statuses', 'employees', 'logs', 'settings'].includes(tabParam)) {
+    if (tabParam && ['projects', 'statuses', 'employees', 'settings'].includes(tabParam)) {
       setActiveTab(tabParam);
     }
   }, [searchParams, isAdmin, navigate]);
@@ -42,7 +41,7 @@ const Admin = () => {
         <AdminHeader onLogout={handleLogout} />
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-5 mb-4">
+          <TabsList className="grid grid-cols-4 mb-4">
             <TabsTrigger value="projects" className="flex items-center gap-2">
               <FileSpreadsheet className="h-4 w-4" />
               <span>Projets</span>
@@ -54,10 +53,6 @@ const Admin = () => {
             <TabsTrigger value="employees" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               <span>Employés</span>
-            </TabsTrigger>
-            <TabsTrigger value="logs" className="flex items-center gap-2">
-              <Shield className="h-4 w-4" />
-              <span>Journaux</span>
             </TabsTrigger>
             <TabsTrigger value="settings" className="flex items-center gap-2">
               <SettingsIcon className="h-4 w-4" />
@@ -84,10 +79,6 @@ const Admin = () => {
               employees={data.employees || []}
               onEmployeesChange={handleEmployeesChange}
             />
-          </TabsContent>
-          
-          <TabsContent value="logs">
-            <ConnectionLogsTab />
           </TabsContent>
           
           <TabsContent value="settings">

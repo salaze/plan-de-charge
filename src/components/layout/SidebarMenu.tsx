@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Calendar, Users, BarChart, FileSpreadsheet, Settings, LogIn, LogOut, Shield } from 'lucide-react';
+import { Calendar, Users, BarChart, FileSpreadsheet, Settings, LogIn, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -50,7 +50,7 @@ export function SidebarMenu() {
       adminOnly: true
     },
     {
-      icon: Shield,
+      icon: Settings,
       label: 'Administration',
       path: '/admin',
       adminOnly: true

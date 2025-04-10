@@ -38,37 +38,12 @@ export function useAuth() {
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User>(null);
 
-  const logConnection = async (userId: string, userName: string, eventType: string) => {
-    try {
-      const userAgent = navigator.userAgent;
-      const ipAddress = '127.0.0.1'; // Placeholder - would be fetched server-side
-      
-      // Since we're not using Supabase, we'll just log to console
-      console.log('Connection log:', {
-        user_id: userId,
-        user_name: userName,
-        event_type: eventType,
-        ip_address: ipAddress,
-        user_agent: userAgent
-      });
-    } catch (error) {
-      console.error('Failed to log connection:', error);
-    }
-  };
-
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       try {
         const parsedUser = JSON.parse(storedUser);
         setUser(parsedUser);
-        if (parsedUser) {
-          logConnection(
-            parsedUser.employeeId || parsedUser.username, 
-            parsedUser.username, 
-            'session_restored'
-          );
-        }
       } catch (e) {
         console.error('Failed to parse stored user data:', e);
         localStorage.removeItem('user');
@@ -82,9 +57,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const adminUser = { username, role: 'admin' as UserRole };
         setUser(adminUser);
         localStorage.setItem('user', JSON.stringify(adminUser));
-        
-        logConnection('admin', 'admin', 'login');
-        
         toast.success('Connexion réussie en tant qu\'administrateur');
         return true;
       }
@@ -110,9 +82,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
           };
           setUser(employeeUser);
           localStorage.setItem('user', JSON.stringify(employeeUser));
-          
-          logConnection(employee.id, employee.name, 'login');
-          
           toast.success(`Bienvenue, ${employee.name}`);
           return true;
         } else {
@@ -130,10 +99,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const logout = () => {
-    if (user) {
-      logConnection(user.employeeId || user.username, user.username, 'logout');
-    }
-    
     setUser(null);
     localStorage.removeItem('user');
   };

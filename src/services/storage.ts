@@ -1,4 +1,3 @@
-
 // Service pour gérer le stockage localStorage
 import { Employee, Project, Status, Department, Client } from '@/types';
 import { generateId } from '@/utils/idUtils';

@@ -29,8 +29,7 @@ export const mapSupabaseEmployeeToEmployee = (
 ): Employee => {
   return {
     id: employee.id,
-    name: employee.nom,
-    firstName: employee.prenom,
+    name: employee.nom + (employee.prenom ? ` ${employee.prenom}` : ''),
     uid: employee.uid,
     position: employee.fonction,
     department: employee.departement,
@@ -50,10 +49,20 @@ export const mapSupabaseEmployeeToEmployee = (
 };
 
 export const mapEmployeeToSupabaseEmployee = (employee: Employee): SupabaseEmployee => {
+  // Extract first name and last name if possible
+  let nom = employee.name;
+  let prenom: string | undefined;
+  
+  const nameParts = employee.name.split(' ');
+  if (nameParts.length > 1) {
+    nom = nameParts[0];
+    prenom = nameParts.slice(1).join(' ');
+  }
+
   return {
     id: employee.id,
-    nom: employee.name,
-    prenom: employee.firstName,
+    nom: nom,
+    prenom: prenom,
     uid: employee.uid,
     fonction: employee.position,
     departement: employee.department,

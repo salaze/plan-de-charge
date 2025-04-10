@@ -9,3 +9,6 @@ export const storageService = newStorageService;
 
 // Re-export the storage keys
 export { STORAGE_KEYS };
+
+// Re-export the generateId function
+export { generateId };

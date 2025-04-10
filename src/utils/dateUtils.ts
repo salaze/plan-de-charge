@@ -21,10 +21,59 @@ export function formatDateToYYYYMMDD(date: Date): string {
 }
 
 /**
+ * Formats a date to YYYY-MM-DD string
+ */
+export function formatDate(date: Date): string {
+  return date.toISOString().split('T')[0];
+}
+
+/**
  * Gets the number of days in a month
  */
 export function getDaysInMonth(year: number, month: number): number {
   return new Date(year, month + 1, 0).getDate();
+}
+
+/**
+ * Creates an array of dates for a given month
+ */
+export function generateDaysInMonth(year: number, month: number): Date[] {
+  const days: Date[] = [];
+  
+  try {
+    if (!Number.isInteger(year) || !Number.isInteger(month) || 
+        year < 1900 || year > 2100 || month < 0 || month > 11) {
+      console.error(`Invalid date parameters: year=${year}, month=${month}`);
+      return [];
+    }
+    
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    console.log(`Month ${month+1}/${year} has ${daysInMonth} days`);
+    
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, month, day);
+      if (isNaN(date.getTime())) {
+        console.error(`Invalid date created: ${year}-${month+1}-${day}`);
+        continue;
+      }
+      days.push(date);
+    }
+    
+    return days;
+  } catch (error) {
+    console.error('Error in generateDaysInMonth:', error);
+    return [];
+  }
+}
+
+/**
+ * Returns the French day name
+ */
+export function getDayName(date: Date, short: boolean = false): string {
+  const dayNames = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+  const shortDayNames = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+  
+  return short ? shortDayNames[date.getDay()] : dayNames[date.getDay()];
 }
 
 /**

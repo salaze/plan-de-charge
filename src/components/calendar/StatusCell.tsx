@@ -31,10 +31,10 @@ export function StatusCell({
     
   // Ajout du code projet si c'est un projet
   if (status === 'projet' && projectCode) {
-    // Pour les projets, on affiche le code projet suivi de la période si ce n'est pas FULL
+    // Pour les projets, on affiche uniquement le code projet suivi de la période si ce n'est pas FULL
     displayText = period && period !== 'FULL' 
       ? `${projectCode} (${period})` 
-      : projectCode;
+      : projectCode; // On n'ajoute plus (FULL) pour les projets
   }
   
   const highlightClass = isHighlighted ? 'border-2 border-black' : '';

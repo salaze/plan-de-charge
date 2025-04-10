@@ -1,6 +1,8 @@
 
 import React from 'react';
 import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { FileSpreadsheet } from 'lucide-react';
 import { exportEmployeesToExcel } from '@/utils/employeeExportUtils';
 import { Employee } from '@/types';
 
@@ -39,5 +41,10 @@ export const ExportEmployeesButton: React.FC<ExportEmployeesButtonProps> = ({
     }
   };
   
-  return { handleExportEmployees };
+  return (
+    <Button onClick={handleExportEmployees} className="w-full">
+      <FileSpreadsheet className="h-4 w-4 mr-2" />
+      Exporter les employés au format Excel
+    </Button>
+  );
 };

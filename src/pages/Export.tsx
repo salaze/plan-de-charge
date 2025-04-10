@@ -10,6 +10,7 @@ import { useImportPlanning } from '@/hooks/useImportPlanning';
 import { useImportEmployees } from '@/hooks/useImportEmployees';
 import { usePlanningData } from '@/hooks/usePlanningData';
 import { useDateSelection } from '@/hooks/useDateSelection';
+import { useExportActions } from '@/hooks/useExportActions';
 import { ExportPlanningButton } from '@/components/export/actions/ExportPlanningButton';
 import { ExportEmployeesButton } from '@/components/export/actions/ExportEmployeesButton';
 import { ExportStatsButton } from '@/components/export/actions/ExportStatsButton';
@@ -23,15 +24,7 @@ const Export = () => {
   const { importedData, handleImportSuccess } = useImportPlanning();
   const { importedEmployees, handleImportEmployees } = useImportEmployees();
   const planningData = usePlanningData();
-  
-  // Use the action components
-  const { handleExport } = ExportPlanningButton({ selectedDepartment });
-  const { handleExportEmployees } = ExportEmployeesButton({ selectedDepartment });
-  const { handleExportStats } = ExportStatsButton({ 
-    selectedDepartment, 
-    currentYear, 
-    currentMonth 
-  });
+  const { handleExport, handleExportEmployees, handleExportStats } = useExportActions(selectedDepartment);
   
   return (
     <Layout>
@@ -44,6 +37,18 @@ const Export = () => {
           selectedDepartment={selectedDepartment}
           setSelectedDepartment={setSelectedDepartment}
         />
+        
+        {/* Hidden action buttons that will be triggered programmatically */}
+        <div className="hidden">
+          <ExportPlanningButton selectedDepartment={selectedDepartment} data-action="export-planning" />
+          <ExportEmployeesButton selectedDepartment={selectedDepartment} data-action="export-employees" />
+          <ExportStatsButton 
+            selectedDepartment={selectedDepartment} 
+            currentYear={currentYear} 
+            currentMonth={currentMonth}
+            data-action="export-stats" 
+          />
+        </div>
         
         <ExportTabs 
           activeTab={activeTab}

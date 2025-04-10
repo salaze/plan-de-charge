@@ -1,7 +1,7 @@
 
 import { Employee } from '@/types';
 import { STORAGE_KEYS, localStorageWrapper } from './base';
-import { generateId } from '@/lib/utils';
+import { generateId } from '@/utils/idUtils';
 
 /**
  * Service for employee storage operations

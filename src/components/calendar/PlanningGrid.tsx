@@ -69,7 +69,7 @@ export function PlanningGrid({
       selectedCell.employeeId,
       selectedCell.date,
       status,
-      selectedCell.period as DayPeriod,
+      selectedCell.period,
       isHighlighted,
       projectCode
     );

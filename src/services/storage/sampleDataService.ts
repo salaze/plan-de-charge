@@ -1,6 +1,6 @@
 
 import { Department, Employee, Project } from '@/types';
-import { generateId } from '@/lib/utils';
+import { generateId } from '@/utils/idUtils';
 
 /**
  * Generate sample departments for application initialization

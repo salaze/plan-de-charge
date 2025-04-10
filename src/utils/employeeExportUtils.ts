@@ -1,7 +1,6 @@
-
 import { Employee } from '@/types';
 import * as XLSX from 'xlsx';
-import { generateId } from './idUtils';
+import { generateId } from '@/utils/idUtils';
 
 /**
  * Exporte les données des employés vers un fichier Excel

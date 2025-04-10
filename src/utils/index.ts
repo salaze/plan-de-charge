@@ -1,7 +1,7 @@
 
 export * from './dateUtils';
 export * from './exportUtils';
-export * from './idUtils';  // Make sure idUtils is exported
+export * from './idUtils';
 export * from './sampleDataUtils';
 export * from './statsUtils';
 export * from './dataFilterUtils';

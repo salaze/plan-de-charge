@@ -30,9 +30,11 @@ export const useAuth = () => {
   return context;
 };
 
+// Separate the AuthProvider component from the export
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User>(null);
+  // Fix 1: Move useNavigate inside the component body
   const navigate = useNavigate();
+  const [user, setUser] = useState<User>(null);
   
   useEffect(() => {
     const storedUser = localStorage.getItem('user');

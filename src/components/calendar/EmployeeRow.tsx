@@ -1,85 +1,98 @@
 
 import React from 'react';
 import { TableRow, TableCell } from '@/components/ui/table';
-import { formatDate, isWeekendOrHoliday } from '@/utils';
+import { Employee, StatusCode, DayPeriod } from '@/types';
+import { getEmployeeStatusForDate } from '@/utils/employeeUtils';
+import { isWeekendOrHoliday } from '@/utils/holidayUtils';
 import { PlanningStatusCell } from './PlanningStatusCell';
-import { Employee, DayStatus } from '@/types';
+import { formatDate } from '@/utils';
 
 interface EmployeeRowProps {
   employee: Employee;
   visibleDays: Date[];
   totalStats: number;
-  onCellClick: (employeeId: string, date: string, period: 'AM' | 'PM') => void;
+  onCellClick: (employeeId: string, date: string, period: DayPeriod) => void;
 }
 
-export function EmployeeRow({ employee, visibleDays, totalStats, onCellClick }: EmployeeRowProps) {
-  // Function to get status details for a date and period
-  const getDayStatus = (date: string, period: 'AM' | 'PM') => {
-    const dayEntry = employee.schedule.find(
+export function EmployeeRow({ 
+  employee, 
+  visibleDays, 
+  totalStats,
+  onCellClick 
+}: EmployeeRowProps) {
+  // Function to check if a date is a weekend
+  const isWeekend = (date: Date) => {
+    return date.getDay() === 0 || date.getDay() === 6;
+  };
+  
+  // Function to find the employee status for a specific date and period
+  const findStatusForDay = (date: string, period: DayPeriod): {
+    status: StatusCode;
+    isHighlighted?: boolean;
+    projectCode?: string;
+  } => {
+    const dayStatus = employee.schedule.find(
       (day) => day.date === date && day.period === period
     );
     
     return {
-      status: dayEntry?.status || '',
-      isHighlighted: dayEntry?.isHighlighted || false,
-      projectCode: dayEntry?.projectCode
+      status: dayStatus ? dayStatus.status : ('' as StatusCode),
+      isHighlighted: dayStatus ? dayStatus.isHighlighted : false,
+      projectCode: dayStatus ? dayStatus.projectCode : undefined
     };
   };
-  
+
   return (
-    <TableRow 
-      key={employee.id} 
-      className="hover:bg-secondary/30 transition-colors duration-200"
-    >
-      <TableCell className="font-medium sticky left-0 bg-background z-10 text-xs sm:text-sm">
-        <div className="flex flex-col">
-          <span>{employee.name}</span>
-          <div className="space-y-0.5">
-            {employee.department && (
-              <span className="text-xs text-muted-foreground">Dpt: {employee.department}</span>
-            )}
-            {employee.position && (
-              <span className="text-xs text-muted-foreground">Fonction: {employee.position}</span>
-            )}
-          </div>
-        </div>
+    <TableRow key={employee.id} className="hover:bg-muted/30 group">
+      {/* Employee name cell - always visible and sticky */}
+      <TableCell className="sticky left-0 bg-white dark:bg-gray-900 font-medium group-hover:bg-muted/30 truncate max-w-[200px]">
+        {employee.name}
       </TableCell>
       
-      {visibleDays.map((day, index) => {
-        const date = formatDate(day);
-        const amStatus = getDayStatus(date, 'AM');
-        const pmStatus = getDayStatus(date, 'PM');
-        const isWeekendOrHol = isWeekendOrHoliday(day);
+      {/* Display days and schedule - scrollable horizontally */}
+      {visibleDays.map((day) => {
+        const formattedDate = formatDate(day);
+        const isWeekendDay = isWeekend(day);
+        
+        // Morning status (AM)
+        const morningStatus = findStatusForDay(formattedDate, 'AM');
+        
+        // Afternoon status (PM)
+        const afternoonStatus = findStatusForDay(formattedDate, 'PM');
         
         return (
-          <React.Fragment key={`day-${index}`}>
-            <PlanningStatusCell
+          <React.Fragment key={`${employee.id}-${formattedDate}`}>
+            {/* Morning cell */}
+            <PlanningStatusCell 
               day={day}
-              date={date}
+              date={formattedDate}
               employeeId={employee.id}
               period="AM"
-              status={amStatus.status}
-              isHighlighted={amStatus.isHighlighted}
-              projectCode={amStatus.projectCode}
-              isWeekend={isWeekendOrHol}
+              status={morningStatus.status}
+              isHighlighted={morningStatus.isHighlighted}
+              projectCode={morningStatus.projectCode}
+              isWeekend={isWeekendDay}
               onCellClick={onCellClick}
             />
-            <PlanningStatusCell
+            
+            {/* Afternoon cell */}
+            <PlanningStatusCell 
               day={day}
-              date={date}
+              date={formattedDate}
               employeeId={employee.id}
               period="PM"
-              status={pmStatus.status}
-              isHighlighted={pmStatus.isHighlighted}
-              projectCode={pmStatus.projectCode}
-              isWeekend={isWeekendOrHol}
+              status={afternoonStatus.status}
+              isHighlighted={afternoonStatus.isHighlighted}
+              projectCode={afternoonStatus.projectCode}
+              isWeekend={isWeekendDay}
               onCellClick={onCellClick}
             />
           </React.Fragment>
         );
       })}
       
-      <TableCell className="text-center font-medium text-xs sm:text-sm">
+      {/* Total stats for this employee */}
+      <TableCell className="text-right font-medium sticky right-0 bg-white dark:bg-gray-900">
         {totalStats.toFixed(1)}
       </TableCell>
     </TableRow>

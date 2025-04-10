@@ -9,6 +9,7 @@ export function usePlanningGrid(isAdmin: boolean) {
   const [selectedCell, setSelectedCell] = useState<{
     employeeId: string;
     date: string;
+    period: DayPeriod;
     currentStatus: StatusCode;
     isHighlighted?: boolean;
     projectCode?: string;
@@ -41,6 +42,7 @@ export function usePlanningGrid(isAdmin: boolean) {
     setSelectedCell({
       employeeId,
       date,
+      period,
       currentStatus: '' as StatusCode, // Will be populated by the component
       isHighlighted: false,
       projectCode: undefined

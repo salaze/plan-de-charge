@@ -1,126 +1,26 @@
-
-import React, { useEffect, useState } from 'react';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
+import React from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Employee, UserRole } from '@/types';
-import { storageService } from '@/services/storage';
+import { Employee } from '@/types';
+import { EmployeeNameField } from './form/EmployeeNameField';
+import { EmployeeJobField } from './form/EmployeeJobField';
+import { EmployeeContactField } from './form/EmployeeContactField';
+import { EmployeeUidField } from './form/EmployeeUidField';
+import { EmployeePasswordFields } from './form/EmployeePasswordFields';
+import { useEmployeeForm } from './form/useEmployeeForm';
 
-interface EmployeeFormProps {
-  isOpen: boolean;
-  onClose: () => void;
-  employee: Employee | null;
+export interface EmployeeFormProps {
+  employee?: Employee;
   onSave: (employee: Employee) => void;
+  onClose: () => void;
+  open: boolean; // Added the missing 'open' property
 }
 
-const defaultEmployee: Omit<Employee, 'id'> = {
-  name: '',
-  email: '',
-  position: '',
-  departmentId: '',
-  role: 'employee',
-  schedule: []
-};
+export const EmployeeForm: React.FC<EmployeeFormProps> = ({ employee, onSave, onClose, open }) => {
+  const { formData, setFormData, departments, password, setPassword, confirmPassword, setPasswordError, handleChange, handleRoleChange, handleDepartmentChange, validateForm, handleSubmit } = useEmployeeForm(employee);
 
-export function EmployeeForm({ isOpen, onClose, employee, onSave }: EmployeeFormProps) {
-  const [formData, setFormData] = useState<Omit<Employee, 'id'>>({ ...defaultEmployee });
-  const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [passwordError, setPasswordError] = useState('');
-  
-  useEffect(() => {
-    if (employee) {
-      setFormData({
-        name: employee.name,
-        email: employee.email || '',
-        position: employee.position || '',
-        departmentId: employee.departmentId || '',
-        role: employee.role || 'employee',
-        schedule: employee.schedule || [],
-      });
-      setPassword('');
-      setConfirmPassword('');
-    } else {
-      setFormData({ ...defaultEmployee });
-      setPassword('');
-      setConfirmPassword('');
-    }
-  }, [employee, isOpen]);
-  
-  useEffect(() => {
-    const loadDepartments = async () => {
-      const deps = await storageService.getDepartments();
-      setDepartments(deps);
-    };
-    
-    loadDepartments();
-  }, []);
-  
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
-  
-  const handleRoleChange = (value: string) => {
-    setFormData({
-      ...formData,
-      role: value as UserRole
-    });
-  };
-  
-  const handleDepartmentChange = (value: string) => {
-    setFormData({
-      ...formData,
-      departmentId: value
-    });
-  };
-  
-  const validateForm = () => {
-    if (!formData.name.trim()) {
-      return false;
-    }
-    
-    if (password && password !== confirmPassword) {
-      setPasswordError('Les mots de passe ne correspondent pas');
-      return false;
-    }
-    
-    return true;
-  };
-  
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateForm()) return;
-    
-    const employeeData: Employee = {
-      id: employee?.id || '',
-      ...formData,
-      ...(password && { password }),
-    };
-    
-    onSave(employeeData);
-  };
-  
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>
@@ -261,4 +161,4 @@ export function EmployeeForm({ isOpen, onClose, employee, onSave }: EmployeeForm
       </DialogContent>
     </Dialog>
   );
-}
+};

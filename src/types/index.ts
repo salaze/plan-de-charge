@@ -1,4 +1,3 @@
-
 export type UserRole = 'admin' | 'employee';
 
 export interface User {
@@ -92,18 +91,17 @@ export type DayStatus = Schedule;
 
 export interface ConnectionLog {
   id: string;
-  userId: string;
-  userName: string;
-  eventType: string;
-  createdAt: string;
-  ipAddress?: string;
-  userAgent?: string;
-  // Compatibility fields for database records
+  userId?: string;
   user_id?: string;
+  userName?: string;
   user_name?: string;
+  eventType?: string;
   event_type?: string;
+  createdAt?: string;
   created_at?: string;
+  ipAddress?: string;
   ip_address?: string;
+  userAgent?: string;
   user_agent?: string;
 }
 

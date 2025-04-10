@@ -1,132 +1,95 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { toast } from 'sonner';
-import { User } from '@/types';
-import { storageService } from '@/services/storage';
+import { supabase } from '@/integrations/supabase/client';
 
-interface AuthContextType {
-  user: User | null;
-  isLoading: boolean;
-  login: (username: string, password: string) => Promise<boolean>;
-  logout: () => void;
+// Update the type to include isAuthenticated
+export interface AuthContextType {
+  isAuthenticated: boolean;
   isAdmin: boolean;
-  updateUser: (userData: Partial<User>) => void;
+  user: any;
+  signIn: (email: string, password: string) => Promise<any>;
+  signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function useAuth() {
+export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-}
+};
 
-interface AuthProviderProps {
-  children: React.ReactNode;
-}
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [user, setUser] = useState(null);
 
-export function AuthProvider({ children }: AuthProviderProps) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Load user from localStorage on initial render
   useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const userData = await storageService.getItem('user');
-        if (userData) {
-          setUser(JSON.parse(userData));
-        }
-      } catch (error) {
-        console.error('Error loading user data:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    const session = supabase.auth.getSession();
 
-    loadUser();
+    supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.session?.user) {
+        setUser(session.session.user);
+        setIsAuthenticated(true);
+        setIsAdmin(session.session.user.app_metadata?.isAdmin === true);
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
+        setIsAdmin(false);
+      }
+    });
+
+    if (session?.data?.session?.user) {
+      setUser(session.data.session.user);
+      setIsAuthenticated(true);
+      setIsAdmin(session.data.session.user.app_metadata?.isAdmin === true);
+    }
   }, []);
 
-  const login = async (username: string, password: string): Promise<boolean> => {
-    setIsLoading(true);
+  const signIn = async (email: string, password: string) => {
     try {
-      // Admin login
-      if (username === 'admin' && password === 'admin123') {
-        const adminUser = {
-          id: 'admin',
-          name: 'Administrateur',
-          role: 'admin' as const
-        };
-        
-        setUser(adminUser);
-        await storageService.setItem('user', JSON.stringify(adminUser));
-        toast.success('Connecté en tant qu\'administrateur');
-        return true;
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password,
+      });
+
+      if (error) {
+        throw error;
       }
 
-      // Regular employee login
-      const employees = await storageService.getEmployees();
-      const employee = employees.find(emp => 
-        emp.name.toLowerCase() === username.toLowerCase() || 
-        emp.email?.toLowerCase() === username.toLowerCase()
-      );
+      setUser(data.user);
+      setIsAuthenticated(true);
+      setIsAdmin(data.user?.app_metadata?.isAdmin === true);
 
-      if (employee) {
-        const employeePassword = employee.password || 'employee123';
-        
-        if (password === employeePassword) {
-          const userData = {
-            id: employee.id,
-            name: employee.name,
-            role: employee.role || 'employee',
-            departmentId: employee.departmentId,
-            email: employee.email
-          };
-          
-          setUser(userData);
-          await storageService.setItem('user', JSON.stringify(userData));
-          toast.success(`Bienvenue, ${employee.name}`);
-          return true;
-        } else {
-          toast.error('Mot de passe incorrect');
-        }
-      } else {
-        toast.error('Utilisateur non trouvé');
-      }
-      
-      return false;
-    } catch (error) {
-      console.error('Error during login:', error);
-      toast.error('Une erreur est survenue lors de la connexion');
-      return false;
-    } finally {
-      setIsLoading(false);
+      return data;
+    } catch (error: any) {
+      console.error('Error signing in:', error.message);
+      throw error;
     }
   };
 
-  const logout = async () => {
-    setUser(null);
-    await storageService.removeItem('user');
-    toast.success('Vous êtes déconnecté');
+  const signOut = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        throw error;
+      }
+
+      setUser(null);
+      setIsAuthenticated(false);
+      setIsAdmin(false);
+    } catch (error: any) {
+      console.error('Error signing out:', error.message);
+    }
   };
 
-  const updateUser = async (userData: Partial<User>) => {
-    if (!user) return;
-    
-    const updatedUser = { ...user, ...userData };
-    setUser(updatedUser);
-    await storageService.setItem('user', JSON.stringify(updatedUser));
-  };
-
-  const value = {
+  const value: AuthContextType = {
+    isAuthenticated,
+    isAdmin,
     user,
-    isLoading,
-    login,
-    logout,
-    isAdmin: user?.role === 'admin',
-    updateUser
+    signIn,
+    signOut,
   };
 
   return (
@@ -134,4 +97,4 @@ export function AuthProvider({ children }: AuthProviderProps) {
       {children}
     </AuthContext.Provider>
   );
-}
+};

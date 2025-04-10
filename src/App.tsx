@@ -16,39 +16,44 @@ import Dashboard from '@/pages/dashboard';
 import Login from '@/pages/login';
 import NotFound from '@/pages/not-found';
 import Planning from '@/pages/planning';
-import Export from '@/pages/Export';
-import Settings from '@/pages/Settings';
+import Export from '@/pages/export'; // Fixed case sensitivity
+import Settings from '@/pages/settings'; // Fixed case sensitivity
 import Employees from '@/pages/Employees';
 import Statistics from '@/pages/Statistics';
 import Admin from '@/pages/Admin';
 
+// Import our toast provider
+import { ToastProvider } from '@/hooks/toast';
+
 function App() {
   return (
     <ThemeProvider defaultTheme="light" storageKey="planning-theme">
-      <AuthProvider>
-        <BrowserRouter>
-          <Suspense fallback={<div className="flex h-screen items-center justify-center">Chargement...</div>}>
-            <Routes>
-              {/* Public routes */}
-              <Route path="/login" element={<Login />} />
-              
-              {/* Protected routes */}
-              <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-              <Route path="/employees" element={<ProtectedRoute><Employees /></ProtectedRoute>} />
-              <Route path="/planning" element={<ProtectedRoute><Planning /></ProtectedRoute>} />
-              <Route path="/statistics" element={<ProtectedRoute><Statistics /></ProtectedRoute>} />
-              <Route path="/export" element={<ProtectedRoute><Export /></ProtectedRoute>} />
-              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-              <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
-              
-              {/* Fallback route */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
-          <SonnerToaster />
-          <Toaster />
-        </BrowserRouter>
-      </AuthProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <BrowserRouter>
+            <Suspense fallback={<div className="flex h-screen items-center justify-center">Chargement...</div>}>
+              <Routes>
+                {/* Public routes */}
+                <Route path="/login" element={<Login />} />
+                
+                {/* Protected routes */}
+                <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                <Route path="/employees" element={<ProtectedRoute><Employees /></ProtectedRoute>} />
+                <Route path="/planning" element={<ProtectedRoute><Planning /></ProtectedRoute>} />
+                <Route path="/statistics" element={<ProtectedRoute><Statistics /></ProtectedRoute>} />
+                <Route path="/export" element={<ProtectedRoute><Export /></ProtectedRoute>} />
+                <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+                <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
+                
+                {/* Fallback route */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
+            <SonnerToaster />
+            <Toaster />
+          </BrowserRouter>
+        </AuthProvider>
+      </ToastProvider>
     </ThemeProvider>
   );
 }

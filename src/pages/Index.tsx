@@ -24,6 +24,7 @@ const Index = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   
+  // Use the updated context that includes isAuthenticated
   const { isAdmin, isAuthenticated } = useAuth();
   
   const fetchData = () => {
@@ -202,6 +203,6 @@ const Index = () => {
       </div>
     </Layout>
   );
-}
+};
 
 export default Index;

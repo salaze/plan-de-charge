@@ -1,28 +1,14 @@
+import { Employee, Status, DateRange } from '@/types';
+import { SummaryStats } from './types';
 
-import { Employee, SummaryStats, StatusCode } from '@/types';
-import { generateDaysInMonth, formatDate } from '../dateUtils';
-import { DayCount } from './types';
-import { updateProjectStats } from './projectStats';
-
-/**
- * Calculates statistics for an employee in a specific month
- */
 export const calculateEmployeeStats = (
   employee: Employee,
-  year: number,
-  month: number
+  dateRange: DateRange,
+  statuses: Status[]
 ): SummaryStats => {
-  const days = generateDaysInMonth(year, month);
-  const startDate = formatDate(days[0]);
-  const endDate = formatDate(days[days.length - 1]);
-  
-  const relevantSchedule = employee.schedule.filter(
-    day => day.date >= startDate && day.date <= endDate
-  );
-  
-  // Initialize counters with default values
+  // Initialize the stats object with proper structure
   const stats: SummaryStats = {
-    totalDays: days.length,
+    totalDays: 0,
     presentDays: 0,
     absentDays: 0,
     vacationDays: 0,
@@ -32,87 +18,84 @@ export const calculateEmployeeStats = (
     vigiDays: 0,
     tpDays: 0,
     coordinatorDays: 0,
-    otherAbsenceDays: 0,
-    regisseurDays: 0,
-    demenagementDays: 0,
-    permanenceDays: 0,
-    projectStats: {},
-    employeeName: employee.name
+    otherDays: 0,
+    presencePct: 0,
+    employeeName: employee.name,
+    // Add these missing properties
+    byStatus: {},
+    byProject: {},
+    highlighted: 0,
+    total: 0
   };
   
-  // Count each day type
-  relevantSchedule.forEach(day => {
-    const dayCount: DayCount = {
-      dayMultiplier: day.period === 'FULL' ? 1 : 0.5,
-      status: day.status,
-      projectCode: day.projectCode,
-      isHighlighted: day.isHighlighted
-    };
-    
-    // Update project stats if applicable
-    updateProjectStats(stats, dayCount);
-    
-    // If it's a highlighted day (permanence)
-    if (day.isHighlighted) {
-      stats.permanenceDays += dayCount.dayMultiplier;
-      stats.presentDays += dayCount.dayMultiplier;
-    } else {
-      updateDayTypeStats(stats, dayCount);
-    }
-  });
-  
-  return stats;
-};
+  const startDate = new Date(dateRange.from);
+  const endDate = new Date(dateRange.to);
+  let currentDate = new Date(startDate);
 
-/**
- * Updates the appropriate day type counters based on status
- */
-const updateDayTypeStats = (stats: SummaryStats, day: DayCount): void => {
-  switch(day.status) {
-    case 'assistance':
-      stats.presentDays += day.dayMultiplier;
-      break;
-    case 'vigi':
-      stats.presentDays += day.dayMultiplier;
-      stats.vigiDays += day.dayMultiplier;
-      break;
-    case 'formation':
-      stats.presentDays += day.dayMultiplier;
-      stats.trainingDays += day.dayMultiplier;
-      break;
-    case 'projet':
-      stats.presentDays += day.dayMultiplier;
-      stats.projectDays += day.dayMultiplier;
-      break;
-    case 'conges':
-      stats.vacationDays += day.dayMultiplier;
-      break;
-    case 'management':
-      stats.presentDays += day.dayMultiplier;
-      stats.managementDays += day.dayMultiplier;
-      break;
-    case 'tp':
-      stats.tpDays += day.dayMultiplier;
-      break;
-    case 'coordinateur':
-      stats.presentDays += day.dayMultiplier;
-      stats.coordinatorDays += day.dayMultiplier;
-      break;
-    case 'absence':
-      stats.absentDays += day.dayMultiplier;
-      stats.otherAbsenceDays += day.dayMultiplier;
-      break;
-    case 'regisseur':
-      stats.presentDays += day.dayMultiplier;
-      stats.regisseurDays += day.dayMultiplier;
-      break;
-    case 'demenagement':
-      stats.presentDays += day.dayMultiplier;
-      stats.demenagementDays += day.dayMultiplier;
-      break;
-    case 'permanence':
-      stats.presentDays += day.dayMultiplier;
-      stats.permanenceDays += day.dayMultiplier;
-      break;
+  while (currentDate <= endDate) {
+    stats.totalDays++;
+
+    const dateStr = currentDate.toISOString().split('T')[0];
+    const scheduleEntry = employee.schedule.find(entry => entry.date === dateStr);
+
+    if (scheduleEntry) {
+      const status = statuses.find(s => s.code === scheduleEntry.status);
+
+      if (status) {
+        if (!stats.byStatus[status.code]) {
+          stats.byStatus[status.code] = 0;
+        }
+        stats.byStatus[status.code]++;
+
+        switch (status.code) {
+          case 'PRESENT':
+            stats.presentDays++;
+            break;
+          case 'ABSENT':
+            stats.absentDays++;
+            break;
+          case 'VACATION':
+            stats.vacationDays++;
+            break;
+          case 'TRAINING':
+            stats.trainingDays++;
+            break;
+          case 'MANAGEMENT':
+            stats.managementDays++;
+            break;
+          case 'VIGI':
+            stats.vigiDays++;
+            break;
+          case 'TP':
+            stats.tpDays++;
+            break;
+          case 'COORDINATOR':
+            stats.coordinatorDays++;
+            break;
+          default:
+            stats.otherDays++;
+            break;
+        }
+      }
+
+      if (scheduleEntry.projectId) {
+        if (!stats.byProject[scheduleEntry.projectId]) {
+          stats.byProject[scheduleEntry.projectId] = 0;
+        }
+        stats.byProject[scheduleEntry.projectId]++;
+        stats.projectDays++;
+      }
+
+      if (scheduleEntry.isHighlighted) {
+        stats.highlighted++;
+      }
+    }
+
+    currentDate.setDate(currentDate.getDate() + 1);
   }
+
+  stats.total = stats.presentDays + stats.absentDays + stats.vacationDays + stats.trainingDays + stats.managementDays + stats.projectDays + stats.vigiDays + stats.tpDays + stats.coordinatorDays + stats.otherDays;
+  stats.presencePct = stats.totalDays > 0 ? (stats.presentDays / stats.totalDays) * 100 : 0;
+
+  return stats;
 };

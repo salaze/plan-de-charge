@@ -10,7 +10,7 @@ import {
   projectService, 
   planningService 
 } from '@/services/supabaseServices';
-import { useAuth } from '@/contexts/auth';
+import { useAuth } from '@/contexts/AuthContext';
 import { Employee, Project, Status } from '@/types';
 import { toast } from 'sonner';
 

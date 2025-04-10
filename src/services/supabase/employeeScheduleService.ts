@@ -1,7 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { DayStatus } from "@/types";
-import { mapDayStatusToSupabaseSchedule } from "./mappers/employeeMappers";
 
 // Service pour la gestion du planning des employés
 export const employeeScheduleService = {

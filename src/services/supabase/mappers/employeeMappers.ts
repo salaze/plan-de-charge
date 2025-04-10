@@ -1,16 +1,15 @@
 
 import { Employee, DayStatus } from "@/types";
 
-// Types pour Supabase
 export type SupabaseEmployee = {
   id: string;
   nom: string;
-  prenom: string | null;
-  uid: string | null;
-  fonction: string | null;
-  departement: string | null;
-  role: string | null;
-  password: string | null;
+  prenom?: string;
+  uid?: string;
+  fonction?: string;
+  departement?: string;
+  password?: string;
+  role?: string;
 };
 
 export type SupabaseSchedule = {
@@ -19,59 +18,50 @@ export type SupabaseSchedule = {
   date: string;
   statut_code: string;
   period: string;
-  note: string | null;
-  project_code: string | null;
-  is_highlighted: boolean | null;
+  note?: string;
+  project_code?: string;
+  is_highlighted?: boolean;
 };
 
-// Convertisseurs de types pour les employés
-export const mapSupabaseEmployeeToEmployee = (employee: SupabaseEmployee, schedule: SupabaseSchedule[] = []): Employee => {
-  // Convertir le planning Supabase au format de l'application
-  const mappedSchedule: DayStatus[] = schedule.map(item => ({
-    date: item.date,
-    status: item.statut_code,
-    period: item.period as 'AM' | 'PM' | 'FULL',
-    note: item.note || undefined,
-    projectCode: item.project_code || undefined,
-    isHighlighted: item.is_highlighted || false
-  }));
-
+export const mapSupabaseEmployeeToEmployee = (
+  employee: SupabaseEmployee,
+  schedules: SupabaseSchedule[] = []
+): Employee => {
   return {
     id: employee.id,
-    name: employee.nom + (employee.prenom ? ` ${employee.prenom}` : ''),
-    uid: employee.uid || undefined,
-    position: employee.fonction || undefined,
-    department: employee.departement || undefined,
-    role: (employee.role as 'admin' | 'employee') || 'employee',
-    password: employee.password || undefined,
-    schedule: mappedSchedule
+    name: employee.nom,
+    firstName: employee.prenom,
+    uid: employee.uid,
+    position: employee.fonction,
+    department: employee.departement,
+    password: employee.password,
+    role: employee.role as any,
+    schedule: schedules.map(s => ({
+      date: s.date,
+      status: s.statut_code,
+      period: s.period as 'AM' | 'PM' | 'FULL',
+      projectCode: s.project_code,
+      projectId: s.project_code, // For backwards compatibility
+      isHighlighted: s.is_highlighted,
+      highlight: s.is_highlighted, // For backwards compatibility
+      note: s.note
+    }))
   };
 };
 
-// Conversion d'Employee vers SupabaseEmployee
-export const mapEmployeeToSupabaseEmployee = (employee: Employee): Omit<SupabaseEmployee, "id"> => {
-  // Extraire prénom du nom complet si possible
-  let nom = employee.name;
-  let prenom: string | null = null;
-  
-  const nameParts = employee.name.split(' ');
-  if (nameParts.length > 1) {
-    nom = nameParts[0];
-    prenom = nameParts.slice(1).join(' ');
-  }
-
+export const mapEmployeeToSupabaseEmployee = (employee: Employee): SupabaseEmployee => {
   return {
-    nom,
-    prenom,
-    uid: employee.uid || null,
-    fonction: employee.position || null,
-    departement: employee.department || null,
-    role: employee.role || 'employee',
-    password: employee.password || null
+    id: employee.id,
+    nom: employee.name,
+    prenom: employee.firstName,
+    uid: employee.uid,
+    fonction: employee.position,
+    departement: employee.department,
+    password: employee.password,
+    role: employee.role
   };
 };
 
-// Conversion de DayStatus vers SupabaseSchedule
 export const mapDayStatusToSupabaseSchedule = (
   employeeId: string, 
   dayStatus: DayStatus

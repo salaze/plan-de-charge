@@ -1,8 +1,9 @@
+
 import { useState, useMemo } from 'react';
 import { Status, StatusCode } from '@/types';
 import { toast } from 'sonner';
 import { statusService } from '@/services/supabaseServices';
-import { generateId } from '@/utils/idUtils';
+import { generateId } from '@/utils/idUtils'; // Direct import from the source
 
 export function useStatusManager(initialStatuses: Status[], onStatusesChange: (statuses: Status[]) => void) {
   const [statuses, setStatuses] = useState<Status[]>(initialStatuses);

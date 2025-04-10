@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { generateId } from '@/utils/idUtils';
+import { generateId } from '@/utils/idUtils'; // Direct import from the source
 import { toast } from 'sonner';
 import { Project } from '@/types';
 import { projectService } from '@/services/jsonStorage';

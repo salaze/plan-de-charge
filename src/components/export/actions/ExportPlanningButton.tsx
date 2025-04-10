@@ -46,7 +46,7 @@ export const ExportPlanningButton: React.FC<ExportPlanningButtonProps> = ({
   };
   
   return (
-    <Button onClick={handleExport} className="w-full">
+    <Button onClick={handleExport} className="w-full" data-action="export-planning">
       <FileSpreadsheet className="h-4 w-4 mr-2" />
       Exporter le planning au format Excel
     </Button>

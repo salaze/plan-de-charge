@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from 'lucide-react';
-import { getMonthName } from '@/lib/utils';
+import { getMonthName } from '@/utils/dateUtils';
 
 interface PlanningNavigatorProps {
   currentMonth: number;

@@ -16,8 +16,8 @@ import Dashboard from '@/pages/dashboard';
 import Login from '@/pages/login';
 import NotFound from '@/pages/not-found';
 import Planning from '@/pages/planning';
-import Export from '@/pages/export'; // Fixed casing
-import Settings from '@/pages/settings'; // Fixed casing
+import Export from '@/pages/Export'; // Keep using uppercase version
+import Settings from '@/pages/Settings'; // Keep using uppercase version
 import Employees from '@/pages/Employees';
 import Statistics from '@/pages/Statistics';
 import Admin from '@/pages/Admin';

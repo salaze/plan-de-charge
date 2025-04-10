@@ -17,6 +17,7 @@ interface AuthContextType {
   logout: () => void;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  isLoading: boolean; // Added missing property
   updateUserRoles: (employeeId: string, newRole: UserRole) => void;
   updatePassword: (employeeId: string, newPassword: string) => boolean;
 }
@@ -37,8 +38,10 @@ export function useAuth() {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true); // Added loading state
 
   useEffect(() => {
+    setIsLoading(true);
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       try {
@@ -49,9 +52,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
         localStorage.removeItem('user');
       }
     }
+    setIsLoading(false);
   }, []);
 
   const login = async (username: string, password: string): Promise<boolean> => {
+    setIsLoading(true);
     try {
       if (username === 'admin' && password === 'admin123') {
         const adminUser = { username, role: 'admin' as UserRole };
@@ -93,6 +98,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } catch (error) {
       console.error('Login error:', error);
       toast.error('Une erreur est survenue lors de la connexion');
+    } finally {
+      setIsLoading(false);
     }
     
     return false;
@@ -155,6 +162,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     logout,
     isAuthenticated: !!user,
     isAdmin: user?.role === 'admin',
+    isLoading, // Added the isLoading property to the context value
     updateUserRoles,
     updatePassword
   };

@@ -17,8 +17,8 @@ import AdminLogin from "./pages/AdminLogin";
 
 const queryClient = new QueryClient();
 
-// Create a proper wrapper for TooltipProvider
-const TooltipWrapper = ({ children }: { children: React.ReactNode }) => {
+// Fix the TooltipWrapper to ensure it's a proper functional component
+const TooltipWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return <TooltipProvider>{children}</TooltipProvider>;
 };
 

@@ -9,7 +9,6 @@ import { AdminRoute } from "@/components/AdminRoute";
 import Index from "./pages/Index";
 import Employees from "./pages/Employees";
 import Statistics from "./pages/Statistics";
-import Export from "./pages/Export";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import Admin from "./pages/Admin";
@@ -44,14 +43,6 @@ const App = () => (
               element={
                 <AdminRoute>
                   <Statistics />
-                </AdminRoute>
-              } 
-            />
-            <Route 
-              path="/export" 
-              element={
-                <AdminRoute>
-                  <Export />
                 </AdminRoute>
               } 
             />

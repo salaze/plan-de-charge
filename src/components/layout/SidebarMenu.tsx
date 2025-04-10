@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Calendar, Users, BarChart, FileSpreadsheet, Settings, LogIn, LogOut, Shield } from 'lucide-react';
+import { Calendar, Users, BarChart, Settings, LogIn, LogOut, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -34,12 +34,6 @@ export function SidebarMenu() {
       icon: BarChart,
       label: 'Statistiques',
       path: '/statistics',
-      adminOnly: true
-    },
-    {
-      icon: FileSpreadsheet,
-      label: 'Export',
-      path: '/export',
       adminOnly: true
     },
     {

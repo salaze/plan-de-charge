@@ -1,5 +1,6 @@
+
 import { Employee, Status, DateRange } from '@/types';
-import { SummaryStats } from './types';
+import { SummaryStats } from '@/types';
 
 export const calculateEmployeeStats = (
   employee: Employee,
@@ -28,8 +29,8 @@ export const calculateEmployeeStats = (
     total: 0
   };
   
-  const startDate = new Date(dateRange.from);
-  const endDate = new Date(dateRange.to);
+  const startDate = new Date(dateRange.start);
+  const endDate = new Date(dateRange.end);
   let currentDate = new Date(startDate);
 
   while (currentDate <= endDate) {

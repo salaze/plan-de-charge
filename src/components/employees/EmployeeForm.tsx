@@ -1,23 +1,43 @@
+
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Employee } from '@/types';
-import { EmployeeNameField } from './form/EmployeeNameField';
-import { EmployeeJobField } from './form/EmployeeJobField';
-import { EmployeeContactField } from './form/EmployeeContactField';
-import { EmployeeUidField } from './form/EmployeeUidField';
-import { EmployeePasswordFields } from './form/EmployeePasswordFields';
 import { useEmployeeForm } from './form/useEmployeeForm';
 
 export interface EmployeeFormProps {
   employee?: Employee;
   onSave: (employee: Employee) => void;
   onClose: () => void;
-  open: boolean; // Added the missing 'open' property
+  open: boolean;
 }
 
 export const EmployeeForm: React.FC<EmployeeFormProps> = ({ employee, onSave, onClose, open }) => {
-  const { formData, setFormData, departments, password, setPassword, confirmPassword, setPasswordError, handleChange, handleRoleChange, handleDepartmentChange, validateForm, handleSubmit } = useEmployeeForm(employee);
+  const {
+    name,
+    setName,
+    uid,
+    setUid,
+    position,
+    setPosition,
+    department,
+    setDepartment,
+    role,
+    setRole,
+    password,
+    setPassword,
+    confirmPassword,
+    setConfirmPassword,
+    passwordError,
+    setPasswordError,
+    departments,
+    handleSubmit,
+    handleDepartmentChange,
+    handleRoleChange
+  } = useEmployeeForm({ employee, onSave, open });
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -37,8 +57,8 @@ export const EmployeeForm: React.FC<EmployeeFormProps> = ({ employee, onSave, on
               <Input
                 id="name"
                 name="name"
-                value={formData.name}
-                onChange={handleChange}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 placeholder="Nom de l'employé"
                 className="col-span-3"
                 required
@@ -53,8 +73,8 @@ export const EmployeeForm: React.FC<EmployeeFormProps> = ({ employee, onSave, on
                 id="email"
                 name="email"
                 type="email"
-                value={formData.email}
-                onChange={handleChange}
+                value={uid}
+                onChange={(e) => setUid(e.target.value)}
                 placeholder="Email de l'employé"
                 className="col-span-3"
               />
@@ -67,8 +87,8 @@ export const EmployeeForm: React.FC<EmployeeFormProps> = ({ employee, onSave, on
               <Input
                 id="position"
                 name="position"
-                value={formData.position}
-                onChange={handleChange}
+                value={position}
+                onChange={(e) => setPosition(e.target.value)}
                 placeholder="Poste occupé"
                 className="col-span-3"
               />
@@ -79,7 +99,7 @@ export const EmployeeForm: React.FC<EmployeeFormProps> = ({ employee, onSave, on
                 Département
               </Label>
               <Select 
-                value={formData.departmentId} 
+                value={department} 
                 onValueChange={handleDepartmentChange}
               >
                 <SelectTrigger className="col-span-3">
@@ -101,7 +121,7 @@ export const EmployeeForm: React.FC<EmployeeFormProps> = ({ employee, onSave, on
                 Rôle
               </Label>
               <Select 
-                value={formData.role} 
+                value={role} 
                 onValueChange={handleRoleChange}
               >
                 <SelectTrigger className="col-span-3">

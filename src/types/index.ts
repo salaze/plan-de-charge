@@ -1,3 +1,4 @@
+
 export type UserRole = 'admin' | 'employee';
 
 export interface User {
@@ -85,6 +86,9 @@ export interface Client {
 export interface DateRange {
   start: Date;
   end: Date;
+  // Add backwards compatibility for from/to
+  from?: Date;
+  to?: Date;
 }
 
 export type DayStatus = Schedule;
@@ -141,10 +145,12 @@ export interface SummaryStats {
   tpDays?: number;
   coordinatorDays?: number;
   otherAbsenceDays?: number;
+  otherDays?: number;
   regisseurDays?: number;
   demenagementDays?: number;
   permanenceDays?: number;
   projectStats?: Record<string, number>;
+  presencePct?: number;
 }
 
 // Constants for status colors and labels

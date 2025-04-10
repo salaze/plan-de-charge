@@ -1,114 +1,143 @@
 
 import { useState, useEffect } from 'react';
-import { Employee } from '@/types';
+import { Employee, Department } from '@/types';
+import { toast } from '@/hooks/toast';
 
-interface UseEmployeeFormProps {
+export interface UseEmployeeFormProps {
   employee?: Employee;
+  onSave: (employee: Employee) => void;
   open: boolean;
 }
 
-export function useEmployeeForm({ employee, open }: UseEmployeeFormProps) {
+export const useEmployeeForm = ({ employee, onSave, open }: UseEmployeeFormProps) => {
   const [name, setName] = useState(employee?.name || '');
   const [uid, setUid] = useState(employee?.uid || '');
+  const [email, setEmail] = useState(employee?.email || '');
   const [position, setPosition] = useState(employee?.position || '');
-  const [department, setDepartment] = useState(employee?.department || '');
+  const [department, setDepartment] = useState(employee?.departmentId || '');
+  const [role, setRole] = useState(employee?.role || 'employee');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [uidError, setUidError] = useState('');
-  const isNewEmployee = !employee?.id;
-  
-  const validatePassword = () => {
-    if (isNewEmployee || password) {
-      if (password.length < 6) {
-        setPasswordError('Le mot de passe doit contenir au moins 6 caractères');
-        return false;
-      }
-      
-      if (password !== confirmPassword) {
-        setPasswordError('Les mots de passe ne correspondent pas');
-        return false;
-      }
-    }
-    
-    setPasswordError('');
-    return true;
-  };
-  
-  const validateUid = () => {
-    if (!uid.trim()) {
-      setUidError('L\'UID est obligatoire');
-      return false;
-    }
-    
-    setUidError('');
-    return true;
-  };
-  
-  const resetForm = () => {
-    setName(employee?.name || '');
-    setUid(employee?.uid || '');
-    setPosition(employee?.position || '');
-    setDepartment(employee?.department || '');
-    setPassword('');
-    setConfirmPassword('');
-    setPasswordError('');
-    setUidError('');
-  };
-  
+  const [departments, setDepartments] = useState<Department[]>([]);
+
+  // Reset the form when the employee changes or when the modal is opened/closed
   useEffect(() => {
     if (open) {
-      resetForm();
+      setName(employee?.name || '');
+      setUid(employee?.uid || '');
+      setEmail(employee?.email || '');
+      setPosition(employee?.position || '');
+      setDepartment(employee?.departmentId || '');
+      setRole(employee?.role || 'employee');
+      setPassword('');
+      setConfirmPassword('');
+      setPasswordError('');
+      setUidError('');
     }
-  }, [open, employee]);
-  
-  const prepareEmployeeData = (): Employee | null => {
-    if (!name.trim()) return null;
-    
-    // Validate UID
-    if (!validateUid()) {
-      return null;
+  }, [employee, open]);
+
+  // Load departments
+  useEffect(() => {
+    // In a real app, fetch departments from API or database
+    // For now, using mock data
+    setDepartments([
+      { id: "dept1", name: "IT" },
+      { id: "dept2", name: "HR" },
+      { id: "dept3", name: "Finance" },
+      { id: "dept4", name: "Marketing" }
+    ]);
+  }, []);
+
+  const handleDepartmentChange = (value: string) => {
+    setDepartment(value);
+  };
+
+  const handleRoleChange = (value: string) => {
+    setRole(value as 'admin' | 'employee');
+  };
+
+  const validateForm = (): boolean => {
+    let isValid = true;
+
+    // Validate password
+    if (password || confirmPassword) {
+      if (password !== confirmPassword) {
+        setPasswordError("Les mots de passe ne correspondent pas");
+        isValid = false;
+      } else {
+        setPasswordError("");
+      }
     }
-    
-    // Vérifier le mot de passe uniquement si c'est un nouvel employé ou si on a mis un mot de passe
-    if ((isNewEmployee || password) && !validatePassword()) {
-      return null;
+
+    // Validate name
+    if (!name.trim()) {
+      toast({
+        title: "Erreur",
+        description: "Le nom est obligatoire",
+        variant: "destructive"
+      });
+      isValid = false;
     }
-    
+
+    return isValid;
+  };
+
+  const prepareEmployeeData = (): Employee => {
     const updatedEmployee: Employee = {
       id: employee?.id || '',
-      name: name.trim(),
-      uid: uid.trim(),
-      position: position.trim() || undefined,
-      department: department.trim() || undefined,
-      password: password || employee?.password,
-      schedule: employee?.schedule || []
+      name,
+      uid,
+      email,
+      position,
+      departmentId: department,
+      role: role as 'admin' | 'employee',
+      schedule: employee?.schedule || [],
     };
-    
-    // Si c'est un nouvel employé sans mot de passe spécifié, utiliser un mot de passe par défaut
-    if (isNewEmployee && !updatedEmployee.password) {
-      updatedEmployee.password = 'employee123';
+
+    if (password) {
+      updatedEmployee.password = password;
     }
-    
+
     return updatedEmployee;
   };
-  
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
+    const employeeData = prepareEmployeeData();
+    onSave(employeeData);
+  };
+
   return {
     name,
-    uid,
-    position,
-    department,
-    password,
-    confirmPassword,
-    passwordError,
-    uidError,
-    isNewEmployee,
     setName,
+    uid,
     setUid,
+    position,
     setPosition,
+    department,
     setDepartment,
+    role,
+    setRole,
+    password,
     setPassword,
+    confirmPassword,
     setConfirmPassword,
+    passwordError,
+    setPasswordError,
+    uidError,
+    isNewEmployee: !employee?.id,
+    departments,
+    handleDepartmentChange,
+    handleRoleChange,
+    handleSubmit,
+    validateForm,
     prepareEmployeeData
   };
-}
+};

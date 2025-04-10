@@ -32,6 +32,8 @@ export default function Login() {
     
     if (success) {
       navigate(from, { replace: true });
+    } else {
+      setError('Nom d\'utilisateur ou mot de passe incorrect');
     }
   };
 

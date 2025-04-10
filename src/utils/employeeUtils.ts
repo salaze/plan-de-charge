@@ -1,6 +1,6 @@
 
 import { Employee, StatusCode, DayPeriod } from '@/types';
-import { generateId } from './idUtils';
+import { generateId } from '@/lib/utils';
 
 /**
  * Creates an empty employee structure

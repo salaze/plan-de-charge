@@ -8,7 +8,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Label } from '@/components/ui/label';
 import { Lock, User, KeyRound, Info } from 'lucide-react';
-import { connectionLogService } from '@/services/supabase/connectionLogService';
 
 const AdminLogin = () => {
   const [username, setUsername] = useState('');
@@ -29,31 +28,7 @@ const AdminLogin = () => {
     const success = await login(username, password);
     
     if (success) {
-      try {
-        // Log the successful login
-        await connectionLogService.create({
-          userName: username,
-          eventType: 'login_success',
-          ipAddress: 'client-ip', // In a real app, you would get the actual IP
-          userAgent: navigator.userAgent
-        });
-      } catch (err) {
-        console.error('Failed to log connection:', err);
-      }
-      
       navigate('/admin');
-    } else {
-      try {
-        // Log the failed login attempt
-        await connectionLogService.create({
-          userName: username,
-          eventType: 'login_failed',
-          ipAddress: 'client-ip', // In a real app, you would get the actual IP
-          userAgent: navigator.userAgent
-        });
-      } catch (err) {
-        console.error('Failed to log connection attempt:', err);
-      }
     }
   };
 

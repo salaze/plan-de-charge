@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -29,22 +29,39 @@ interface LegendModalProps {
 
 export function LegendModal({ isOpen, onClose, projects }: LegendModalProps) {
   const { isAdmin } = useAuth();
+  const [statuses, setStatuses] = useState<StatusCode[]>([]);
   
-  // Récupérer les statuts disponibles depuis localStorage
-  const getAvailableStatuses = (): StatusCode[] => {
-    const savedData = localStorage.getItem('planningData');
-    const data = savedData ? JSON.parse(savedData) : { statuses: [] };
+  // Récupérer les statuts disponibles depuis localStorage avec réactivité
+  useEffect(() => {
+    const getAvailableStatuses = () => {
+      const savedData = localStorage.getItem('planningData');
+      const data = savedData ? JSON.parse(savedData) : { statuses: [] };
+      
+      // Si nous avons des statuts personnalisés, extraire les codes
+      if (data.statuses && data.statuses.length > 0) {
+        setStatuses(data.statuses.map((s: any) => s.code as StatusCode));
+      } else {
+        // Statuts par défaut
+        setStatuses(Object.keys(STATUS_LABELS).filter(status => status !== '') as StatusCode[]);
+      }
+    };
     
-    // Si nous avons des statuts personnalisés, extraire les codes
-    if (data.statuses && data.statuses.length > 0) {
-      return data.statuses.map((s: any) => s.code as StatusCode);
-    }
+    // Charger les statuts immédiatement
+    getAvailableStatuses();
     
-    // Statuts par défaut
-    return Object.keys(STATUS_LABELS).filter(status => status !== '') as StatusCode[];
-  };
-  
-  const statuses = getAvailableStatuses();
+    // Écouter les changements dans le localStorage
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'planningData') {
+        getAvailableStatuses();
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

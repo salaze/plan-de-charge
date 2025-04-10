@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -25,6 +25,58 @@ export function StatusSelectorEnhanced({
   const [highlightedStatus, setHighlightedStatus] = useState(isHighlighted);
   const [selectedProject, setSelectedProject] = useState(projectCode);
   const [selectedStatus, setSelectedStatus] = useState<StatusCode>(value);
+  const [availableStatuses, setAvailableStatuses] = useState<{ value: StatusCode; label: string }[]>([]);
+  
+  // Charger les statuts disponibles immédiatement et réagir aux changements
+  useEffect(() => {
+    const loadStatuses = () => {
+      const savedData = localStorage.getItem('planningData');
+      const data = savedData ? JSON.parse(savedData) : { statuses: [] };
+      
+      // Si nous avons des statuts personnalisés, les utiliser
+      if (data.statuses && data.statuses.length > 0) {
+        setAvailableStatuses([
+          { value: '', label: 'Aucun' },
+          ...data.statuses.map((status: any) => ({
+            value: status.code as StatusCode,
+            label: status.label
+          }))
+        ]);
+      } else {
+        // Sinon, utiliser les statuts par défaut
+        setAvailableStatuses([
+          { value: '', label: 'Aucun' },
+          { value: 'assistance', label: 'Assistance' },
+          { value: 'vigi', label: 'Vigi' },
+          { value: 'formation', label: 'Formation' },
+          { value: 'projet', label: 'Projet' },
+          { value: 'conges', label: 'Congés' },
+          { value: 'management', label: 'Management' },
+          { value: 'tp', label: 'Temps Partiel' },
+          { value: 'coordinateur', label: 'Coordinateur Vigi Ticket' },
+          { value: 'absence', label: 'Autre Absence' },
+          { value: 'regisseur', label: 'Régisseur' },
+          { value: 'demenagement', label: 'Déménagements' },
+        ]);
+      }
+    };
+    
+    // Charger les statuts immédiatement
+    loadStatuses();
+    
+    // Écouter les changements dans le localStorage
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'planningData') {
+        loadStatuses();
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
   
   const handleStatusChange = (newStatus: StatusCode) => {
     setSelectedStatus(newStatus);
@@ -33,47 +85,31 @@ export function StatusSelectorEnhanced({
     if (newStatus !== 'projet') {
       setSelectedProject('');
     }
+    
+    // Appliquer immédiatement si ce n'est pas un projet
+    if (newStatus !== 'projet') {
+      onChange(newStatus, highlightedStatus);
+    }
+  };
+  
+  const handleProjectChange = (projectCode: string) => {
+    setSelectedProject(projectCode);
+    
+    // Appliquer immédiatement le changement de projet
+    onChange(selectedStatus, highlightedStatus, projectCode);
+  };
+  
+  const handleHighlightChange = (checked: boolean) => {
+    setHighlightedStatus(checked);
+    
+    // Appliquer immédiatement la mise en évidence
+    onChange(selectedStatus, checked, selectedProject);
   };
   
   const handleSubmit = () => {
     const projectToUse = selectedStatus === 'projet' ? selectedProject : undefined;
     onChange(selectedStatus, highlightedStatus, projectToUse);
   };
-  
-  // Récupérer les statuts disponibles depuis localStorage
-  const getAvailableStatuses = (): { value: StatusCode; label: string }[] => {
-    const savedData = localStorage.getItem('planningData');
-    const data = savedData ? JSON.parse(savedData) : { statuses: [] };
-    
-    // Si nous avons des statuts personnalisés, les utiliser
-    if (data.statuses && data.statuses.length > 0) {
-      return [
-        { value: '', label: 'Aucun' },
-        ...data.statuses.map((status: any) => ({
-          value: status.code as StatusCode,
-          label: status.label
-        }))
-      ];
-    }
-    
-    // Sinon, utiliser les statuts par défaut
-    return [
-      { value: '', label: 'Aucun' },
-      { value: 'assistance', label: 'Assistance' },
-      { value: 'vigi', label: 'Vigi' },
-      { value: 'formation', label: 'Formation' },
-      { value: 'projet', label: 'Projet' },
-      { value: 'conges', label: 'Congés' },
-      { value: 'management', label: 'Management' },
-      { value: 'tp', label: 'Temps Partiel' },
-      { value: 'coordinateur', label: 'Coordinateur Vigi Ticket' },
-      { value: 'absence', label: 'Autre Absence' },
-      { value: 'regisseur', label: 'Régisseur' },
-      { value: 'demenagement', label: 'Déménagements' },
-    ];
-  };
-  
-  const statuses = getAvailableStatuses();
   
   return (
     <div className="space-y-6">
@@ -84,7 +120,7 @@ export function StatusSelectorEnhanced({
           onValueChange={(value) => handleStatusChange(value as StatusCode)}
           className="grid grid-cols-2 gap-2"
         >
-          {statuses.map((status) => (
+          {availableStatuses.map((status) => (
             <div 
               key={status.value} 
               className="flex items-center space-x-2 rounded-md border p-2 hover:bg-secondary/50 transition-colors"
@@ -113,7 +149,7 @@ export function StatusSelectorEnhanced({
           <Label>Sélectionner un projet</Label>
           <Select 
             value={selectedProject} 
-            onValueChange={setSelectedProject}
+            onValueChange={handleProjectChange}
           >
             <SelectTrigger>
               <SelectValue placeholder="Choisir un projet" />
@@ -139,16 +175,18 @@ export function StatusSelectorEnhanced({
         <Checkbox 
           id="highlight" 
           checked={highlightedStatus}
-          onCheckedChange={(checked) => setHighlightedStatus(checked === true)}
+          onCheckedChange={(checked) => handleHighlightChange(checked === true)}
         />
         <Label htmlFor="highlight" className="cursor-pointer">
           Entourer de noir (mettre en évidence)
         </Label>
       </div>
       
-      <Button onClick={handleSubmit} className="w-full">
-        Appliquer
-      </Button>
+      {selectedStatus === 'projet' && !selectedProject && (
+        <Button onClick={handleSubmit} className="w-full">
+          Appliquer
+        </Button>
+      )}
     </div>
   );
 }

@@ -97,6 +97,7 @@ export function PlanningGrid({
   const handleStatusChange = (status: StatusCode, isHighlighted?: boolean, projectCode?: string) => {
     if (!selectedCell) return;
     
+    // Appliquer immédiatement le changement
     onStatusChange(
       selectedCell.employeeId,
       selectedCell.date,
@@ -106,7 +107,13 @@ export function PlanningGrid({
       projectCode
     );
     
+    // Fermer le dialogue immédiatement pour une expérience plus réactive
     setSelectedCell(null);
+    
+    const periodLabel = selectedPeriod === 'AM' ? 'matin' : selectedPeriod === 'PM' ? 'après-midi' : 'journée';
+    toast.success(`Statut ${periodLabel} modifié avec succès`, {
+      duration: 2000, // Réduire la durée du toast pour plus de réactivité
+    });
   };
   
   const handleCloseDialog = () => {

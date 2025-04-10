@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { Layout } from '@/components/layout/Layout';
 import { MonthSelector } from '@/components/calendar/MonthSelector';
@@ -71,10 +71,15 @@ const Index = () => {
   const [filters, setFilters] = useState<FilterOptions>({});
   const [isLegendOpen, setIsLegendOpen] = useState(false);
   
-  // Sauvegarde automatique des données
+  // Sauvegarde automatique des données - maintenant avec debounce pour éviter trop d'écritures
+  const saveDataToLocalStorage = useCallback((updatedData: MonthData) => {
+    localStorage.setItem('planningData', JSON.stringify(updatedData));
+  }, []);
+  
+  // Sauvegarde immédiate lors des changements
   useEffect(() => {
-    localStorage.setItem('planningData', JSON.stringify(data));
-  }, [data]);
+    saveDataToLocalStorage(data);
+  }, [data, saveDataToLocalStorage]);
   
   const handleMonthChange = (year: number, month: number) => {
     setCurrentYear(year);
@@ -141,14 +146,18 @@ const Index = () => {
         return employee;
       });
       
-      return {
+      const updatedData = {
         ...prevData,
         employees: updatedEmployees
       };
+      
+      // Sauvegarder immédiatement les données mises à jour
+      saveDataToLocalStorage(updatedData);
+      
+      return updatedData;
     });
     
-    const periodLabel = period === 'AM' ? 'matin' : period === 'PM' ? 'après-midi' : 'journée';
-    toast.success(`Statut ${periodLabel} modifié avec succès`);
+    // Le toast est maintenant géré dans PlanningGrid pour une meilleure réactivité
   };
   
   return (

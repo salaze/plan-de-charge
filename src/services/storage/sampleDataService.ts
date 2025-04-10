@@ -1,3 +1,4 @@
+
 import { Department, Employee, Project } from '@/types';
 import { generateId } from '@/utils/idUtils'; // Direct import from the source
 

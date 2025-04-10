@@ -42,6 +42,6 @@ export function isToday(date: Date): boolean {
   );
 }
 
-// Import and re-export generateId from the correct location
+// Import and re-export generateId from idUtils
 import { generateId } from '@/utils/idUtils';
 export { generateId };

@@ -30,15 +30,30 @@ export async function checkSupabaseTables() {
       }
     };
     
+    // Add retry mechanism for more reliability
+    const checkTableWithRetry = async (tableName: ValidTableName, retries = 1) => {
+      for (let i = 0; i <= retries; i++) {
+        const result = await checkTable(tableName);
+        if (result) return true;
+        
+        if (i < retries) {
+          // Wait a bit longer between retries
+          await new Promise(resolve => setTimeout(resolve, 500));
+          console.log(`Retrying check for ${tableName}, attempt ${i + 2}`);
+        }
+      }
+      return false;
+    };
+    
     try {
-      // Check each table with a small delay between requests to avoid rate limiting
-      const statusCheck = await checkTable("statuts");
-      await new Promise(resolve => setTimeout(resolve, 100)); 
+      // Check each table with sequential execution to avoid rate limiting issues
+      const statusCheck = await checkTableWithRetry("statuts");
+      await new Promise(resolve => setTimeout(resolve, 200)); 
       
-      const employesCheck = await checkTable("employes");
-      await new Promise(resolve => setTimeout(resolve, 100)); 
+      const employesCheck = await checkTableWithRetry("employes");
+      await new Promise(resolve => setTimeout(resolve, 200)); 
       
-      const scheduleCheck = await checkTable("employe_schedule");
+      const scheduleCheck = await checkTableWithRetry("employe_schedule");
       
       console.log("Supabase tables check complete");
       

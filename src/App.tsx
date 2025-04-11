@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AdminRoute } from "@/components/AdminRoute";
 import { useEffect, useState } from "react";
@@ -32,6 +32,7 @@ const TooltipWrapper = ({ children }: { children: React.ReactNode }) => {
 
 const App = () => {
   const [supabaseInitialized, setSupabaseInitialized] = useState<boolean>(false);
+  const [initError, setInitError] = useState<boolean>(false);
   
   // Initialize Supabase tables check
   useEffect(() => {
@@ -42,6 +43,7 @@ const App = () => {
       } catch (error) {
         console.error("Failed to initialize Supabase:", error);
         // Still set to true so the app can continue loading even if Supabase is not available
+        setInitError(true);
         setSupabaseInitialized(true);
       }
     };

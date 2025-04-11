@@ -30,12 +30,14 @@ export async function checkSupabaseTables() {
       }
     };
     
-    // Check tables in sequence to avoid rate limiting
     try {
+      // Check each table with a small delay between requests to avoid rate limiting
       const statusCheck = await checkTable("statuts");
-      const employesCheck = await checkTable("employes");
-      // Add a short delay between checks to avoid rate limiting
       await new Promise(resolve => setTimeout(resolve, 100)); 
+      
+      const employesCheck = await checkTable("employes");
+      await new Promise(resolve => setTimeout(resolve, 100)); 
+      
       const scheduleCheck = await checkTable("employe_schedule");
       
       console.log("Supabase tables check complete");

@@ -48,9 +48,9 @@ export function useSyncStatus() {
     };
   }, [checkConnection]);
   
-  // Fix the TypeScript error by using a concrete type with no generics
+  // Fix TypeScript error by breaking the recursive type with a specific non-generic type
   const syncWithSupabase = useCallback(async (
-    data: any, // Use any to avoid the deep type instantiation issue
+    data: Record<string, any>, // Using Record<string, any> which is more specific than just 'any'
     table: SupabaseTable,
     idField: string = 'id'
   ) => {

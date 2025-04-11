@@ -22,24 +22,29 @@ export function useSupabaseSchedule() {
       setIsLoading(true);
       setError(null);
 
-      // Créer un ID unique basé sur l'employé, la date et la période
-      const entryId = `${employeeId}_${date}_${period}`;
+      // Générer un UUID valide pour l'entrée au lieu d'utiliser une chaîne simple
+      // En assurant que l'ID est un UUID valide pour Supabase
+      const entryId = generateId(); // Utiliser la fonction generateId pour créer un UUID valide
 
       if (status === '') {
-        // Si le statut est vide, supprimer l'entrée
+        // Si le statut est vide, supprimer l'entrée en utilisant une combinaison de champs uniques
         const { error: deleteError } = await supabase
           .from('employe_schedule')
           .delete()
-          .eq('id', entryId);
+          .eq('employe_id', employeeId)
+          .eq('date', date)
+          .eq('period', period);
 
         if (deleteError) throw deleteError;
         return true;
       } else {
-        // Vérifier si l'entrée existe déjà
+        // Vérifier si l'entrée existe déjà en utilisant les champs uniques
         const { data: existingEntry } = await supabase
           .from('employe_schedule')
           .select('*')
-          .eq('id', entryId)
+          .eq('employe_id', employeeId)
+          .eq('date', date)
+          .eq('period', period)
           .maybeSingle();
 
         if (existingEntry) {
@@ -51,15 +56,15 @@ export function useSupabaseSchedule() {
               project_code: projectCode,
               is_highlighted: isHighlighted
             })
-            .eq('id', entryId);
+            .eq('id', existingEntry.id); // Utiliser l'ID existant
 
           if (updateError) throw updateError;
         } else {
-          // Créer une nouvelle entrée
+          // Créer une nouvelle entrée avec un UUID valide
           const { error: insertError } = await supabase
             .from('employe_schedule')
             .insert({
-              id: entryId,
+              id: entryId, // ID généré qui est un UUID valide
               employe_id: employeeId,
               date: date,
               period: period,

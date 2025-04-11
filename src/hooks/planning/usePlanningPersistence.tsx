@@ -4,6 +4,7 @@ import { MonthData } from '@/types';
 import { toast } from 'sonner';
 import { useSyncStatus } from '@/hooks/useSyncStatus';
 import { SupabaseTable } from '@/types/supabase';
+import { generateId } from '@/utils';
 
 export const usePlanningPersistence = () => {
   // Use useSyncStatus hook within the component context
@@ -26,9 +27,14 @@ export const usePlanningPersistence = () => {
         try {
           // Only sync if we have an id
           if (employee.id) {
+            // Assurez-vous que l'ID est un UUID valide ou générez-en un nouveau si nécessaire
+            const employeeUuid = employee.id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i) 
+              ? employee.id 
+              : generateId();
+              
             syncWithSupabase(
               {
-                id: employee.id,
+                id: employeeUuid, // Utiliser un UUID valide
                 nom: employee.name.split(' ').pop() || employee.name,
                 prenom: employee.name.split(' ').slice(0, -1).join(' ') || undefined,
                 departement: employee.department
@@ -39,13 +45,13 @@ export const usePlanningPersistence = () => {
             // Sync schedule entries for this employee
             employee.schedule.forEach(scheduleItem => {
               if (scheduleItem.date && scheduleItem.period) {
-                // Créer un ID unique basé sur l'employé, la date et la période
-                const entryId = `${employee.id}_${scheduleItem.date}_${scheduleItem.period}`;
+                // Générer un UUID unique pour chaque entrée de planning
+                const entryId = generateId();
                 
                 syncWithSupabase(
                   {
-                    id: entryId,
-                    employe_id: employee.id,
+                    id: entryId, // Utiliser un UUID valide
+                    employe_id: employeeUuid, // S'assurer que l'employe_id est aussi un UUID valide
                     date: scheduleItem.date,
                     period: scheduleItem.period,
                     statut_code: scheduleItem.status,

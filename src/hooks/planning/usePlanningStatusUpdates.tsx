@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { MonthData, StatusCode, DayPeriod } from '@/types';
 import { useSupabaseSchedule } from '../useSupabaseSchedule';
 import { usePlanningPersistence } from './usePlanningPersistence';
+import { generateId } from '@/utils';
 
 export const usePlanningStatusUpdates = (
   data: MonthData,
@@ -27,9 +28,15 @@ export const usePlanningStatusUpdates = (
     }
     
     try {
-      // Mettre à jour dans Supabase
+      // Vérifier si l'employeeId est un UUID valide
+      // Si ce n'est pas un UUID valide, nous devons générer un nouvel ID
+      const validEmployeeId = employeeId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i) 
+        ? employeeId 
+        : generateId();
+      
+      // Mettre à jour dans Supabase avec un ID valide
       await updateScheduleEntry(
-        employeeId, 
+        validEmployeeId,
         date, 
         status, 
         period, 

@@ -29,7 +29,7 @@ export function useStatusOptions(defaultStatuses: StatusCode[] = []) {
           ...customStatuses
         ]);
       } else {
-        // Sinon, utiliser les statuts par défaut
+        // Sinon, utiliser les statuts par défaut fournis
         setAvailableStatuses([
           { value: 'none', label: 'Aucun' },
           { value: 'assistance', label: 'Assistance' },
@@ -59,8 +59,13 @@ export function useStatusOptions(defaultStatuses: StatusCode[] = []) {
     
     window.addEventListener('storage', handleStorageChange);
     
+    // Créer un événement personnalisé pour forcer le rechargement des statuts
+    const handleCustomEvent = () => loadStatuses();
+    window.addEventListener('statusesUpdated', handleCustomEvent);
+    
     return () => {
       window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('statusesUpdated', handleCustomEvent);
     };
   }, [defaultStatuses]);
   

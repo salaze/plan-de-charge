@@ -30,12 +30,17 @@ export const useAvailableStatuses = (defaultStatuses: StatusCode[] = []) => {
       }
     };
     
-    // Ajouter l'écouteur d'événement pour le localStorage
-    window.addEventListener('storage', handleStorageChange);
+    // Écouter l'événement personnalisé pour les mises à jour de statuts
+    const handleCustomEvent = () => loadStatuses();
     
-    // Nettoyer l'écouteur lors du démontage
+    // Ajouter les écouteurs d'événements
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('statusesUpdated', handleCustomEvent);
+    
+    // Nettoyer les écouteurs lors du démontage
     return () => {
       window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('statusesUpdated', handleCustomEvent);
     };
   }, [defaultStatuses]);
   

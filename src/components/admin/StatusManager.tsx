@@ -65,6 +65,10 @@ export function StatusManager({ statuses, onStatusesChange }: StatusManagerProps
           STATUS_COLORS[status.code] = status.color;
         }
       });
+      
+      // Déclencher un événement personnalisé pour informer les autres composants
+      const event = new CustomEvent('statusesUpdated');
+      window.dispatchEvent(event);
     }
   }, [statuses]);
   
@@ -148,6 +152,11 @@ export function StatusManager({ statuses, onStatusesChange }: StatusManagerProps
     }
     
     onStatusesChange(updatedStatuses);
+    
+    // Déclencher un événement personnalisé pour informer les autres composants
+    const event = new CustomEvent('statusesUpdated');
+    window.dispatchEvent(event);
+    
     setFormOpen(false);
   };
   

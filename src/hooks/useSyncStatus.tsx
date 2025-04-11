@@ -66,15 +66,18 @@ export function useSyncStatus() {
       const id = data[idField];
       const idString = id ? String(id) : '';
       
-      // Use explicit typing for the query to avoid deep instantiation
-      const checkResponse = await supabase
+      // Using type assertion to avoid TypeScript recursion
+      type BasicResponse = { data: any | null; error: any | null };
+      
+      // Check if the record exists with explicit typing
+      const checkResult = await supabase
         .from(table)
         .select(idField)
         .eq(idField, idString)
         .maybeSingle();
       
-      const existingData = checkResponse.data;
-      const checkError = checkResponse.error;
+      const existingData = checkResult.data;
+      const checkError = checkResult.error;
       
       if (checkError) throw checkError;
       
@@ -82,23 +85,23 @@ export function useSyncStatus() {
       
       if (existingData) {
         // Update existing record with explicit typing
-        const updateResponse = await supabase
+        const updateResult = await supabase
           .from(table)
           .update(data)
           .eq(idField, idString)
           .select();
           
-        if (updateResponse.error) throw updateResponse.error;
-        result = updateResponse.data;
+        if (updateResult.error) throw updateResult.error;
+        result = updateResult.data;
       } else {
         // Create new record with explicit typing
-        const insertResponse = await supabase
+        const insertResult = await supabase
           .from(table)
           .insert(data)
           .select();
           
-        if (insertResponse.error) throw insertResponse.error;
-        result = insertResponse.data;
+        if (insertResult.error) throw insertResult.error;
+        result = insertResult.data;
       }
       
       setLastSyncTime(new Date());

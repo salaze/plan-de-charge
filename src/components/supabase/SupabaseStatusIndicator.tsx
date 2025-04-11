@@ -16,8 +16,7 @@ interface SupabaseStatusIndicatorProps {
 }
 
 export const SupabaseStatusIndicator: React.FC<SupabaseStatusIndicatorProps> = () => {
-  const syncStatus = useSyncStatus();
-  const { isConnected, lastSyncTime, checkConnection, isSyncing } = syncStatus;
+  const { isConnected, lastSyncTime, checkConnection, isSyncing } = useSyncStatus();
   
   const handleManualCheck = async () => {
     const connected = await checkConnection();

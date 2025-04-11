@@ -54,7 +54,7 @@ export function useSyncStatus() {
     };
   }, [checkConnection]);
   
-  // Fonction pour forcer une synchronisation manuelle
+  // Fonction pour synchroniser avec Supabase de manière sûre
   const syncWithSupabase = useCallback(async (data: any, table: string, idField: string = 'id') => {
     if (!isConnected) {
       toast.error("Impossible de synchroniser: pas de connexion à Supabase");
@@ -64,14 +64,12 @@ export function useSyncStatus() {
     setIsSyncing(true);
     
     try {
-      // We need to cast dynamically for table selection
-      const query = (supabase
+      // Utiliser as any pour contourner les restrictions TypeScript temporairement
+      const { data: existingData, error: checkError } = await (supabase as any)
         .from(table)
         .select(idField)
         .eq(idField, data[idField])
-        .maybeSingle() as any);
-      
-      const { data: existingData, error: checkError } = await query;
+        .maybeSingle();
       
       if (checkError) throw checkError;
       
@@ -79,20 +77,20 @@ export function useSyncStatus() {
       
       if (existingData) {
         // Mise à jour d'un enregistrement existant
-        const { data: updatedData, error: updateError } = await (supabase
+        const { data: updatedData, error: updateError } = await (supabase as any)
           .from(table)
           .update(data)
           .eq(idField, data[idField])
-          .select() as any);
+          .select();
           
         if (updateError) throw updateError;
         result = updatedData;
       } else {
         // Création d'un nouvel enregistrement
-        const { data: insertedData, error: insertError } = await (supabase
+        const { data: insertedData, error: insertError } = await (supabase as any)
           .from(table)
           .insert([data])
-          .select() as any);
+          .select();
           
         if (insertError) throw insertError;
         result = insertedData;
@@ -119,10 +117,10 @@ export function useSyncStatus() {
     setIsSyncing(true);
     
     try {
-      const { data, error } = await (supabase
+      const { data, error } = await (supabase as any)
         .from(table)
         .select('*')
-        .order('created_at', { ascending: false }) as any);
+        .order('created_at', { ascending: false });
         
       if (error) throw error;
       

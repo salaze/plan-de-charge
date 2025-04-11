@@ -25,10 +25,10 @@ export const useSupabaseProjects = () => {
     try {
       setLoading(true);
       // Use type assertion to handle dynamic table access
-      const { data, error } = await (supabase
+      const { data, error } = await (supabase as any)
         .from('projets')
         .select('*')
-        .order('code') as any);
+        .order('code');
 
       if (error) {
         throw error;
@@ -85,10 +85,10 @@ export const useSupabaseProjects = () => {
       };
 
       // Use type assertion for dynamic table access
-      const { data, error } = await (supabase
+      const { data, error } = await (supabase as any)
         .from('projets')
         .insert([supabaseProject])
-        .select() as any);
+        .select();
 
       if (error) {
         throw error;
@@ -119,11 +119,11 @@ export const useSupabaseProjects = () => {
   const updateProject = async (id: string, project: Partial<SupabaseProject>) => {
     try {
       // Use type assertion for dynamic table access
-      const { data, error } = await (supabase
+      const { data, error } = await (supabase as any)
         .from('projets')
         .update(project)
         .eq('id', id)
-        .select() as any);
+        .select();
 
       if (error) {
         throw error;
@@ -154,10 +154,10 @@ export const useSupabaseProjects = () => {
   const deleteProject = async (id: string) => {
     try {
       // Use type assertion for dynamic table access
-      const { error } = await (supabase
+      const { error } = await (supabase as any)
         .from('projets')
         .delete()
-        .eq('id', id) as any);
+        .eq('id', id);
 
       if (error) {
         throw error;

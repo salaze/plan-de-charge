@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AdminRoute } from "@/components/AdminRoute";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { checkSupabaseTables } from "@/utils/initSupabase";
 import Index from "./pages/Index";
 import Employees from "./pages/Employees";
@@ -31,18 +31,32 @@ const TooltipWrapper = ({ children }: { children: React.ReactNode }) => {
 };
 
 const App = () => {
+  const [supabaseInitialized, setSupabaseInitialized] = useState<boolean>(false);
+  
   // Initialize Supabase tables check
   useEffect(() => {
     const initializeSupabase = async () => {
       try {
         await checkSupabaseTables();
+        setSupabaseInitialized(true);
       } catch (error) {
         console.error("Failed to initialize Supabase:", error);
+        // Still set to true so the app can continue loading even if Supabase is not available
+        setSupabaseInitialized(true);
       }
     };
     
     initializeSupabase();
   }, []);
+  
+  // Show a very minimal loading state while initializing Supabase
+  if (!supabaseInitialized) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
   
   return (
     <QueryClientProvider client={queryClient}>

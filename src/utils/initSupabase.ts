@@ -34,6 +34,8 @@ export async function checkSupabaseTables() {
     try {
       const statusCheck = await checkTable("statuts");
       const employesCheck = await checkTable("employes");
+      // Add a short delay between checks to avoid rate limiting
+      await new Promise(resolve => setTimeout(resolve, 100)); 
       const scheduleCheck = await checkTable("employe_schedule");
       
       console.log("Supabase tables check complete");

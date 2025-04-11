@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Database, Cloud, CloudOff, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { 
@@ -11,14 +11,17 @@ import {
 import { Button } from '@/components/ui/button';
 import { checkSupabaseTables } from '@/utils/initSupabase';
 
-export function SupabaseStatusIndicator() {
-  // Use React.useState instead of the direct import to avoid potential issues
-  const [isChecking, setIsChecking] = React.useState(false);
-  const [isConnected, setIsConnected] = React.useState<boolean | null>(null);
-  const [lastSyncTime, setLastSyncTime] = React.useState<Date | null>(null);
+interface SupabaseStatusIndicatorProps {
+  // Add any props if needed
+}
+
+export const SupabaseStatusIndicator: React.FC<SupabaseStatusIndicatorProps> = () => {
+  const [isChecking, setIsChecking] = useState(false);
+  const [isConnected, setIsConnected] = useState<boolean | null>(null);
+  const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
   
   // Define a standalone check connection function
-  const checkConnection = React.useCallback(async () => {
+  const checkConnection = useCallback(async () => {
     setIsChecking(true);
     try {
       const connected = await checkSupabaseTables();
@@ -37,7 +40,7 @@ export function SupabaseStatusIndicator() {
   }, []);
   
   // Check connection on component mount
-  React.useEffect(() => {
+  useEffect(() => {
     let isMounted = true;
     
     const checkInitialConnection = async () => {
@@ -141,4 +144,4 @@ export function SupabaseStatusIndicator() {
       </Tooltip>
     </TooltipProvider>
   );
-}
+};

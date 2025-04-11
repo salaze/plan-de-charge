@@ -52,7 +52,7 @@ export async function syncTableData<T extends SupabaseTable>(
           return await updateEmploye(idValue, data as Partial<EmployeData>);
         case 'employe_schedule':
           return await updateSchedule(idValue, data as Partial<ScheduleData>);
-        case 'Taches':
+        case 'taches':
           return await updateTache(idValue, data as Partial<TacheData>);
         case 'connection_logs':
           return await updateConnectionLog(idValue, data as Partial<ConnectionLogData>);
@@ -71,7 +71,7 @@ export async function syncTableData<T extends SupabaseTable>(
           return await insertEmploye(data as EmployeData);
         case 'employe_schedule':
           return await insertSchedule(data as ScheduleData);
-        case 'Taches':
+        case 'taches':
           return await insertTache(data as TacheData);
         case 'connection_logs':
           return await insertConnectionLog(data as ConnectionLogData);

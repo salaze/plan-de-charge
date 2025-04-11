@@ -185,7 +185,7 @@ export async function updateSchedule(idValue: string, data: Partial<ScheduleData
 export async function insertTache(data: TacheData): Promise<SyncResult> {
   try {
     const result = await supabase
-      .from('Taches')
+      .from('taches')
       .insert({
         created_at: data.created_at,
         id: parseInt(data.id || '0') // Convert string id to number
@@ -195,7 +195,7 @@ export async function insertTache(data: TacheData): Promise<SyncResult> {
     if (result.error) throw result.error;
     return { success: true, data: result.data };
   } catch (error) {
-    console.error(`Error inserting record into Taches:`, error);
+    console.error(`Error inserting record into taches:`, error);
     return { success: false, error };
   }
 }
@@ -203,7 +203,7 @@ export async function insertTache(data: TacheData): Promise<SyncResult> {
 export async function updateTache(idValue: string, data: Partial<TacheData>): Promise<SyncResult> {
   try {
     const result = await supabase
-      .from('Taches')
+      .from('taches')
       .update({
         created_at: data.created_at
       })
@@ -213,7 +213,7 @@ export async function updateTache(idValue: string, data: Partial<TacheData>): Pr
     if (result.error) throw result.error;
     return { success: true, data: result.data };
   } catch (error) {
-    console.error(`Error updating record in Taches:`, error);
+    console.error(`Error updating record in taches:`, error);
     return { success: false, error };
   }
 }

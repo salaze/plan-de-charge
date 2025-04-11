@@ -52,6 +52,15 @@ export interface ConnectionLogData {
   created_at?: string;
 }
 
+export interface ProjetData {
+  id?: string;
+  code: string;
+  name: string;
+  color: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 // Define a simple interface for the return type of sync functions
 export interface SyncResult {
   success: boolean;
@@ -83,10 +92,10 @@ export type TableDataType = {
   'statuts': StatutData;
   'employes': EmployeData;
   'employe_schedule': ScheduleData;
-  'Taches': TacheData;
+  'taches': TacheData;
   'connection_logs': ConnectionLogData;
+  'projets': ProjetData;
 }
 
-export type TableDataTypes = {
-  [K in SupabaseTable]: TableDataType[K];
-}
+// Define an explicit mapping for TableDataTypes
+export type TableDataTypes<T extends SupabaseTable> = TableDataType[T];

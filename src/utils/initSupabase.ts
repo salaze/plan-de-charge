@@ -1,13 +1,12 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { SupabaseTable } from '@/types/supabase';
 
 export async function checkSupabaseTables() {
   try {
     console.log("Checking Supabase tables...");
     
     // Try to check tables in a safer way that handles potential failures gracefully
-    const checkTable = async (tableName: SupabaseTable) => {
+    const checkTable = async (tableName: string) => {
       try {
         const { data, error } = await supabase
           .from(tableName)

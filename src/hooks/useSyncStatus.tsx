@@ -66,43 +66,38 @@ export function useSyncStatus() {
       const id = data[idField];
       const idString = id ? String(id) : '';
       
-      // Avoid using maybeSingle() which can trigger type recursion
-      // Instead, use simpler query approach
-      const checkResponse = await supabase
+      // Use the most basic possible approach to avoid type recursion
+      let result;
+      
+      // First check if the record exists
+      const { data: checkData, error: checkError } = await supabase
         .from(table)
         .select(idField)
         .eq(idField, idString);
-        
-      if (checkResponse.error) throw checkResponse.error;
       
-      // Check if any data returned instead of using maybeSingle()
-      const existingData = checkResponse.data && checkResponse.data.length > 0 
-        ? checkResponse.data[0] 
-        : null;
-        
-      let result;
+      if (checkError) throw checkError;
       
-      if (existingData) {
-        // Update existing record with a simpler approach
-        const updateResponse = await supabase
+      const recordExists = checkData && checkData.length > 0;
+      
+      if (recordExists) {
+        // Update existing record
+        const { error: updateError } = await supabase
           .from(table)
           .update(data)
           .eq(idField, idString);
           
-        if (updateResponse.error) throw updateResponse.error;
-        result = updateResponse.data;
+        if (updateError) throw updateError;
       } else {
-        // Create new record with a simpler approach
-        const insertResponse = await supabase
+        // Create new record
+        const { error: insertError } = await supabase
           .from(table)
           .insert(data);
           
-        if (insertResponse.error) throw insertResponse.error;
-        result = insertResponse.data;
+        if (insertError) throw insertError;
       }
       
       setLastSyncTime(new Date());
-      return result;
+      return true;
     } catch (error) {
       console.error(`Erreur lors de la synchronisation avec Supabase (table ${table}):`, error);
       return false;
@@ -121,16 +116,15 @@ export function useSyncStatus() {
     setIsSyncing(true);
     
     try {
-      // Use a simpler approach avoiding complex type instantiation
-      const response = await supabase
+      // Use the most basic approach to avoid type recursion
+      const { data, error } = await supabase
         .from(table)
-        .select('*')
-        .order('created_at', { ascending: false });
-        
-      if (response.error) throw response.error;
+        .select('*');
+      
+      if (error) throw error;
       
       setLastSyncTime(new Date());
-      return response.data;
+      return data;
     } catch (error) {
       console.error(`Erreur lors de la récupération depuis Supabase (table ${table}):`, error);
       return null;

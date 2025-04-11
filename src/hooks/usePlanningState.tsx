@@ -1,9 +1,10 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import { MonthData, StatusCode, DayPeriod } from '@/types';
+import { MonthData, StatusCode, DayPeriod, FilterOptions } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { createSampleData } from '@/utils';
+import { filterData } from '@/utils/dataFilterUtils';
 
 export const usePlanningState = () => {
   const { isAdmin } = useAuth();
@@ -44,8 +45,17 @@ export const usePlanningState = () => {
   
   const [currentYear, setCurrentYear] = useState(data.year || new Date().getFullYear());
   const [currentMonth, setCurrentMonth] = useState(typeof data.month === 'number' ? data.month : new Date().getMonth());
-  const [filters, setFilters] = useState({});
+  const [filters, setFilters] = useState<FilterOptions>({});
   const [isLegendOpen, setIsLegendOpen] = useState(false);
+
+  // Données filtrées basées sur les filtres appliqués
+  const [filteredData, setFilteredData] = useState<MonthData>(data);
+
+  // Appliquer les filtres lorsqu'ils changent
+  useEffect(() => {
+    const filtered = filterData(data, filters);
+    setFilteredData(filtered);
+  }, [data, filters]);
 
   function createDefaultData() {
     const sampleData = createSampleData();
@@ -149,15 +159,34 @@ export const usePlanningState = () => {
     });
   };
 
+  // Gestionnaire pour mettre à jour les filtres
+  const handleFiltersChange = (newFilters: FilterOptions) => {
+    setFilters(newFilters);
+    
+    // Afficher un toast pour indiquer que les filtres ont été appliqués
+    if (Object.keys(newFilters).length > 0 && 
+        (newFilters.employeeId || 
+         newFilters.projectCode || 
+         (newFilters.statusCodes && newFilters.statusCodes.length) || 
+         newFilters.startDate || 
+         newFilters.endDate)) {
+      toast.success("Filtres appliqués");
+    } else {
+      toast.info("Filtres réinitialisés");
+    }
+  };
+
   return {
-    data,
+    data: filteredData, // Utiliser les données filtrées
+    originalData: data, // Conserver l'accès aux données originales si nécessaire
     currentYear,
     currentMonth,
     filters,
     isLegendOpen,
     setIsLegendOpen,
     handleMonthChange,
-    handleStatusChange
+    handleStatusChange,
+    handleFiltersChange
   };
 };
 

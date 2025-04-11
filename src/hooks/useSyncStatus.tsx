@@ -48,7 +48,7 @@ export function useSyncStatus() {
     };
   }, [checkConnection]);
   
-  // Sync function using type assertions - simplified to avoid deep type instantiation
+  // Sync function with simplified typing to avoid deep type instantiation
   const syncWithSupabase = useCallback(async (
     data: any,
     table: SupabaseTable,
@@ -104,7 +104,7 @@ export function useSyncStatus() {
     }
   }, [isConnected]);
   
-  // Function to fetch data from Supabase with proper type annotations
+  // Function to fetch data from Supabase with simpler type annotations
   const fetchFromSupabase = useCallback(async (table: SupabaseTable) => {
     if (!isConnected) {
       console.error("Impossible de récupérer les données: pas de connexion à Supabase");

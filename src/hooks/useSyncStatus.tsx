@@ -48,7 +48,7 @@ export function useSyncStatus() {
     };
   }, [checkConnection]);
   
-  // Use a simple non-generic function to avoid type recursion
+  // Simplified function with explicit types to avoid TypeScript recursion issues
   const syncWithSupabase = useCallback(async (
     data: Record<string, unknown>,
     table: SupabaseTable,
@@ -62,38 +62,43 @@ export function useSyncStatus() {
     setIsSyncing(true);
     
     try {
+      // Extract id safely
       const id = data[idField];
+      const idString = id ? String(id) : '';
       
-      // Check if the record exists
-      const { data: existingData, error: checkError } = await supabase
+      // Use explicit typing for the query to avoid deep instantiation
+      const checkResponse = await supabase
         .from(table)
         .select(idField)
-        .eq(idField, id ? String(id) : '')
+        .eq(idField, idString)
         .maybeSingle();
+      
+      const existingData = checkResponse.data;
+      const checkError = checkResponse.error;
       
       if (checkError) throw checkError;
       
       let result;
       
       if (existingData) {
-        // Update existing record
-        const { data: updatedData, error: updateError } = await supabase
+        // Update existing record with explicit typing
+        const updateResponse = await supabase
           .from(table)
           .update(data)
-          .eq(idField, id ? String(id) : '')
+          .eq(idField, idString)
           .select();
           
-        if (updateError) throw updateError;
-        result = updatedData;
+        if (updateResponse.error) throw updateResponse.error;
+        result = updateResponse.data;
       } else {
-        // Create new record
-        const { data: insertedData, error: insertError } = await supabase
+        // Create new record with explicit typing
+        const insertResponse = await supabase
           .from(table)
           .insert(data)
           .select();
           
-        if (insertError) throw insertError;
-        result = insertedData;
+        if (insertResponse.error) throw insertResponse.error;
+        result = insertResponse.data;
       }
       
       setLastSyncTime(new Date());

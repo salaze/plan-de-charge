@@ -1,6 +1,5 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { checkSupabaseTables } from '@/utils/initSupabase';
 import { SupabaseTable } from '@/types/supabase';
@@ -114,5 +113,3 @@ export function useSyncStatus() {
     checkConnection
   };
 }
-
-export default useSyncStatus;

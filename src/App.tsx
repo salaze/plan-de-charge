@@ -19,14 +19,22 @@ import AdminLogin from "./pages/AdminLogin";
 const queryClient = new QueryClient();
 
 // Fix the TooltipWrapper to ensure it's a proper functional component
-const TooltipWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const TooltipWrapper = ({ children }: { children: React.ReactNode }) => {
   return <TooltipProvider>{children}</TooltipProvider>;
 };
 
 const App = () => {
   // Initialize Supabase tables check
   useEffect(() => {
-    checkSupabaseTables();
+    const initializeSupabase = async () => {
+      try {
+        await checkSupabaseTables();
+      } catch (error) {
+        console.error("Failed to initialize Supabase:", error);
+      }
+    };
+    
+    initializeSupabase();
   }, []);
   
   return (

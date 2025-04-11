@@ -114,3 +114,5 @@ export function useSyncStatus() {
     checkConnection
   };
 }
+
+export default useSyncStatus;

@@ -16,7 +16,6 @@ interface SupabaseStatusIndicatorProps {
 }
 
 export const SupabaseStatusIndicator: React.FC<SupabaseStatusIndicatorProps> = () => {
-  // Use the hook inside the component body, not at module level
   const { isConnected, lastSyncTime, checkConnection, isSyncing } = useSyncStatus();
   
   const handleManualCheck = async () => {
@@ -100,3 +99,5 @@ export const SupabaseStatusIndicator: React.FC<SupabaseStatusIndicatorProps> = (
     </TooltipProvider>
   );
 };
+
+export default SupabaseStatusIndicator;

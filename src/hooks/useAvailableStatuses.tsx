@@ -1,50 +1,52 @@
 
 import { useState, useEffect } from 'react';
 import { StatusCode } from '@/types';
+import { useSupabaseStatuses } from './useSupabaseStatuses';
 
 export const useAvailableStatuses = (defaultStatuses: StatusCode[] = []) => {
   const [statuses, setStatuses] = useState<StatusCode[]>(defaultStatuses);
+  const { statuses: supabaseStatuses, loading } = useSupabaseStatuses();
   
   useEffect(() => {
-    // Fonction pour récupérer les statuts depuis localStorage
-    const loadStatuses = () => {
-      const savedData = localStorage.getItem('planningData');
-      const data = savedData ? JSON.parse(savedData) : { statuses: [] };
+    // Si nous avons des statuts depuis Supabase, extraire les codes
+    if (supabaseStatuses && supabaseStatuses.length > 0) {
+      setStatuses(supabaseStatuses.map(s => s.code as StatusCode));
+    } else {
+      // Utiliser les statuts par défaut fournis si pas de données Supabase
+      setStatuses(defaultStatuses);
       
-      // Si nous avons des statuts personnalisés, extraire les codes
-      if (data.statuses && data.statuses.length > 0) {
-        setStatuses(data.statuses.map((s: any) => s.code as StatusCode));
-      } else {
-        // Utiliser les statuts par défaut fournis
-        setStatuses(defaultStatuses);
+      // Fallback au localStorage si nécessaire (pour la rétrocompatibilité)
+      const savedData = localStorage.getItem('planningData');
+      if (savedData) {
+        try {
+          const data = JSON.parse(savedData);
+          if (data.statuses && data.statuses.length > 0) {
+            setStatuses(data.statuses.map((s: any) => s.code as StatusCode));
+          }
+        } catch (error) {
+          console.error("Erreur lors du parsing des données locales:", error);
+        }
       }
+    }
+  }, [supabaseStatuses, defaultStatuses]);
+  
+  // Écouter les événements personnalisés pour les mises à jour de statuts
+  useEffect(() => {
+    const handleCustomEvent = () => {
+      // Recharger les statuts lorsque l'événement est déclenché
+      console.log("Événement de mise à jour des statuts détecté");
     };
-    
-    // Charger les statuts au montage du composant
-    loadStatuses();
-    
-    // Écouter les changements dans le localStorage
-    const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === 'planningData') {
-        loadStatuses();
-      }
-    };
-    
-    // Écouter l'événement personnalisé pour les mises à jour de statuts
-    const handleCustomEvent = () => loadStatuses();
     
     // Ajouter les écouteurs d'événements
-    window.addEventListener('storage', handleStorageChange);
     window.addEventListener('statusesUpdated', handleCustomEvent);
     
     // Nettoyer les écouteurs lors du démontage
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('statusesUpdated', handleCustomEvent);
     };
-  }, [defaultStatuses]);
+  }, []);
   
-  return statuses;
+  return { statuses, loading };
 };
 
 export default useAvailableStatuses;

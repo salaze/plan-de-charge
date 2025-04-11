@@ -31,6 +31,7 @@ import { toast } from 'sonner';
 import { Edit, Plus, Trash } from 'lucide-react';
 import { generateId } from '@/utils';
 import { StatusCode, STATUS_LABELS, STATUS_COLORS } from '@/types';
+import { useSupabaseStatuses } from '@/hooks/useSupabaseStatuses';
 
 interface Status {
   id: string;
@@ -53,6 +54,9 @@ export function StatusManager({ statuses, onStatusesChange }: StatusManagerProps
   const [code, setCode] = useState<StatusCode>('');
   const [label, setLabel] = useState('');
   const [color, setColor] = useState('bg-green-500 text-white');
+
+  // Utiliser Supabase pour gérer les statuts
+  const { addStatus, updateStatus, deleteStatus } = useSupabaseStatuses();
   
   useEffect(() => {
     // Mettre à jour les STATUS_LABELS et STATUS_COLORS globaux
@@ -93,18 +97,27 @@ export function StatusManager({ statuses, onStatusesChange }: StatusManagerProps
     setDeleteDialogOpen(true);
   };
   
-  const confirmDeleteStatus = () => {
+  const confirmDeleteStatus = async () => {
     if (!statusToDelete) return;
     
-    const updatedStatuses = statuses.filter(status => status.id !== statusToDelete);
-    onStatusesChange(updatedStatuses);
-    
-    toast.success('Statut supprimé avec succès');
-    setDeleteDialogOpen(false);
-    setStatusToDelete('');
+    try {
+      // Supprimer dans Supabase
+      await deleteStatus(statusToDelete);
+      
+      // Mettre à jour l'état local
+      const updatedStatuses = statuses.filter(status => status.id !== statusToDelete);
+      onStatusesChange(updatedStatuses);
+      
+      toast.success('Statut supprimé avec succès');
+      setDeleteDialogOpen(false);
+      setStatusToDelete('');
+    } catch (error) {
+      console.error("Erreur lors de la suppression du statut:", error);
+      toast.error("Impossible de supprimer le statut dans Supabase");
+    }
   };
   
-  const handleSaveStatus = (e: React.FormEvent) => {
+  const handleSaveStatus = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!code || !label) {
@@ -122,42 +135,62 @@ export function StatusManager({ statuses, onStatusesChange }: StatusManagerProps
       return;
     }
     
-    let updatedStatuses: Status[];
-    
-    if (currentStatus) {
-      // Mettre à jour un statut existant
-      updatedStatuses = statuses.map(status => 
-        status.id === currentStatus.id 
-          ? { ...status, code, label, color } 
-          : status
-      );
-      toast.success('Statut modifié avec succès');
-    } else {
-      // Ajouter un nouveau statut
-      const newStatus: Status = {
-        id: generateId(),
-        code,
-        label,
-        color
-      };
-      updatedStatuses = [...statuses, newStatus];
+    try {
+      let updatedStatuses: Status[];
       
-      // Mettre à jour les STATUS_LABELS et STATUS_COLORS globaux
-      // @ts-ignore - Mise à jour dynamique
-      STATUS_LABELS[code] = label;
-      // @ts-ignore - Mise à jour dynamique
-      STATUS_COLORS[code] = color;
+      if (currentStatus) {
+        // Mettre à jour un statut existant dans Supabase
+        await updateStatus(currentStatus.id, {
+          code,
+          libelle: label,
+          couleur: color
+        });
+        
+        // Mettre à jour l'état local
+        updatedStatuses = statuses.map(status => 
+          status.id === currentStatus.id 
+            ? { ...status, code, label, color } 
+            : status
+        );
+        toast.success('Statut modifié avec succès');
+      } else {
+        // Ajouter un nouveau statut à Supabase
+        const result = await addStatus({
+          code,
+          libelle: label,
+          couleur: color,
+          display_order: statuses.length + 1
+        });
+        
+        // Ajouter à l'état local
+        const newStatus: Status = {
+          id: result.id,
+          code,
+          label,
+          color
+        };
+        updatedStatuses = [...statuses, newStatus];
+        
+        // Mettre à jour les STATUS_LABELS et STATUS_COLORS globaux
+        // @ts-ignore - Mise à jour dynamique
+        STATUS_LABELS[code] = label;
+        // @ts-ignore - Mise à jour dynamique
+        STATUS_COLORS[code] = color;
+        
+        toast.success('Statut ajouté avec succès');
+      }
       
-      toast.success('Statut ajouté avec succès');
+      onStatusesChange(updatedStatuses);
+      
+      // Déclencher un événement personnalisé pour informer les autres composants
+      const event = new CustomEvent('statusesUpdated');
+      window.dispatchEvent(event);
+      
+      setFormOpen(false);
+    } catch (error) {
+      console.error("Erreur lors de l'enregistrement du statut:", error);
+      toast.error("Impossible d'enregistrer le statut dans Supabase");
     }
-    
-    onStatusesChange(updatedStatuses);
-    
-    // Déclencher un événement personnalisé pour informer les autres composants
-    const event = new CustomEvent('statusesUpdated');
-    window.dispatchEvent(event);
-    
-    setFormOpen(false);
   };
   
   // Liste prédéfinie de classes Tailwind pour les couleurs

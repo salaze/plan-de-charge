@@ -8,7 +8,7 @@ import { syncTableData } from '@/services/syncService';
 import { fetchFromTable } from '@/utils/supabaseHelpers';
 
 export function useSyncStatus() {
-  // Define state variables properly at the React component level
+  // Define state variables
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
   const [isConnected, setIsConnected] = useState<boolean | null>(null);

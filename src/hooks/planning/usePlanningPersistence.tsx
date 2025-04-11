@@ -26,14 +26,13 @@ export const usePlanningPersistence = () => {
         try {
           // Only sync if we have an id
           if (employee.id) {
-            // Use type assertion to match the expected type for the "employes" table
             syncWithSupabase(
               {
                 id: employee.id,
                 nom: employee.name.split(' ').pop() || employee.name,
                 prenom: employee.name.split(' ').slice(0, -1).join(' ') || undefined,
                 departement: employee.department
-              } as any,
+              },
               "employes" as SupabaseTable
             );
             
@@ -49,7 +48,7 @@ export const usePlanningPersistence = () => {
                     statut_code: scheduleItem.status,
                     is_highlighted: scheduleItem.isHighlighted,
                     project_code: scheduleItem.projectCode
-                  } as any,
+                  },
                   "employe_schedule" as SupabaseTable
                 );
               }

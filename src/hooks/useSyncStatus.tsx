@@ -48,9 +48,9 @@ export function useSyncStatus() {
     };
   }, [checkConnection]);
   
-  // Fix the type to avoid infinite recursion
+  // Use a simple type definition to avoid infinite recursion
   const syncWithSupabase = useCallback(async (
-    data: Record<string, any>, // Use Record<string, any> instead of any to be more specific
+    data: Record<string, unknown>, // Use Record<string, unknown> to avoid type recursion issues
     table: SupabaseTable,
     idField: string = 'id'
   ) => {

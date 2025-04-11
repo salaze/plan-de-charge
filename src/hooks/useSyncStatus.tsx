@@ -48,9 +48,9 @@ export function useSyncStatus() {
     };
   }, [checkConnection]);
   
-  // Define syncWithSupabase with a simplified type signature to avoid deep type instantiation
+  // Use a simple generic type that avoids recursive type resolution
   const syncWithSupabase = useCallback(async (
-    data: Record<string, any>,
+    data: any, // Using any to avoid deep type instantiation
     table: SupabaseTable,
     idField: string = 'id'
   ) => {

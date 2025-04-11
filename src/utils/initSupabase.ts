@@ -11,8 +11,9 @@ export async function checkSupabaseTables() {
     // Try to check tables in a safer way that handles potential failures gracefully
     const checkTable = async (tableName: ValidTableName) => {
       try {
+        // Use type assertion to tell TypeScript that the table name is valid
         const { data, error } = await supabase
-          .from(tableName)
+          .from(tableName as any)
           .select('id')
           .limit(1);
           

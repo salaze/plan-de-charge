@@ -59,6 +59,12 @@ export async function syncTableData<T extends ValidTableName>(
           return await updateTache(idValue, data as Partial<TacheData>);
         case 'connection_logs':
           return await updateConnectionLog(idValue, data as Partial<ConnectionLogData>);
+        case 'projets':
+          // We'd need to implement these functions
+          return {
+            success: false,
+            error: new Error(`Update operation not implemented for table: ${table}`)
+          };
         default:
           return {
             success: false,
@@ -78,6 +84,12 @@ export async function syncTableData<T extends ValidTableName>(
           return await insertTache(data as TacheData);
         case 'connection_logs':
           return await insertConnectionLog(data as ConnectionLogData);
+        case 'projets':
+          // We'd need to implement this function
+          return {
+            success: false,
+            error: new Error(`Insert operation not implemented for table: ${table}`)
+          };
         default:
           return {
             success: false,

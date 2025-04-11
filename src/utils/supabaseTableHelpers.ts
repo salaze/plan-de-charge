@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { 
   StatutData, 
@@ -31,7 +30,7 @@ export async function insertStatut(data: StatutData): Promise<SyncResult> {
     };
     
     const result = await supabase
-      .from('statuts')
+      .from('statuts' as any)
       .insert(insertData)
       .select();
     
@@ -52,7 +51,7 @@ export async function updateStatut(idValue: string, data: Partial<StatutData>): 
     if (data.display_order !== undefined) updateData.display_order = data.display_order;
     
     const result = await supabase
-      .from('statuts')
+      .from('statuts' as any)
       .update(updateData)
       .eq('id', idValue)
       .select();
@@ -86,7 +85,7 @@ export async function insertEmploye(data: EmployeData): Promise<SyncResult> {
     };
     
     const result = await supabase
-      .from('employes')
+      .from('employes' as any)
       .insert(insertData)
       .select();
     
@@ -109,7 +108,7 @@ export async function updateEmploye(idValue: string, data: Partial<EmployeData>)
     if (data.uid !== undefined) updateData.uid = data.uid;
     
     const result = await supabase
-      .from('employes')
+      .from('employes' as any)
       .update(updateData)
       .eq('id', idValue)
       .select();
@@ -144,7 +143,7 @@ export async function insertSchedule(data: ScheduleData): Promise<SyncResult> {
     };
     
     const result = await supabase
-      .from('employe_schedule')
+      .from('employe_schedule' as any)
       .insert(insertData)
       .select();
     
@@ -168,7 +167,7 @@ export async function updateSchedule(idValue: string, data: Partial<ScheduleData
     if (data.note !== undefined) updateData.note = data.note;
     
     const result = await supabase
-      .from('employe_schedule')
+      .from('employe_schedule' as any)
       .update(updateData)
       .eq('id', idValue)
       .select();
@@ -185,7 +184,7 @@ export async function updateSchedule(idValue: string, data: Partial<ScheduleData
 export async function insertTache(data: TacheData): Promise<SyncResult> {
   try {
     const result = await supabase
-      .from('taches')
+      .from('taches' as any)
       .insert({
         created_at: data.created_at,
         id: parseInt(data.id || '0') // Convert string id to number
@@ -203,7 +202,7 @@ export async function insertTache(data: TacheData): Promise<SyncResult> {
 export async function updateTache(idValue: string, data: Partial<TacheData>): Promise<SyncResult> {
   try {
     const result = await supabase
-      .from('taches')
+      .from('taches' as any)
       .update({
         created_at: data.created_at
       })
@@ -231,7 +230,7 @@ export async function insertConnectionLog(data: ConnectionLogData): Promise<Sync
     };
     
     const result = await supabase
-      .from('connection_logs')
+      .from('connection_logs' as any)
       .insert(insertData)
       .select();
     
@@ -253,7 +252,7 @@ export async function updateConnectionLog(idValue: string, data: Partial<Connect
     if (data.user_agent !== undefined) updateData.user_agent = data.user_agent;
     
     const result = await supabase
-      .from('connection_logs')
+      .from('connection_logs' as any)
       .update(updateData)
       .eq('id', idValue)
       .select();

@@ -4,6 +4,9 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { checkSupabaseTables } from '@/utils/initSupabase';
 
+// Define specific type for the table parameter to avoid infinite type recursion
+type SupabaseTable = "statuts" | "employes" | "employe_schedule";
+
 export function useSyncStatus() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
@@ -47,8 +50,8 @@ export function useSyncStatus() {
     };
   }, [checkConnection]);
   
-  // Function to safely sync with Supabase
-  const syncWithSupabase = useCallback(async (data: any, table: "statuts" | "employes" | "employe_schedule", idField: string = 'id') => {
+  // Function to safely sync with Supabase with proper type annotations
+  const syncWithSupabase = useCallback(async (data: any, table: SupabaseTable, idField: string = 'id') => {
     if (!isConnected) {
       console.error("Impossible de synchroniser: pas de connexion à Supabase");
       return false;
@@ -98,8 +101,8 @@ export function useSyncStatus() {
     }
   }, [isConnected]);
   
-  // Function to fetch data from Supabase
-  const fetchFromSupabase = useCallback(async (table: "statuts" | "employes" | "employe_schedule") => {
+  // Function to fetch data from Supabase with proper type annotations
+  const fetchFromSupabase = useCallback(async (table: SupabaseTable) => {
     if (!isConnected) {
       console.error("Impossible de récupérer les données: pas de connexion à Supabase");
       return null;

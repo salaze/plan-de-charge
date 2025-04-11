@@ -1,12 +1,15 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
+// Define specific type for the table parameter to match useSyncStatus
+type SupabaseTable = "statuts" | "employes" | "employe_schedule";
+
 export async function checkSupabaseTables() {
   try {
     console.log("Checking Supabase tables...");
     
     // Try to check tables in a safer way that handles potential failures gracefully
-    const checkTable = async (tableName: "statuts" | "employes" | "employe_schedule") => {
+    const checkTable = async (tableName: SupabaseTable) => {
       try {
         const { data, error } = await supabase
           .from(tableName)

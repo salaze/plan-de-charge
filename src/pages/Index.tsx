@@ -1,5 +1,5 @@
 
-import React, { Suspense } from 'react';
+import React from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { PlanningGrid } from '@/components/calendar/PlanningGrid';
 import { LegendModal } from '@/components/calendar/LegendModal';

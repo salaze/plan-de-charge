@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Database, Cloud, CloudOff, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { 
@@ -12,22 +12,23 @@ import { Button } from '@/components/ui/button';
 import { checkSupabaseTables } from '@/utils/initSupabase';
 
 export function SupabaseStatusIndicator() {
-  // Initialize states properly
-  const [isChecking, setIsChecking] = useState(false);
-  const [isConnected, setIsConnected] = useState<boolean | null>(null);
-  const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
-  const [isSyncing, setIsSyncing] = useState(false);
+  // Initialize states properly with React hooks
+  const [isChecking, setIsChecking] = React.useState(false);
+  const [isConnected, setIsConnected] = React.useState<boolean | null>(null);
+  const [lastSyncTime, setLastSyncTime] = React.useState<Date | null>(null);
   
   // Check connection on component mount
-  useEffect(() => {
+  React.useEffect(() => {
     let isMounted = true;
     
     const checkInitialConnection = async () => {
       if (isMounted) {
         setIsChecking(true);
         const connected = await checkSupabaseTables();
-        setIsConnected(connected);
-        setIsChecking(false);
+        if (isMounted) {
+          setIsConnected(connected);
+          setIsChecking(false);
+        }
       }
     };
     
@@ -119,7 +120,7 @@ export function SupabaseStatusIndicator() {
                 <span className="font-medium">Dernière synchronisation:</span> {formatLastSync()}
               </div>
             )}
-            {isSyncing && (
+            {isChecking && (
               <div className="text-xs flex items-center">
                 <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
                 <span>Synchronisation en cours...</span>

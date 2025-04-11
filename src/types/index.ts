@@ -12,6 +12,7 @@ export type StatusCode =
   | 'regisseur'
   | 'demenagement'
   | 'permanence'
+  | 'none'
   | '';
 
 export type DayPeriod = 'AM' | 'PM' | 'FULL';
@@ -93,6 +94,7 @@ export const STATUS_LABELS: Record<StatusCode, string> = {
   regisseur: 'Régisseur',
   demenagement: 'Déménagements',
   permanence: 'Permanences',
+  none: 'Aucun',
   '': '-'
 };
 
@@ -109,5 +111,6 @@ export const STATUS_COLORS: Record<StatusCode, string> = {
   regisseur: 'bg-blue-300 text-blue-800',
   demenagement: 'bg-indigo-500 text-white',
   permanence: 'bg-pink-600 text-white',
+  none: 'bg-transparent text-foreground',
   '': 'bg-transparent text-foreground'
 };

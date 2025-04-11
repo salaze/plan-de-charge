@@ -29,14 +29,14 @@ export function StatusSelectorEnhanced({
 }: StatusSelectorEnhancedProps) {
   const [highlightedStatus, setHighlightedStatus] = useState(isHighlighted);
   const [selectedProject, setSelectedProject] = useState(projectCode);
-  const [selectedStatus, setSelectedStatus] = useState<StatusCode>(value || 'none' as StatusCode);
+  const [selectedStatus, setSelectedStatus] = useState<StatusCode>(value || 'none');
   
   // Use our custom hook to get available statuses
   const availableStatuses = useStatusOptions();
   
   // Reset form when dialog reopens with new values
   useEffect(() => {
-    setSelectedStatus(value || 'none' as StatusCode);
+    setSelectedStatus(value || 'none');
     setHighlightedStatus(isHighlighted);
     setSelectedProject(projectCode || '');
   }, [value, isHighlighted, projectCode]);
@@ -65,7 +65,7 @@ export function StatusSelectorEnhanced({
     }
     
     const projectToUse = selectedStatus === 'projet' ? selectedProject : undefined;
-    const finalStatus = selectedStatus === 'none' ? '' as StatusCode : selectedStatus;
+    const finalStatus = selectedStatus === 'none' ? ('' as StatusCode) : selectedStatus;
     onChange(finalStatus, highlightedStatus, projectToUse);
     
     toast.success(`Statut ${selectedPeriod === 'AM' ? 'matin' : 'après-midi'} enregistré avec succès`);
@@ -83,7 +83,7 @@ export function StatusSelectorEnhanced({
           {availableStatuses.map((status) => (
             <StatusOption 
               key={status.value} 
-              value={status.value || 'none'} 
+              value={status.value} 
               label={status.label} 
             />
           ))}

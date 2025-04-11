@@ -1,6 +1,5 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { SupabaseTable } from '@/types/supabase';
 import { 
   TableDataType, 
   StatutData, 
@@ -8,7 +7,8 @@ import {
   ScheduleData, 
   TacheData, 
   ConnectionLogData,
-  SyncResult 
+  SyncResult,
+  ProjetData
 } from '@/types/supabaseModels';
 import { checkRecordExists } from '@/utils/supabaseHelpers';
 import {
@@ -24,8 +24,11 @@ import {
   updateConnectionLog
 } from '@/utils/supabaseTableHelpers';
 
+// Define valid table names to match Supabase's expected types
+type ValidTableName = "statuts" | "employes" | "employe_schedule" | "taches" | "connection_logs" | "projets";
+
 // Type-safe sync function for specific table types
-export async function syncTableData<T extends SupabaseTable>(
+export async function syncTableData<T extends ValidTableName>(
   data: Record<string, any>,
   table: T,
   idField: string = 'id'

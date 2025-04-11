@@ -1,10 +1,12 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { SupabaseTable } from '@/types/supabase';
+
+// Define valid table names to match Supabase's expected types
+type ValidTableName = "statuts" | "employes" | "employe_schedule" | "taches" | "connection_logs" | "projets";
 
 // Helper function to check if record exists
 export async function checkRecordExists(
-  table: SupabaseTable,
+  table: ValidTableName,
   idField: string, 
   idValue: string
 ): Promise<any> {
@@ -24,8 +26,7 @@ export async function checkRecordExists(
 }
 
 // Generic function for fetching data from a table
-// Use unknown[] type instead of generic type parameter to avoid deep type instantiation
-export async function fetchFromTable(table: SupabaseTable): Promise<unknown[] | null> {
+export async function fetchFromTable(table: ValidTableName): Promise<unknown[] | null> {
   try {
     const { data, error } = await supabase
       .from(table)

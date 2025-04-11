@@ -1,12 +1,15 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
+// Define valid table names as literals to match what Supabase expects
+type ValidTableName = "statuts" | "employes" | "employe_schedule" | "taches" | "connection_logs" | "projets";
+
 export async function checkSupabaseTables() {
   try {
     console.log("Checking Supabase tables...");
     
     // Try to check tables in a safer way that handles potential failures gracefully
-    const checkTable = async (tableName: string) => {
+    const checkTable = async (tableName: ValidTableName) => {
       try {
         const { data, error } = await supabase
           .from(tableName)

@@ -28,7 +28,14 @@ export const usePlanningStatusUpdates = (
     
     try {
       // Mettre à jour dans Supabase
-      await updateScheduleEntry(employeeId, date, status, period, isHighlighted, projectCode);
+      await updateScheduleEntry(
+        employeeId, 
+        date, 
+        status, 
+        period, 
+        isHighlighted, 
+        status === 'projet' ? projectCode : undefined
+      );
 
       // Mettre à jour l'état local également
       setData((prevData) => {

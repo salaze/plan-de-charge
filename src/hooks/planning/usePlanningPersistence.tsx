@@ -39,9 +39,12 @@ export const usePlanningPersistence = () => {
             // Sync schedule entries for this employee
             employee.schedule.forEach(scheduleItem => {
               if (scheduleItem.date && scheduleItem.period) {
+                // Créer un ID unique basé sur l'employé, la date et la période
+                const entryId = `${employee.id}_${scheduleItem.date}_${scheduleItem.period}`;
+                
                 syncWithSupabase(
                   {
-                    id: `${employee.id}_${scheduleItem.date}_${scheduleItem.period}`,
+                    id: entryId,
                     employe_id: employee.id,
                     date: scheduleItem.date,
                     period: scheduleItem.period,
@@ -59,8 +62,6 @@ export const usePlanningPersistence = () => {
           // Don't show toast here as it would be overwhelming
         }
       });
-      
-      // Projects are now handled via localStorage only
     }
   }, [isConnected, syncWithSupabase]);
   

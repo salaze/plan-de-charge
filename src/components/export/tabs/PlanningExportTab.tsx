@@ -34,7 +34,7 @@ const PlanningExportTab: React.FC<PlanningExportTabProps> = ({
         />
       </div>
       
-      <StatusLegendCard statuses={statuses || defaultStatuses} />
+      {statuses && <StatusLegendCard statuses={statuses} />}
     </div>
   );
 };

@@ -48,7 +48,7 @@ export function useSyncStatus() {
     };
   }, [checkConnection]);
   
-  // Simplified sync function with `unknown` instead of `any`
+  // Simplified sync function to avoid TypeScript recursion issues
   const syncWithSupabase = useCallback(async (
     data: Record<string, unknown>,
     table: SupabaseTable,
@@ -62,36 +62,34 @@ export function useSyncStatus() {
     setIsSyncing(true);
 
     try {
-      // Check if the record exists
-      const { data: existingData, error: checkError } = await supabase
-        .from(table)
-        .select(idField)
-        .eq(idField, data[idField])
-        .maybeSingle();
-
-      if (checkError) throw checkError;
+      // Type assertion to avoid TypeScript recursion
+      const tableRef = supabase.from(table as string);
+      
+      // Check if record exists - done in steps to avoid complex type inference
+      let checkQuery = tableRef.select(idField);
+      checkQuery = checkQuery.eq(idField, data[idField]);
+      const checkResult = await checkQuery.maybeSingle();
+      
+      if (checkResult.error) throw checkResult.error;
+      const existingData = checkResult.data;
 
       let result;
 
       if (existingData) {
-        // Update existing record
-        const { data: updatedData, error: updateError } = await supabase
-          .from(table)
-          .update(data)
-          .eq(idField, data[idField])
-          .select();
-
-        if (updateError) throw updateError;
-        result = updatedData;
+        // Update existing record - split into steps
+        let updateQuery = tableRef.update(data as any);
+        updateQuery = updateQuery.eq(idField, data[idField]);
+        const updateResult = await updateQuery.select();
+        
+        if (updateResult.error) throw updateResult.error;
+        result = updateResult.data;
       } else {
-        // Create new record
-        const { data: insertedData, error: insertError } = await supabase
-          .from(table)
-          .insert(data)
-          .select();
-
-        if (insertError) throw insertError;
-        result = insertedData;
+        // Create new record - split into steps
+        const insertQuery = tableRef.insert(data as any);
+        const insertResult = await insertQuery.select();
+        
+        if (insertResult.error) throw insertResult.error;
+        result = insertResult.data;
       }
 
       setLastSyncTime(new Date());
@@ -104,7 +102,7 @@ export function useSyncStatus() {
     }
   }, [isConnected]);
   
-  // Fetch function with improved type handling
+  // Fetch function with simplified typing to avoid recursion
   const fetchFromSupabase = useCallback(async (table: SupabaseTable) => {
     if (!isConnected) {
       console.error("Impossible de récupérer les données: pas de connexion à Supabase");
@@ -114,14 +112,14 @@ export function useSyncStatus() {
     setIsSyncing(true);
     
     try {
-      const { data, error } = await supabase
-        .from(table)
-        .select('*');
+      // Type assertion to avoid TypeScript recursion
+      const tableRef = supabase.from(table as string);
+      const result = await tableRef.select('*');
       
-      if (error) throw error;
+      if (result.error) throw result.error;
       
       setLastSyncTime(new Date());
-      return data;
+      return result.data;
     } catch (error) {
       console.error(`Erreur lors de la récupération depuis Supabase (table ${table}):`, error);
       return null;

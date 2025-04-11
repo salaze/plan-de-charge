@@ -10,59 +10,14 @@ import {
 } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 import { checkSupabaseTables } from '@/utils/initSupabase';
+import { useSyncStatus } from '@/hooks/useSyncStatus';
 
 interface SupabaseStatusIndicatorProps {
   // Add any props if needed
 }
 
 export const SupabaseStatusIndicator: React.FC<SupabaseStatusIndicatorProps> = () => {
-  const [isChecking, setIsChecking] = useState(false);
-  const [isConnected, setIsConnected] = useState<boolean | null>(null);
-  const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
-  
-  // Define a standalone check connection function
-  const checkConnection = useCallback(async () => {
-    setIsChecking(true);
-    try {
-      const connected = await checkSupabaseTables();
-      setIsConnected(connected);
-      if (connected) {
-        setLastSyncTime(new Date());
-      }
-      setIsChecking(false);
-      return connected;
-    } catch (error) {
-      console.error("Erreur lors de la vérification de la connexion:", error);
-      setIsConnected(false);
-      setIsChecking(false);
-      return false;
-    }
-  }, []);
-  
-  // Check connection on component mount
-  useEffect(() => {
-    let isMounted = true;
-    
-    const checkInitialConnection = async () => {
-      if (isMounted) {
-        await checkConnection();
-      }
-    };
-    
-    checkInitialConnection();
-    
-    // Check connection every 30 seconds
-    const interval = setInterval(() => {
-      if (isMounted) {
-        checkConnection();
-      }
-    }, 30000);
-    
-    return () => {
-      isMounted = false;
-      clearInterval(interval);
-    };
-  }, [checkConnection]);
+  const { isConnected, lastSyncTime, checkConnection, isSyncing } = useSyncStatus();
   
   const handleManualCheck = async () => {
     const connected = await checkConnection();
@@ -103,9 +58,9 @@ export const SupabaseStatusIndicator: React.FC<SupabaseStatusIndicatorProps> = (
             size="sm"
             className={`flex items-center text-xs px-2 py-1 h-auto ${isConnected ? 'text-green-500 hover:text-green-600' : 'text-red-500 hover:text-red-600'}`}
             onClick={handleManualCheck}
-            disabled={isChecking}
+            disabled={isSyncing}
           >
-            {isChecking ? (
+            {isSyncing ? (
               <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
             ) : isConnected ? (
               <Cloud className="h-3 w-3 mr-1" />
@@ -133,7 +88,7 @@ export const SupabaseStatusIndicator: React.FC<SupabaseStatusIndicatorProps> = (
                 <span className="font-medium">Dernière synchronisation:</span> {formatLastSync()}
               </div>
             )}
-            {isChecking && (
+            {isSyncing && (
               <div className="text-xs flex items-center">
                 <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
                 <span>Synchronisation en cours...</span>

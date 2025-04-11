@@ -1,8 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { StatusCode } from '@/types';
+import { ensureValidUuid } from '@/utils/idUtils';
 
 export interface SupabaseStatus {
   id: string;
@@ -36,7 +36,6 @@ export const useSupabaseStatuses = () => {
       }
 
       if (data) {
-        // Convertir explicitement les codes en StatusCode
         const typedData: SupabaseStatus[] = data.map(item => ({
           ...item,
           code: item.code as StatusCode
@@ -47,7 +46,6 @@ export const useSupabaseStatuses = () => {
       console.error('Erreur lors du chargement des statuts:', error);
       setError('Impossible de charger les statuts depuis Supabase');
       
-      // Fallback au localStorage si Supabase échoue
       const savedData = localStorage.getItem('planningData');
       if (savedData) {
         const data = JSON.parse(savedData);
@@ -67,19 +65,22 @@ export const useSupabaseStatuses = () => {
     }
   };
 
-  const addStatus = async (status: Omit<SupabaseStatus, 'id' | 'created_at' | 'updated_at'>) => {
+  const addStatus = async (status: Omit<SupabaseStatus, 'created_at' | 'updated_at'>) => {
     try {
+      const validId = ensureValidUuid(status.id);
+      const statusWithValidId = { ...status, id: validId };
+      
       const { data, error } = await supabase
         .from('statuts')
-        .insert([status])
+        .insert([statusWithValidId])
         .select();
 
       if (error) {
+        console.error("Erreur détaillée lors de l'ajout du statut:", error);
         throw error;
       }
 
       if (data && data[0]) {
-        // Convertir explicitement le code en StatusCode
         const newStatus: SupabaseStatus = {
           ...data[0],
           code: data[0].code as StatusCode
@@ -89,56 +90,61 @@ export const useSupabaseStatuses = () => {
       }
       return null;
     } catch (error) {
-      console.error('Erreur lors de l\'ajout du statut:', error);
-      toast.error('Impossible d\'ajouter le statut');
+      console.error("Erreur lors de l'ajout du statut:", error);
+      toast.error("Impossible d'ajouter le statut");
       throw error;
     }
   };
 
   const updateStatus = async (id: string, status: Partial<SupabaseStatus>) => {
     try {
+      const validId = ensureValidUuid(id);
+      
       const { data, error } = await supabase
         .from('statuts')
         .update(status)
-        .eq('id', id)
+        .eq('id', validId)
         .select();
 
       if (error) {
+        console.error("Erreur détaillée lors de la mise à jour du statut:", error);
         throw error;
       }
 
       if (data && data[0]) {
-        // Convertir explicitement le code en StatusCode
         const updatedStatus: SupabaseStatus = {
           ...data[0],
           code: data[0].code as StatusCode
         };
-        setStatuses(prev => prev.map(s => s.id === id ? updatedStatus : s));
+        setStatuses(prev => prev.map(s => s.id === validId ? updatedStatus : s));
         return updatedStatus;
       }
       return null;
     } catch (error) {
-      console.error('Erreur lors de la mise à jour du statut:', error);
-      toast.error('Impossible de mettre à jour le statut');
+      console.error("Erreur lors de la mise à jour du statut:", error);
+      toast.error("Impossible de mettre à jour le statut");
       throw error;
     }
   };
 
   const deleteStatus = async (id: string) => {
     try {
+      const validId = ensureValidUuid(id);
+      
       const { error } = await supabase
         .from('statuts')
         .delete()
-        .eq('id', id);
+        .eq('id', validId);
 
       if (error) {
+        console.error("Erreur détaillée lors de la suppression du statut:", error);
         throw error;
       }
 
-      setStatuses(prev => prev.filter(s => s.id !== id));
+      setStatuses(prev => prev.filter(s => s.id !== validId));
     } catch (error) {
-      console.error('Erreur lors de la suppression du statut:', error);
-      toast.error('Impossible de supprimer le statut');
+      console.error("Erreur lors de la suppression du statut:", error);
+      toast.error("Impossible de supprimer le statut");
       throw error;
     }
   };

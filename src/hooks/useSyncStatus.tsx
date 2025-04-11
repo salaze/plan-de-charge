@@ -5,6 +5,36 @@ import { supabase } from '@/integrations/supabase/client';
 import { checkSupabaseTables } from '@/utils/initSupabase';
 import { SupabaseTable } from '@/types/supabase';
 
+// Define type for table-specific data
+type SupabaseTableData = {
+  "employes": {
+    id: string;
+    nom: string;
+    prenom?: string;
+    departement?: string;
+    fonction?: string;
+    role?: string;
+    uid?: string;
+  },
+  "employe_schedule": {
+    id: string;
+    employe_id: string;
+    date: string;
+    period: string;
+    statut_code: string;
+    is_highlighted?: boolean;
+    project_code?: string;
+    note?: string;
+  },
+  "statuts": {
+    id: string;
+    code: string;
+    libelle: string;
+    couleur: string;
+    display_order?: number;
+  }
+};
+
 export function useSyncStatus() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
@@ -48,8 +78,12 @@ export function useSyncStatus() {
     };
   }, [checkConnection]);
   
-  // Use explicit type annotation for the data parameter to avoid circular references
-  const syncWithSupabase = useCallback(async (data: Record<string, any>, table: SupabaseTable, idField: string = 'id') => {
+  // Generic sync function that handles typing based on the table
+  const syncWithSupabase = useCallback(async <T extends SupabaseTable>(
+    data: Partial<SupabaseTableData[T]>,
+    table: T,
+    idField: string = 'id'
+  ) => {
     if (!isConnected) {
       console.error("Impossible de synchroniser: pas de connexion à Supabase");
       return false;
@@ -83,7 +117,7 @@ export function useSyncStatus() {
         // Create new record
         const { data: insertedData, error: insertError } = await supabase
           .from(table)
-          .insert([data])
+          .insert(data)
           .select();
           
         if (insertError) throw insertError;

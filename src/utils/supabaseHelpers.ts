@@ -4,8 +4,8 @@ import { TableDataType, SyncResult } from '@/types/supabaseModels';
 import { SupabaseTable } from '@/types/supabase';
 
 // Helper function to check if record exists
-export async function checkRecordExists<T extends SupabaseTable>(
-  table: T,
+export async function checkRecordExists(
+  table: SupabaseTable,
   idField: string, 
   idValue: string
 ): Promise<any> {
@@ -32,7 +32,7 @@ export async function fetchFromTable<T extends SupabaseTable>(table: T): Promise
       .select('*');
     
     if (error) throw error;
-    return data as TableDataType[T][];
+    return data as unknown as TableDataType[T][];
   } catch (error) {
     console.error(`Error fetching from ${table}:`, error);
     return null;

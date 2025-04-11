@@ -184,14 +184,12 @@ export async function updateSchedule(idValue: string, data: Partial<ScheduleData
 // Taches table operations
 export async function insertTache(data: TacheData): Promise<SyncResult> {
   try {
-    const insertData = {
-      id: data.id,
-      created_at: data.created_at
-    };
-    
     const result = await supabase
       .from('Taches')
-      .insert(insertData)
+      .insert({
+        created_at: data.created_at,
+        id: parseInt(data.id || '0') // Convert string id to number
+      })
       .select();
     
     if (result.error) throw result.error;
@@ -209,7 +207,7 @@ export async function updateTache(idValue: string, data: Partial<TacheData>): Pr
       .update({
         created_at: data.created_at
       })
-      .eq('id', idValue)
+      .eq('id', parseInt(idValue)) // Convert string id to number
       .select();
     
     if (result.error) throw result.error;

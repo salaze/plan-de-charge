@@ -24,6 +24,7 @@ export const useSupabaseProjects = () => {
   const fetchProjects = async () => {
     try {
       setLoading(true);
+      // @ts-ignore - TypeScript doesn't know about projets table yet
       const { data, error } = await supabase
         .from('projets')
         .select('*')
@@ -76,6 +77,7 @@ export const useSupabaseProjects = () => {
 
   const addProject = async (project: Omit<SupabaseProject, 'id' | 'created_at' | 'updated_at'>) => {
     try {
+      // @ts-ignore - TypeScript doesn't know about projets table yet
       const { data, error } = await supabase
         .from('projets')
         .insert([project])
@@ -108,6 +110,7 @@ export const useSupabaseProjects = () => {
 
   const updateProject = async (id: string, project: Partial<SupabaseProject>) => {
     try {
+      // @ts-ignore - TypeScript doesn't know about projets table yet
       const { data, error } = await supabase
         .from('projets')
         .update(project)
@@ -141,6 +144,7 @@ export const useSupabaseProjects = () => {
 
   const deleteProject = async (id: string) => {
     try {
+      // @ts-ignore - TypeScript doesn't know about projets table yet
       const { error } = await supabase
         .from('projets')
         .delete()

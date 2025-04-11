@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Database, Cloud, CloudOff, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { 
@@ -10,10 +10,11 @@ import {
 } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 import { useSyncStatus } from '@/hooks/useSyncStatus';
+import { Check } from 'lucide-react';
 
 export function SupabaseStatusIndicator() {
   const { isConnected, isSyncing, lastSyncTime, checkConnection } = useSyncStatus();
-  const [isChecking, setIsChecking] = React.useState(false);
+  const [isChecking, setIsChecking] = useState(false);
 
   const handleManualCheck = async () => {
     setIsChecking(true);
@@ -99,6 +100,3 @@ export function SupabaseStatusIndicator() {
     </TooltipProvider>
   );
 }
-
-// Import for Check icon
-import { Check } from 'lucide-react';

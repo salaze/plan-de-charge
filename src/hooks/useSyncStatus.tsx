@@ -17,7 +17,10 @@ export function useSyncStatus() {
     checkInitialConnection();
     
     // Vérifier la connexion toutes les 30 secondes
-    const interval = setInterval(checkConnection, 30000);
+    const interval = setInterval(() => {
+      checkConnection();
+    }, 30000);
+    
     return () => clearInterval(interval);
   }, []);
   
@@ -49,8 +52,9 @@ export function useSyncStatus() {
     
     try {
       // Use the any type for now to work around the type issues
+      // @ts-ignore - Use table name directly
       const query = supabase
-        .from(table as any)
+        .from(table)
         .select(idField)
         .eq(idField, data[idField])
         .maybeSingle();
@@ -63,8 +67,9 @@ export function useSyncStatus() {
       
       if (existingData) {
         // Mise à jour d'un enregistrement existant
+        // @ts-ignore - Use table name directly
         const { data: updatedData, error: updateError } = await supabase
-          .from(table as any)
+          .from(table)
           .update(data)
           .eq(idField, data[idField])
           .select();
@@ -73,8 +78,9 @@ export function useSyncStatus() {
         result = updatedData;
       } else {
         // Création d'un nouvel enregistrement
+        // @ts-ignore - Use table name directly
         const { data: insertedData, error: insertError } = await supabase
-          .from(table as any)
+          .from(table)
           .insert([data])
           .select();
           
@@ -103,8 +109,9 @@ export function useSyncStatus() {
     setIsSyncing(true);
     
     try {
+      // @ts-ignore - Use table name directly
       const { data, error } = await supabase
-        .from(table as any)
+        .from(table)
         .select('*')
         .order('created_at', { ascending: false });
         

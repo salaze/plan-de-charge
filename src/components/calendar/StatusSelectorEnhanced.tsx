@@ -65,8 +65,7 @@ export function StatusSelectorEnhanced({
     }
     
     const projectToUse = selectedStatus === 'projet' ? selectedProject : undefined;
-    const finalStatus = selectedStatus === 'none' ? 'none' : selectedStatus;
-    onChange(finalStatus, highlightedStatus, projectToUse);
+    onChange(selectedStatus, highlightedStatus, projectToUse);
     
     toast.success(`Statut ${selectedPeriod === 'AM' ? 'matin' : 'après-midi'} enregistré avec succès`);
   };

@@ -52,7 +52,7 @@ export function StatusSelector({ value, onChange }: StatusSelectorProps) {
                 "p-2.5 text-left hover:bg-secondary transition-colors",
                 status === value && "bg-secondary"
               )}
-              onClick={() => onChange(status === 'none' ? 'none' : status)}
+              onClick={() => onChange(status)}
             >
               {status !== 'none' ? (
                 <div className="flex items-center">

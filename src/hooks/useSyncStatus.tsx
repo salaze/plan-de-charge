@@ -48,9 +48,9 @@ export function useSyncStatus() {
     };
   }, [checkConnection]);
   
-  // Use a non-recursive type to solve the deep instantiation issue
-  const syncWithSupabase = useCallback(async <T extends Record<string, unknown>>(
-    data: T,
+  // Simplify the type to avoid deep instantiation issues
+  const syncWithSupabase = useCallback(async (
+    data: Record<string, unknown>,
     table: SupabaseTable,
     idField: string = 'id'
   ) => {

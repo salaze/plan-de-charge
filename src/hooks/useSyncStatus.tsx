@@ -48,63 +48,54 @@ export function useSyncStatus() {
     };
   }, [checkConnection]);
   
-  // Completely rewritten with simplest possible typing to avoid TypeScript recursion
+  // Simplified sync function with `unknown` instead of `any`
   const syncWithSupabase = useCallback(async (
     data: Record<string, unknown>,
     table: SupabaseTable,
     idField: string = 'id'
-  ): Promise<boolean> => {
+  ) => {
     if (!isConnected) {
       console.error("Impossible de synchroniser: pas de connexion à Supabase");
       return false;
     }
-    
+
     setIsSyncing(true);
-    
+
     try {
-      // Extract id safely
-      const id = data[idField];
-      const idString = id ? String(id) : '';
-      
-      // Avoid destructuring and complex type inference
-      // Create the query without awaiting first
-      const query = supabase
+      // Check if the record exists
+      const { data: existingData, error: checkError } = await supabase
         .from(table)
         .select(idField)
-        .eq(idField, idString);
-      
-      // Execute and handle results as unknown type first
-      const rawResult = await query;
-      
-      // Type assertions after receiving results
-      const checkData = rawResult.data || [];
-      const checkError = rawResult.error;
-      
+        .eq(idField, data[idField])
+        .maybeSingle();
+
       if (checkError) throw checkError;
-      
-      const recordExists = checkData.length > 0;
-      
-      if (recordExists) {
-        // Update existing record without immediate destructuring
-        const updateQuery = supabase
+
+      let result;
+
+      if (existingData) {
+        // Update existing record
+        const { data: updatedData, error: updateError } = await supabase
           .from(table)
           .update(data)
-          .eq(idField, idString);
-          
-        const updateRaw = await updateQuery;
-        if (updateRaw.error) throw updateRaw.error;
+          .eq(idField, data[idField])
+          .select();
+
+        if (updateError) throw updateError;
+        result = updatedData;
       } else {
-        // Insert new record without immediate destructuring
-        const insertQuery = supabase
+        // Create new record
+        const { data: insertedData, error: insertError } = await supabase
           .from(table)
-          .insert(data);
-          
-        const insertRaw = await insertQuery;
-        if (insertRaw.error) throw insertRaw.error;
+          .insert(data)
+          .select();
+
+        if (insertError) throw insertError;
+        result = insertedData;
       }
-      
+
       setLastSyncTime(new Date());
-      return true;
+      return result;
     } catch (error) {
       console.error(`Erreur lors de la synchronisation avec Supabase (table ${table}):`, error);
       return false;
@@ -113,7 +104,7 @@ export function useSyncStatus() {
     }
   }, [isConnected]);
   
-  // Simplified fetch function with minimal typing to avoid recursion
+  // Fetch function with improved type handling
   const fetchFromSupabase = useCallback(async (table: SupabaseTable) => {
     if (!isConnected) {
       console.error("Impossible de récupérer les données: pas de connexion à Supabase");
@@ -123,15 +114,9 @@ export function useSyncStatus() {
     setIsSyncing(true);
     
     try {
-      // Create query without immediate awaiting
-      const query = supabase
+      const { data, error } = await supabase
         .from(table)
         .select('*');
-      
-      // Execute and handle as unknown first
-      const rawResult = await query;
-      const data = rawResult.data;
-      const error = rawResult.error;
       
       if (error) throw error;
       

@@ -5,8 +5,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { checkSupabaseTables } from '@/utils/initSupabase';
 import { SupabaseTable } from '@/types/supabase';
 
-export { SupabaseTable };
-
 export function useSyncStatus() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);

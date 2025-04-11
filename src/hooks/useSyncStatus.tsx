@@ -48,7 +48,7 @@ export function useSyncStatus() {
     };
   }, [checkConnection]);
   
-  // Simplified sync function to avoid TypeScript recursion issues
+  // Properly typed sync function that avoids type inference issues
   const syncWithSupabase = useCallback(async (
     data: Record<string, unknown>,
     table: SupabaseTable,
@@ -62,13 +62,15 @@ export function useSyncStatus() {
     setIsSyncing(true);
 
     try {
-      // Type assertion to avoid TypeScript recursion
-      const tableRef = supabase.from(table as string);
+      // Use proper type assertion with "as const" to ensure correct typing
+      const tableString = table as "statuts" | "employes" | "employe_schedule" | "Taches" | "connection_logs";
       
-      // Check if record exists - done in steps to avoid complex type inference
-      let checkQuery = tableRef.select(idField);
-      checkQuery = checkQuery.eq(idField, data[idField]);
-      const checkResult = await checkQuery.maybeSingle();
+      // Check if record exists
+      const checkResult = await supabase
+        .from(tableString)
+        .select(idField)
+        .eq(idField, data[idField])
+        .maybeSingle();
       
       if (checkResult.error) throw checkResult.error;
       const existingData = checkResult.data;
@@ -76,17 +78,23 @@ export function useSyncStatus() {
       let result;
 
       if (existingData) {
-        // Update existing record - split into steps
-        let updateQuery = tableRef.update(data as any);
-        updateQuery = updateQuery.eq(idField, data[idField]);
-        const updateResult = await updateQuery.select();
+        // Update existing record
+        const updateResult = await supabase
+          .from(tableString)
+          // Safe type assertion just for the update operation
+          .update(data as Record<string, any>)
+          .eq(idField, data[idField])
+          .select();
         
         if (updateResult.error) throw updateResult.error;
         result = updateResult.data;
       } else {
-        // Create new record - split into steps
-        const insertQuery = tableRef.insert(data as any);
-        const insertResult = await insertQuery.select();
+        // Create new record
+        const insertResult = await supabase
+          .from(tableString)
+          // Safe type assertion just for the insert operation
+          .insert(data as Record<string, any>)
+          .select();
         
         if (insertResult.error) throw insertResult.error;
         result = insertResult.data;
@@ -102,7 +110,7 @@ export function useSyncStatus() {
     }
   }, [isConnected]);
   
-  // Fetch function with simplified typing to avoid recursion
+  // Properly typed fetch function
   const fetchFromSupabase = useCallback(async (table: SupabaseTable) => {
     if (!isConnected) {
       console.error("Impossible de récupérer les données: pas de connexion à Supabase");
@@ -112,9 +120,12 @@ export function useSyncStatus() {
     setIsSyncing(true);
     
     try {
-      // Type assertion to avoid TypeScript recursion
-      const tableRef = supabase.from(table as string);
-      const result = await tableRef.select('*');
+      // Use proper type assertion with "as const" to ensure correct typing
+      const tableString = table as "statuts" | "employes" | "employe_schedule" | "Taches" | "connection_logs";
+      
+      const result = await supabase
+        .from(tableString)
+        .select('*');
       
       if (result.error) throw result.error;
       

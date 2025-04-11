@@ -20,6 +20,7 @@ interface PlanningFiltersProps {
   projects: { id: string; code: string; name: string }[];
   filters: FilterOptions;
   onApplyFilters: (filters: FilterOptions) => void;
+  isAdmin: boolean;
 }
 
 export function PlanningFilters({
@@ -28,7 +29,8 @@ export function PlanningFilters({
   employees,
   projects,
   filters,
-  onApplyFilters
+  onApplyFilters,
+  isAdmin
 }: PlanningFiltersProps) {
   // État local des filtres (copie pour modifier sans impact direct)
   const [localFilters, setLocalFilters] = useState<FilterOptions>({
@@ -95,26 +97,28 @@ export function PlanningFilters({
         </DialogHeader>
 
         <div className="grid gap-6 py-4">
-          {/* Filtre par employé */}
-          <div className="space-y-2">
-            <Label htmlFor="employee">Employé</Label>
-            <Select
-              value={localFilters.employeeId || ""}
-              onValueChange={(value) => setLocalFilters(prev => ({ ...prev, employeeId: value || undefined }))}
-            >
-              <SelectTrigger id="employee">
-                <SelectValue placeholder="Tous les employés" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">Tous les employés</SelectItem>
-                {employees.map(employee => (
-                  <SelectItem key={employee.id} value={employee.id}>
-                    {employee.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Filtre par employé - visible uniquement pour les admins */}
+          {isAdmin && (
+            <div className="space-y-2">
+              <Label htmlFor="employee">Employé</Label>
+              <Select
+                value={localFilters.employeeId || ""}
+                onValueChange={(value) => setLocalFilters(prev => ({ ...prev, employeeId: value || undefined }))}
+              >
+                <SelectTrigger id="employee">
+                  <SelectValue placeholder="Tous les employés" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Tous les employés</SelectItem>
+                  {employees.map(employee => (
+                    <SelectItem key={employee.id} value={employee.id}>
+                      {employee.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {/* Filtre par projet */}
           <div className="space-y-2">

@@ -60,16 +60,15 @@ export function PlanningToolbar({
           Légende
         </Button>
         
-        {isAdmin && (
-          <Button 
-            variant={hasActiveFilters ? "default" : "outline"}
-            className={hasActiveFilters ? "" : "transition-all hover:bg-secondary"}
-            onClick={() => setIsFiltersOpen(true)}
-          >
-            <Filter className="mr-2 h-4 w-4" />
-            Filtres {hasActiveFilters && "(Actifs)"}
-          </Button>
-        )}
+        {/* Bouton de filtres visible pour tous les utilisateurs */}
+        <Button 
+          variant={hasActiveFilters ? "default" : "outline"}
+          className={hasActiveFilters ? "" : "transition-all hover:bg-secondary"}
+          onClick={() => setIsFiltersOpen(true)}
+        >
+          <Filter className="mr-2 h-4 w-4" />
+          Filtres {hasActiveFilters && "(Actifs)"}
+        </Button>
       </div>
       
       <PlanningFilters
@@ -79,6 +78,7 @@ export function PlanningToolbar({
         projects={projects}
         filters={filters}
         onApplyFilters={onFiltersChange}
+        isAdmin={isAdmin}
       />
     </div>
   );

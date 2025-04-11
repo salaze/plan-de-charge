@@ -23,8 +23,8 @@ export function ProjectFilterSelect({ projects, selectedProjectCode, onChange }:
         <SelectContent>
           <SelectItem value="all">Tous les projets</SelectItem>
           {projects.map(project => (
-            <SelectItem key={project.id} value={project.code}>
-              {project.name} ({project.code})
+            <SelectItem key={project.id} value={project.code || `project-${project.id}`}>
+              {project.name} ({project.code || 'N/A'})
             </SelectItem>
           ))}
         </SelectContent>

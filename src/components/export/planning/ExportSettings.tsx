@@ -58,8 +58,8 @@ const ExportSettings: React.FC<ExportSettingsProps> = ({ handleExport }) => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="excel">Excel (.xlsx)</SelectItem>
-              <SelectItem value="csv" disabled>CSV (.csv)</SelectItem>
-              <SelectItem value="json" disabled>JSON (.json)</SelectItem>
+              <SelectItem value="csv">CSV (.csv)</SelectItem>
+              <SelectItem value="json">JSON (.json)</SelectItem>
             </SelectContent>
           </Select>
         </div>

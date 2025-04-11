@@ -4,7 +4,7 @@ import { Files, FileJson } from 'lucide-react';
 import ExportSettings from '@/components/export/planning/ExportSettings';
 import ImportPlanning from '@/components/export/planning/ImportPlanning';
 import StatusLegendCard from '@/components/export/legend/StatusLegendCard';
-import useAvailableStatuses from '@/hooks/useAvailableStatuses';
+import { useAvailableStatuses } from '@/hooks/useAvailableStatuses';
 import { StatusCode } from '@/types';
 
 interface PlanningExportTabProps {

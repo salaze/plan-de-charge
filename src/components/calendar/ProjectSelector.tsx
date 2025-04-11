@@ -21,7 +21,7 @@ export function ProjectSelector({ projects, selectedProject, onProjectChange }: 
     <div className="space-y-3">
       <Label>Sélectionner un projet</Label>
       <Select 
-        value={selectedProject} 
+        value={selectedProject || "select-project"} 
         onValueChange={onProjectChange}
       >
         <SelectTrigger>
@@ -29,13 +29,13 @@ export function ProjectSelector({ projects, selectedProject, onProjectChange }: 
         </SelectTrigger>
         <SelectContent>
           {projects.map((project) => (
-            <SelectItem key={project.id} value={project.code}>
+            <SelectItem key={project.id} value={project.code || `project-${project.id}`}>
               <div className="flex items-center gap-2">
                 <div 
                   className="w-3 h-3 rounded-full" 
                   style={{ backgroundColor: project.color }}
                 />
-                {project.code} - {project.name}
+                {project.code || project.id} - {project.name}
               </div>
             </SelectItem>
           ))}

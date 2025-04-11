@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
 export function useSyncStatus() {
-  const [isSyncing, setIsSyncing] = useState(false);
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
   const [isConnected, setIsConnected] = useState<boolean | null>(null);
   
@@ -15,31 +15,43 @@ export function useSyncStatus() {
       const { data, error } = await supabase.from('statuts').select('id').limit(1);
       
       if (error) {
-        setIsConnected(false);
         console.error("Erreur de connexion à Supabase:", error);
+        setIsConnected(false);
+        return false;
       } else {
         setIsConnected(true);
+        return true;
       }
     } catch (error) {
-      setIsConnected(false);
       console.error("Erreur lors de la vérification de la connexion:", error);
+      setIsConnected(false);
+      return false;
     }
   }, []);
   
   // Vérifier la connexion au démarrage
   useEffect(() => {
+    let isMounted = true;
+    
     const checkInitialConnection = async () => {
-      await checkConnection();
+      if (isMounted) {
+        await checkConnection();
+      }
     };
     
     checkInitialConnection();
     
     // Vérifier la connexion toutes les 30 secondes
     const interval = setInterval(() => {
-      checkConnection();
+      if (isMounted) {
+        checkConnection();
+      }
     }, 30000);
     
-    return () => clearInterval(interval);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, [checkConnection]);
   
   // Fonction pour forcer une synchronisation manuelle

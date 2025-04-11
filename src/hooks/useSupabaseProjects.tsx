@@ -24,9 +24,8 @@ export const useSupabaseProjects = () => {
   const fetchProjects = async () => {
     try {
       setLoading(true);
-      // We need to use any here to work with dynamic tables
       const { data, error } = await supabase
-        .from('projets' as any)
+        .from('projets')
         .select('*')
         .order('code');
 
@@ -84,9 +83,8 @@ export const useSupabaseProjects = () => {
         color: project.color
       };
 
-      // We need to use any here to work with dynamic tables
       const { data, error } = await supabase
-        .from('projets' as any)
+        .from('projets')
         .insert([supabaseProject])
         .select();
 
@@ -94,7 +92,8 @@ export const useSupabaseProjects = () => {
         throw error;
       }
 
-      if (data && data[0]) {
+      if (data && data.length > 0) {
+        // Use type assertion to safely handle data
         const newProject: SupabaseProject = {
           id: data[0].id || '',
           code: data[0].code || '',
@@ -117,9 +116,8 @@ export const useSupabaseProjects = () => {
 
   const updateProject = async (id: string, project: Partial<SupabaseProject>) => {
     try {
-      // We need to use any here to work with dynamic tables
       const { data, error } = await supabase
-        .from('projets' as any)
+        .from('projets')
         .update(project)
         .eq('id', id)
         .select();
@@ -128,7 +126,8 @@ export const useSupabaseProjects = () => {
         throw error;
       }
 
-      if (data && data[0]) {
+      if (data && data.length > 0) {
+        // Use type assertion to safely handle data
         const updatedProject: SupabaseProject = {
           id: data[0].id || '',
           code: data[0].code || '',
@@ -151,9 +150,8 @@ export const useSupabaseProjects = () => {
 
   const deleteProject = async (id: string) => {
     try {
-      // We need to use any here to work with dynamic tables
       const { error } = await supabase
-        .from('projets' as any)
+        .from('projets')
         .delete()
         .eq('id', id);
 

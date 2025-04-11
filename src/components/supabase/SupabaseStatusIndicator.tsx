@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Database, Cloud, CloudOff, RefreshCw, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { 
@@ -12,8 +12,9 @@ import { Button } from '@/components/ui/button';
 import { useSyncStatus } from '@/hooks/useSyncStatus';
 
 export function SupabaseStatusIndicator() {
-  const { isConnected, isSyncing, lastSyncTime, checkConnection } = useSyncStatus();
-  const [isChecking, setIsChecking] = useState(false);
+  const syncStatus = useSyncStatus();
+  const { isConnected, isSyncing, lastSyncTime, checkConnection } = syncStatus;
+  const [isChecking, setIsChecking] = React.useState(false);
 
   const handleManualCheck = async () => {
     setIsChecking(true);

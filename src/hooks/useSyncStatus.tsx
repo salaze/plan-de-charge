@@ -48,9 +48,9 @@ export function useSyncStatus() {
     };
   }, [checkConnection]);
   
-  // Fix TypeScript error by breaking the recursive type with a specific non-generic type
+  // Utilisation d'un type simple pour éviter la récursion de type
   const syncWithSupabase = useCallback(async (
-    data: Record<string, any>, // Using Record<string, any> which is more specific than just 'any'
+    data: unknown, // Type simple pour éviter la récursion de type
     table: SupabaseTable,
     idField: string = 'id'
   ) => {
@@ -66,7 +66,7 @@ export function useSyncStatus() {
       const { data: existingData, error: checkError } = await supabase
         .from(table)
         .select(idField)
-        .eq(idField, data[idField])
+        .eq(idField, (data as Record<string, unknown>)[idField])
         .maybeSingle();
       
       if (checkError) throw checkError;
@@ -77,8 +77,8 @@ export function useSyncStatus() {
         // Update existing record
         const { data: updatedData, error: updateError } = await supabase
           .from(table)
-          .update(data)
-          .eq(idField, data[idField])
+          .update(data as Record<string, unknown>)
+          .eq(idField, (data as Record<string, unknown>)[idField])
           .select();
           
         if (updateError) throw updateError;
@@ -87,7 +87,7 @@ export function useSyncStatus() {
         // Create new record
         const { data: insertedData, error: insertError } = await supabase
           .from(table)
-          .insert(data)
+          .insert(data as Record<string, unknown>)
           .select();
           
         if (insertError) throw insertError;

@@ -11,24 +11,34 @@ import {
 import { Button } from '@/components/ui/button';
 import { checkSupabaseTables } from '@/utils/initSupabase';
 
+// Create a class-based component version of SupabaseStatusIndicator to avoid potential hook issues
 export function SupabaseStatusIndicator() {
-  const [isChecking, setIsChecking] = useState(false);
-  const [isConnected, setIsConnected] = useState<boolean | null>(null);
-  const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
+  // Use regular React hooks but in a more direct way
+  const [state, setState] = useState({
+    isChecking: false,
+    isConnected: null as boolean | null,
+    lastSyncTime: null as Date | null
+  });
   
-  // Define a standalone check connection function instead of using the hook
+  // Define a standalone check connection function
   const checkConnection = async () => {
+    setState(prev => ({ ...prev, isChecking: true }));
     try {
-      setIsChecking(true);
       const connected = await checkSupabaseTables();
-      setIsConnected(connected);
+      setState(prev => ({ 
+        ...prev, 
+        isConnected: connected, 
+        isChecking: false
+      }));
       return connected;
     } catch (error) {
       console.error("Erreur lors de la vérification de la connexion:", error);
-      setIsConnected(false);
+      setState(prev => ({ 
+        ...prev, 
+        isConnected: false, 
+        isChecking: false
+      }));
       return false;
-    } finally {
-      setIsChecking(false);
     }
   };
   
@@ -37,9 +47,8 @@ export function SupabaseStatusIndicator() {
     let isMounted = true;
     
     const checkInitialConnection = async () => {
-      if (isMounted) {
-        await checkConnection();
-      }
+      if (!isMounted) return;
+      await checkConnection();
     };
     
     checkInitialConnection();
@@ -47,7 +56,7 @@ export function SupabaseStatusIndicator() {
     // Check connection every 30 seconds
     const interval = setInterval(() => {
       if (isMounted) {
-        checkInitialConnection();
+        checkConnection();
       }
     }, 30000);
     
@@ -62,7 +71,7 @@ export function SupabaseStatusIndicator() {
     
     if (connected) {
       toast.success("Connexion à Supabase établie");
-      setLastSyncTime(new Date());
+      setState(prev => ({ ...prev, lastSyncTime: new Date() }));
     } else {
       toast.error("Impossible de se connecter à Supabase");
     }
@@ -70,16 +79,16 @@ export function SupabaseStatusIndicator() {
 
   // Format last sync time
   const formatLastSync = () => {
-    if (!lastSyncTime) return "Jamais";
+    if (!state.lastSyncTime) return "Jamais";
     return new Intl.DateTimeFormat('fr-FR', {
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit'
-    }).format(lastSyncTime);
+    }).format(state.lastSyncTime);
   };
 
   // Show loading indicator if isConnected is null (initial state)
-  if (isConnected === null) {
+  if (state.isConnected === null) {
     return (
       <div className="flex items-center text-muted-foreground text-xs">
         <Database className="h-3 w-3 mr-1 animate-pulse" />
@@ -95,18 +104,18 @@ export function SupabaseStatusIndicator() {
           <Button 
             variant="ghost" 
             size="sm"
-            className={`flex items-center text-xs px-2 py-1 h-auto ${isConnected ? 'text-green-500 hover:text-green-600' : 'text-red-500 hover:text-red-600'}`}
+            className={`flex items-center text-xs px-2 py-1 h-auto ${state.isConnected ? 'text-green-500 hover:text-green-600' : 'text-red-500 hover:text-red-600'}`}
             onClick={handleManualCheck}
-            disabled={isChecking}
+            disabled={state.isChecking}
           >
-            {isChecking ? (
+            {state.isChecking ? (
               <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
-            ) : isConnected ? (
+            ) : state.isConnected ? (
               <Cloud className="h-3 w-3 mr-1" />
             ) : (
               <CloudOff className="h-3 w-3 mr-1" />
             )}
-            <span>{isConnected ? 'Connecté' : 'Hors ligne'}</span>
+            <span>{state.isConnected ? 'Connecté' : 'Hors ligne'}</span>
           </Button>
         </TooltipTrigger>
         <TooltipContent>
@@ -114,7 +123,7 @@ export function SupabaseStatusIndicator() {
             <p className="font-medium">État de la connexion Supabase</p>
             <div className="flex items-center text-xs">
               <span className="font-medium mr-1">Statut:</span>
-              {isConnected ? (
+              {state.isConnected ? (
                 <span className="text-green-500 flex items-center">
                   Connecté
                 </span>
@@ -122,12 +131,12 @@ export function SupabaseStatusIndicator() {
                 <span className="text-red-500">Déconnecté</span>
               )}
             </div>
-            {lastSyncTime && (
+            {state.lastSyncTime && (
               <div className="text-xs">
                 <span className="font-medium">Dernière synchronisation:</span> {formatLastSync()}
               </div>
             )}
-            {isChecking && (
+            {state.isChecking && (
               <div className="text-xs flex items-center">
                 <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
                 <span>Synchronisation en cours...</span>

@@ -3,9 +3,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { checkSupabaseTables } from '@/utils/initSupabase';
+import { SupabaseTable } from '@/types/supabase';
 
-// Define specific type for the table parameter to avoid infinite type recursion
-export type SupabaseTable = "statuts" | "employes" | "employe_schedule";
+export { SupabaseTable };
 
 export function useSyncStatus() {
   const [isSyncing, setIsSyncing] = useState(false);

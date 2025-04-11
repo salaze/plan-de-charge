@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { SupabaseTable } from '@/hooks/useSyncStatus';
+import { SupabaseTable } from '@/types/supabase';
 
 export async function checkSupabaseTables() {
   try {

@@ -2,7 +2,8 @@
 import { useCallback } from 'react';
 import { MonthData } from '@/types';
 import { toast } from 'sonner';
-import { useSyncStatus, SupabaseTable } from '@/hooks/useSyncStatus';
+import { useSyncStatus } from '@/hooks/useSyncStatus';
+import { SupabaseTable } from '@/types/supabase';
 
 export const usePlanningPersistence = () => {
   // Use useSyncStatus hook within the component context

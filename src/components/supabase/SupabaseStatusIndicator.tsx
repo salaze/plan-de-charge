@@ -100,5 +100,5 @@ export function SupabaseStatusIndicator() {
   );
 }
 
-// Import manquant pour Check icon
+// Import for Check icon
 import { Check } from 'lucide-react';

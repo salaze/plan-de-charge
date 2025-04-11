@@ -15,7 +15,6 @@ export const usePlanningPersistence = () => {
     // Si connecté à Supabase, tenter une synchronisation de chaque employé
     if (isConnected && updatedData.employees) {
       // Note: La synchronisation est tentée mais n'est pas bloquante
-      // On pourrait implémenter une file d'attente pour les synchronisations si nécessaire
       updatedData.employees.forEach(employee => {
         try {
           syncWithSupabase(

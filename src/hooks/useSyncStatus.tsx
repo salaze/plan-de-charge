@@ -10,7 +10,11 @@ export function useSyncStatus() {
   
   // Vérifier la connexion au démarrage
   useEffect(() => {
-    checkConnection();
+    const checkInitialConnection = async () => {
+      await checkConnection();
+    };
+    
+    checkInitialConnection();
     
     // Vérifier la connexion toutes les 30 secondes
     const interval = setInterval(checkConnection, 30000);
@@ -34,7 +38,7 @@ export function useSyncStatus() {
     }
   }, []);
   
-  // Fonction pour forcer une synchronisation manuelle - use useCallback to avoid recreating this function
+  // Fonction pour forcer une synchronisation manuelle
   const syncWithSupabase = useCallback(async (data: any, table: string, idField: string = 'id') => {
     if (!isConnected) {
       toast.error("Impossible de synchroniser: pas de connexion à Supabase");
@@ -67,7 +71,6 @@ export function useSyncStatus() {
           
         if (updateError) throw updateError;
         result = updatedData;
-        toast.success(`Enregistrement mis à jour dans Supabase`);
       } else {
         // Création d'un nouvel enregistrement
         const { data: insertedData, error: insertError } = await supabase
@@ -77,7 +80,6 @@ export function useSyncStatus() {
           
         if (insertError) throw insertError;
         result = insertedData;
-        toast.success(`Nouvel enregistrement ajouté dans Supabase`);
       }
       
       setLastSyncTime(new Date());

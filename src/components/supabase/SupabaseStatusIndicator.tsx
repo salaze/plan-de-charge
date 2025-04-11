@@ -15,7 +15,7 @@ interface SupabaseStatusIndicatorProps {
   // Add any props if needed
 }
 
-export const SupabaseStatusIndicator: React.FC<SupabaseStatusIndicatorProps> = () => {
+export function SupabaseStatusIndicator() {
   const { isConnected, lastSyncTime, checkConnection, isSyncing } = useSyncStatus();
   
   const handleManualCheck = async () => {
@@ -98,6 +98,6 @@ export const SupabaseStatusIndicator: React.FC<SupabaseStatusIndicatorProps> = (
       </Tooltip>
     </TooltipProvider>
   );
-};
+}
 
 export default SupabaseStatusIndicator;

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Layout } from '@/components/layout/Layout';
@@ -14,20 +13,17 @@ import { SupabaseStatusIndicator } from '@/components/supabase/SupabaseStatusInd
 
 const Settings = () => {
   const [showWeekends, setShowWeekends] = useState<boolean>(() => {
-    // Récupérer la valeur depuis localStorage ou utiliser true par défaut
     const saved = localStorage.getItem('showWeekends');
     return saved !== null ? JSON.parse(saved) : true;
   });
   
   const [autoSave, setAutoSave] = useState<boolean>(() => {
-    // Récupérer la valeur depuis localStorage ou utiliser true par défaut
     const saved = localStorage.getItem('autoSave');
     return saved !== null ? JSON.parse(saved) : true;
   });
   
   const [isMigrating, setIsMigrating] = useState(false);
   
-  // Sauvegarder les paramètres lors des changements
   useEffect(() => {
     localStorage.setItem('showWeekends', JSON.stringify(showWeekends));
     toast.success('Paramètre "Afficher les weekends" mis à jour');

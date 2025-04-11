@@ -26,6 +26,7 @@ export const usePlanningPersistence = () => {
         try {
           // Only sync if we have an id
           if (employee.id) {
+            // Cast the employee data to Record<string, any> to match the updated type
             syncWithSupabase(
               {
                 id: employee.id,

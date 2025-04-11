@@ -48,8 +48,8 @@ export function useSyncStatus() {
     };
   }, [checkConnection]);
   
-  // Function to safely sync with Supabase with proper type annotations
-  const syncWithSupabase = useCallback(async (data: any, table: SupabaseTable, idField: string = 'id') => {
+  // Use explicit type annotation for the data parameter to avoid circular references
+  const syncWithSupabase = useCallback(async (data: Record<string, any>, table: SupabaseTable, idField: string = 'id') => {
     if (!isConnected) {
       console.error("Impossible de synchroniser: pas de connexion à Supabase");
       return false;

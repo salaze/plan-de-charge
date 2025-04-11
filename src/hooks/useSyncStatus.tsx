@@ -48,7 +48,7 @@ export function useSyncStatus() {
     };
   }, [checkConnection]);
   
-  // Properly typed sync function that avoids type inference issues
+  // Using explicit typing to avoid recursion issues
   const syncWithSupabase = useCallback(async (
     data: Record<string, unknown>,
     table: SupabaseTable,
@@ -62,15 +62,41 @@ export function useSyncStatus() {
     setIsSyncing(true);
 
     try {
-      // Use proper type assertion with "as const" to ensure correct typing
-      const tableString = table as "statuts" | "employes" | "employe_schedule" | "Taches" | "connection_logs";
+      // Handle each table type explicitly to avoid TypeScript recursion
+      let checkResult;
       
-      // Check if record exists
-      const checkResult = await supabase
-        .from(tableString)
-        .select(idField)
-        .eq(idField, data[idField])
-        .maybeSingle();
+      if (table === "statuts") {
+        checkResult = await supabase
+          .from("statuts")
+          .select(idField)
+          .eq(idField, data[idField] as string)
+          .maybeSingle();
+      } else if (table === "employes") {
+        checkResult = await supabase
+          .from("employes")
+          .select(idField)
+          .eq(idField, data[idField] as string)
+          .maybeSingle();
+      } else if (table === "employe_schedule") {
+        checkResult = await supabase
+          .from("employe_schedule")
+          .select(idField)
+          .eq(idField, data[idField] as string)
+          .maybeSingle();
+      } else if (table === "Taches") {
+        checkResult = await supabase
+          .from("Taches")
+          .select(idField)
+          .eq(idField, data[idField] as string)
+          .maybeSingle();
+      } else {
+        // connection_logs as fallback
+        checkResult = await supabase
+          .from("connection_logs")
+          .select(idField)
+          .eq(idField, data[idField] as string)
+          .maybeSingle();
+      }
       
       if (checkResult.error) throw checkResult.error;
       const existingData = checkResult.data;
@@ -78,23 +104,73 @@ export function useSyncStatus() {
       let result;
 
       if (existingData) {
-        // Update existing record
-        const updateResult = await supabase
-          .from(tableString)
-          // Safe type assertion just for the update operation
-          .update(data as Record<string, any>)
-          .eq(idField, data[idField])
-          .select();
+        // Update existing record based on table type
+        let updateResult;
+        
+        if (table === "statuts") {
+          updateResult = await supabase
+            .from("statuts")
+            .update(data as Record<string, any>)
+            .eq(idField, data[idField] as string)
+            .select();
+        } else if (table === "employes") {
+          updateResult = await supabase
+            .from("employes")
+            .update(data as Record<string, any>)
+            .eq(idField, data[idField] as string)
+            .select();
+        } else if (table === "employe_schedule") {
+          updateResult = await supabase
+            .from("employe_schedule")
+            .update(data as Record<string, any>)
+            .eq(idField, data[idField] as string)
+            .select();
+        } else if (table === "Taches") {
+          updateResult = await supabase
+            .from("Taches")
+            .update(data as Record<string, any>)
+            .eq(idField, data[idField] as string)
+            .select();
+        } else {
+          updateResult = await supabase
+            .from("connection_logs")
+            .update(data as Record<string, any>)
+            .eq(idField, data[idField] as string)
+            .select();
+        }
         
         if (updateResult.error) throw updateResult.error;
         result = updateResult.data;
       } else {
-        // Create new record
-        const insertResult = await supabase
-          .from(tableString)
-          // Safe type assertion just for the insert operation
-          .insert(data as Record<string, any>)
-          .select();
+        // Create new record based on table type
+        let insertResult;
+        
+        if (table === "statuts") {
+          insertResult = await supabase
+            .from("statuts")
+            .insert(data as Record<string, any>)
+            .select();
+        } else if (table === "employes") {
+          insertResult = await supabase
+            .from("employes")
+            .insert(data as Record<string, any>)
+            .select();
+        } else if (table === "employe_schedule") {
+          insertResult = await supabase
+            .from("employe_schedule")
+            .insert(data as Record<string, any>)
+            .select();
+        } else if (table === "Taches") {
+          insertResult = await supabase
+            .from("Taches")
+            .insert(data as Record<string, any>)
+            .select();
+        } else {
+          insertResult = await supabase
+            .from("connection_logs")
+            .insert(data as Record<string, any>)
+            .select();
+        }
         
         if (insertResult.error) throw insertResult.error;
         result = insertResult.data;
@@ -110,7 +186,7 @@ export function useSyncStatus() {
     }
   }, [isConnected]);
   
-  // Properly typed fetch function
+  // Fetch function with explicit table handling to avoid type recursion
   const fetchFromSupabase = useCallback(async (table: SupabaseTable) => {
     if (!isConnected) {
       console.error("Impossible de récupérer les données: pas de connexion à Supabase");
@@ -120,12 +196,19 @@ export function useSyncStatus() {
     setIsSyncing(true);
     
     try {
-      // Use proper type assertion with "as const" to ensure correct typing
-      const tableString = table as "statuts" | "employes" | "employe_schedule" | "Taches" | "connection_logs";
+      let result;
       
-      const result = await supabase
-        .from(tableString)
-        .select('*');
+      if (table === "statuts") {
+        result = await supabase.from("statuts").select('*');
+      } else if (table === "employes") {
+        result = await supabase.from("employes").select('*');
+      } else if (table === "employe_schedule") {
+        result = await supabase.from("employe_schedule").select('*');
+      } else if (table === "Taches") {
+        result = await supabase.from("Taches").select('*');
+      } else {
+        result = await supabase.from("connection_logs").select('*');
+      }
       
       if (result.error) throw result.error;
       

@@ -11,10 +11,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { useSyncStatus } from '@/hooks/useSyncStatus';
 
-interface SupabaseStatusIndicatorProps {
-  // Add any props if needed
-}
-
 export function SupabaseStatusIndicator() {
   const { isConnected, lastSyncTime, checkConnection, isSyncing } = useSyncStatus();
   

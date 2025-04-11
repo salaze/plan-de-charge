@@ -48,12 +48,12 @@ export function useSyncStatus() {
     };
   }, [checkConnection]);
   
-  // Fix the type by using a simple type without recursion
-  const syncWithSupabase = useCallback(async (
-    data: any,  // Use 'any' here to avoid recursion issues
+  // Fix the complex TypeScript error by using a simple object type signature
+  const syncWithSupabase = useCallback(async <T extends Record<string, any>>(
+    data: T,
     table: SupabaseTable,
     idField: string = 'id'
-  ) => {
+  ): Promise<any> => {
     if (!isConnected) {
       console.error("Impossible de synchroniser: pas de connexion à Supabase");
       return false;

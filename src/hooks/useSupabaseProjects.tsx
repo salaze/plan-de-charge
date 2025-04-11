@@ -24,8 +24,9 @@ export const useSupabaseProjects = () => {
   const fetchProjects = async () => {
     try {
       setLoading(true);
+      // Use 'as any' to work around the TypeScript error until Supabase types are updated
       const { data, error } = await supabase
-        .from('projets')
+        .from('projets' as any)
         .select('*')
         .order('code');
 
@@ -33,7 +34,17 @@ export const useSupabaseProjects = () => {
         throw error;
       }
 
-      setProjects(data || []);
+      // Safely type the returned data
+      const typedData: SupabaseProject[] = data ? data.map(item => ({
+        id: item.id,
+        code: item.code,
+        name: item.name,
+        color: item.color,
+        created_at: item.created_at,
+        updated_at: item.updated_at
+      })) : [];
+      
+      setProjects(typedData);
     } catch (error) {
       console.error('Erreur lors du chargement des projets:', error);
       setError('Impossible de charger les projets depuis Supabase');
@@ -65,7 +76,7 @@ export const useSupabaseProjects = () => {
   const addProject = async (project: Omit<SupabaseProject, 'id' | 'created_at' | 'updated_at'>) => {
     try {
       const { data, error } = await supabase
-        .from('projets')
+        .from('projets' as any)
         .insert([project])
         .select();
 
@@ -73,8 +84,20 @@ export const useSupabaseProjects = () => {
         throw error;
       }
 
-      setProjects(prev => [...prev, data[0]]);
-      return data[0];
+      if (data && data[0]) {
+        const newProject: SupabaseProject = {
+          id: data[0].id,
+          code: data[0].code,
+          name: data[0].name,
+          color: data[0].color,
+          created_at: data[0].created_at,
+          updated_at: data[0].updated_at
+        };
+        
+        setProjects(prev => [...prev, newProject]);
+        return newProject;
+      }
+      return null;
     } catch (error) {
       console.error("Erreur lors de l'ajout du projet:", error);
       toast.error("Impossible d'ajouter le projet");
@@ -85,7 +108,7 @@ export const useSupabaseProjects = () => {
   const updateProject = async (id: string, project: Partial<SupabaseProject>) => {
     try {
       const { data, error } = await supabase
-        .from('projets')
+        .from('projets' as any)
         .update(project)
         .eq('id', id)
         .select();
@@ -94,8 +117,20 @@ export const useSupabaseProjects = () => {
         throw error;
       }
 
-      setProjects(prev => prev.map(p => p.id === id ? data[0] : p));
-      return data[0];
+      if (data && data[0]) {
+        const updatedProject: SupabaseProject = {
+          id: data[0].id,
+          code: data[0].code,
+          name: data[0].name,
+          color: data[0].color,
+          created_at: data[0].created_at,
+          updated_at: data[0].updated_at
+        };
+        
+        setProjects(prev => prev.map(p => p.id === id ? updatedProject : p));
+        return updatedProject;
+      }
+      return null;
     } catch (error) {
       console.error('Erreur lors de la mise à jour du projet:', error);
       toast.error('Impossible de mettre à jour le projet');
@@ -106,7 +141,7 @@ export const useSupabaseProjects = () => {
   const deleteProject = async (id: string) => {
     try {
       const { error } = await supabase
-        .from('projets')
+        .from('projets' as any)
         .delete()
         .eq('id', id);
 

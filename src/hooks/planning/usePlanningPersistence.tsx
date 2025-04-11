@@ -40,8 +40,7 @@ export const usePlanningPersistence = () => {
                 is_highlighted: scheduleItem.isHighlighted,
                 project_code: scheduleItem.projectCode
               },
-              'employe_schedule',
-              'id'
+              'employe_schedule'
             );
           });
         } catch (error) {
@@ -60,8 +59,7 @@ export const usePlanningPersistence = () => {
                 name: project.name,
                 color: project.color
               },
-              'projets',
-              'id'
+              'projets'
             );
           } catch (error) {
             console.error("Erreur lors de la synchronisation des projets:", error);

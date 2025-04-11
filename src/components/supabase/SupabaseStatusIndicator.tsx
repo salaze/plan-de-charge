@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { Database, Cloud, CloudOff, RefreshCw, Check } from 'lucide-react';
+import React from 'react';
+import { Database, Cloud, CloudOff, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { 
   Tooltip,
@@ -13,7 +13,7 @@ import { useSyncStatus } from '@/hooks/useSyncStatus';
 
 export function SupabaseStatusIndicator() {
   const { isConnected, isSyncing, lastSyncTime, checkConnection } = useSyncStatus();
-  const [isChecking, setIsChecking] = useState(false);
+  const [isChecking, setIsChecking] = React.useState(false);
 
   const handleManualCheck = async () => {
     setIsChecking(true);
@@ -37,6 +37,7 @@ export function SupabaseStatusIndicator() {
     }).format(lastSyncTime);
   };
 
+  // Afficher un indicateur de chargement si isConnected est null (état initial)
   if (isConnected === null) {
     return (
       <div className="flex items-center text-muted-foreground text-xs">
@@ -98,3 +99,6 @@ export function SupabaseStatusIndicator() {
     </TooltipProvider>
   );
 }
+
+// Import manquant pour Check icon
+import { Check } from 'lucide-react';

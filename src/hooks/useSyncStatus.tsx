@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -17,8 +17,9 @@ export function useSyncStatus() {
     return () => clearInterval(interval);
   }, []);
   
-  const checkConnection = async () => {
+  const checkConnection = useCallback(async () => {
     try {
+      // Use a simpler query on a table we know exists
       const { data, error } = await supabase.from('statuts').select('id').limit(1);
       
       if (error) {
@@ -31,10 +32,10 @@ export function useSyncStatus() {
       setIsConnected(false);
       console.error("Erreur lors de la vérification de la connexion:", error);
     }
-  };
+  }, []);
   
-  // Fonction pour forcer une synchronisation manuelle
-  const syncWithSupabase = async (data: any, table: string, idField: string = 'id') => {
+  // Fonction pour forcer une synchronisation manuelle - use useCallback to avoid recreating this function
+  const syncWithSupabase = useCallback(async (data: any, table: string, idField: string = 'id') => {
     if (!isConnected) {
       toast.error("Impossible de synchroniser: pas de connexion à Supabase");
       return false;
@@ -43,12 +44,14 @@ export function useSyncStatus() {
     setIsSyncing(true);
     
     try {
-      // Vérifier si l'enregistrement existe déjà
-      const { data: existingData, error: checkError } = await supabase
-        .from(table)
+      // Use the any type for now to work around the type issues
+      const query = supabase
+        .from(table as any)
         .select(idField)
         .eq(idField, data[idField])
         .maybeSingle();
+      
+      const { data: existingData, error: checkError } = await query;
       
       if (checkError) throw checkError;
       
@@ -57,7 +60,7 @@ export function useSyncStatus() {
       if (existingData) {
         // Mise à jour d'un enregistrement existant
         const { data: updatedData, error: updateError } = await supabase
-          .from(table)
+          .from(table as any)
           .update(data)
           .eq(idField, data[idField])
           .select();
@@ -68,7 +71,7 @@ export function useSyncStatus() {
       } else {
         // Création d'un nouvel enregistrement
         const { data: insertedData, error: insertError } = await supabase
-          .from(table)
+          .from(table as any)
           .insert([data])
           .select();
           
@@ -86,10 +89,10 @@ export function useSyncStatus() {
     } finally {
       setIsSyncing(false);
     }
-  };
+  }, [isConnected]);
   
   // Fonction pour récupérer des données depuis Supabase
-  const fetchFromSupabase = async (table: string, query = {}) => {
+  const fetchFromSupabase = useCallback(async (table: string, query = {}) => {
     if (!isConnected) {
       toast.error("Impossible de récupérer les données: pas de connexion à Supabase");
       return null;
@@ -99,7 +102,7 @@ export function useSyncStatus() {
     
     try {
       const { data, error } = await supabase
-        .from(table)
+        .from(table as any)
         .select('*')
         .order('created_at', { ascending: false });
         
@@ -114,7 +117,7 @@ export function useSyncStatus() {
     } finally {
       setIsSyncing(false);
     }
-  };
+  }, [isConnected]);
   
   return {
     isSyncing,

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Database, Cloud, CloudOff, RefreshCw, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { 
@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { useSyncStatus } from '@/hooks/useSyncStatus';
 
 export function SupabaseStatusIndicator() {
+  // Properly use the hook to extract values
   const syncStatus = useSyncStatus();
   const { isConnected, isSyncing, lastSyncTime, checkConnection } = syncStatus;
   const [isChecking, setIsChecking] = useState(false);

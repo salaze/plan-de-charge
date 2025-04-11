@@ -21,7 +21,7 @@ export function useStatusOptions(defaultStatuses: StatusCode[] = []) {
           .filter((status: any) => status.code && status.code.trim() !== '') // Filter out any empty codes
           .map((status: any) => ({
             value: status.code as StatusCode,
-            label: status.label || status.code
+            label: status.label || status.code || 'Status'
           }));
         
         setAvailableStatuses([

@@ -49,7 +49,7 @@ export function StatusSelector({ value, onChange }: StatusSelectorProps) {
         <div className="flex flex-col divide-y divide-border">
           {statuses.map((status) => (
             <button
-              key={status}
+              key={status || 'unknown-status'}
               className={cn(
                 "p-2.5 text-left hover:bg-secondary transition-colors",
                 status === value && "bg-secondary"

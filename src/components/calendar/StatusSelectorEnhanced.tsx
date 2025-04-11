@@ -28,7 +28,7 @@ export function StatusSelectorEnhanced({
   selectedPeriod = 'AM'
 }: StatusSelectorEnhancedProps) {
   const [highlightedStatus, setHighlightedStatus] = useState(isHighlighted);
-  const [selectedProject, setSelectedProject] = useState(projectCode);
+  const [selectedProject, setSelectedProject] = useState(projectCode || 'no-project');
   const [selectedStatus, setSelectedStatus] = useState<StatusCode>(value || 'none');
   
   // Use our custom hook to get available statuses
@@ -38,7 +38,7 @@ export function StatusSelectorEnhanced({
   useEffect(() => {
     setSelectedStatus(value || 'none');
     setHighlightedStatus(isHighlighted);
-    setSelectedProject(projectCode || '');
+    setSelectedProject(projectCode || 'no-project');
   }, [value, isHighlighted, projectCode]);
   
   const handleStatusChange = (newStatus: StatusCode) => {
@@ -46,7 +46,7 @@ export function StatusSelectorEnhanced({
     
     // Réinitialiser le projet sélectionné si le statut n'est pas "projet"
     if (newStatus !== 'projet') {
-      setSelectedProject('');
+      setSelectedProject('no-project');
     }
   };
   
@@ -59,7 +59,7 @@ export function StatusSelectorEnhanced({
   };
   
   const handleSubmit = () => {
-    if (selectedStatus === 'projet' && !selectedProject) {
+    if (selectedStatus === 'projet' && (!selectedProject || selectedProject === 'no-project')) {
       toast.error("Veuillez sélectionner un projet");
       return;
     }

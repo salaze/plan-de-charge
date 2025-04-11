@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Database, Cloud, CloudOff, RefreshCw } from 'lucide-react';
+import { Database, Cloud, CloudOff, RefreshCw, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { 
   Tooltip,
@@ -10,7 +10,6 @@ import {
 } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 import { useSyncStatus } from '@/hooks/useSyncStatus';
-import { Check } from 'lucide-react';
 
 export function SupabaseStatusIndicator() {
   const { isConnected, isSyncing, lastSyncTime, checkConnection } = useSyncStatus();

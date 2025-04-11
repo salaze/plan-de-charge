@@ -24,9 +24,9 @@ export const useSupabaseProjects = () => {
   const fetchProjects = async () => {
     try {
       setLoading(true);
-      // @ts-ignore - TypeScript doesn't know about projets table yet
+      // We need to use any here to work with dynamic tables
       const { data, error } = await supabase
-        .from('projets')
+        .from('projets' as any)
         .select('*')
         .order('code');
 
@@ -77,10 +77,17 @@ export const useSupabaseProjects = () => {
 
   const addProject = async (project: Omit<SupabaseProject, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      // @ts-ignore - TypeScript doesn't know about projets table yet
+      // Transform to the expected format for Supabase
+      const supabaseProject = {
+        code: project.code,
+        name: project.name,
+        color: project.color
+      };
+
+      // We need to use any here to work with dynamic tables
       const { data, error } = await supabase
-        .from('projets')
-        .insert([project])
+        .from('projets' as any)
+        .insert([supabaseProject])
         .select();
 
       if (error) {
@@ -110,9 +117,9 @@ export const useSupabaseProjects = () => {
 
   const updateProject = async (id: string, project: Partial<SupabaseProject>) => {
     try {
-      // @ts-ignore - TypeScript doesn't know about projets table yet
+      // We need to use any here to work with dynamic tables
       const { data, error } = await supabase
-        .from('projets')
+        .from('projets' as any)
         .update(project)
         .eq('id', id)
         .select();
@@ -144,9 +151,9 @@ export const useSupabaseProjects = () => {
 
   const deleteProject = async (id: string) => {
     try {
-      // @ts-ignore - TypeScript doesn't know about projets table yet
+      // We need to use any here to work with dynamic tables
       const { error } = await supabase
-        .from('projets')
+        .from('projets' as any)
         .delete()
         .eq('id', id);
 

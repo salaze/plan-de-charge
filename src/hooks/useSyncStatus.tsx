@@ -8,22 +8,7 @@ export function useSyncStatus() {
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
   const [isConnected, setIsConnected] = useState<boolean | null>(null);
   
-  // Vérifier la connexion au démarrage
-  useEffect(() => {
-    const checkInitialConnection = async () => {
-      await checkConnection();
-    };
-    
-    checkInitialConnection();
-    
-    // Vérifier la connexion toutes les 30 secondes
-    const interval = setInterval(() => {
-      checkConnection();
-    }, 30000);
-    
-    return () => clearInterval(interval);
-  }, []);
-  
+  // Define checkConnection before using it in useEffect
   const checkConnection = useCallback(async () => {
     try {
       // Use a simpler query on a table we know exists
@@ -41,6 +26,22 @@ export function useSyncStatus() {
     }
   }, []);
   
+  // Vérifier la connexion au démarrage
+  useEffect(() => {
+    const checkInitialConnection = async () => {
+      await checkConnection();
+    };
+    
+    checkInitialConnection();
+    
+    // Vérifier la connexion toutes les 30 secondes
+    const interval = setInterval(() => {
+      checkConnection();
+    }, 30000);
+    
+    return () => clearInterval(interval);
+  }, [checkConnection]);
+  
   // Fonction pour forcer une synchronisation manuelle
   const syncWithSupabase = useCallback(async (data: any, table: string, idField: string = 'id') => {
     if (!isConnected) {
@@ -51,10 +52,9 @@ export function useSyncStatus() {
     setIsSyncing(true);
     
     try {
-      // Use the any type for now to work around the type issues
-      // @ts-ignore - Use table name directly
+      // We need to use any here since we're dynamically selecting tables
       const query = supabase
-        .from(table)
+        .from(table as any)
         .select(idField)
         .eq(idField, data[idField])
         .maybeSingle();
@@ -67,9 +67,8 @@ export function useSyncStatus() {
       
       if (existingData) {
         // Mise à jour d'un enregistrement existant
-        // @ts-ignore - Use table name directly
         const { data: updatedData, error: updateError } = await supabase
-          .from(table)
+          .from(table as any)
           .update(data)
           .eq(idField, data[idField])
           .select();
@@ -78,9 +77,8 @@ export function useSyncStatus() {
         result = updatedData;
       } else {
         // Création d'un nouvel enregistrement
-        // @ts-ignore - Use table name directly
         const { data: insertedData, error: insertError } = await supabase
-          .from(table)
+          .from(table as any)
           .insert([data])
           .select();
           
@@ -109,9 +107,8 @@ export function useSyncStatus() {
     setIsSyncing(true);
     
     try {
-      // @ts-ignore - Use table name directly
       const { data, error } = await supabase
-        .from(table)
+        .from(table as any)
         .select('*')
         .order('created_at', { ascending: false });
         

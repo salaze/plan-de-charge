@@ -5,12 +5,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { checkSupabaseTables } from '@/utils/initSupabase';
 import { SupabaseTable } from '@/types/supabase';
 
-// Define table-specific type interfaces to avoid recursion issues
+// Define table-specific interfaces with required fields explicitly marked
 interface StatutData {
   id: string;
-  code: string;
-  libelle: string;
-  couleur: string;
+  code: string; // Required field
+  libelle: string; // Required field
+  couleur: string; // Required field
   display_order?: number;
   created_at?: string;
   updated_at?: string;
@@ -18,7 +18,7 @@ interface StatutData {
 
 interface EmployeData {
   id: string;
-  nom: string;
+  nom: string; // Required field
   prenom?: string;
   departement?: string;
   fonction?: string;
@@ -31,9 +31,9 @@ interface EmployeData {
 interface ScheduleData {
   id: string;
   employe_id: string;
-  date: string;
-  period: string;
-  statut_code: string;
+  date: string; // Required field
+  period: string; // Required field
+  statut_code: string; // Required field
   project_code?: string;
   is_highlighted?: boolean;
   note?: string;
@@ -53,6 +53,15 @@ interface ConnectionLogData {
   user_id?: string;
   user_name?: string;
   ip_address?: string;
+}
+
+// Direct mapping type to help with type checking
+type TableDataMap = {
+  'statuts': StatutData;
+  'employes': EmployeData;
+  'employe_schedule': ScheduleData;
+  'Taches': TacheData;
+  'connection_logs': ConnectionLogData;
 }
 
 export function useSyncStatus() {
@@ -99,30 +108,16 @@ export function useSyncStatus() {
   }, [checkConnection]);
   
   // Helper function to check if record exists and get it
-  const checkRecordExists = async (table: SupabaseTable, idField: string, idValue: string) => {
+  const checkRecordExists = async <T extends SupabaseTable>(table: T, idField: string, idValue: string) => {
     try {
-      let query;
+      const { data, error } = await supabase
+        .from(table)
+        .select(idField)
+        .eq(idField, idValue)
+        .maybeSingle();
       
-      switch (table) {
-        case "statuts":
-          query = await supabase.from("statuts").select(idField).eq(idField, idValue).maybeSingle();
-          break;
-        case "employes":
-          query = await supabase.from("employes").select(idField).eq(idField, idValue).maybeSingle();
-          break;
-        case "employe_schedule":
-          query = await supabase.from("employe_schedule").select(idField).eq(idField, idValue).maybeSingle();
-          break;
-        case "Taches":
-          query = await supabase.from("Taches").select(idField).eq(idField, idValue).maybeSingle();
-          break;
-        case "connection_logs":
-          query = await supabase.from("connection_logs").select(idField).eq(idField, idValue).maybeSingle();
-          break;
-      }
-      
-      if (query?.error) throw query.error;
-      return query?.data;
+      if (error) throw error;
+      return data;
     } catch (error) {
       console.error(`Error checking if record exists in ${table}:`, error);
       return null;
@@ -130,32 +125,40 @@ export function useSyncStatus() {
   };
   
   // Helper function for inserting records with proper typing
-  const insertRecord = async (table: SupabaseTable, data: any) => {
+  const insertRecord = async <T extends SupabaseTable>(table: T, data: any) => {
     try {
       let result;
       
       switch (table) {
-        case "statuts": {
-          // Ensure required fields are present
+        case 'statuts': {
+          // Validate required fields
           if (!data.code || !data.libelle || !data.couleur) {
             throw new Error("Missing required fields for statuts table");
           }
-          const statutData: Partial<StatutData> = {
+          
+          // Type-safe insertion for statuts
+          const insertData = {
             id: data.id,
             code: data.code,
             libelle: data.libelle,
             couleur: data.couleur,
             display_order: data.display_order
           };
-          result = await supabase.from("statuts").insert(statutData).select();
+          
+          result = await supabase
+            .from('statuts')
+            .insert(insertData)
+            .select();
           break;
         }
-        case "employes": {
-          // Ensure required fields are present
+        case 'employes': {
+          // Validate required fields
           if (!data.nom) {
             throw new Error("Missing required fields for employes table");
           }
-          const employeData: Partial<EmployeData> = {
+          
+          // Type-safe insertion for employes
+          const insertData = {
             id: data.id,
             nom: data.nom,
             prenom: data.prenom,
@@ -164,15 +167,21 @@ export function useSyncStatus() {
             role: data.role,
             uid: data.uid
           };
-          result = await supabase.from("employes").insert(employeData).select();
+          
+          result = await supabase
+            .from('employes')
+            .insert(insertData)
+            .select();
           break;
         }
-        case "employe_schedule": {
-          // Ensure required fields are present
+        case 'employe_schedule': {
+          // Validate required fields
           if (!data.date || !data.period || !data.statut_code) {
             throw new Error("Missing required fields for employe_schedule table");
           }
-          const scheduleData: Partial<ScheduleData> = {
+          
+          // Type-safe insertion for employe_schedule
+          const insertData = {
             id: data.id,
             employe_id: data.employe_id,
             date: data.date,
@@ -182,25 +191,41 @@ export function useSyncStatus() {
             is_highlighted: data.is_highlighted,
             note: data.note
           };
-          result = await supabase.from("employe_schedule").insert(scheduleData).select();
+          
+          result = await supabase
+            .from('employe_schedule')
+            .insert(insertData)
+            .select();
           break;
         }
-        case "Taches":
-          result = await supabase.from("Taches").insert({
+        case 'Taches': {
+          const insertData = {
             id: data.id,
             created_at: data.created_at
-          }).select();
+          };
+          
+          result = await supabase
+            .from('Taches')
+            .insert(insertData)
+            .select();
           break;
-        case "connection_logs":
-          result = await supabase.from("connection_logs").insert({
+        }
+        case 'connection_logs': {
+          const insertData = {
             id: data.id,
             event_type: data.event_type,
             user_id: data.user_id,
             user_name: data.user_name,
             ip_address: data.ip_address,
             user_agent: data.user_agent
-          }).select();
+          };
+          
+          result = await supabase
+            .from('connection_logs')
+            .insert(insertData)
+            .select();
           break;
+        }
       }
       
       if (result?.error) throw result.error;
@@ -212,60 +237,86 @@ export function useSyncStatus() {
   };
   
   // Helper function for updating records with proper typing
-  const updateRecord = async (table: SupabaseTable, idField: string, idValue: string, data: any) => {
+  const updateRecord = async <T extends SupabaseTable>(table: T, idField: string, idValue: string, data: any) => {
     try {
       let result;
       
       switch (table) {
-        case "statuts": {
-          const updateData: Partial<StatutData> = {};
-          if (data.code) updateData.code = data.code;
-          if (data.libelle) updateData.libelle = data.libelle;
-          if (data.couleur) updateData.couleur = data.couleur;
-          if (data.display_order) updateData.display_order = data.display_order;
+        case 'statuts': {
+          // Create update object only with fields that exist
+          const updateData: Record<string, any> = {};
+          if (data.code !== undefined) updateData.code = data.code;
+          if (data.libelle !== undefined) updateData.libelle = data.libelle;
+          if (data.couleur !== undefined) updateData.couleur = data.couleur;
+          if (data.display_order !== undefined) updateData.display_order = data.display_order;
           
-          result = await supabase.from("statuts").update(updateData).eq(idField, idValue).select();
+          result = await supabase
+            .from('statuts')
+            .update(updateData)
+            .eq(idField, idValue)
+            .select();
           break;
         }
-        case "employes": {
-          const updateData: Partial<EmployeData> = {};
-          if (data.nom) updateData.nom = data.nom;
-          if (data.prenom) updateData.prenom = data.prenom;
-          if (data.departement) updateData.departement = data.departement;
-          if (data.fonction) updateData.fonction = data.fonction;
-          if (data.role) updateData.role = data.role;
-          if (data.uid) updateData.uid = data.uid;
+        case 'employes': {
+          // Create update object only with fields that exist
+          const updateData: Record<string, any> = {};
+          if (data.nom !== undefined) updateData.nom = data.nom;
+          if (data.prenom !== undefined) updateData.prenom = data.prenom;
+          if (data.departement !== undefined) updateData.departement = data.departement;
+          if (data.fonction !== undefined) updateData.fonction = data.fonction;
+          if (data.role !== undefined) updateData.role = data.role;
+          if (data.uid !== undefined) updateData.uid = data.uid;
           
-          result = await supabase.from("employes").update(updateData).eq(idField, idValue).select();
+          result = await supabase
+            .from('employes')
+            .update(updateData)
+            .eq(idField, idValue)
+            .select();
           break;
         }
-        case "employe_schedule": {
-          const updateData: Partial<ScheduleData> = {};
-          if (data.employe_id) updateData.employe_id = data.employe_id;
-          if (data.date) updateData.date = data.date;
-          if (data.period) updateData.period = data.period;
-          if (data.statut_code) updateData.statut_code = data.statut_code;
+        case 'employe_schedule': {
+          // Create update object only with fields that exist
+          const updateData: Record<string, any> = {};
+          if (data.employe_id !== undefined) updateData.employe_id = data.employe_id;
+          if (data.date !== undefined) updateData.date = data.date;
+          if (data.period !== undefined) updateData.period = data.period;
+          if (data.statut_code !== undefined) updateData.statut_code = data.statut_code;
           if (data.project_code !== undefined) updateData.project_code = data.project_code;
           if (data.is_highlighted !== undefined) updateData.is_highlighted = data.is_highlighted;
           if (data.note !== undefined) updateData.note = data.note;
           
-          result = await supabase.from("employe_schedule").update(updateData).eq(idField, idValue).select();
+          result = await supabase
+            .from('employe_schedule')
+            .update(updateData)
+            .eq(idField, idValue)
+            .select();
           break;
         }
-        case "Taches":
-          result = await supabase.from("Taches").update({
-            created_at: data.created_at
-          }).eq(idField, idValue).select();
+        case 'Taches': {
+          result = await supabase
+            .from('Taches')
+            .update({
+              created_at: data.created_at
+            })
+            .eq(idField, idValue)
+            .select();
           break;
-        case "connection_logs":
-          result = await supabase.from("connection_logs").update({
-            event_type: data.event_type,
-            user_id: data.user_id,
-            user_name: data.user_name,
-            ip_address: data.ip_address,
-            user_agent: data.user_agent
-          }).eq(idField, idValue).select();
+        }
+        case 'connection_logs': {
+          const updateData: Record<string, any> = {};
+          if (data.event_type !== undefined) updateData.event_type = data.event_type;
+          if (data.user_id !== undefined) updateData.user_id = data.user_id;
+          if (data.user_name !== undefined) updateData.user_name = data.user_name;
+          if (data.ip_address !== undefined) updateData.ip_address = data.ip_address;
+          if (data.user_agent !== undefined) updateData.user_agent = data.user_agent;
+          
+          result = await supabase
+            .from('connection_logs')
+            .update(updateData)
+            .eq(idField, idValue)
+            .select();
           break;
+        }
       }
       
       if (result?.error) throw result.error;
@@ -328,30 +379,14 @@ export function useSyncStatus() {
     setIsSyncing(true);
     
     try {
-      let result;
+      const { data, error } = await supabase
+        .from(table)
+        .select('*');
       
-      switch (table) {
-        case "statuts":
-          result = await supabase.from("statuts").select('*');
-          break;
-        case "employes":
-          result = await supabase.from("employes").select('*');
-          break;
-        case "employe_schedule":
-          result = await supabase.from("employe_schedule").select('*');
-          break;
-        case "Taches":
-          result = await supabase.from("Taches").select('*');
-          break;
-        case "connection_logs":
-          result = await supabase.from("connection_logs").select('*');
-          break;
-      }
-      
-      if (result?.error) throw result.error;
+      if (error) throw error;
       
       setLastSyncTime(new Date());
-      return result?.data || null;
+      return data || null;
     } catch (error) {
       console.error(`Erreur lors de la récupération depuis Supabase (table ${table}):`, error);
       return null;

@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { useSyncStatus } from '@/hooks/useSyncStatus';
 
 export function SupabaseStatusIndicator() {
+  // Use the custom hook inside the component function
   const { isConnected, lastSyncTime, checkConnection, isSyncing } = useSyncStatus();
   
   const handleManualCheck = async () => {
@@ -95,5 +96,3 @@ export function SupabaseStatusIndicator() {
     </TooltipProvider>
   );
 }
-
-export default SupabaseStatusIndicator;

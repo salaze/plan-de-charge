@@ -31,14 +31,19 @@ export async function checkSupabaseTables() {
     };
     
     // Check tables in sequence to avoid rate limiting
-    const statusCheck = await checkTable("statuts");
-    const employesCheck = await checkTable("employes");
-    const scheduleCheck = await checkTable("employe_schedule");
-    
-    console.log("Supabase tables check complete");
-    
-    // Return true if at least one table is accessible
-    return statusCheck || employesCheck || scheduleCheck;
+    try {
+      const statusCheck = await checkTable("statuts");
+      const employesCheck = await checkTable("employes");
+      const scheduleCheck = await checkTable("employe_schedule");
+      
+      console.log("Supabase tables check complete");
+      
+      // Return true if at least one table is accessible
+      return statusCheck || employesCheck || scheduleCheck;
+    } catch (e) {
+      console.error("Error in table checks:", e);
+      return false;
+    }
   } catch (error) {
     console.error("Error during Supabase initialization:", error);
     return false;

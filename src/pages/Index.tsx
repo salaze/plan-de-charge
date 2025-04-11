@@ -1,12 +1,18 @@
 
-import React, { Suspense } from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { PlanningGrid } from '@/components/calendar/PlanningGrid';
 import { LegendModal } from '@/components/calendar/LegendModal';
 import { PlanningToolbar } from '@/components/planning/PlanningToolbar';
 import { usePlanningState } from '@/hooks/usePlanningState';
 import { useAuth } from '@/contexts/AuthContext';
-import { SupabaseStatusIndicator } from '@/components/supabase/SupabaseStatusIndicator';
+
+// Lazy load the SupabaseStatusIndicator to avoid hooks being called too early
+const SupabaseStatusIndicator = lazy(() => 
+  import('@/components/supabase/SupabaseStatusIndicator').then(module => ({
+    default: module.SupabaseStatusIndicator
+  }))
+);
 
 const Index = () => {
   const { isAdmin } = useAuth();

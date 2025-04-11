@@ -5,12 +5,18 @@ import { toast } from 'sonner';
 import { useSyncStatus } from '@/hooks/useSyncStatus';
 
 export const usePlanningPersistence = () => {
+  // Use useSyncStatus hook within the component context
   const { syncWithSupabase, isConnected } = useSyncStatus();
   
   // Save data to localStorage and attempt to sync with Supabase
   const saveDataToLocalStorage = useCallback((updatedData: MonthData) => {
     // Always save locally first
-    localStorage.setItem('planningData', JSON.stringify(updatedData));
+    try {
+      localStorage.setItem('planningData', JSON.stringify(updatedData));
+    } catch (error) {
+      console.error("Error saving to localStorage:", error);
+      toast.error("Erreur lors de la sauvegarde locale");
+    }
     
     // If connected to Supabase, try to sync each employee
     if (isConnected && updatedData.employees) {

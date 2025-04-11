@@ -48,9 +48,9 @@ export function useSyncStatus() {
     };
   }, [checkConnection]);
   
-  // Use a simple generic type that avoids recursive type resolution
+  // Completely simplified type signature to avoid TypeScript recursion issues
   const syncWithSupabase = useCallback(async (
-    data: any, // Using any to avoid deep type instantiation
+    data: object,
     table: SupabaseTable,
     idField: string = 'id'
   ) => {
@@ -66,7 +66,7 @@ export function useSyncStatus() {
       const { data: existingData, error: checkError } = await supabase
         .from(table)
         .select(idField)
-        .eq(idField, data[idField])
+        .eq(idField, data[idField as keyof typeof data])
         .maybeSingle();
       
       if (checkError) throw checkError;
@@ -78,7 +78,7 @@ export function useSyncStatus() {
         const { data: updatedData, error: updateError } = await supabase
           .from(table)
           .update(data)
-          .eq(idField, data[idField])
+          .eq(idField, data[idField as keyof typeof data])
           .select();
           
         if (updateError) throw updateError;

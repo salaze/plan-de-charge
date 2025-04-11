@@ -19,7 +19,9 @@ export function StatusSelector({ value, onChange }: StatusSelectorProps) {
     
     // Si nous avons des statuts personnalisés, extraire les codes
     if (data.statuses && data.statuses.length > 0) {
-      return [...data.statuses.map((s: any) => s.code as StatusCode), 'none'];
+      return [...data.statuses
+        .filter((s: any) => s.code && s.code.trim() !== '') // Filtrer les codes vides
+        .map((s: any) => s.code as StatusCode), 'none'];
     }
     
     // Statuts par défaut

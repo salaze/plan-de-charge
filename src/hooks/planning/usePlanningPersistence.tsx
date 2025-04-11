@@ -5,8 +5,7 @@ import { toast } from 'sonner';
 import { useSyncStatus } from '@/hooks/useSyncStatus';
 
 export const usePlanningPersistence = () => {
-  const syncStatus = useSyncStatus();
-  const { syncWithSupabase, isConnected } = syncStatus;
+  const { syncWithSupabase, isConnected } = useSyncStatus();
   
   // Sauvegarde des données dans localStorage et tente une synchronisation avec Supabase
   const saveDataToLocalStorage = useCallback((updatedData: MonthData) => {

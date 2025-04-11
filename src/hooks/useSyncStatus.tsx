@@ -8,7 +8,7 @@ export function useSyncStatus() {
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
   const [isConnected, setIsConnected] = useState<boolean | null>(null);
   
-  // Define checkConnection before using it in useEffect
+  // Define checkConnection function
   const checkConnection = useCallback(async () => {
     try {
       // Use a simpler query on a table we know exists
@@ -64,12 +64,12 @@ export function useSyncStatus() {
     setIsSyncing(true);
     
     try {
-      // We need to use any here since we're dynamically selecting tables
-      const query = supabase
-        .from(table as any)
+      // We need to cast dynamically for table selection
+      const query = (supabase
+        .from(table)
         .select(idField)
         .eq(idField, data[idField])
-        .maybeSingle();
+        .maybeSingle() as any);
       
       const { data: existingData, error: checkError } = await query;
       
@@ -79,20 +79,20 @@ export function useSyncStatus() {
       
       if (existingData) {
         // Mise à jour d'un enregistrement existant
-        const { data: updatedData, error: updateError } = await supabase
-          .from(table as any)
+        const { data: updatedData, error: updateError } = await (supabase
+          .from(table)
           .update(data)
           .eq(idField, data[idField])
-          .select();
+          .select() as any);
           
         if (updateError) throw updateError;
         result = updatedData;
       } else {
         // Création d'un nouvel enregistrement
-        const { data: insertedData, error: insertError } = await supabase
-          .from(table as any)
+        const { data: insertedData, error: insertError } = await (supabase
+          .from(table)
           .insert([data])
-          .select();
+          .select() as any);
           
         if (insertError) throw insertError;
         result = insertedData;
@@ -119,10 +119,10 @@ export function useSyncStatus() {
     setIsSyncing(true);
     
     try {
-      const { data, error } = await supabase
-        .from(table as any)
+      const { data, error } = await (supabase
+        .from(table)
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }) as any);
         
       if (error) throw error;
       

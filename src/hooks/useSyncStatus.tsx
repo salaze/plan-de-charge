@@ -5,63 +5,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { checkSupabaseTables } from '@/utils/initSupabase';
 import { SupabaseTable } from '@/types/supabase';
 
-// Define table-specific interfaces with required fields explicitly marked
-interface StatutData {
-  id: string;
-  code: string; // Required field
-  libelle: string; // Required field
-  couleur: string; // Required field
-  display_order?: number;
-  created_at?: string;
-  updated_at?: string;
-}
-
-interface EmployeData {
-  id: string;
-  nom: string; // Required field
-  prenom?: string;
-  departement?: string;
-  fonction?: string;
-  role?: string;
-  uid?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-interface ScheduleData {
-  id: string;
-  employe_id: string;
-  date: string; // Required field
-  period: string; // Required field
-  statut_code: string; // Required field
-  project_code?: string;
-  is_highlighted?: boolean;
-  note?: string;
-  created_at?: string;
-}
-
-interface TacheData {
-  id: number;
-  created_at: string;
-}
-
-interface ConnectionLogData {
-  id: string;
-  user_agent?: string;
-  created_at: string;
-  event_type?: string;
-  user_id?: string;
-  user_name?: string;
-  ip_address?: string;
-}
-
-// Direct mapping type to help with type checking
-type TableDataMap = {
-  'statuts': StatutData;
-  'employes': EmployeData;
-  'employe_schedule': ScheduleData;
-  'Taches': TacheData;
-  'connection_logs': ConnectionLogData;
+// Define simple interface for the return type of sync functions
+interface SyncResult {
+  success: boolean;
+  data?: any;
+  error?: any;
 }
 
 export function useSyncStatus() {
@@ -108,7 +56,7 @@ export function useSyncStatus() {
   }, [checkConnection]);
   
   // Helper function to check if record exists and get it
-  const checkRecordExists = async <T extends SupabaseTable>(table: T, idField: string, idValue: string) => {
+  const checkRecordExists = async (table: string, idField: string, idValue: string) => {
     try {
       const { data, error } = await supabase
         .from(table)
@@ -123,26 +71,45 @@ export function useSyncStatus() {
       return null;
     }
   };
+
+  // Type guards for validating data
+  const isValidStatut = (data: any): boolean => {
+    return data && typeof data.code === 'string' && 
+           typeof data.libelle === 'string' && 
+           typeof data.couleur === 'string';
+  };
   
-  // Helper function for inserting records with proper typing
-  const insertRecord = async <T extends SupabaseTable>(table: T, data: any) => {
+  const isValidEmploye = (data: any): boolean => {
+    return data && typeof data.nom === 'string';
+  };
+  
+  const isValidSchedule = (data: any): boolean => {
+    return data && typeof data.date === 'string' && 
+           typeof data.period === 'string' && 
+           typeof data.statut_code === 'string';
+  };
+  
+  // Helper function for inserting records with validation
+  const insertRecord = async (table: string, data: any): Promise<SyncResult> => {
     try {
       let result;
       
       switch (table) {
         case 'statuts': {
-          // Validate required fields
-          if (!data.code || !data.libelle || !data.couleur) {
-            throw new Error("Missing required fields for statuts table");
+          if (!isValidStatut(data)) {
+            return { 
+              success: false, 
+              error: new Error("Missing required fields for statuts table") 
+            };
           }
           
           // Type-safe insertion for statuts
           const insertData = {
-            id: data.id,
             code: data.code,
             libelle: data.libelle,
             couleur: data.couleur,
-            display_order: data.display_order
+            display_order: data.display_order || 0,
+            id: data.id
           };
           
           result = await supabase
@@ -152,9 +119,11 @@ export function useSyncStatus() {
           break;
         }
         case 'employes': {
-          // Validate required fields
-          if (!data.nom) {
-            throw new Error("Missing required fields for employes table");
+          if (!isValidEmploye(data)) {
+            return { 
+              success: false, 
+              error: new Error("Missing required fields for employes table") 
+            };
           }
           
           // Type-safe insertion for employes
@@ -175,9 +144,11 @@ export function useSyncStatus() {
           break;
         }
         case 'employe_schedule': {
-          // Validate required fields
-          if (!data.date || !data.period || !data.statut_code) {
-            throw new Error("Missing required fields for employe_schedule table");
+          if (!isValidSchedule(data)) {
+            return { 
+              success: false, 
+              error: new Error("Missing required fields for employe_schedule table") 
+            };
           }
           
           // Type-safe insertion for employe_schedule
@@ -226,18 +197,23 @@ export function useSyncStatus() {
             .select();
           break;
         }
+        default:
+          return {
+            success: false,
+            error: new Error(`Unsupported table: ${table}`)
+          };
       }
       
       if (result?.error) throw result.error;
-      return result?.data;
+      return { success: true, data: result?.data };
     } catch (error) {
       console.error(`Error inserting record into ${table}:`, error);
-      return null;
+      return { success: false, error };
     }
   };
   
   // Helper function for updating records with proper typing
-  const updateRecord = async <T extends SupabaseTable>(table: T, idField: string, idValue: string, data: any) => {
+  const updateRecord = async (table: string, idField: string, idValue: string, data: any): Promise<SyncResult> => {
     try {
       let result;
       
@@ -317,20 +293,25 @@ export function useSyncStatus() {
             .select();
           break;
         }
+        default:
+          return {
+            success: false,
+            error: new Error(`Unsupported table: ${table}`)
+          };
       }
       
       if (result?.error) throw result.error;
-      return result?.data;
+      return { success: true, data: result?.data };
     } catch (error) {
       console.error(`Error updating record in ${table}:`, error);
-      return null;
+      return { success: false, error };
     }
   };
   
   // Main syncWithSupabase function
   const syncWithSupabase = useCallback(async (
-    data: Record<string, unknown>,
-    table: SupabaseTable,
+    data: Record<string, any>,
+    table: string,
     idField: string = 'id'
   ) => {
     if (!isConnected) {
@@ -359,8 +340,11 @@ export function useSyncStatus() {
         result = await insertRecord(table, data);
       }
 
-      setLastSyncTime(new Date());
-      return result;
+      if (result.success) {
+        setLastSyncTime(new Date());
+      }
+      
+      return result.data || result.success;
     } catch (error) {
       console.error(`Erreur lors de la synchronisation avec Supabase (table ${table}):`, error);
       return false;
@@ -370,7 +354,7 @@ export function useSyncStatus() {
   }, [isConnected]);
   
   // Fetch function with explicit table handling
-  const fetchFromSupabase = useCallback(async (table: SupabaseTable) => {
+  const fetchFromSupabase = useCallback(async (table: string) => {
     if (!isConnected) {
       console.error("Impossible de récupérer les données: pas de connexion à Supabase");
       return null;

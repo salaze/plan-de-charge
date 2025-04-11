@@ -48,7 +48,7 @@ export function useSyncStatus() {
     };
   }, [checkConnection]);
   
-  // Simplify the type to avoid deep instantiation issues
+  // Use a simple non-generic function to avoid type recursion
   const syncWithSupabase = useCallback(async (
     data: Record<string, unknown>,
     table: SupabaseTable,
@@ -62,11 +62,13 @@ export function useSyncStatus() {
     setIsSyncing(true);
     
     try {
+      const id = data[idField];
+      
       // Check if the record exists
       const { data: existingData, error: checkError } = await supabase
         .from(table)
         .select(idField)
-        .eq(idField, String(data[idField]))
+        .eq(idField, id ? String(id) : '')
         .maybeSingle();
       
       if (checkError) throw checkError;
@@ -78,7 +80,7 @@ export function useSyncStatus() {
         const { data: updatedData, error: updateError } = await supabase
           .from(table)
           .update(data)
-          .eq(idField, String(data[idField]))
+          .eq(idField, id ? String(id) : '')
           .select();
           
         if (updateError) throw updateError;

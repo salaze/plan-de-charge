@@ -93,6 +93,11 @@ const AuthProviderWithNavigate: React.FC<{ children: React.ReactNode }> = ({ chi
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user');
+    
+    // Ne pas supprimer les données de planning lors de la déconnexion
+    // Cela permet de conserver les statuts même après déconnexion
+    
+    navigate('/login');
   };
 
   const updateUserRoles = (employeeId: string, newRole: UserRole) => {

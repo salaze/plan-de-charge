@@ -5,14 +5,24 @@ export async function checkSupabaseTables() {
   try {
     console.log("Checking Supabase tables...");
     
-    // Check if 'projets' table exists
-    const { data: projetsTable, error: projectsError } = await supabase
-      .from('projets')
+    // Check if 'statuts' table exists instead, since it's in the database schema
+    const { data: statusTable, error: statusError } = await supabase
+      .from('statuts')
       .select('id')
       .limit(1);
       
-    if (projectsError) {
-      console.error("Error checking projets table:", projectsError);
+    if (statusError) {
+      console.error("Error checking statuts table:", statusError);
+    }
+    
+    // Check if 'employes' table exists
+    const { data: employesTable, error: employesError } = await supabase
+      .from('employes')
+      .select('id')
+      .limit(1);
+      
+    if (employesError) {
+      console.error("Error checking employes table:", employesError);
     }
     
     console.log("Supabase tables check complete");

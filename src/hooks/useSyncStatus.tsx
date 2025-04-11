@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
+// Create a proper React hook
 export function useSyncStatus() {
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
@@ -64,9 +65,9 @@ export function useSyncStatus() {
     setIsSyncing(true);
     
     try {
-      // Utiliser as any pour contourner les restrictions TypeScript temporairement
-      const { data: existingData, error: checkError } = await (supabase as any)
-        .from(table)
+      // Use type annotation to help TypeScript understand
+      const { data: existingData, error: checkError } = await supabase
+        .from(table as any)
         .select(idField)
         .eq(idField, data[idField])
         .maybeSingle();
@@ -77,8 +78,8 @@ export function useSyncStatus() {
       
       if (existingData) {
         // Mise à jour d'un enregistrement existant
-        const { data: updatedData, error: updateError } = await (supabase as any)
-          .from(table)
+        const { data: updatedData, error: updateError } = await supabase
+          .from(table as any)
           .update(data)
           .eq(idField, data[idField])
           .select();
@@ -87,8 +88,8 @@ export function useSyncStatus() {
         result = updatedData;
       } else {
         // Création d'un nouvel enregistrement
-        const { data: insertedData, error: insertError } = await (supabase as any)
-          .from(table)
+        const { data: insertedData, error: insertError } = await supabase
+          .from(table as any)
           .insert([data])
           .select();
           
@@ -117,8 +118,8 @@ export function useSyncStatus() {
     setIsSyncing(true);
     
     try {
-      const { data, error } = await (supabase as any)
-        .from(table)
+      const { data, error } = await supabase
+        .from(table as any)
         .select('*')
         .order('created_at', { ascending: false });
         

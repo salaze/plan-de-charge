@@ -47,24 +47,7 @@ export const usePlanningPersistence = () => {
         }
       });
       
-      // Synchroniser les projets
-      if (updatedData.projects) {
-        updatedData.projects.forEach(project => {
-          try {
-            syncWithSupabase(
-              {
-                id: project.id,
-                code: project.code,
-                name: project.name,
-                color: project.color
-              },
-              'projets'
-            );
-          } catch (error) {
-            console.error("Erreur lors de la synchronisation des projets:", error);
-          }
-        });
-      }
+      // Projects are now handled via localStorage only until the projets table is created
     }
   }, [isConnected, syncWithSupabase]);
   
@@ -72,3 +55,5 @@ export const usePlanningPersistence = () => {
     saveDataToLocalStorage
   };
 };
+
+export default usePlanningPersistence;

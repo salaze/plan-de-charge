@@ -16,7 +16,14 @@ import NotFound from "./pages/NotFound";
 import Admin from "./pages/Admin";
 import AdminLogin from "./pages/AdminLogin";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false
+    }
+  }
+});
 
 // Fix the TooltipWrapper to ensure it's a proper functional component
 const TooltipWrapper = ({ children }: { children: React.ReactNode }) => {

@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { useSyncStatus } from '@/hooks/useSyncStatus';
 
 export function SupabaseStatusIndicator() {
-  // Use the custom hook inside the component function
+  // Ensure this hook is called within the function component
   const { isConnected, lastSyncTime, checkConnection, isSyncing } = useSyncStatus();
   
   const handleManualCheck = async () => {

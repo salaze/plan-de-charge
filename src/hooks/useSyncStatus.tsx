@@ -7,12 +7,12 @@ import { syncTableData } from '@/services/syncService';
 import { fetchFromTable } from '@/utils/supabaseHelpers';
 
 export function useSyncStatus() {
-  // Define state variables
+  // Define state variables inside the hook function
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
   const [isConnected, setIsConnected] = useState<boolean | null>(null);
   
-  // Define checkConnection function
+  // Define checkConnection function with useCallback
   const checkConnection = useCallback(async () => {
     try {
       const connected = await checkSupabaseTables();
@@ -29,6 +29,7 @@ export function useSyncStatus() {
   useEffect(() => {
     let isMounted = true;
     
+    // Immediately check the connection
     const checkInitialConnection = async () => {
       if (isMounted) {
         await checkConnection();
@@ -44,13 +45,14 @@ export function useSyncStatus() {
       }
     }, 30000);
     
+    // Cleanup function
     return () => {
       isMounted = false;
       clearInterval(interval);
     };
   }, [checkConnection]);
   
-  // Main syncWithSupabase function
+  // Define syncWithSupabase function with useCallback
   const syncWithSupabase = useCallback(async (
     data: Record<string, any>,
     table: SupabaseTable,
@@ -79,7 +81,7 @@ export function useSyncStatus() {
     }
   }, [isConnected]);
   
-  // Fetch function with explicit table handling
+  // Define fetchFromSupabase function with useCallback
   const fetchFromSupabase = useCallback(async (table: SupabaseTable) => {
     if (!isConnected) {
       console.error("Impossible de récupérer les données: pas de connexion à Supabase");
@@ -104,6 +106,7 @@ export function useSyncStatus() {
     }
   }, [isConnected]);
   
+  // Return the hook values
   return {
     isSyncing,
     lastSyncTime,

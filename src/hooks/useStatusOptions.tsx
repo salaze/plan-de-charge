@@ -17,12 +17,16 @@ export function useStatusOptions(defaultStatuses: StatusCode[] = []) {
       
       // Si nous avons des statuts personnalisés, les utiliser
       if (data.statuses && data.statuses.length > 0) {
+        const customStatuses = data.statuses
+          .filter((status: any) => status.code && status.code.trim() !== '') // Filter out any empty codes
+          .map((status: any) => ({
+            value: status.code as StatusCode,
+            label: status.label || status.code
+          }));
+        
         setAvailableStatuses([
           { value: 'none', label: 'Aucun' },
-          ...data.statuses.map((status: any) => ({
-            value: status.code as StatusCode,
-            label: status.label
-          }))
+          ...customStatuses
         ]);
       } else {
         // Sinon, utiliser les statuts par défaut

@@ -92,7 +92,7 @@ export function StatusSelectorEnhanced({
       {selectedStatus === 'projet' && (
         <ProjectSelector
           projects={projects}
-          selectedProject={selectedProject}
+          selectedProject={selectedProject || "select-project"}
           onProjectChange={handleProjectChange}
         />
       )}

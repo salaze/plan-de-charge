@@ -23,7 +23,7 @@ export function EmployeeFilterSelect({ employees, selectedEmployeeId, onChange }
         <SelectContent>
           <SelectItem value="all">Tous les employés</SelectItem>
           {employees.map(employee => (
-            <SelectItem key={employee.id} value={employee.id}>
+            <SelectItem key={employee.id} value={employee.id || `employee-${employee.name}`}>
               {employee.name}
             </SelectItem>
           ))}

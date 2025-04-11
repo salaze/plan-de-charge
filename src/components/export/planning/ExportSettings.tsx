@@ -102,6 +102,6 @@ const ExportSettings: React.FC<ExportSettingsProps> = ({ handleExport }) => {
       </CardFooter>
     </Card>
   );
-};
+}
 
 export default ExportSettings;

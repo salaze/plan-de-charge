@@ -29,7 +29,10 @@ export function ProjectSelector({ projects, selectedProject, onProjectChange }: 
         </SelectTrigger>
         <SelectContent>
           {projects.map((project) => (
-            <SelectItem key={project.id} value={project.code || `project-${project.id}`}>
+            <SelectItem 
+              key={project.id} 
+              value={project.code || `project-${project.id}`}
+            >
               <div className="flex items-center gap-2">
                 <div 
                   className="w-3 h-3 rounded-full" 

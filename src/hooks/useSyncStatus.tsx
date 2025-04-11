@@ -48,9 +48,9 @@ export function useSyncStatus() {
     };
   }, [checkConnection]);
   
-  // Sync function using type assertions to handle different table structures
+  // Sync function using type assertions - simplified to avoid deep type instantiation
   const syncWithSupabase = useCallback(async (
-    data: Record<string, any>,
+    data: any,
     table: SupabaseTable,
     idField: string = 'id'
   ) => {

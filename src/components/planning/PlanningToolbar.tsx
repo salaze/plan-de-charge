@@ -1,8 +1,7 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { MonthSelector } from '@/components/calendar/MonthSelector';
-import { Filter, Info } from 'lucide-react';
+import { MonthNavigator } from './toolbar/MonthNavigator';
+import { ToolbarActions } from './toolbar/ToolbarActions';
 import { PlanningFilters } from './PlanningFilters';
 import { FilterOptions } from '@/types';
 
@@ -44,32 +43,17 @@ export function PlanningToolbar({
 
   return (
     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-      <MonthSelector 
+      <MonthNavigator 
         year={year} 
         month={month} 
-        onChange={onMonthChange} 
+        onMonthChange={onMonthChange} 
       />
       
-      <div className="flex flex-wrap gap-2">
-        <Button 
-          variant="outline" 
-          onClick={onShowLegend}
-          className="transition-all hover:bg-secondary"
-        >
-          <Info className="mr-2 h-4 w-4" />
-          Légende
-        </Button>
-        
-        {/* Bouton de filtres visible pour tous les utilisateurs */}
-        <Button 
-          variant={hasActiveFilters ? "default" : "outline"}
-          className={hasActiveFilters ? "" : "transition-all hover:bg-secondary"}
-          onClick={() => setIsFiltersOpen(true)}
-        >
-          <Filter className="mr-2 h-4 w-4" />
-          Filtres {hasActiveFilters && "(Actifs)"}
-        </Button>
-      </div>
+      <ToolbarActions 
+        hasActiveFilters={hasActiveFilters}
+        onShowLegend={onShowLegend}
+        onShowFilters={() => setIsFiltersOpen(true)}
+      />
       
       <PlanningFilters
         isOpen={isFiltersOpen}

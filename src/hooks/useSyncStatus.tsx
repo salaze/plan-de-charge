@@ -48,9 +48,9 @@ export function useSyncStatus() {
     };
   }, [checkConnection]);
   
-  // Completely replace the type with Record<string, any> to eliminate recursion issues
+  // Use a simpler type to avoid TypeScript recursion issues
   const syncWithSupabase = useCallback(async (
-    data: Record<string, any>,
+    data: any,
     table: SupabaseTable,
     idField: string = 'id'
   ) => {
@@ -141,4 +141,5 @@ export function useSyncStatus() {
   };
 }
 
-export default useSyncStatus;
+// Remove default export to ensure consistent import
+// export default useSyncStatus;

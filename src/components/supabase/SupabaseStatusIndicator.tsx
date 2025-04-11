@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React from 'react';
 import { Database, Cloud, CloudOff, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { 
@@ -9,7 +9,6 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
-import { checkSupabaseTables } from '@/utils/initSupabase';
 import { useSyncStatus } from '@/hooks/useSyncStatus';
 
 interface SupabaseStatusIndicatorProps {
@@ -17,7 +16,8 @@ interface SupabaseStatusIndicatorProps {
 }
 
 export const SupabaseStatusIndicator: React.FC<SupabaseStatusIndicatorProps> = () => {
-  const { isConnected, lastSyncTime, checkConnection, isSyncing } = useSyncStatus();
+  const syncStatus = useSyncStatus();
+  const { isConnected, lastSyncTime, checkConnection, isSyncing } = syncStatus;
   
   const handleManualCheck = async () => {
     const connected = await checkConnection();

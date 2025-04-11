@@ -3,7 +3,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
-// Create a proper React hook
 export function useSyncStatus() {
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
@@ -30,7 +29,7 @@ export function useSyncStatus() {
     }
   }, []);
   
-  // Vérifier la connexion au démarrage
+  // Check connection on component mount
   useEffect(() => {
     let isMounted = true;
     
@@ -42,7 +41,7 @@ export function useSyncStatus() {
     
     checkInitialConnection();
     
-    // Vérifier la connexion toutes les 30 secondes
+    // Check connection every 30 seconds
     const interval = setInterval(() => {
       if (isMounted) {
         checkConnection();
@@ -55,7 +54,7 @@ export function useSyncStatus() {
     };
   }, [checkConnection]);
   
-  // Fonction pour synchroniser avec Supabase de manière sûre
+  // Function to safely sync with Supabase
   const syncWithSupabase = useCallback(async (data: any, table: string, idField: string = 'id') => {
     if (!isConnected) {
       toast.error("Impossible de synchroniser: pas de connexion à Supabase");
@@ -65,7 +64,6 @@ export function useSyncStatus() {
     setIsSyncing(true);
     
     try {
-      // Use type annotation to help TypeScript understand
       const { data: existingData, error: checkError } = await supabase
         .from(table as any)
         .select(idField)
@@ -77,7 +75,7 @@ export function useSyncStatus() {
       let result;
       
       if (existingData) {
-        // Mise à jour d'un enregistrement existant
+        // Update existing record
         const { data: updatedData, error: updateError } = await supabase
           .from(table as any)
           .update(data)
@@ -87,7 +85,7 @@ export function useSyncStatus() {
         if (updateError) throw updateError;
         result = updatedData;
       } else {
-        // Création d'un nouvel enregistrement
+        // Create new record
         const { data: insertedData, error: insertError } = await supabase
           .from(table as any)
           .insert([data])
@@ -108,7 +106,7 @@ export function useSyncStatus() {
     }
   }, [isConnected]);
   
-  // Fonction pour récupérer des données depuis Supabase
+  // Function to fetch data from Supabase
   const fetchFromSupabase = useCallback(async (table: string, query = {}) => {
     if (!isConnected) {
       toast.error("Impossible de récupérer les données: pas de connexion à Supabase");

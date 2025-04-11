@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { PlanningGrid } from '@/components/calendar/PlanningGrid';
 import { LegendModal } from '@/components/calendar/LegendModal';
@@ -30,7 +30,9 @@ const Index = () => {
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold">Planning</h1>
           <div className="flex items-center">
-            <SupabaseStatusIndicator />
+            <Suspense fallback={<div className="text-xs text-muted-foreground">Chargement...</div>}>
+              <SupabaseStatusIndicator />
+            </Suspense>
           </div>
         </div>
         

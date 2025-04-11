@@ -24,16 +24,8 @@ export const useSupabaseProjects = () => {
   const fetchProjects = async () => {
     try {
       setLoading(true);
-      // Instead of using type assertion, check if the table exists first
-      try {
-        // Check if the 'projets' table exists in our database
-        const { count, error: checkError } = await supabase
-          .from('statuts')  // Use a table we know exists
-          .select('*', { count: 'exact', head: true });
-        
-        if (checkError) throw checkError;
-        
-        // If we can query a known table, we can try to get projects from localStorage
+      // Load from localStorage as a fallback
+      const loadLocalProjects = () => {
         const savedData = localStorage.getItem('planningData');
         if (savedData) {
           try {
@@ -46,19 +38,33 @@ export const useSupabaseProjects = () => {
                 color: p.color
               }));
               setProjects(localProjects);
-              toast.info('Utilisation des projets stockés localement');
+              console.log('Using locally stored projects');
             }
           } catch (parseError) {
-            console.error("Erreur lors du parsing des données locales:", parseError);
+            console.error("Error parsing local data:", parseError);
           }
         }
-      } catch (tableError) {
-        console.error('Erreur lors de la vérification des tables:', tableError);
-        setError('Impossible de vérifier la structure de la base de données');
+      };
+
+      try {
+        // First check if we can connect to Supabase at all
+        const { data: statusCheck, error: statusError } = await supabase
+          .from('statuts')
+          .select('id')
+          .limit(1);
+          
+        if (statusError) {
+          console.warn("Could not connect to Supabase, using local data instead");
+          loadLocalProjects();
+          return;
+        }
+        
+        // If we've made it here, we're connected to Supabase
+        loadLocalProjects(); // Still load local projects as a fallback
+      } catch (connectionError) {
+        console.error('Error connecting to Supabase:', connectionError);
+        loadLocalProjects();
       }
-    } catch (error) {
-      console.error('Erreur lors du chargement des projets:', error);
-      setError('Impossible de charger les projets depuis Supabase');
     } finally {
       setLoading(false);
     }
@@ -66,7 +72,7 @@ export const useSupabaseProjects = () => {
 
   const addProject = async (project: Omit<SupabaseProject, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      // Since we might not have the projets table yet, handle locally
+      // Add locally first
       const newProject: SupabaseProject = {
         id: crypto.randomUUID(),
         code: project.code,
@@ -84,12 +90,16 @@ export const useSupabaseProjects = () => {
         const data = JSON.parse(savedData);
         data.projects = [...(data.projects || []), newProject];
         localStorage.setItem('planningData', JSON.stringify(data));
+      } else {
+        localStorage.setItem('planningData', JSON.stringify({
+          projects: [newProject]
+        }));
       }
       
       return newProject;
     } catch (error) {
-      console.error("Erreur lors de l'ajout du projet:", error);
-      toast.error("Impossible d'ajouter le projet");
+      console.error("Error adding project:", error);
+      toast.error("Could not add project");
       throw error;
     }
   };
@@ -113,8 +123,8 @@ export const useSupabaseProjects = () => {
       const updatedProject = updatedProjects.find(p => p.id === id);
       return updatedProject || null;
     } catch (error) {
-      console.error('Erreur lors de la mise à jour du projet:', error);
-      toast.error('Impossible de mettre à jour le projet');
+      console.error('Error updating project:', error);
+      toast.error('Could not update project');
       throw error;
     }
   };
@@ -133,8 +143,8 @@ export const useSupabaseProjects = () => {
         localStorage.setItem('planningData', JSON.stringify(data));
       }
     } catch (error) {
-      console.error('Erreur lors de la suppression du projet:', error);
-      toast.error('Impossible de supprimer le projet');
+      console.error('Error deleting project:', error);
+      toast.error('Could not delete project');
       throw error;
     }
   };

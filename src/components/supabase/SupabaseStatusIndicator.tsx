@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Database, Cloud, CloudOff, RefreshCw, Check } from 'lucide-react';
+import { Database, Cloud, CloudOff, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { 
   Tooltip,
@@ -28,7 +28,7 @@ export function SupabaseStatusIndicator() {
     }
   };
 
-  // Formater la date de dernière synchronisation
+  // Format last sync time
   const formatLastSync = () => {
     if (!lastSyncTime) return "Jamais";
     return new Intl.DateTimeFormat('fr-FR', {
@@ -38,7 +38,7 @@ export function SupabaseStatusIndicator() {
     }).format(lastSyncTime);
   };
 
-  // Afficher un indicateur de chargement si isConnected est null (état initial)
+  // Show loading indicator if isConnected is null (initial state)
   if (isConnected === null) {
     return (
       <div className="flex items-center text-muted-foreground text-xs">
@@ -76,7 +76,6 @@ export function SupabaseStatusIndicator() {
               <span className="font-medium mr-1">Statut:</span>
               {isConnected ? (
                 <span className="text-green-500 flex items-center">
-                  <Check className="h-3 w-3 mr-1" />
                   Connecté
                 </span>
               ) : (

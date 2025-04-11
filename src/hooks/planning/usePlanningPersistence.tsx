@@ -7,14 +7,14 @@ import { useSyncStatus } from '@/hooks/useSyncStatus';
 export const usePlanningPersistence = () => {
   const { syncWithSupabase, isConnected } = useSyncStatus();
   
-  // Sauvegarde des données dans localStorage et tente une synchronisation avec Supabase
+  // Save data to localStorage and attempt to sync with Supabase
   const saveDataToLocalStorage = useCallback((updatedData: MonthData) => {
-    // Toujours sauvegarder en local d'abord
+    // Always save locally first
     localStorage.setItem('planningData', JSON.stringify(updatedData));
     
-    // Si connecté à Supabase, tenter une synchronisation de chaque employé
+    // If connected to Supabase, try to sync each employee
     if (isConnected && updatedData.employees) {
-      // Note: La synchronisation est tentée mais n'est pas bloquante
+      // Note: Synchronization is attempted but not blocking
       updatedData.employees.forEach(employee => {
         try {
           syncWithSupabase(
@@ -27,7 +27,7 @@ export const usePlanningPersistence = () => {
             'employes'
           );
           
-          // Synchroniser les entrées de planning pour cet employé
+          // Sync schedule entries for this employee
           employee.schedule.forEach(scheduleItem => {
             syncWithSupabase(
               {
@@ -43,11 +43,12 @@ export const usePlanningPersistence = () => {
             );
           });
         } catch (error) {
-          console.error("Erreur lors de la synchronisation avec Supabase:", error);
+          console.error("Error syncing with Supabase:", error);
+          // Don't show toast here as it would be overwhelming
         }
       });
       
-      // Projects are now handled via localStorage only until the projets table is created
+      // Projects are now handled via localStorage only
     }
   }, [isConnected, syncWithSupabase]);
   

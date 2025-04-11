@@ -16,7 +16,7 @@ interface SupabaseStatusIndicatorProps {
 }
 
 export const SupabaseStatusIndicator: React.FC<SupabaseStatusIndicatorProps> = () => {
-  // Définition explicite du hook au niveau supérieur du composant
+  // Use hook at the top level of component
   const { isConnected, lastSyncTime, checkConnection, isSyncing } = useSyncStatus();
   
   const handleManualCheck = async () => {

@@ -48,9 +48,9 @@ export function useSyncStatus() {
     };
   }, [checkConnection]);
   
-  // Fix the type definition to avoid recursive type issues
+  // Use primitive types to avoid recursive type definition issues
   const syncWithSupabase = useCallback(async (
-    data: { [key: string]: any }, // Use an index signature instead of any or Record
+    data: Record<string, unknown>,
     table: SupabaseTable,
     idField: string = 'id'
   ) => {
@@ -104,7 +104,7 @@ export function useSyncStatus() {
     }
   }, [isConnected]);
   
-  // Define fetchFromSupabase with a simplified approach
+  // Define fetchFromSupabase with appropriate typing
   const fetchFromSupabase = useCallback(async (table: SupabaseTable) => {
     if (!isConnected) {
       console.error("Impossible de récupérer les données: pas de connexion à Supabase");

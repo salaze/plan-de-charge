@@ -48,12 +48,12 @@ export function useSyncStatus() {
     };
   }, [checkConnection]);
   
-  // Simplified function with explicit types to avoid TypeScript recursion issues
+  // Completely rewritten with explicit any typing to avoid TypeScript recursion issues
   const syncWithSupabase = useCallback(async (
     data: Record<string, unknown>,
     table: SupabaseTable,
     idField: string = 'id'
-  ) => {
+  ): Promise<boolean> => {
     if (!isConnected) {
       console.error("Impossible de synchroniser: pas de connexion à Supabase");
       return false;
@@ -66,34 +66,38 @@ export function useSyncStatus() {
       const id = data[idField];
       const idString = id ? String(id) : '';
       
-      // Use the most basic possible approach to avoid type recursion
-      let result;
-      
-      // First check if the record exists
-      const { data: checkData, error: checkError } = await supabase
+      // Use explicit any type to avoid TypeScript recursion
+      const query = supabase
         .from(table)
         .select(idField)
         .eq(idField, idString);
+        
+      // Use explicit type casting to avoid type recursion
+      const checkResult = await query as any;
+      const checkError = checkResult.error;
+      const checkData = checkResult.data;
       
       if (checkError) throw checkError;
       
       const recordExists = checkData && checkData.length > 0;
       
       if (recordExists) {
-        // Update existing record
-        const { error: updateError } = await supabase
+        // Explicitly type cast to avoid recursion
+        const updateQuery = supabase
           .from(table)
           .update(data)
           .eq(idField, idString);
-          
-        if (updateError) throw updateError;
+        
+        const updateResult = await updateQuery as any;
+        if (updateResult.error) throw updateResult.error;
       } else {
-        // Create new record
-        const { error: insertError } = await supabase
+        // Explicitly type cast to avoid recursion
+        const insertQuery = supabase
           .from(table)
           .insert(data);
-          
-        if (insertError) throw insertError;
+        
+        const insertResult = await insertQuery as any;
+        if (insertResult.error) throw insertResult.error;
       }
       
       setLastSyncTime(new Date());
@@ -106,7 +110,7 @@ export function useSyncStatus() {
     }
   }, [isConnected]);
   
-  // Define fetchFromSupabase with appropriate typing
+  // Completely rewritten fetch function with explicit typing to avoid recursion
   const fetchFromSupabase = useCallback(async (table: SupabaseTable) => {
     if (!isConnected) {
       console.error("Impossible de récupérer les données: pas de connexion à Supabase");
@@ -116,15 +120,14 @@ export function useSyncStatus() {
     setIsSyncing(true);
     
     try {
-      // Use the most basic approach to avoid type recursion
-      const { data, error } = await supabase
-        .from(table)
-        .select('*');
+      // Use explicit any type to avoid TypeScript recursion
+      const query = supabase.from(table).select('*');
+      const result = await query as any;
       
-      if (error) throw error;
+      if (result.error) throw result.error;
       
       setLastSyncTime(new Date());
-      return data;
+      return result.data;
     } catch (error) {
       console.error(`Erreur lors de la récupération depuis Supabase (table ${table}):`, error);
       return null;

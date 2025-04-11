@@ -48,12 +48,12 @@ export function useSyncStatus() {
     };
   }, [checkConnection]);
   
-  // Fix the TypeScript error by using a plain function signature without generics
+  // Fix the TypeScript error by using a concrete type with no generics
   const syncWithSupabase = useCallback(async (
-    data: Record<string, unknown>,
+    data: any, // Use any to avoid the deep type instantiation issue
     table: SupabaseTable,
     idField: string = 'id'
-  ): Promise<any> => {
+  ) => {
     if (!isConnected) {
       console.error("Impossible de synchroniser: pas de connexion à Supabase");
       return false;

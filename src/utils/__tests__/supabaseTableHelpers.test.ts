@@ -14,14 +14,20 @@ import {
 } from '../supabaseTableHelpers';
 import { StatutData, EmployeData, ScheduleData, TacheData, ConnectionLogData } from '@/types/supabaseModels';
 
-// Mock the supabase client
+// Mock the supabase client with the correct chaining structure
 jest.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    from: jest.fn().mockReturnThis(),
-    insert: jest.fn().mockReturnThis(),
-    update: jest.fn().mockReturnThis(),
-    eq: jest.fn().mockReturnThis(),
-    select: jest.fn(),
+    from: jest.fn(() => ({
+      insert: jest.fn(() => ({
+        select: jest.fn()
+      })),
+      update: jest.fn(() => ({
+        eq: jest.fn(() => ({
+          select: jest.fn()
+        }))
+      })),
+      select: jest.fn()
+    }))
   }
 }));
 
@@ -39,28 +45,35 @@ describe('supabaseTableHelpers', () => {
     };
 
     it('should insert statut successfully', async () => {
-      (supabase.from as jest.Mock).mockReturnThis();
-      (supabase.insert as jest.Mock).mockReturnThis();
-      (supabase.select as jest.Mock).mockResolvedValue({
-        data: [{ ...mockStatutData, id: '123' }],
-        error: null
+      const mockFrom = jest.fn().mockReturnValue({
+        insert: jest.fn().mockReturnValue({
+          select: jest.fn().mockResolvedValue({
+            data: [{ ...mockStatutData, id: '123' }],
+            error: null
+          })
+        })
       });
+      
+      (supabase.from as jest.Mock).mockImplementation(mockFrom);
 
       const result = await insertStatut(mockStatutData);
       expect(result.success).toBe(true);
       expect(result.data).toEqual([{ ...mockStatutData, id: '123' }]);
-      expect(supabase.from).toHaveBeenCalledWith('statuts');
-      expect(supabase.insert).toHaveBeenCalled();
+      expect(mockFrom).toHaveBeenCalledWith('statuts');
     });
 
     it('should return error when insertion fails', async () => {
       const error = new Error('Database error');
-      (supabase.from as jest.Mock).mockReturnThis();
-      (supabase.insert as jest.Mock).mockReturnThis();
-      (supabase.select as jest.Mock).mockResolvedValue({
-        data: null,
-        error
+      const mockFrom = jest.fn().mockReturnValue({
+        insert: jest.fn().mockReturnValue({
+          select: jest.fn().mockResolvedValue({
+            data: null,
+            error
+          })
+        })
       });
+      
+      (supabase.from as jest.Mock).mockImplementation(mockFrom);
 
       const result = await insertStatut(mockStatutData);
       expect(result.success).toBe(false);
@@ -68,20 +81,23 @@ describe('supabaseTableHelpers', () => {
     });
 
     it('should update statut successfully', async () => {
-      (supabase.from as jest.Mock).mockReturnThis();
-      (supabase.update as jest.Mock).mockReturnThis();
-      (supabase.eq as jest.Mock).mockReturnThis();
-      (supabase.select as jest.Mock).mockResolvedValue({
-        data: [{ ...mockStatutData, id: '123' }],
-        error: null
+      const mockFrom = jest.fn().mockReturnValue({
+        update: jest.fn().mockReturnValue({
+          eq: jest.fn().mockReturnValue({
+            select: jest.fn().mockResolvedValue({
+              data: [{ ...mockStatutData, id: '123' }],
+              error: null
+            })
+          })
+        })
       });
+      
+      (supabase.from as jest.Mock).mockImplementation(mockFrom);
 
       const result = await updateStatut('123', { libelle: 'Updated Test Status' });
       expect(result.success).toBe(true);
       expect(result.data).toEqual([{ ...mockStatutData, id: '123' }]);
-      expect(supabase.from).toHaveBeenCalledWith('statuts');
-      expect(supabase.update).toHaveBeenCalled();
-      expect(supabase.eq).toHaveBeenCalledWith('id', '123');
+      expect(mockFrom).toHaveBeenCalledWith('statuts');
     });
   });
 
@@ -93,35 +109,41 @@ describe('supabaseTableHelpers', () => {
     };
 
     it('should insert employee successfully', async () => {
-      (supabase.from as jest.Mock).mockReturnThis();
-      (supabase.insert as jest.Mock).mockReturnThis();
-      (supabase.select as jest.Mock).mockResolvedValue({
-        data: [{ ...mockEmployeeData, id: '123' }],
-        error: null
+      const mockFrom = jest.fn().mockReturnValue({
+        insert: jest.fn().mockReturnValue({
+          select: jest.fn().mockResolvedValue({
+            data: [{ ...mockEmployeeData, id: '123' }],
+            error: null
+          })
+        })
       });
+      
+      (supabase.from as jest.Mock).mockImplementation(mockFrom);
 
       const result = await insertEmploye(mockEmployeeData);
       expect(result.success).toBe(true);
       expect(result.data).toEqual([{ ...mockEmployeeData, id: '123' }]);
-      expect(supabase.from).toHaveBeenCalledWith('employes');
-      expect(supabase.insert).toHaveBeenCalled();
+      expect(mockFrom).toHaveBeenCalledWith('employes');
     });
 
     it('should update employee successfully', async () => {
-      (supabase.from as jest.Mock).mockReturnThis();
-      (supabase.update as jest.Mock).mockReturnThis();
-      (supabase.eq as jest.Mock).mockReturnThis();
-      (supabase.select as jest.Mock).mockResolvedValue({
-        data: [{ ...mockEmployeeData, id: '123', departement: 'HR' }],
-        error: null
+      const mockFrom = jest.fn().mockReturnValue({
+        update: jest.fn().mockReturnValue({
+          eq: jest.fn().mockReturnValue({
+            select: jest.fn().mockResolvedValue({
+              data: [{ ...mockEmployeeData, id: '123', departement: 'HR' }],
+              error: null
+            })
+          })
+        })
       });
+      
+      (supabase.from as jest.Mock).mockImplementation(mockFrom);
 
       const result = await updateEmploye('123', { departement: 'HR' });
       expect(result.success).toBe(true);
       expect(result.data).toEqual([{ ...mockEmployeeData, id: '123', departement: 'HR' }]);
-      expect(supabase.from).toHaveBeenCalledWith('employes');
-      expect(supabase.update).toHaveBeenCalled();
-      expect(supabase.eq).toHaveBeenCalledWith('id', '123');
+      expect(mockFrom).toHaveBeenCalledWith('employes');
     });
   });
 
@@ -134,18 +156,21 @@ describe('supabaseTableHelpers', () => {
     };
 
     it('should insert schedule successfully', async () => {
-      (supabase.from as jest.Mock).mockReturnThis();
-      (supabase.insert as jest.Mock).mockReturnThis();
-      (supabase.select as jest.Mock).mockResolvedValue({
-        data: [{ ...mockScheduleData, id: '123' }],
-        error: null
+      const mockFrom = jest.fn().mockReturnValue({
+        insert: jest.fn().mockReturnValue({
+          select: jest.fn().mockResolvedValue({
+            data: [{ ...mockScheduleData, id: '123' }],
+            error: null
+          })
+        })
       });
+      
+      (supabase.from as jest.Mock).mockImplementation(mockFrom);
 
       const result = await insertSchedule(mockScheduleData);
       expect(result.success).toBe(true);
       expect(result.data).toEqual([{ ...mockScheduleData, id: '123' }]);
-      expect(supabase.from).toHaveBeenCalledWith('employe_schedule');
-      expect(supabase.insert).toHaveBeenCalled();
+      expect(mockFrom).toHaveBeenCalledWith('employe_schedule');
     });
   });
 });

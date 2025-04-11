@@ -81,7 +81,7 @@ export function useSyncStatus() {
   }, [isConnected]);
   
   // Fetch function with explicit table handling
-  const fetchFromSupabase = useCallback(async <T extends SupabaseTable>(table: T) => {
+  const fetchFromSupabase = useCallback(async (table: SupabaseTable) => {
     if (!isConnected) {
       console.error("Impossible de récupérer les données: pas de connexion à Supabase");
       return null;

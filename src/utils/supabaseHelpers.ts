@@ -24,7 +24,8 @@ export async function checkRecordExists(
 }
 
 // Generic function for fetching data from a table
-export async function fetchFromTable<T extends SupabaseTable>(table: T): Promise<unknown[] | null> {
+// Use unknown[] type instead of generic type parameter to avoid deep type instantiation
+export async function fetchFromTable(table: SupabaseTable): Promise<unknown[] | null> {
   try {
     const { data, error } = await supabase
       .from(table)

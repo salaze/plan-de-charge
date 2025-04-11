@@ -48,9 +48,9 @@ export function useSyncStatus() {
     };
   }, [checkConnection]);
   
-  // Using a simple type annotation to avoid type recursion
-  const syncWithSupabase = useCallback(async (
-    data: Record<string, any>, // Simple non-recursive type
+  // Use a non-recursive type to solve the deep instantiation issue
+  const syncWithSupabase = useCallback(async <T extends Record<string, unknown>>(
+    data: T,
     table: SupabaseTable,
     idField: string = 'id'
   ) => {
@@ -66,7 +66,7 @@ export function useSyncStatus() {
       const { data: existingData, error: checkError } = await supabase
         .from(table)
         .select(idField)
-        .eq(idField, data[idField])
+        .eq(idField, String(data[idField]))
         .maybeSingle();
       
       if (checkError) throw checkError;
@@ -78,7 +78,7 @@ export function useSyncStatus() {
         const { data: updatedData, error: updateError } = await supabase
           .from(table)
           .update(data)
-          .eq(idField, data[idField])
+          .eq(idField, String(data[idField]))
           .select();
           
         if (updateError) throw updateError;

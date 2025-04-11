@@ -48,9 +48,9 @@ export function useSyncStatus() {
     };
   }, [checkConnection]);
   
-  // Use primitive types to avoid recursive type definition issues
+  // Fix the type by using a simple type without recursion
   const syncWithSupabase = useCallback(async (
-    data: Record<string, unknown>,
+    data: any,  // Use 'any' here to avoid recursion issues
     table: SupabaseTable,
     idField: string = 'id'
   ) => {

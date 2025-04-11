@@ -48,9 +48,9 @@ export function useSyncStatus() {
     };
   }, [checkConnection]);
   
-  // Fix the complex TypeScript error by using a simple object type signature
-  const syncWithSupabase = useCallback(async <T extends Record<string, any>>(
-    data: T,
+  // Fix the TypeScript error by using a plain function signature without generics
+  const syncWithSupabase = useCallback(async (
+    data: Record<string, unknown>,
     table: SupabaseTable,
     idField: string = 'id'
   ): Promise<any> => {

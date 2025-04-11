@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { checkSupabaseTables } from '@/utils/initSupabase';
 
 // Define specific type for the table parameter to avoid infinite type recursion
-type SupabaseTable = "statuts" | "employes" | "employe_schedule";
+export type SupabaseTable = "statuts" | "employes" | "employe_schedule";
 
 export function useSyncStatus() {
   const [isSyncing, setIsSyncing] = useState(false);
@@ -60,6 +60,7 @@ export function useSyncStatus() {
     setIsSyncing(true);
     
     try {
+      // Check if the record exists
       const { data: existingData, error: checkError } = await supabase
         .from(table)
         .select(idField)

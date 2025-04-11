@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Database, Cloud, CloudOff, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { 
@@ -12,23 +12,33 @@ import { Button } from '@/components/ui/button';
 import { checkSupabaseTables } from '@/utils/initSupabase';
 
 export function SupabaseStatusIndicator() {
-  // Initialize states properly with React hooks
-  const [isChecking, setIsChecking] = React.useState(false);
-  const [isConnected, setIsConnected] = React.useState<boolean | null>(null);
-  const [lastSyncTime, setLastSyncTime] = React.useState<Date | null>(null);
+  const [isChecking, setIsChecking] = useState(false);
+  const [isConnected, setIsConnected] = useState<boolean | null>(null);
+  const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
+  
+  // Define a standalone check connection function instead of using the hook
+  const checkConnection = async () => {
+    try {
+      setIsChecking(true);
+      const connected = await checkSupabaseTables();
+      setIsConnected(connected);
+      return connected;
+    } catch (error) {
+      console.error("Erreur lors de la vérification de la connexion:", error);
+      setIsConnected(false);
+      return false;
+    } finally {
+      setIsChecking(false);
+    }
+  };
   
   // Check connection on component mount
-  React.useEffect(() => {
+  useEffect(() => {
     let isMounted = true;
     
     const checkInitialConnection = async () => {
       if (isMounted) {
-        setIsChecking(true);
-        const connected = await checkSupabaseTables();
-        if (isMounted) {
-          setIsConnected(connected);
-          setIsChecking(false);
-        }
+        await checkConnection();
       }
     };
     
@@ -48,10 +58,7 @@ export function SupabaseStatusIndicator() {
   }, []);
   
   const handleManualCheck = async () => {
-    setIsChecking(true);
-    const connected = await checkSupabaseTables();
-    setIsConnected(connected);
-    setIsChecking(false);
+    const connected = await checkConnection();
     
     if (connected) {
       toast.success("Connexion à Supabase établie");

@@ -1,8 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-
-// Define specific type for the table parameter to match useSyncStatus
-type SupabaseTable = "statuts" | "employes" | "employe_schedule";
+import { SupabaseTable } from '@/hooks/useSyncStatus';
 
 export async function checkSupabaseTables() {
   try {

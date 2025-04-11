@@ -2,7 +2,7 @@
 import { useCallback } from 'react';
 import { MonthData } from '@/types';
 import { toast } from 'sonner';
-import { useSyncStatus } from '@/hooks/useSyncStatus';
+import { useSyncStatus, SupabaseTable } from '@/hooks/useSyncStatus';
 
 export const usePlanningPersistence = () => {
   // Use useSyncStatus hook within the component context
@@ -32,7 +32,7 @@ export const usePlanningPersistence = () => {
                 prenom: employee.name.split(' ').slice(0, -1).join(' ') || undefined,
                 departement: employee.department
               },
-              "employes"
+              "employes" as SupabaseTable
             );
             
             // Sync schedule entries for this employee
@@ -48,7 +48,7 @@ export const usePlanningPersistence = () => {
                     is_highlighted: scheduleItem.isHighlighted,
                     project_code: scheduleItem.projectCode
                   },
-                  "employe_schedule"
+                  "employe_schedule" as SupabaseTable
                 );
               }
             });

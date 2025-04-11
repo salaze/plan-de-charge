@@ -6,7 +6,7 @@ export async function checkSupabaseTables() {
     console.log("Checking Supabase tables...");
     
     // Try to check tables in a safer way that handles potential failures gracefully
-    const checkTable = async (tableName: string) => {
+    const checkTable = async (tableName: "statuts" | "employes" | "employe_schedule") => {
       try {
         const { data, error } = await supabase
           .from(tableName)
@@ -27,9 +27,9 @@ export async function checkSupabaseTables() {
     };
     
     // Check tables in sequence to avoid rate limiting
-    const statusCheck = await checkTable('statuts');
-    const employesCheck = await checkTable('employes');
-    const scheduleCheck = await checkTable('employe_schedule');
+    const statusCheck = await checkTable("statuts");
+    const employesCheck = await checkTable("employes");
+    const scheduleCheck = await checkTable("employe_schedule");
     
     console.log("Supabase tables check complete");
     

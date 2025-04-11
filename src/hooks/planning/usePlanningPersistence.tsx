@@ -23,31 +23,36 @@ export const usePlanningPersistence = () => {
       // Note: Synchronization is attempted but not blocking
       updatedData.employees.forEach(employee => {
         try {
-          syncWithSupabase(
-            {
-              id: employee.id,
-              nom: employee.name.split(' ').pop() || employee.name,
-              prenom: employee.name.split(' ').slice(0, -1).join(' ') || undefined,
-              departement: employee.department
-            },
-            'employes'
-          );
-          
-          // Sync schedule entries for this employee
-          employee.schedule.forEach(scheduleItem => {
+          // Only sync if we have an id
+          if (employee.id) {
             syncWithSupabase(
               {
-                id: `${employee.id}_${scheduleItem.date}_${scheduleItem.period}`,
-                employe_id: employee.id,
-                date: scheduleItem.date,
-                period: scheduleItem.period,
-                statut_code: scheduleItem.status,
-                is_highlighted: scheduleItem.isHighlighted,
-                project_code: scheduleItem.projectCode
+                id: employee.id,
+                nom: employee.name.split(' ').pop() || employee.name,
+                prenom: employee.name.split(' ').slice(0, -1).join(' ') || undefined,
+                departement: employee.department
               },
-              'employe_schedule'
+              "employes"
             );
-          });
+            
+            // Sync schedule entries for this employee
+            employee.schedule.forEach(scheduleItem => {
+              if (scheduleItem.date && scheduleItem.period) {
+                syncWithSupabase(
+                  {
+                    id: `${employee.id}_${scheduleItem.date}_${scheduleItem.period}`,
+                    employe_id: employee.id,
+                    date: scheduleItem.date,
+                    period: scheduleItem.period,
+                    statut_code: scheduleItem.status,
+                    is_highlighted: scheduleItem.isHighlighted,
+                    project_code: scheduleItem.projectCode
+                  },
+                  "employe_schedule"
+                );
+              }
+            });
+          }
         } catch (error) {
           console.error("Error syncing with Supabase:", error);
           // Don't show toast here as it would be overwhelming

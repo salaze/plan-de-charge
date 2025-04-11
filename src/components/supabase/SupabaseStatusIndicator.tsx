@@ -9,34 +9,52 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
-import { useSyncStatus } from '@/hooks/useSyncStatus';
+import { checkSupabaseTables } from '@/utils/initSupabase';
 
 export function SupabaseStatusIndicator() {
-  // Initialize states locally first to avoid the "dispatcher is null" error
+  // Initialize states properly
   const [isChecking, setIsChecking] = useState(false);
-  const [localIsConnected, setLocalIsConnected] = useState<boolean | null>(null);
-  const [localLastSyncTime, setLocalLastSyncTime] = useState<Date | null>(null);
-  const [localIsSyncing, setLocalIsSyncing] = useState(false);
+  const [isConnected, setIsConnected] = useState<boolean | null>(null);
+  const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
   
-  // Use the hook inside a useEffect to ensure it's only called in a mounted component
-  const { isConnected, isSyncing, lastSyncTime, checkConnection } = useSyncStatus();
-  
-  // Update local states when values from the hook change
+  // Check connection on component mount
   useEffect(() => {
-    setLocalIsConnected(isConnected);
-    setLocalIsSyncing(isSyncing || false);
-    if (lastSyncTime) {
-      setLocalLastSyncTime(lastSyncTime);
-    }
-  }, [isConnected, isSyncing, lastSyncTime]);
-
+    let isMounted = true;
+    
+    const checkInitialConnection = async () => {
+      if (isMounted) {
+        setIsChecking(true);
+        const connected = await checkSupabaseTables();
+        setIsConnected(connected);
+        setIsChecking(false);
+      }
+    };
+    
+    checkInitialConnection();
+    
+    // Check connection every 30 seconds
+    const interval = setInterval(() => {
+      if (isMounted) {
+        checkInitialConnection();
+      }
+    }, 30000);
+    
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
+  
   const handleManualCheck = async () => {
     setIsChecking(true);
-    await checkConnection();
+    const connected = await checkSupabaseTables();
+    setIsConnected(connected);
     setIsChecking(false);
     
-    if (isConnected) {
+    if (connected) {
       toast.success("Connexion à Supabase établie");
+      setLastSyncTime(new Date());
     } else {
       toast.error("Impossible de se connecter à Supabase");
     }
@@ -44,16 +62,16 @@ export function SupabaseStatusIndicator() {
 
   // Format last sync time
   const formatLastSync = () => {
-    if (!localLastSyncTime) return "Jamais";
+    if (!lastSyncTime) return "Jamais";
     return new Intl.DateTimeFormat('fr-FR', {
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit'
-    }).format(localLastSyncTime);
+    }).format(lastSyncTime);
   };
 
   // Show loading indicator if isConnected is null (initial state)
-  if (localIsConnected === null) {
+  if (isConnected === null) {
     return (
       <div className="flex items-center text-muted-foreground text-xs">
         <Database className="h-3 w-3 mr-1 animate-pulse" />
@@ -69,18 +87,18 @@ export function SupabaseStatusIndicator() {
           <Button 
             variant="ghost" 
             size="sm"
-            className={`flex items-center text-xs px-2 py-1 h-auto ${localIsConnected ? 'text-green-500 hover:text-green-600' : 'text-red-500 hover:text-red-600'}`}
+            className={`flex items-center text-xs px-2 py-1 h-auto ${isConnected ? 'text-green-500 hover:text-green-600' : 'text-red-500 hover:text-red-600'}`}
             onClick={handleManualCheck}
             disabled={isChecking}
           >
             {isChecking ? (
               <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
-            ) : localIsConnected ? (
+            ) : isConnected ? (
               <Cloud className="h-3 w-3 mr-1" />
             ) : (
               <CloudOff className="h-3 w-3 mr-1" />
             )}
-            <span>{localIsConnected ? 'Connecté' : 'Hors ligne'}</span>
+            <span>{isConnected ? 'Connecté' : 'Hors ligne'}</span>
           </Button>
         </TooltipTrigger>
         <TooltipContent>
@@ -88,7 +106,7 @@ export function SupabaseStatusIndicator() {
             <p className="font-medium">État de la connexion Supabase</p>
             <div className="flex items-center text-xs">
               <span className="font-medium mr-1">Statut:</span>
-              {localIsConnected ? (
+              {isConnected ? (
                 <span className="text-green-500 flex items-center">
                   Connecté
                 </span>
@@ -96,12 +114,12 @@ export function SupabaseStatusIndicator() {
                 <span className="text-red-500">Déconnecté</span>
               )}
             </div>
-            {localLastSyncTime && (
+            {lastSyncTime && (
               <div className="text-xs">
                 <span className="font-medium">Dernière synchronisation:</span> {formatLastSync()}
               </div>
             )}
-            {localIsSyncing && (
+            {isSyncing && (
               <div className="text-xs flex items-center">
                 <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
                 <span>Synchronisation en cours...</span>

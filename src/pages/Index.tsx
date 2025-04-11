@@ -1,18 +1,12 @@
 
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { PlanningGrid } from '@/components/calendar/PlanningGrid';
 import { LegendModal } from '@/components/calendar/LegendModal';
 import { PlanningToolbar } from '@/components/planning/PlanningToolbar';
 import { usePlanningState } from '@/hooks/usePlanningState';
 import { useAuth } from '@/contexts/AuthContext';
-
-// Lazy load the SupabaseStatusIndicator to avoid hooks being called too early
-const SupabaseStatusIndicator = lazy(() => 
-  import('@/components/supabase/SupabaseStatusIndicator').then(module => ({
-    default: module.SupabaseStatusIndicator
-  }))
-);
+import { SupabaseStatusIndicator } from '@/components/supabase/SupabaseStatusIndicator';
 
 const Index = () => {
   const { isAdmin } = useAuth();
@@ -36,9 +30,7 @@ const Index = () => {
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold">Planning</h1>
           <div className="flex items-center">
-            <Suspense fallback={<div className="text-xs text-muted-foreground">Chargement...</div>}>
-              <SupabaseStatusIndicator />
-            </Suspense>
+            <SupabaseStatusIndicator />
           </div>
         </div>
         

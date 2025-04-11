@@ -2,26 +2,19 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { checkSupabaseTables } from '@/utils/initSupabase';
 
 export function useSyncStatus() {
-  const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
   const [isConnected, setIsConnected] = useState<boolean | null>(null);
   
   // Define checkConnection function
   const checkConnection = useCallback(async () => {
     try {
-      // Use a simpler query on a table we know exists
-      const { data, error } = await supabase.from('statuts').select('id').limit(1);
-      
-      if (error) {
-        console.error("Erreur de connexion à Supabase:", error);
-        setIsConnected(false);
-        return false;
-      } else {
-        setIsConnected(true);
-        return true;
-      }
+      const connected = await checkSupabaseTables();
+      setIsConnected(connected);
+      return connected;
     } catch (error) {
       console.error("Erreur lors de la vérification de la connexion:", error);
       setIsConnected(false);
@@ -55,9 +48,9 @@ export function useSyncStatus() {
   }, [checkConnection]);
   
   // Function to safely sync with Supabase
-  const syncWithSupabase = useCallback(async (data: any, table: string, idField: string = 'id') => {
+  const syncWithSupabase = useCallback(async (data: any, table: "statuts" | "employes" | "employe_schedule", idField: string = 'id') => {
     if (!isConnected) {
-      toast.error("Impossible de synchroniser: pas de connexion à Supabase");
+      console.error("Impossible de synchroniser: pas de connexion à Supabase");
       return false;
     }
     
@@ -65,7 +58,7 @@ export function useSyncStatus() {
     
     try {
       const { data: existingData, error: checkError } = await supabase
-        .from(table as any)
+        .from(table)
         .select(idField)
         .eq(idField, data[idField])
         .maybeSingle();
@@ -77,7 +70,7 @@ export function useSyncStatus() {
       if (existingData) {
         // Update existing record
         const { data: updatedData, error: updateError } = await supabase
-          .from(table as any)
+          .from(table)
           .update(data)
           .eq(idField, data[idField])
           .select();
@@ -87,7 +80,7 @@ export function useSyncStatus() {
       } else {
         // Create new record
         const { data: insertedData, error: insertError } = await supabase
-          .from(table as any)
+          .from(table)
           .insert([data])
           .select();
           
@@ -99,7 +92,6 @@ export function useSyncStatus() {
       return result;
     } catch (error) {
       console.error(`Erreur lors de la synchronisation avec Supabase (table ${table}):`, error);
-      toast.error(`Erreur de synchronisation: ${(error as any).message || "Erreur inconnue"}`);
       return false;
     } finally {
       setIsSyncing(false);
@@ -107,9 +99,9 @@ export function useSyncStatus() {
   }, [isConnected]);
   
   // Function to fetch data from Supabase
-  const fetchFromSupabase = useCallback(async (table: string, query = {}) => {
+  const fetchFromSupabase = useCallback(async (table: "statuts" | "employes" | "employe_schedule") => {
     if (!isConnected) {
-      toast.error("Impossible de récupérer les données: pas de connexion à Supabase");
+      console.error("Impossible de récupérer les données: pas de connexion à Supabase");
       return null;
     }
     
@@ -117,7 +109,7 @@ export function useSyncStatus() {
     
     try {
       const { data, error } = await supabase
-        .from(table as any)
+        .from(table)
         .select('*')
         .order('created_at', { ascending: false });
         
@@ -127,7 +119,6 @@ export function useSyncStatus() {
       return data;
     } catch (error) {
       console.error(`Erreur lors de la récupération depuis Supabase (table ${table}):`, error);
-      toast.error(`Erreur de récupération: ${(error as any).message || "Erreur inconnue"}`);
       return null;
     } finally {
       setIsSyncing(false);

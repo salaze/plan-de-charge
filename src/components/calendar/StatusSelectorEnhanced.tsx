@@ -32,7 +32,7 @@ export function StatusSelectorEnhanced({
   const [selectedStatus, setSelectedStatus] = useState<StatusCode>(value || 'none');
   
   // Use our custom hook to get available statuses
-  const availableStatuses = useStatusOptions();
+  const { availableStatuses, loading } = useStatusOptions();
   
   // Reset form when dialog reopens with new values
   useEffect(() => {
@@ -79,13 +79,17 @@ export function StatusSelectorEnhanced({
           onValueChange={(value) => handleStatusChange(value as StatusCode)}
           className="grid grid-cols-2 gap-2"
         >
-          {availableStatuses.map((status) => (
-            <StatusOption 
-              key={status.value} 
-              value={status.value} 
-              label={status.label} 
-            />
-          ))}
+          {loading ? (
+            <div>Chargement des statuts...</div>
+          ) : (
+            availableStatuses.map((status) => (
+              <StatusOption 
+                key={status.value} 
+                value={status.value} 
+                label={status.label} 
+              />
+            ))
+          )}
         </RadioGroup>
       </div>
       

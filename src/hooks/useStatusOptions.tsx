@@ -18,7 +18,7 @@ export function useStatusOptions(defaultStatuses: StatusCode[] = []) {
       const customStatuses = supabaseStatuses
         .filter((status) => status.code && status.code.trim() !== '')
         .map((status) => ({
-          value: status.code as StatusCode,
+          value: status.code,
           label: status.libelle || status.code || 'Status'
         }));
       
@@ -46,27 +46,34 @@ export function useStatusOptions(defaultStatuses: StatusCode[] = []) {
             ]);
           } else {
             // Utiliser les statuts par défaut si pas de données locales
-            setAvailableStatuses([
-              { value: 'none', label: 'Aucun' },
-              { value: 'assistance', label: 'Assistance' },
-              { value: 'vigi', label: 'Vigi' },
-              { value: 'formation', label: 'Formation' },
-              { value: 'projet', label: 'Projet' },
-              { value: 'conges', label: 'Congés' },
-              { value: 'management', label: 'Management' },
-              { value: 'tp', label: 'Temps Partiel' },
-              { value: 'coordinateur', label: 'Coordinateur Vigi Ticket' },
-              { value: 'absence', label: 'Autre Absence' },
-              { value: 'regisseur', label: 'Régisseur' },
-              { value: 'demenagement', label: 'Déménagements' },
-            ]);
+            setDefaultStatuses();
           }
         } catch (error) {
           console.error("Erreur lors du parsing des données locales:", error);
+          setDefaultStatuses();
         }
+      } else {
+        setDefaultStatuses();
       }
     }
   }, [supabaseStatuses, defaultStatuses]);
+  
+  const setDefaultStatuses = () => {
+    setAvailableStatuses([
+      { value: 'none', label: 'Aucun' },
+      { value: 'assistance', label: 'Assistance' },
+      { value: 'vigi', label: 'Vigi' },
+      { value: 'formation', label: 'Formation' },
+      { value: 'projet', label: 'Projet' },
+      { value: 'conges', label: 'Congés' },
+      { value: 'management', label: 'Management' },
+      { value: 'tp', label: 'Temps Partiel' },
+      { value: 'coordinateur', label: 'Coordinateur Vigi Ticket' },
+      { value: 'absence', label: 'Autre Absence' },
+      { value: 'regisseur', label: 'Régisseur' },
+      { value: 'demenagement', label: 'Déménagements' },
+    ]);
+  };
   
   useEffect(() => {
     // Écouter l'événement personnalisé pour forcer le rechargement des statuts

@@ -35,7 +35,14 @@ export const useSupabaseStatuses = () => {
         throw error;
       }
 
-      setStatuses(data || []);
+      if (data) {
+        // Convertir explicitement les codes en StatusCode
+        const typedData: SupabaseStatus[] = data.map(item => ({
+          ...item,
+          code: item.code as StatusCode
+        }));
+        setStatuses(typedData);
+      }
     } catch (error) {
       console.error('Erreur lors du chargement des statuts:', error);
       setError('Impossible de charger les statuts depuis Supabase');
@@ -45,12 +52,13 @@ export const useSupabaseStatuses = () => {
       if (savedData) {
         const data = JSON.parse(savedData);
         if (data.statuses && data.statuses.length > 0) {
-          setStatuses(data.statuses.map((s: any) => ({
+          const localStatuses: SupabaseStatus[] = data.statuses.map((s: any) => ({
             id: s.id,
-            code: s.code,
+            code: s.code as StatusCode,
             libelle: s.label,
             couleur: s.color
-          })));
+          }));
+          setStatuses(localStatuses);
           toast.info('Utilisation des statuts stockés localement');
         }
       }
@@ -70,8 +78,16 @@ export const useSupabaseStatuses = () => {
         throw error;
       }
 
-      setStatuses(prev => [...prev, data[0]]);
-      return data[0];
+      if (data && data[0]) {
+        // Convertir explicitement le code en StatusCode
+        const newStatus: SupabaseStatus = {
+          ...data[0],
+          code: data[0].code as StatusCode
+        };
+        setStatuses(prev => [...prev, newStatus]);
+        return newStatus;
+      }
+      return null;
     } catch (error) {
       console.error('Erreur lors de l\'ajout du statut:', error);
       toast.error('Impossible d\'ajouter le statut');
@@ -91,8 +107,16 @@ export const useSupabaseStatuses = () => {
         throw error;
       }
 
-      setStatuses(prev => prev.map(s => s.id === id ? data[0] : s));
-      return data[0];
+      if (data && data[0]) {
+        // Convertir explicitement le code en StatusCode
+        const updatedStatus: SupabaseStatus = {
+          ...data[0],
+          code: data[0].code as StatusCode
+        };
+        setStatuses(prev => prev.map(s => s.id === id ? updatedStatus : s));
+        return updatedStatus;
+      }
+      return null;
     } catch (error) {
       console.error('Erreur lors de la mise à jour du statut:', error);
       toast.error('Impossible de mettre à jour le statut');

@@ -18,7 +18,7 @@ export function useStatusOptions(defaultStatuses: StatusCode[] = []) {
       // Si nous avons des statuts personnalisés, les utiliser
       if (data.statuses && data.statuses.length > 0) {
         setAvailableStatuses([
-          { value: '', label: 'Aucun' },
+          { value: 'none' as StatusCode, label: 'Aucun' },
           ...data.statuses.map((status: any) => ({
             value: status.code as StatusCode,
             label: status.label
@@ -27,7 +27,7 @@ export function useStatusOptions(defaultStatuses: StatusCode[] = []) {
       } else {
         // Sinon, utiliser les statuts par défaut
         setAvailableStatuses([
-          { value: '', label: 'Aucun' },
+          { value: 'none' as StatusCode, label: 'Aucun' },
           { value: 'assistance', label: 'Assistance' },
           { value: 'vigi', label: 'Vigi' },
           { value: 'formation', label: 'Formation' },

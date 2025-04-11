@@ -14,14 +14,14 @@ export function ProjectFilterSelect({ projects, selectedProjectCode, onChange }:
     <div className="space-y-2">
       <Label htmlFor="project">Projet</Label>
       <Select
-        value={selectedProjectCode || ""}
-        onValueChange={(value) => onChange(value || undefined)}
+        value={selectedProjectCode || "all"}
+        onValueChange={(value) => onChange(value === "all" ? undefined : value)}
       >
         <SelectTrigger id="project">
           <SelectValue placeholder="Tous les projets" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">Tous les projets</SelectItem>
+          <SelectItem value="all">Tous les projets</SelectItem>
           {projects.map(project => (
             <SelectItem key={project.id} value={project.code}>
               {project.name} ({project.code})

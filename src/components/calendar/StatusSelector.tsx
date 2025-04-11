@@ -19,12 +19,12 @@ export function StatusSelector({ value, onChange }: StatusSelectorProps) {
     
     // Si nous avons des statuts personnalisés, extraire les codes
     if (data.statuses && data.statuses.length > 0) {
-      return [...data.statuses.map((s: any) => s.code as StatusCode), ''];
+      return [...data.statuses.map((s: any) => s.code as StatusCode), 'none'];
     }
     
     // Statuts par défaut
     return ['assistance', 'vigi', 'formation', 'projet', 'conges', 'management', 
-            'tp', 'coordinateur', 'absence', 'regisseur', 'demenagement', ''];
+            'tp', 'coordinateur', 'absence', 'regisseur', 'demenagement', 'none'];
   };
   
   const statuses = getAvailableStatuses();
@@ -36,10 +36,10 @@ export function StatusSelector({ value, onChange }: StatusSelectorProps) {
           variant="outline" 
           className={cn(
             "w-full justify-between",
-            value && STATUS_COLORS[value]
+            value && value !== 'none' && STATUS_COLORS[value]
           )}
         >
-          {value ? STATUS_LABELS[value] : "Sélectionner un statut"}
+          {value && value !== 'none' ? STATUS_LABELS[value] : "Sélectionner un statut"}
           <ChevronDown className="ml-2 h-4 w-4" />
         </Button>
       </PopoverTrigger>
@@ -52,9 +52,9 @@ export function StatusSelector({ value, onChange }: StatusSelectorProps) {
                 "p-2.5 text-left hover:bg-secondary transition-colors",
                 status === value && "bg-secondary"
               )}
-              onClick={() => onChange(status)}
+              onClick={() => onChange(status === 'none' ? '' as StatusCode : status)}
             >
-              {status ? (
+              {status !== 'none' ? (
                 <div className="flex items-center">
                   {STATUS_COLORS[status] && (
                     <div 

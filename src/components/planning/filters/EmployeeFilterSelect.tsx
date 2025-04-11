@@ -14,14 +14,14 @@ export function EmployeeFilterSelect({ employees, selectedEmployeeId, onChange }
     <div className="space-y-2">
       <Label htmlFor="employee">Employé</Label>
       <Select
-        value={selectedEmployeeId || ""}
-        onValueChange={(value) => onChange(value || undefined)}
+        value={selectedEmployeeId || "all"}
+        onValueChange={(value) => onChange(value === "all" ? undefined : value)}
       >
         <SelectTrigger id="employee">
           <SelectValue placeholder="Tous les employés" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">Tous les employés</SelectItem>
+          <SelectItem value="all">Tous les employés</SelectItem>
           {employees.map(employee => (
             <SelectItem key={employee.id} value={employee.id}>
               {employee.name}

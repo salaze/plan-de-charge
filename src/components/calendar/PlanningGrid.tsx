@@ -69,7 +69,7 @@ export function PlanningGrid({
   
   // Log employees data for debugging
   useEffect(() => {
-    console.log("PlanningGrid employees:", employees.length, employees.map(e => e.nom));
+    console.log("PlanningGrid employees:", employees.length, employees.map(e => e.name));
   }, [employees]);
   
   // Find current status for a selected cell

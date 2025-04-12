@@ -11,7 +11,7 @@ export interface SupabaseEmployee {
   departement?: string | null;
   fonction?: string | null;
   role?: string | null;
-  uid?: string | null;
+  identifiant?: string | null;  // Changed from uid to identifiant to match database schema
   created_at?: string | null;
   updated_at?: string | null;
 }
@@ -57,7 +57,7 @@ export const useSupabaseEmployees = () => {
         prenom: employee.name.split(' ').slice(0, -1).join(' ') || undefined,
         departement: employee.department,
         fonction: employee.position,
-        uid: employee.uid,
+        identifiant: employee.uid,  // Using identifiant instead of uid
         role: employee.role
       };
       
@@ -91,7 +91,7 @@ export const useSupabaseEmployees = () => {
       
       if (employee.department !== undefined) supabaseEmployee.departement = employee.department;
       if (employee.position !== undefined) supabaseEmployee.fonction = employee.position;
-      if (employee.uid !== undefined) supabaseEmployee.uid = employee.uid;
+      if (employee.uid !== undefined) supabaseEmployee.identifiant = employee.uid;  // Using identifiant instead of uid
       if (employee.role !== undefined) supabaseEmployee.role = employee.role;
       
       const { data, error } = await supabase

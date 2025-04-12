@@ -35,7 +35,7 @@ const Employees = () => {
         name: emp.prenom ? `${emp.prenom} ${emp.nom}` : emp.nom,
         department: emp.departement || undefined,
         position: emp.fonction || undefined,
-        uid: emp.uid || undefined,
+        uid: emp.identifiant || undefined,  // Using identifiant instead of uid
         role: emp.role as any || 'employee',
         schedule: []
       }));
@@ -95,7 +95,7 @@ const Employees = () => {
         const savedEmployee = {
           id: result.id,
           name: result.prenom ? `${result.prenom} ${result.nom}` : result.nom,
-          uid: result.uid || '', // Make sure this matches your database field name
+          uid: result.identifiant || '',  // Using identifiant instead of uid
           position: result.fonction || undefined,
           department: result.departement || undefined,
           role: result.role as any || 'employee',

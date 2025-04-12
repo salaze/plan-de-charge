@@ -103,7 +103,7 @@ export function EmployeeTab({ employees, onEmployeesChange }: EmployeeTabProps) 
         const newEmployee = {
           id: result.id,
           name: result.prenom ? `${result.prenom} ${result.nom}` : result.nom,
-          uid: result.uid || '',
+          uid: result.identifiant || '',  // Using identifiant instead of uid
           position: result.fonction || undefined,
           department: result.departement || undefined,
           role: result.role as any || 'employee',

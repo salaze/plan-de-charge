@@ -7,6 +7,7 @@ import { PlanningToolbar } from '@/components/planning/PlanningToolbar';
 import { usePlanningState } from '@/hooks/usePlanningState';
 import { useAuth } from '@/contexts/AuthContext';
 import { SupabaseStatusIndicator } from '@/components/supabase/SupabaseStatusIndicator';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 const Index = () => {
   const { isAdmin } = useAuth();
@@ -30,7 +31,9 @@ const Index = () => {
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold">Planning</h1>
           <div className="flex items-center">
-            <SupabaseStatusIndicator />
+            <TooltipProvider>
+              <SupabaseStatusIndicator />
+            </TooltipProvider>
           </div>
         </div>
         

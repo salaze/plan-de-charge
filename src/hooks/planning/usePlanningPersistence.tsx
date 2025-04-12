@@ -4,7 +4,7 @@ import { MonthData } from '@/types';
 import { toast } from 'sonner';
 import { useSyncStatus } from '@/hooks/useSyncStatus';
 import { SupabaseTable } from '@/types/supabase';
-import { generateId } from '@/utils';
+import { ensureValidUuid, generateId } from '@/utils/idUtils';
 
 export const usePlanningPersistence = () => {
   // Use useSyncStatus hook within the component context
@@ -25,44 +25,39 @@ export const usePlanningPersistence = () => {
       // Note: Synchronization is attempted but not blocking
       updatedData.employees.forEach(employee => {
         try {
-          // Only sync if we have an id
-          if (employee.id) {
-            // Assurez-vous que l'ID est un UUID valide ou générez-en un nouveau si nécessaire
-            const employeeUuid = employee.id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i) 
-              ? employee.id 
-              : generateId();
+          // Ensure employee ID is a valid UUID
+          const employeeUuid = ensureValidUuid(employee.id);
               
-            syncWithSupabase(
-              {
-                id: employeeUuid, // Utiliser un UUID valide
-                nom: employee.name.split(' ').pop() || employee.name,
-                prenom: employee.name.split(' ').slice(0, -1).join(' ') || undefined,
-                departement: employee.department
-              },
-              "employes" as SupabaseTable
-            );
-            
-            // Sync schedule entries for this employee
-            employee.schedule.forEach(scheduleItem => {
-              if (scheduleItem.date && scheduleItem.period) {
-                // Générer un UUID unique pour chaque entrée de planning
-                const entryId = generateId();
-                
-                syncWithSupabase(
-                  {
-                    id: entryId, // Utiliser un UUID valide
-                    employe_id: employeeUuid, // S'assurer que l'employe_id est aussi un UUID valide
-                    date: scheduleItem.date,
-                    period: scheduleItem.period,
-                    statut_code: scheduleItem.status,
-                    is_highlighted: scheduleItem.isHighlighted,
-                    project_code: scheduleItem.projectCode
-                  },
-                  "employe_schedule" as SupabaseTable
-                );
-              }
-            });
-          }
+          syncWithSupabase(
+            {
+              id: employeeUuid,
+              nom: employee.name.split(' ').pop() || employee.name,
+              prenom: employee.name.split(' ').slice(0, -1).join(' ') || undefined,
+              departement: employee.department
+            },
+            "employes" as SupabaseTable
+          );
+          
+          // Sync schedule entries for this employee
+          employee.schedule.forEach(scheduleItem => {
+            if (scheduleItem.date && scheduleItem.period) {
+              // Generate a UUID for each schedule entry
+              const entryId = generateId();
+              
+              syncWithSupabase(
+                {
+                  id: entryId,
+                  employe_id: employeeUuid,
+                  date: scheduleItem.date,
+                  period: scheduleItem.period,
+                  statut_code: scheduleItem.status,
+                  is_highlighted: scheduleItem.isHighlighted,
+                  project_code: scheduleItem.projectCode
+                },
+                "employe_schedule" as SupabaseTable
+              );
+            }
+          });
         } catch (error) {
           console.error("Error syncing with Supabase:", error);
           // Don't show toast here as it would be overwhelming

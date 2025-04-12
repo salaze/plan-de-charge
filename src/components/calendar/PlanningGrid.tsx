@@ -64,18 +64,23 @@ export function PlanningGrid({
   const handleStatusChange = (status: StatusCode, isHighlighted?: boolean, projectCode?: string) => {
     if (!selectedCell) return;
     
-    // Apply the change immediately
-    onStatusChange(
-      selectedCell.employeeId,
-      selectedCell.date,
-      status,
-      selectedCell.period,
-      isHighlighted,
-      projectCode
-    );
-    
-    // Close dialog
-    handleCloseDialog();
+    try {
+      // Apply the change immediately
+      onStatusChange(
+        selectedCell.employeeId,
+        selectedCell.date,
+        status,
+        selectedCell.period,
+        isHighlighted,
+        projectCode
+      );
+      
+      // Close dialog
+      handleCloseDialog();
+    } catch (error) {
+      console.error("Erreur lors du changement de statut:", error);
+      toast.error("Une erreur s'est produite lors de la mise à jour du statut");
+    }
   };
   
   // Calculate statistics for an employee

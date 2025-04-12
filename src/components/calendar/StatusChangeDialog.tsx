@@ -4,7 +4,8 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle
+  DialogTitle,
+  DialogDescription
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { StatusSelectorEnhanced } from './StatusSelectorEnhanced';
@@ -38,6 +39,9 @@ export function StatusChangeDialog({
           <DialogTitle>
             Modifier le statut {selectedPeriod === 'AM' ? '(Matin)' : '(Après-midi)'}
           </DialogTitle>
+          <DialogDescription>
+            Sélectionnez un statut pour cette période
+          </DialogDescription>
         </DialogHeader>
         
         <div className="grid gap-4 py-4">

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Layout } from '@/components/layout/Layout';
@@ -34,7 +35,7 @@ const Employees = () => {
         name: emp.prenom ? `${emp.prenom} ${emp.nom}` : emp.nom,
         department: emp.departement || undefined,
         position: emp.fonction || undefined,
-        uid: emp.identifiant || undefined,
+        uid: emp.uid || undefined,
         role: emp.role as any || 'employee',
         schedule: []
       }));
@@ -94,7 +95,7 @@ const Employees = () => {
         const savedEmployee = {
           id: result.id,
           name: result.prenom ? `${result.prenom} ${result.nom}` : result.nom,
-          uid: result.identifiant || '',
+          uid: result.uid || '',
           position: result.fonction || undefined,
           department: result.departement || undefined,
           role: result.role as any || 'employee',

@@ -55,12 +55,14 @@ export const useSupabaseEmployees = () => {
       const supabaseEmployee: SupabaseEmployee = {
         id: employee.id,
         nom: employee.name.split(' ').pop() || employee.name,
-        prenom: employee.name.split(' ').slice(0, -1).join(' ') || undefined,
-        departement: employee.department,
-        fonction: employee.position,
-        identifiant: employee.uid,  // Using identifiant for uid value
-        role: employee.role
+        prenom: employee.name.split(' ').slice(0, -1).join(' ') || null,
+        departement: employee.department || null,
+        fonction: employee.position || null,
+        identifiant: employee.uid || null,  // Using identifiant for uid value
+        role: employee.role || null
       };
+      
+      console.log('Ajout d\'un employé à Supabase:', supabaseEmployee);
       
       const { data, error } = await supabase
         .from('employes')
@@ -68,9 +70,11 @@ export const useSupabaseEmployees = () => {
         .select();
 
       if (error) {
+        console.error('Erreur Supabase lors de l\'ajout:', error);
         throw error;
       }
 
+      console.log('Employé ajouté avec succès dans Supabase:', data);
       await fetchEmployees(); // Refresh the employee list
       return data[0];
     } catch (error) {
@@ -87,13 +91,15 @@ export const useSupabaseEmployees = () => {
       
       if (employee.name) {
         supabaseEmployee.nom = employee.name.split(' ').pop() || employee.name;
-        supabaseEmployee.prenom = employee.name.split(' ').slice(0, -1).join(' ') || undefined;
+        supabaseEmployee.prenom = employee.name.split(' ').slice(0, -1).join(' ') || null;
       }
       
-      if (employee.department !== undefined) supabaseEmployee.departement = employee.department;
-      if (employee.position !== undefined) supabaseEmployee.fonction = employee.position;
-      if (employee.uid !== undefined) supabaseEmployee.identifiant = employee.uid;  // Using identifiant for uid value
-      if (employee.role !== undefined) supabaseEmployee.role = employee.role;
+      if (employee.department !== undefined) supabaseEmployee.departement = employee.department || null;
+      if (employee.position !== undefined) supabaseEmployee.fonction = employee.position || null;
+      if (employee.uid !== undefined) supabaseEmployee.identifiant = employee.uid || null;  // Using identifiant for uid value
+      if (employee.role !== undefined) supabaseEmployee.role = employee.role || null;
+      
+      console.log('Mise à jour d\'un employé dans Supabase:', id, supabaseEmployee);
       
       const { data, error } = await supabase
         .from('employes')
@@ -102,9 +108,11 @@ export const useSupabaseEmployees = () => {
         .select();
 
       if (error) {
+        console.error('Erreur Supabase lors de la mise à jour:', error);
         throw error;
       }
 
+      console.log('Employé mis à jour avec succès dans Supabase:', data);
       await fetchEmployees(); // Refresh the employee list
       return data[0];
     } catch (error) {
@@ -116,15 +124,19 @@ export const useSupabaseEmployees = () => {
 
   const deleteEmployee = async (id: string) => {
     try {
+      console.log('Suppression d\'un employé dans Supabase:', id);
+      
       const { error } = await supabase
         .from('employes')
         .delete()
         .eq('id', id);
 
       if (error) {
+        console.error('Erreur Supabase lors de la suppression:', error);
         throw error;
       }
 
+      console.log('Employé supprimé avec succès dans Supabase');
       setEmployees(prev => prev.filter(e => e.id !== id));
       toast.success('Employé supprimé avec succès');
     } catch (error) {
@@ -136,15 +148,19 @@ export const useSupabaseEmployees = () => {
   
   const deleteAllEmployees = async () => {
     try {
+      console.log('Suppression de tous les employés dans Supabase');
+      
       const { error } = await supabase
         .from('employes')
         .delete()
         .neq('id', '00000000-0000-0000-0000-000000000000'); // Ceci va supprimer tous les employés
 
       if (error) {
+        console.error('Erreur Supabase lors de la suppression de tous les employés:', error);
         throw error;
       }
 
+      console.log('Tous les employés ont été supprimés avec succès dans Supabase');
       setEmployees([]);
       toast.success('Tous les employés ont été supprimés de Supabase');
     } catch (error) {

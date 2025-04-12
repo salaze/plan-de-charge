@@ -7,7 +7,7 @@ import { useSupabaseStatuses } from '../useSupabaseStatuses';
 import { createSampleData } from '@/utils';
 
 export const usePlanningDataLoader = () => {
-  const { employees: supabaseEmployees, loading: loadingEmployees } = useSupabaseEmployees();
+  const { employees: supabaseEmployees, loading: loadingEmployees, fetchEmployees } = useSupabaseEmployees();
   const { statuses: supabaseStatuses, loading: loadingStatuses } = useSupabaseStatuses();
   const [data, setData] = useState<MonthData>(createDefaultData());
   const [isLoading, setIsLoading] = useState(true);
@@ -38,6 +38,9 @@ export const usePlanningDataLoader = () => {
         
         console.log("Loading employees from Supabase:", supabaseEmployees);
         
+        // Rafraîchir les employés pour s'assurer qu'ils sont à jour
+        await fetchEmployees();
+        
         // Convert Supabase employees to our app format
         const convertedEmployees = supabaseEmployees.map(emp => ({
           id: emp.id,
@@ -66,7 +69,7 @@ export const usePlanningDataLoader = () => {
     }
     
     loadDataFromSupabase();
-  }, [supabaseEmployees, supabaseStatuses, loadingEmployees, loadingStatuses]);
+  }, [supabaseEmployees, supabaseStatuses, loadingEmployees, loadingStatuses, fetchEmployees]);
   
   return {
     data,

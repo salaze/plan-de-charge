@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Layout } from '@/components/layout/Layout';
@@ -16,15 +17,37 @@ import {
 import { Employee } from '@/types';
 import { generateId } from '@/utils';
 import { useSupabaseEmployees } from '@/hooks/useSupabaseEmployees';
+import { supabase } from '@/integrations/supabase/client';
 
 const Employees = () => {
-  const { employees: supabaseEmployees, loading, error, addEmployee, updateEmployee, deleteEmployee } = useSupabaseEmployees();
+  const { employees: supabaseEmployees, loading, error, fetchEmployees, addEmployee, updateEmployee, deleteEmployee } = useSupabaseEmployees();
   const [employees, setEmployees] = useState<Employee[]>([]);
   
   const [formOpen, setFormOpen] = useState(false);
   const [currentEmployee, setCurrentEmployee] = useState<Employee | undefined>(undefined);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<string>('');
+  
+  useEffect(() => {
+    // Pour le débogage
+    const checkSupabaseConnection = async () => {
+      try {
+        const { data, error } = await supabase.from('employes').select('count').single();
+        if (error) {
+          console.error("Erreur connexion Supabase:", error);
+        } else {
+          console.log("Connexion Supabase OK:", data);
+        }
+      } catch (err) {
+        console.error("Exception connexion Supabase:", err);
+      }
+    };
+    
+    checkSupabaseConnection();
+    
+    // Rafraîchir la liste des employés
+    fetchEmployees();
+  }, [fetchEmployees]);
   
   useEffect(() => {
     if (!loading) {
@@ -38,6 +61,7 @@ const Employees = () => {
         schedule: []
       }));
       
+      console.log("Employés convertis:", convertedEmployees);
       setEmployees(convertedEmployees);
     }
   }, [supabaseEmployees, loading]);
@@ -76,36 +100,53 @@ const Employees = () => {
   const handleSaveEmployee = async (employee: Employee) => {
     try {
       if (employee.id) {
+        // Mise à jour d'un employé existant
         await updateEmployee(employee.id, employee);
         setEmployees(prev => prev.map(emp => emp.id === employee.id ? employee : emp));
         toast.success('Employé modifié avec succès');
       } else {
+        // Ajout d'un nouvel employé
         const newEmployee = {
           ...employee,
           id: generateId(),
           schedule: []
         };
         
+        console.log("Nouveau employé à ajouter:", newEmployee);
+        
         const result = await addEmployee(newEmployee);
         
-        const savedEmployee = {
-          id: result.id,
-          name: result.prenom ? `${result.prenom} ${result.nom}` : result.nom,
-          uid: result.identifiant || result.uid || '',  // Using either identifiant or uid
-          position: result.fonction || undefined,
-          department: result.departement || undefined,
-          role: result.role as any || 'employee',
-          schedule: []
-        };
-        
-        setEmployees(prev => [...prev, savedEmployee]);
-        toast.success('Employé ajouté avec succès');
+        if (result) {
+          const savedEmployee = {
+            id: result.id,
+            name: result.prenom ? `${result.prenom} ${result.nom}` : result.nom,
+            uid: result.identifiant || result.uid || '',  // Using either identifiant or uid
+            position: result.fonction || undefined,
+            department: result.departement || undefined,
+            role: result.role as any || 'employee',
+            schedule: []
+          };
+          
+          console.log("Employé sauvegardé:", savedEmployee);
+          
+          setEmployees(prev => [...prev, savedEmployee]);
+          toast.success('Employé ajouté avec succès');
+          
+          // Rafraîchir la liste des employés
+          fetchEmployees();
+        }
       }
+      
+      setFormOpen(false);
     } catch (error) {
       console.error('Erreur lors de la sauvegarde de l\'employé:', error);
       toast.error('Impossible de sauvegarder l\'employé');
     }
   };
+  
+  if (error) {
+    console.error("Erreur de chargement:", error);
+  }
   
   return (
     <Layout>

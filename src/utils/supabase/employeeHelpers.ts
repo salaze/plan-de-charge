@@ -19,7 +19,7 @@ export async function insertEmploye(data: EmployeData): Promise<SyncResult> {
       departement: data.departement,
       fonction: data.fonction,
       role: data.role,
-      identifiant: data.uid  // Using identifiant instead of uid
+      identifiant: data.identifiant || data.uid  // Use identifiant or uid if available
     };
     
     const result = await supabase
@@ -43,7 +43,10 @@ export async function updateEmploye(idValue: string, data: Partial<EmployeData>)
     if (data.departement !== undefined) updateData.departement = data.departement;
     if (data.fonction !== undefined) updateData.fonction = data.fonction;
     if (data.role !== undefined) updateData.role = data.role;
-    if (data.uid !== undefined) updateData.identifiant = data.uid;  // Using identifiant instead of uid
+    
+    // Handle both uid and identifiant fields for backward compatibility
+    if (data.uid !== undefined) updateData.identifiant = data.uid;
+    if (data.identifiant !== undefined) updateData.identifiant = data.identifiant;
     
     const result = await supabase
       .from('employes' as any)

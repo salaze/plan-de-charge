@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,7 +10,8 @@ export interface SupabaseEmployee {
   departement?: string | null;
   fonction?: string | null;
   role?: string | null;
-  identifiant?: string | null;  // Changed from uid to identifiant to match database schema
+  identifiant?: string | null;  // Added identifiant property
+  uid?: string | null;  // Keep uid for backward compatibility
   created_at?: string | null;
   updated_at?: string | null;
 }
@@ -57,7 +57,7 @@ export const useSupabaseEmployees = () => {
         prenom: employee.name.split(' ').slice(0, -1).join(' ') || undefined,
         departement: employee.department,
         fonction: employee.position,
-        identifiant: employee.uid,  // Using identifiant instead of uid
+        identifiant: employee.uid,  // Using identifiant for uid value
         role: employee.role
       };
       
@@ -91,7 +91,7 @@ export const useSupabaseEmployees = () => {
       
       if (employee.department !== undefined) supabaseEmployee.departement = employee.department;
       if (employee.position !== undefined) supabaseEmployee.fonction = employee.position;
-      if (employee.uid !== undefined) supabaseEmployee.identifiant = employee.uid;  // Using identifiant instead of uid
+      if (employee.uid !== undefined) supabaseEmployee.identifiant = employee.uid;  // Using identifiant for uid value
       if (employee.role !== undefined) supabaseEmployee.role = employee.role;
       
       const { data, error } = await supabase

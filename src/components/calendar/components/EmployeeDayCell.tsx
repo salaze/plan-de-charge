@@ -35,6 +35,7 @@ export function EmployeeDayCell({
       {/* Morning cell */}
       <PlanningCell 
         day={day}
+        date={formattedDate}
         employeeId={employeeId}
         period="AM"
         status={morningStatus.status}
@@ -47,6 +48,7 @@ export function EmployeeDayCell({
       {/* Afternoon cell */}
       <PlanningCell 
         day={day}
+        date={formattedDate}
         employeeId={employeeId}
         period="PM"
         status={afternoonStatus.status}

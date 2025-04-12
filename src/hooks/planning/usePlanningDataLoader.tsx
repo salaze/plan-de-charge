@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { MonthData } from '@/types';
@@ -44,7 +43,7 @@ export const usePlanningDataLoader = () => {
           name: emp.prenom ? `${emp.prenom} ${emp.nom}` : emp.nom,
           department: emp.departement || undefined,
           position: emp.fonction || undefined,
-          uid: emp.identifiant || undefined,  // Changed from uid to identifiant
+          uid: emp.identifiant || emp.uid || undefined,  // Using either identifiant or uid
           role: emp.role as any || 'employee',
           schedule: [] // Les plannings seront chargés séparément pour chaque employé
         }));
@@ -74,4 +73,3 @@ export const usePlanningDataLoader = () => {
     isLoading
   };
 };
-

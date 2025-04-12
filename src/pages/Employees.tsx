@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Layout } from '@/components/layout/Layout';
@@ -27,7 +26,6 @@ const Employees = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<string>('');
   
-  // Convert Supabase employees to the app's format
   useEffect(() => {
     if (!loading) {
       const convertedEmployees = supabaseEmployees.map(emp => ({
@@ -78,12 +76,10 @@ const Employees = () => {
   const handleSaveEmployee = async (employee: Employee) => {
     try {
       if (employee.id) {
-        // Mettre à jour un employé existant
         await updateEmployee(employee.id, employee);
         setEmployees(prev => prev.map(emp => emp.id === employee.id ? employee : emp));
         toast.success('Employé modifié avec succès');
       } else {
-        // Ajouter un nouvel employé
         const newEmployee = {
           ...employee,
           id: generateId(),

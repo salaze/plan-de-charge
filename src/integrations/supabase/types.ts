@@ -59,6 +59,7 @@ export type Database = {
           departement: string | null
           fonction: string | null
           id: string
+          identifiant: string | null
           nom: string
           prenom: string | null
           role: string | null
@@ -70,6 +71,7 @@ export type Database = {
           departement?: string | null
           fonction?: string | null
           id?: string
+          identifiant?: string | null
           nom: string
           prenom?: string | null
           role?: string | null
@@ -81,6 +83,7 @@ export type Database = {
           departement?: string | null
           fonction?: string | null
           id?: string
+          identifiant?: string | null
           nom?: string
           prenom?: string | null
           role?: string | null

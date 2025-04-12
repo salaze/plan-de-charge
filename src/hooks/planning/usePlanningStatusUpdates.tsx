@@ -119,30 +119,41 @@ export const usePlanningStatusUpdates = (
         return updatedData;
       });
       
-      // Then call Supabase to persist the change
-      console.log("Appel à Supabase pour persister le changement");
-      const result = await updateScheduleEntry(
-        employeeId,
-        date, 
-        status, 
-        period, 
-        isHighlighted, 
-        status === 'projet' ? projectCode : undefined
-      );
-      
-      // Correction ici : vérification appropriée selon le type de retour
-      const isSuccess = typeof result === 'boolean' ? result : result.success;
-      
-      if (isSuccess) {
-        console.log("Statut mis à jour avec succès dans Supabase");
-        toast.success(`Statut ${period === 'AM' ? 'matin' : 'après-midi'} mis à jour et synchronisé`);
-      } else {
-        console.error("Échec de la mise à jour dans Supabase");
-        toast.warning("Mise à jour locale effectuée, mais échec de la synchronisation avec Supabase");
+      // Multiple save attempts with retry logic
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          console.log(`SUPABASE: Tentative ${attempt} de sauvegarde dans Supabase`);
+          const result = await updateScheduleEntry(
+            employeeId,
+            date, 
+            status, 
+            period, 
+            isHighlighted, 
+            status === 'projet' ? projectCode : undefined
+          );
+          
+          // Vérification du succès selon le format de retour
+          const isSuccess = typeof result === 'boolean' ? result : result.success;
+          
+          if (isSuccess) {
+            console.log("Statut mis à jour avec succès dans Supabase");
+            toast.success(`Statut ${period === 'AM' ? 'matin' : 'après-midi'} mis à jour et synchronisé`);
+            return;  // Sortie de la fonction si réussite
+          } else {
+            throw new Error("Échec de la mise à jour");
+          }
+        } catch (error) {
+          // Si c'est la dernière tentative, propager l'erreur
+          if (attempt === 3) throw error;
+          
+          // Sinon, attendre avant de réessayer
+          console.warn(`Échec de la tentative ${attempt}, nouvelle tentative dans 1s...`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
       }
     } catch (error) {
       console.error("Erreur détaillée lors de la mise à jour du statut:", error);
-      toast.error("Impossible de mettre à jour le statut dans Supabase");
+      toast.error("Impossible de mettre à jour le statut dans Supabase. Les changements sont enregistrés localement.");
       
       // Test the connection to see if that's the issue
       checkSupabaseConnection();

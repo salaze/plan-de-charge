@@ -10,6 +10,7 @@ import { SupabaseStatusIndicator } from '@/components/supabase/SupabaseStatusInd
 import { Button } from '@/components/ui/button';
 import { testSupabaseConnection } from '@/utils/initSupabase';
 import { toast } from 'sonner';
+import { checkTableExists } from '@/utils/supabase/statusTableChecker';
 
 const Index = () => {
   const { isAdmin } = useAuth();
@@ -31,6 +32,29 @@ const Index = () => {
       console.log("Employés chargés sur la page d'index:", data.employees);
     }
   }, [data.employees]);
+  
+  // Vérifier la connexion au démarrage
+  useEffect(() => {
+    if (isAdmin) {
+      handleTestConnection();
+      
+      // Vérifier aussi les tables nécessaires
+      const checkTables = async () => {
+        const statusTableExists = await checkTableExists('statuts');
+        const scheduleTableExists = await checkTableExists('employe_schedule');
+        
+        if (!statusTableExists) {
+          toast.warning("La table 'statuts' n'est pas accessible. Certaines fonctionnalités peuvent être limitées.");
+        }
+        
+        if (!scheduleTableExists) {
+          toast.warning("La table 'employe_schedule' n'est pas accessible. Les modifications ne seront pas enregistrées dans Supabase.");
+        }
+      };
+      
+      checkTables();
+    }
+  }, [isAdmin]);
   
   const handleTestConnection = async () => {
     setIsCheckingConnection(true);

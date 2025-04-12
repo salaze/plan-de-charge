@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { StatusCode, STATUS_LABELS, STATUS_COLORS } from '@/types';
 import { useSupabaseStatuses } from '@/hooks/useSupabaseStatuses';
 import { generateId, ensureValidUuid } from '@/utils/idUtils';
+import { useSupabaseSchedule } from '@/hooks/useSupabaseSchedule';
 
 interface Status {
   id: string;
@@ -26,6 +27,7 @@ export function useStatusManagement(
   const [color, setColor] = useState('bg-green-500 text-white');
 
   const { addStatus, updateStatus, deleteStatus } = useSupabaseStatuses();
+  const { saveStatus } = useSupabaseSchedule();  // Utilisation du nouveau hook
   
   const handleAddStatus = () => {
     setCurrentStatus(null);
@@ -89,11 +91,22 @@ export function useStatusManagement(
       if (currentStatus) {
         const validId = ensureValidUuid(currentStatus.id);
         
-        await updateStatus(validId, {
-          code,
-          libelle: label,
-          couleur: color
-        });
+        // Essayer d'abord avec addStatus, puis avec saveStatus si addStatus échoue
+        try {
+          await updateStatus(validId, {
+            code,
+            libelle: label,
+            couleur: color
+          });
+        } catch (error) {
+          console.warn("Erreur lors de la mise à jour avec updateStatus, tentative avec saveStatus:", error);
+          await saveStatus({
+            code,
+            libelle: label,
+            couleur: color,
+            display_order: statuses.findIndex(s => s.id === currentStatus.id) + 1
+          });
+        }
         
         updatedStatuses = statuses.map(status => 
           status.id === currentStatus.id 
@@ -104,13 +117,25 @@ export function useStatusManagement(
       } else {
         const newId = generateId();
         
-        const result = await addStatus({
-          id: newId,
-          code,
-          libelle: label,
-          couleur: color,
-          display_order: statuses.length + 1
-        });
+        // Essayer d'abord avec addStatus, puis avec saveStatus si addStatus échoue
+        let result;
+        try {
+          result = await addStatus({
+            id: newId,
+            code,
+            libelle: label,
+            couleur: color,
+            display_order: statuses.length + 1
+          });
+        } catch (error) {
+          console.warn("Erreur lors de l'ajout avec addStatus, tentative avec saveStatus:", error);
+          result = await saveStatus({
+            code,
+            libelle: label,
+            couleur: color,
+            display_order: statuses.length + 1
+          });
+        }
         
         const newStatus: Status = {
           id: result?.id || newId,

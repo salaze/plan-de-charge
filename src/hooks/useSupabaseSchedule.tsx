@@ -189,10 +189,51 @@ export function useSupabaseSchedule() {
     }
   }, []);
 
+  // Nouveau: Fonction pour sauvegarder un statut directement
+  const saveStatus = useCallback(async (statusData: {
+    code: StatusCode;
+    libelle: string;
+    couleur: string;
+    display_order?: number;
+  }) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const newStatusId = generateId();
+      
+      const { data, error } = await supabase
+        .from('statuts')
+        .insert({
+          id: newStatusId,
+          code: statusData.code,
+          libelle: statusData.libelle,
+          couleur: statusData.couleur,
+          display_order: statusData.display_order || 0
+        })
+        .select();
+      
+      if (error) {
+        console.error("SUPABASE: Erreur lors de l'enregistrement du statut:", error);
+        throw error;
+      }
+      
+      console.log("SUPABASE: Statut enregistré avec succès:", data);
+      return { success: true, data };
+    } catch (error) {
+      console.error("SUPABASE: Erreur lors de l'enregistrement du statut:", error);
+      setError("Impossible d'enregistrer le statut dans Supabase");
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   return {
     updateScheduleEntry,
     getScheduleForEmployee,
     testConnection,
+    saveStatus,  // Ajout de la nouvelle fonction
     isLoading,
     error
   };

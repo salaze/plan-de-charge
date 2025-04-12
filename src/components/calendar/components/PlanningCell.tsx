@@ -5,11 +5,11 @@ import { StatusCell } from '../StatusCell';
 import { StatusCode, DayPeriod } from '@/types';
 import { isValidUuid } from '@/utils/idUtils';
 
-interface PlanningStatusCellProps {
+interface PlanningCellProps {
   day: Date;
   date: string;
   employeeId: string;
-  period: 'AM' | 'PM' | 'FULL'; // Updated to accept 'FULL' as well
+  period: DayPeriod; // Modifié pour accepter 'FULL' aussi
   status: StatusCode;
   isHighlighted?: boolean;
   projectCode?: string;
@@ -27,7 +27,7 @@ export function PlanningCell({
   projectCode,
   isWeekend,
   onCellClick
-}: PlanningStatusCellProps) {
+}: PlanningCellProps) {
   // Check if the employee ID is valid
   const isValidEmployeeId = isValidUuid(employeeId);
   
@@ -46,8 +46,7 @@ export function PlanningCell({
   
   const handleClick = () => {
     if (isValidEmployeeId) {
-      // Only pass AM, PM or FULL as appropriate for DayPeriod
-      onCellClick(employeeId, date, period as DayPeriod);
+      onCellClick(employeeId, date, period);
     }
   };
   

@@ -37,24 +37,14 @@ export const useSupabaseEmployees = () => {
         throw error;
       }
 
+      console.log('Employés chargés depuis Supabase:', data);
       setEmployees(data || []);
     } catch (error) {
       console.error('Erreur lors du chargement des employés:', error);
       setError('Impossible de charger les employés depuis Supabase');
       
-      // Fallback au localStorage si Supabase échoue
-      const savedData = localStorage.getItem('planningData');
-      if (savedData) {
-        const data = JSON.parse(savedData);
-        if (data.employees && data.employees.length > 0) {
-          setEmployees(data.employees.map((e: Employee) => ({
-            id: e.id,
-            nom: e.name,
-            departement: e.department || null
-          })));
-          toast.info('Utilisation des employés stockés localement');
-        }
-      }
+      // Ne pas utiliser le fallback localStorage car nous voulons vider la liste
+      setEmployees([]);
     } finally {
       setLoading(false);
     }
@@ -119,6 +109,26 @@ export const useSupabaseEmployees = () => {
       throw error;
     }
   };
+  
+  const deleteAllEmployees = async () => {
+    try {
+      const { error } = await supabase
+        .from('employes')
+        .delete()
+        .neq('id', '00000000-0000-0000-0000-000000000000'); // Ceci va supprimer tous les employés
+
+      if (error) {
+        throw error;
+      }
+
+      setEmployees([]);
+      toast.success('Tous les employés ont été supprimés de Supabase');
+    } catch (error) {
+      console.error('Erreur lors de la suppression des employés:', error);
+      toast.error('Impossible de supprimer les employés');
+      throw error;
+    }
+  };
 
   return {
     employees,
@@ -127,7 +137,8 @@ export const useSupabaseEmployees = () => {
     fetchEmployees,
     addEmployee,
     updateEmployee,
-    deleteEmployee
+    deleteEmployee,
+    deleteAllEmployees
   };
 };
 

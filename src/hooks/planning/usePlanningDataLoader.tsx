@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { MonthData } from '@/types';
@@ -13,6 +14,9 @@ export const usePlanningDataLoader = () => {
   
   function createDefaultData(): MonthData {
     const sampleData = createSampleData();
+    
+    // Vider les employés au démarrage
+    sampleData.employees = [];
     
     // Ajouter des projets aux données de démo
     sampleData.projects = [
@@ -43,7 +47,9 @@ export const usePlanningDataLoader = () => {
             // Assurer que les données ont la structure correcte
             if (!parsedData.year) parsedData.year = new Date().getFullYear();
             if (!parsedData.month && parsedData.month !== 0) parsedData.month = new Date().getMonth();
-            if (!Array.isArray(parsedData.employees)) parsedData.employees = [];
+            
+            // Vider explicitement les employés
+            parsedData.employees = [];
             
             // Assurer que la structure contient des projets
             if (!parsedData.projects) {
@@ -68,6 +74,7 @@ export const usePlanningDataLoader = () => {
           department: emp.departement || undefined,
           position: emp.fonction || undefined,
           uid: emp.uid || undefined,
+          role: emp.role as any || 'employee',
           schedule: [] // Les plannings seront chargés séparément pour chaque employé
         }));
 
@@ -75,28 +82,10 @@ export const usePlanningDataLoader = () => {
         
         // Use either parsed data or create new data structure
         if (parsedData) {
-          // Keep existing data but update employees list with fresh data from Supabase
-          const existingEmployeeIds = new Set(parsedData.employees.map((e: any) => e.id));
-          
-          // Merge schedules from existing employees with new employee data
-          const mergedEmployees = convertedEmployees.map(newEmp => {
-            const existingEmp = parsedData.employees.find((e: any) => e.id === newEmp.id);
-            return existingEmp ? { 
-              ...newEmp, 
-              schedule: existingEmp.schedule || []
-            } : newEmp;
-          });
-          
-          // Add any employees from localStorage that aren't in Supabase
-          parsedData.employees.forEach((emp: any) => {
-            if (!supabaseEmployees.some(sEmp => sEmp.id === emp.id)) {
-              mergedEmployees.push(emp);
-            }
-          });
-          
+          // Mettre à jour la structure avec les employés vides
           setData({
             ...parsedData,
-            employees: mergedEmployees
+            employees: convertedEmployees // Utiliser uniquement les employés de Supabase, pas ceux du localStorage
           });
         } else {
           // Create new data with just Supabase employees

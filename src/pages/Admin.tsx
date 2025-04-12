@@ -35,6 +35,22 @@ const Admin = () => {
         statuses: defaultStatuses
       }));
     }
+    
+    // Vider les employés lors du chargement initial
+    setData(prevData => ({
+      ...prevData,
+      employees: []
+    }));
+    
+    // Mettre à jour le localStorage
+    const savedData = localStorage.getItem('planningData');
+    if (savedData) {
+      const parsedData = JSON.parse(savedData);
+      localStorage.setItem('planningData', JSON.stringify({
+        ...parsedData,
+        employees: []
+      }));
+    }
   }, []);
   
   useEffect(() => {

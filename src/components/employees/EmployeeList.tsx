@@ -5,12 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Employee } from '@/types';
 import { PasswordManager } from '@/components/employees/PasswordManager';
+
 interface EmployeeListProps {
   employees: Employee[];
   onAddEmployee: () => void;
   onEditEmployee: (employee: Employee) => void;
   onDeleteEmployee: (employeeId: string) => void;
 }
+
 export function EmployeeList({
   employees,
   onAddEmployee,
@@ -36,8 +38,7 @@ export function EmployeeList({
           <TableHeader>
             <TableRow>
               <TableHead>Nom</TableHead>
-              <TableHead>Identifiant
-            </TableHead>
+              <TableHead>Identifiant</TableHead>
               <TableHead>Fonction</TableHead>
               <TableHead>Département</TableHead>
               <TableHead className="text-right">Actions</TableHead>

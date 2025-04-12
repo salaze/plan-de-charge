@@ -117,6 +117,8 @@ export function PlanningGrid({
   
   // Group valid employees by department
   const departmentGroups = groupEmployeesByDepartment(validEmployees);
+
+  console.log("Employees on planning page:", validEmployees);
   
   return (
     <>

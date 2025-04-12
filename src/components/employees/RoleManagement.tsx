@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { toast } from 'sonner';
 import { Employee, UserRole } from '@/types';
@@ -53,7 +54,7 @@ export function RoleManagement({
           <TableBody>
             {employees.map(employee => <TableRow key={employee.id}>
                 <TableCell>{employee.name}</TableCell>
-                <TableCell>{employee.email || '-'}</TableCell>
+                <TableCell>{employee.uid || '-'}</TableCell>
                 <TableCell>{employee.position || '-'}</TableCell>
                 <TableCell>
                   <EmployeeRoleSelector employee={employee} onRoleChange={handleRoleChange} />

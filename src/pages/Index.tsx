@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { PlanningGrid } from '@/components/calendar/PlanningGrid';
 import { LegendModal } from '@/components/calendar/LegendModal';
@@ -20,6 +20,13 @@ const Index = () => {
     handleMonthChange,
     handleStatusChange
   } = usePlanningState();
+  
+  // Log employees when they load
+  useEffect(() => {
+    if (data.employees) {
+      console.log("Employees loaded on index page:", data.employees);
+    }
+  }, [data.employees]);
   
   return (
     <Layout>

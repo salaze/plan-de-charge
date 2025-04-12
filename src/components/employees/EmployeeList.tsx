@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { User, Pencil, Trash, UserPlus, Briefcase, Building, Fingerprint } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -17,6 +18,7 @@ export function EmployeeList({
   onDeleteEmployee
 }: EmployeeListProps) {
   const sortedEmployees = [...employees].sort((a, b) => a.name.localeCompare(b.name));
+  
   return <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold flex items-center gap-2">

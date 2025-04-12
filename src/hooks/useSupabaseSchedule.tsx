@@ -3,16 +3,11 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { StatusCode, DayPeriod } from '@/types';
-import { generateId, isValidUuid } from '@/utils/idUtils';
+import { generateId, isValidUuid, ensureValidUuid } from '@/utils/idUtils';
 
 export function useSupabaseSchedule() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Function to check if an ID is a valid UUID, if not, convert it to one
-  const ensureValidId = (id: string): string => {
-    return isValidUuid(id) ? id : generateId();
-  };
 
   // Fonction pour mettre à jour une entrée de planning dans Supabase
   const updateScheduleEntry = useCallback(async (
@@ -28,12 +23,8 @@ export function useSupabaseSchedule() {
       setError(null);
 
       // Ensure employee ID is a valid UUID
-      const validEmployeeId = ensureValidId(employeeId);
+      const validEmployeeId = ensureValidUuid(employeeId);
       
-      // Generate a unique ID for the entry based on its unique attributes
-      // This ensures we can find it again if needed
-      const entryId = generateId();
-
       if (status === '') {
         // If the status is empty, delete the entry using a combination of fields
         const { error: deleteError } = await supabase
@@ -43,17 +34,25 @@ export function useSupabaseSchedule() {
           .eq('date', date)
           .eq('period', period);
 
-        if (deleteError) throw deleteError;
+        if (deleteError) {
+          console.error("Delete error details:", deleteError);
+          throw deleteError;
+        }
         return true;
       } else {
         // Check if the entry exists already using the fields
-        const { data: existingEntry } = await supabase
+        const { data: existingEntry, error: fetchError } = await supabase
           .from('employe_schedule')
           .select('*')
           .eq('employe_id', validEmployeeId)
           .eq('date', date)
           .eq('period', period)
           .maybeSingle();
+        
+        if (fetchError) {
+          console.error("Fetch error details:", fetchError);
+          throw fetchError;
+        }
 
         if (existingEntry) {
           // Update the existing entry
@@ -66,13 +65,18 @@ export function useSupabaseSchedule() {
             })
             .eq('id', existingEntry.id);
 
-          if (updateError) throw updateError;
+          if (updateError) {
+            console.error("Update error details:", updateError);
+            throw updateError;
+          }
         } else {
           // Create a new entry with a valid UUID
+          const newEntryId = generateId();
+          
           const { error: insertError } = await supabase
             .from('employe_schedule')
             .insert({
-              id: entryId,
+              id: newEntryId,
               employe_id: validEmployeeId,
               date: date,
               period: period,
@@ -81,7 +85,10 @@ export function useSupabaseSchedule() {
               is_highlighted: isHighlighted
             });
 
-          if (insertError) throw insertError;
+          if (insertError) {
+            console.error("Insert error details:", insertError);
+            throw insertError;
+          }
         }
 
         return true;
@@ -102,14 +109,17 @@ export function useSupabaseSchedule() {
       setError(null);
 
       // Ensure employee ID is a valid UUID
-      const validEmployeeId = ensureValidId(employeeId);
+      const validEmployeeId = ensureValidUuid(employeeId);
 
       const { data, error } = await supabase
         .from('employe_schedule')
         .select('*')
         .eq('employe_id', validEmployeeId);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Fetch schedule error:", error);
+        throw error;
+      }
       return data || [];
     } catch (error) {
       console.error("Erreur lors de la récupération du planning:", error);

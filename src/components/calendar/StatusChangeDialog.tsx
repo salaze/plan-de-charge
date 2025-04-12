@@ -10,6 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { StatusSelectorEnhanced } from './StatusSelectorEnhanced';
 import { StatusCode } from '@/types';
+import { ensureValidUuid } from '@/utils/idUtils';
 
 interface StatusChangeDialogProps {
   isOpen: boolean;
@@ -31,6 +32,12 @@ export function StatusChangeDialog({
   projects
 }: StatusChangeDialogProps) {
   const [selectedPeriod, setSelectedPeriod] = useState<'AM' | 'PM'>('AM');
+  
+  // Ensure projects have valid UUIDs
+  const validatedProjects = projects.map(project => ({
+    ...project,
+    id: ensureValidUuid(project.id)
+  }));
   
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -65,7 +72,7 @@ export function StatusChangeDialog({
           <StatusSelectorEnhanced 
             value={currentStatus}
             onChange={onStatusChange}
-            projects={projects}
+            projects={validatedProjects}
             isHighlighted={isHighlighted}
             projectCode={projectCode}
             selectedPeriod={selectedPeriod}

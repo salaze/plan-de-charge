@@ -4,6 +4,7 @@ import { TableCell } from '@/components/ui/table';
 import { StatusCell } from './StatusCell';
 import { StatusCode } from '@/types';
 import { isWeekendOrHoliday } from '@/utils/holidayUtils';
+import { ensureValidUuid } from '@/utils/idUtils';
 
 interface PlanningStatusCellProps {
   day: Date;
@@ -28,13 +29,16 @@ export function PlanningStatusCell({
   isWeekend,
   onCellClick
 }: PlanningStatusCellProps) {
+  // Ensure the employee ID is a valid UUID
+  const validEmployeeId = ensureValidUuid(employeeId);
+  
   return (
     <TableCell 
       className={`text-center p-0 sm:p-1 ${isWeekend ? 'bg-gray-200 dark:bg-gray-700/50' : ''}`}
     >
       <div 
         className="cursor-pointer hover:bg-secondary/50 rounded p-0.5 sm:p-1 transition-all text-xs"
-        onClick={() => onCellClick(employeeId, date, period)}
+        onClick={() => onCellClick(validEmployeeId, date, period)}
       >
         {status ? (
           <StatusCell 

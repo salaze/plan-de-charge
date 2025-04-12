@@ -17,6 +17,7 @@ import { DepartmentHeader } from './DepartmentHeader';
 import { StatusChangeDialog } from './StatusChangeDialog';
 import { usePlanningGrid } from '@/hooks/usePlanningGrid';
 import { groupEmployeesByDepartment } from '@/utils/departmentUtils';
+import { ensureValidUuid } from '@/utils/idUtils';
 
 interface PlanningGridProps {
   year: number;
@@ -65,9 +66,12 @@ export function PlanningGrid({
     if (!selectedCell) return;
     
     try {
+      // Validate the employee ID before updating
+      const validEmployeeId = ensureValidUuid(selectedCell.employeeId);
+      
       // Apply the change immediately
       onStatusChange(
-        selectedCell.employeeId,
+        validEmployeeId,
         selectedCell.date,
         status,
         selectedCell.period,
@@ -122,8 +126,11 @@ export function PlanningGrid({
                   
                   return (
                     <EmployeeRow
-                      key={employee.id}
-                      employee={employee}
+                      key={ensureValidUuid(employee.id)}
+                      employee={{
+                        ...employee,
+                        id: ensureValidUuid(employee.id)
+                      }}
                       visibleDays={visibleDays}
                       totalStats={totalStats}
                       onCellClick={handleCellClick}

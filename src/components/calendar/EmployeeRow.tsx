@@ -6,6 +6,7 @@ import { getEmployeeStatusForDate } from '@/utils/employeeUtils';
 import { isWeekendOrHoliday } from '@/utils/holidayUtils';
 import { PlanningStatusCell } from './PlanningStatusCell';
 import { formatDate } from '@/utils';
+import { ensureValidUuid } from '@/utils/idUtils';
 
 interface EmployeeRowProps {
   employee: Employee;
@@ -20,6 +21,9 @@ export function EmployeeRow({
   totalStats,
   onCellClick 
 }: EmployeeRowProps) {
+  // Ensure employee ID is a valid UUID
+  const validEmployeeId = ensureValidUuid(employee.id);
+  
   // Function to check if a date is a weekend
   const isWeekend = (date: Date) => {
     return date.getDay() === 0 || date.getDay() === 6;
@@ -43,7 +47,7 @@ export function EmployeeRow({
   };
 
   return (
-    <TableRow key={employee.id} className="hover:bg-muted/30 group">
+    <TableRow key={validEmployeeId} className="hover:bg-muted/30 group">
       {/* Employee name cell - always visible and sticky */}
       <TableCell className="sticky left-0 bg-white dark:bg-gray-900 font-medium group-hover:bg-muted/30 truncate max-w-[200px]">
         {employee.name}
@@ -61,12 +65,12 @@ export function EmployeeRow({
         const afternoonStatus = findStatusForDay(formattedDate, 'PM');
         
         return (
-          <React.Fragment key={`${employee.id}-${formattedDate}`}>
+          <React.Fragment key={`${validEmployeeId}-${formattedDate}`}>
             {/* Morning cell */}
             <PlanningStatusCell 
               day={day}
               date={formattedDate}
-              employeeId={employee.id}
+              employeeId={validEmployeeId}
               period="AM"
               status={morningStatus.status}
               isHighlighted={morningStatus.isHighlighted}
@@ -79,7 +83,7 @@ export function EmployeeRow({
             <PlanningStatusCell 
               day={day}
               date={formattedDate}
-              employeeId={employee.id}
+              employeeId={validEmployeeId}
               period="PM"
               status={afternoonStatus.status}
               isHighlighted={afternoonStatus.isHighlighted}

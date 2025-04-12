@@ -4,7 +4,12 @@
  * This is compatible with PostgreSQL's uuid type
  */
 export const generateId = (): string => {
-  // Implementation of UUID v4 format
+  // Implementation of UUID v4 format using crypto for better randomness if available
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  
+  // Fallback implementation for older browsers
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
     const r = Math.random() * 16 | 0;
     const v = c === 'x' ? r : (r & 0x3 | 0x8);

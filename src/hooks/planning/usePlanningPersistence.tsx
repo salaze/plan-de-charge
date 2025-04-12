@@ -25,7 +25,7 @@ export const usePlanningPersistence = () => {
       // Note: Synchronization is attempted but not blocking
       updatedData.employees.forEach(employee => {
         try {
-          // Ensure employee ID is a valid UUID
+          // Ensure employee ID is a valid UUID before syncing
           const employeeUuid = ensureValidUuid(employee.id);
               
           syncWithSupabase(
@@ -41,7 +41,7 @@ export const usePlanningPersistence = () => {
           // Sync schedule entries for this employee
           employee.schedule.forEach(scheduleItem => {
             if (scheduleItem.date && scheduleItem.period) {
-              // Generate a UUID for each schedule entry
+              // Generate a new UUID for each schedule entry
               const entryId = generateId();
               
               syncWithSupabase(

@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { MonthData, StatusCode, DayPeriod } from '@/types';
 import { useSupabaseSchedule } from '../useSupabaseSchedule';
 import { usePlanningPersistence } from './usePlanningPersistence';
-import { isValidUuid } from '@/utils/idUtils';
+import { ensureValidUuid } from '@/utils/idUtils';
 
 export const usePlanningStatusUpdates = (
   data: MonthData,
@@ -28,9 +28,12 @@ export const usePlanningStatusUpdates = (
     }
     
     try {
-      // The useSupabaseSchedule hook will handle UUID validation
+      // Ensure the employee ID is a valid UUID before updating
+      const validEmployeeId = ensureValidUuid(employeeId);
+      
+      // Call the useSupabaseSchedule hook to update the entry
       await updateScheduleEntry(
-        employeeId,
+        validEmployeeId,
         date, 
         status, 
         period, 

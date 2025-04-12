@@ -1,72 +1,55 @@
 
 import React from 'react';
-import { Database, Cloud, CloudOff, RefreshCw } from 'lucide-react';
-import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { Database, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { useSyncStatus } from '@/hooks/useSyncStatus';
+import { cn } from '@/lib/utils';
 
 export function SupabaseStatusIndicator() {
-  // Wrap hook usage in try-catch in case there's an issue with React context
-  try {
-    const { isConnected, lastSyncTime, checkConnection, isSyncing } = useSyncStatus();
-    
-    const handleManualCheck = async () => {
-      const connected = await checkConnection();
-      
-      if (connected) {
-        toast.success("Connexion à Supabase établie");
-      } else {
-        toast.error("Impossible de se connecter à Supabase");
-      }
-    };
-
-    // Format last sync time
-    const formatLastSync = () => {
-      if (!lastSyncTime) return "Jamais";
-      return new Intl.DateTimeFormat('fr-FR', {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      }).format(lastSyncTime);
-    };
-
-    // Show loading indicator if isConnected is null (initial state)
+  const { isConnected, lastSyncTime, checkConnection } = useSyncStatus();
+  
+  const getStatusIcon = () => {
     if (isConnected === null) {
-      return (
-        <div className="flex items-center text-muted-foreground text-xs">
-          <Database className="h-3 w-3 mr-1 animate-pulse" />
-          <span>Vérification...</span>
-        </div>
-      );
+      return <AlertCircle className="h-4 w-4 text-yellow-400" />;
+    } else if (isConnected) {
+      return <CheckCircle className="h-4 w-4 text-green-500" />;
+    } else {
+      return <XCircle className="h-4 w-4 text-red-500" />;
     }
+  };
+  
+  const getStatusText = () => {
+    if (isConnected === null) {
+      return "Vérification de la connexion...";
+    } else if (isConnected) {
+      return lastSyncTime
+        ? `Connecté à Supabase (dernière sync: ${new Date(lastSyncTime).toLocaleTimeString()})`
+        : "Connecté à Supabase";
+    } else {
+      return "Non connecté à Supabase";
+    }
+  };
+  
+  const handleRefreshClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    checkConnection();
+  };
 
-    return (
+  return (
+    <div className="relative inline-flex items-center">
       <Button 
         variant="ghost" 
-        size="sm"
-        className={`flex items-center text-xs px-2 py-1 h-auto ${isConnected ? 'text-green-500 hover:text-green-600' : 'text-red-500 hover:text-red-600'}`}
-        onClick={handleManualCheck}
-        disabled={isSyncing}
-        title={`Statut: ${isConnected ? 'Connecté' : 'Déconnecté'}${lastSyncTime ? `. Dernière synchronisation: ${formatLastSync()}` : ''}`}
-      >
-        {isSyncing ? (
-          <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
-        ) : isConnected ? (
-          <Cloud className="h-3 w-3 mr-1" />
-        ) : (
-          <CloudOff className="h-3 w-3 mr-1" />
+        size="sm" 
+        className={cn(
+          "rounded-full flex items-center space-x-1 px-2 py-1",
+          isConnected ? "hover:bg-green-100 dark:hover:bg-green-900" : "hover:bg-red-100 dark:hover:bg-red-900"
         )}
-        <span>{isConnected ? 'Connecté' : 'Hors ligne'}</span>
+        onClick={handleRefreshClick}
+        title={getStatusText()}
+      >
+        <Database className="h-4 w-4 mr-1" />
+        {getStatusIcon()}
       </Button>
-    );
-  } catch (error) {
-    // Fallback render in case of hook errors
-    console.error("Error rendering SupabaseStatusIndicator:", error);
-    return (
-      <div className="flex items-center text-red-500 text-xs">
-        <Database className="h-3 w-3 mr-1" />
-        <span>Erreur</span>
-      </div>
-    );
-  }
+    </div>
+  );
 }

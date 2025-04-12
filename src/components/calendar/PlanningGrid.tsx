@@ -17,7 +17,7 @@ import { DepartmentHeader } from './DepartmentHeader';
 import { StatusChangeDialog } from './StatusChangeDialog';
 import { usePlanningGrid } from '@/hooks/usePlanningGrid';
 import { groupEmployeesByDepartment } from '@/utils/departmentUtils';
-import { isValidUuid } from '@/utils/idUtils';
+import { isValidUuid, ensureValidUuid } from '@/utils/idUtils';
 
 interface PlanningGridProps {
   year: number;
@@ -60,6 +60,12 @@ export function PlanningGrid({
   
   // Get visible days based on screen size
   const visibleDays = getVisibleDays(days, safeYear, safeMonth);
+  
+  // Ensure project IDs are valid
+  const validatedProjects = projects.map(project => ({
+    ...project,
+    id: ensureValidUuid(project.id)
+  }));
   
   // Handler for status changes
   const handleStatusChange = (status: StatusCode, isHighlighted?: boolean, projectCode?: string) => {
@@ -106,8 +112,11 @@ export function PlanningGrid({
     );
   }
   
-  // Group employees by department
-  const departmentGroups = groupEmployeesByDepartment(employees);
+  // Filter out employees with invalid IDs
+  const validEmployees = employees.filter(emp => isValidUuid(emp.id));
+  
+  // Group valid employees by department
+  const departmentGroups = groupEmployeesByDepartment(validEmployees);
   
   return (
     <>
@@ -158,7 +167,7 @@ export function PlanningGrid({
         currentStatus={selectedCell?.currentStatus || ''}
         isHighlighted={selectedCell?.isHighlighted}
         projectCode={selectedCell?.projectCode}
-        projects={projects}
+        projects={validatedProjects}
       />
     </>
   );

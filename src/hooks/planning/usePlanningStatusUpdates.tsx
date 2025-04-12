@@ -38,15 +38,15 @@ export const usePlanningStatusUpdates = (
       setData((prevData) => {
         const updatedEmployees = prevData.employees.map((employee) => {
           if (employee.id === employeeId) {
-            // Trouver si un statut existe déjà pour cette date et période
+            // Check if a status already exists for this date and period
             const existingStatusIndex = employee.schedule.findIndex(
               (day) => day.date === date && day.period === period
             );
             
             if (existingStatusIndex >= 0) {
-              // Mise à jour d'un statut existant
+              // Update existing status
               if (status === '') {
-                // Si le nouveau statut est vide, supprimer l'entrée
+                // If new status is empty, remove the entry
                 const newSchedule = [...employee.schedule];
                 newSchedule.splice(existingStatusIndex, 1);
                 return { ...employee, schedule: newSchedule };
@@ -63,7 +63,7 @@ export const usePlanningStatusUpdates = (
                 return { ...employee, schedule: newSchedule };
               }
             } else if (status !== '') {
-              // Ajout d'un nouveau statut
+              // Add new status
               return {
                 ...employee,
                 schedule: [
@@ -87,7 +87,7 @@ export const usePlanningStatusUpdates = (
           employees: updatedEmployees
         };
         
-        // Sauvegarder immédiatement les données mises à jour pour rétrocompatibilité
+        // Save updated data immediately for backwards compatibility
         saveDataToLocalStorage(updatedData);
         
         return updatedData;

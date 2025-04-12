@@ -9,7 +9,7 @@ export function useSupabaseSchedule() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fonction pour mettre à jour une entrée de planning dans Supabase
+  // Function to update a schedule entry in Supabase
   const updateScheduleEntry = useCallback(async (
     employeeId: string,
     date: string,
@@ -29,6 +29,7 @@ export function useSupabaseSchedule() {
       
       if (status === '') {
         // If the status is empty, delete the entry using a combination of fields
+        console.log("Deleting entry for employee:", employeeId, "date:", date, "period:", period);
         const { error: deleteError } = await supabase
           .from('employe_schedule')
           .delete()
@@ -40,9 +41,11 @@ export function useSupabaseSchedule() {
           console.error("Delete error details:", deleteError);
           throw deleteError;
         }
+        console.log("Entry deleted successfully");
         return true;
       } else {
         // Check if the entry exists already using the fields
+        console.log("Checking if entry exists for employee:", employeeId, "date:", date, "period:", period);
         const { data: existingEntry, error: fetchError } = await supabase
           .from('employe_schedule')
           .select('*')
@@ -58,6 +61,7 @@ export function useSupabaseSchedule() {
 
         if (existingEntry) {
           // Update the existing entry
+          console.log("Updating existing entry:", existingEntry.id);
           const { error: updateError } = await supabase
             .from('employe_schedule')
             .update({
@@ -71,9 +75,11 @@ export function useSupabaseSchedule() {
             console.error("Update error details:", updateError);
             throw updateError;
           }
+          console.log("Entry updated successfully");
         } else {
           // Create a new entry with a valid UUID
           const newEntryId = generateId();
+          console.log("Creating new entry with ID:", newEntryId);
           
           const { error: insertError } = await supabase
             .from('employe_schedule')
@@ -91,6 +97,7 @@ export function useSupabaseSchedule() {
             console.error("Insert error details:", insertError);
             throw insertError;
           }
+          console.log("Entry created successfully");
         }
 
         return true;
@@ -104,7 +111,7 @@ export function useSupabaseSchedule() {
     }
   }, []);
 
-  // Récupérer toutes les entrées de planning pour un employé
+  // Function to get all schedule entries for an employee
   const getScheduleForEmployee = useCallback(async (employeeId: string) => {
     try {
       setIsLoading(true);

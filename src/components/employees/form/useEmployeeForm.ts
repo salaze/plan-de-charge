@@ -37,7 +37,7 @@ export function useEmployeeForm({ employee, open }: UseEmployeeFormProps) {
   
   const validateUid = () => {
     if (!uid.trim()) {
-      setUidError('L\'UID est obligatoire');
+      setUidError('L\'identifiant est obligatoire');
       return false;
     }
     

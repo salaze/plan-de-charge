@@ -13,7 +13,7 @@ interface EmployeeUidFieldProps {
 export function EmployeeUidField({ uid, onChange, error }: EmployeeUidFieldProps) {
   return (
     <div className="grid gap-2">
-      <Label htmlFor="uid">UID *</Label>
+      <Label htmlFor="uid">Identifiant *</Label>
       <div className="flex items-center gap-2 relative">
         <Fingerprint className="h-4 w-4 absolute left-3 text-muted-foreground" />
         <Input

@@ -35,7 +35,6 @@ export function EmployeeForm({
   const {
     name,
     uid,
-    email,
     position,
     department,
     password,
@@ -45,7 +44,6 @@ export function EmployeeForm({
     isNewEmployee,
     setName,
     setUid,
-    setEmail,
     setPosition,
     setDepartment,
     setPassword,
@@ -87,11 +85,6 @@ export function EmployeeForm({
             error={uidError} 
           />
 
-          <EmployeeContactField 
-            uid={email} 
-            onChange={setEmail} 
-          />
-          
           <EmployeeJobField 
             position={position} 
             department={department} 

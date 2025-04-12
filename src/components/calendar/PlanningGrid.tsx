@@ -1,40 +1,16 @@
 
-import React, { useEffect, useState } from 'react';
-import { 
-  Table,
-  TableBody
-} from '@/components/ui/table';
+import React, { useEffect } from 'react';
 import { toast } from 'sonner';
-import { 
-  generateDaysInMonth, 
-  formatDate,
-  calculateEmployeeStats
-} from '@/utils';
-import { Employee, DayPeriod, StatusCode } from '@/types';
-import { PlanningGridHeader } from './PlanningGridHeader';
-import { EmployeeRow } from './EmployeeRow';
-import { DepartmentHeader } from './DepartmentHeader';
+import { calculateEmployeeStats } from '@/utils';
+import { StatusCode, DayPeriod } from '@/types';
 import { StatusChangeDialog } from './StatusChangeDialog';
 import { usePlanningGrid } from '@/hooks/usePlanningGrid';
 import { groupEmployeesByDepartment } from '@/utils/departmentUtils';
 import { isValidUuid, ensureValidUuid } from '@/utils/idUtils';
-import { testSupabaseConnection } from '@/utils/initSupabase';
-
-interface PlanningGridProps {
-  year: number;
-  month: number;
-  employees: Employee[];
-  projects: { id: string; code: string; name: string; color: string }[];
-  onStatusChange: (
-    employeeId: string, 
-    date: string, 
-    status: StatusCode, 
-    period: DayPeriod,
-    isHighlighted?: boolean,
-    projectCode?: string
-  ) => void;
-  isAdmin: boolean;
-}
+import { useSupabaseConnectionTest } from './hooks/useSupabaseConnectionTest';
+import { PlanningGridTable } from './components/PlanningGridTable';
+import { NoEmployeesMessage } from './components/NoEmployeesMessage';
+import { PlanningGridProps, CurrentStatusInfo } from './types/PlanningGridTypes';
 
 export function PlanningGrid({ 
   year, 
@@ -44,9 +20,10 @@ export function PlanningGrid({
   onStatusChange,
   isAdmin
 }: PlanningGridProps) {
-  const [connectionTested, setConnectionTested] = useState(false);
+  // Use custom hooks
+  const { connectionTested } = useSupabaseConnectionTest(isAdmin);
   
-  // Extract grid functionality to a custom hook
+  // Extract grid functionality from the custom hook
   const {
     selectedCell,
     handleCellClick,
@@ -75,25 +52,8 @@ export function PlanningGrid({
     console.log("PlanningGrid employees:", employees.length, employees.map(e => e.name));
   }, [employees]);
   
-  // Test connection to Supabase on component mount
-  useEffect(() => {
-    // Only test once
-    if (!connectionTested && isAdmin) {
-      const testConnection = async () => {
-        try {
-          await testSupabaseConnection();
-          setConnectionTested(true);
-        } catch (error) {
-          console.error("Erreur lors du test de connexion:", error);
-        }
-      };
-      
-      testConnection();
-    }
-  }, [isAdmin, connectionTested]);
-  
   // Find current status for a selected cell
-  const findCurrentStatus = (employeeId: string, date: string, period: DayPeriod) => {
+  const findCurrentStatus = (employeeId: string, date: string, period: DayPeriod): CurrentStatusInfo => {
     const employee = employees.find(emp => emp.id === employeeId);
     if (!employee) return { status: '' as StatusCode, isHighlighted: false };
     
@@ -152,11 +112,7 @@ export function PlanningGrid({
   
   // If no employees, show a message
   if (!employees || employees.length === 0) {
-    return (
-      <div className="text-center p-8 bg-muted/30 rounded-lg">
-        <p className="text-muted-foreground">Aucun employé disponible</p>
-      </div>
-    );
+    return <NoEmployeesMessage />;
   }
   
   // Filter out employees with invalid IDs
@@ -174,44 +130,12 @@ export function PlanningGrid({
   
   return (
     <>
-      <div className="overflow-x-auto -mx-2 sm:mx-0">
-        <Table className="border rounded-lg bg-white dark:bg-gray-900 shadow-sm min-w-full">
-          <PlanningGridHeader days={visibleDays} />
-          
-          <TableBody>
-            {departmentGroups.map((group, groupIndex) => (
-              <React.Fragment key={`dept-${groupIndex}`}>
-                {/* Department header */}
-                <DepartmentHeader 
-                  name={group.name} 
-                  colSpan={visibleDays.length * 2 + 2} 
-                />
-                
-                {/* Employee rows */}
-                {group.employees.map((employee) => {
-                  // Skip employees without valid IDs
-                  if (!isValidUuid(employee.id)) {
-                    console.warn(`Employé ignoré avec ID invalide: ${employee.id}`);
-                    return null;
-                  }
-                  
-                  const totalStats = getTotalStats(employee);
-                  
-                  return (
-                    <EmployeeRow
-                      key={employee.id}
-                      employee={employee}
-                      visibleDays={visibleDays}
-                      totalStats={totalStats}
-                      onCellClick={handleCellClick}
-                    />
-                  );
-                })}
-              </React.Fragment>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+      <PlanningGridTable 
+        visibleDays={visibleDays}
+        departmentGroups={departmentGroups}
+        getTotalStats={getTotalStats}
+        handleCellClick={handleCellClick}
+      />
       
       {/* Status change dialog */}
       {selectedCell && (
@@ -227,4 +151,10 @@ export function PlanningGrid({
       )}
     </>
   );
+}
+
+// Helper function to generate days in a given month
+function generateDaysInMonth(year: number, month: number): Date[] {
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  return Array.from({ length: daysInMonth }, (_, i) => new Date(year, month, i + 1));
 }

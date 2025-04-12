@@ -21,6 +21,7 @@ export interface EmployeData {
   fonction?: string;
   role?: string;
   uid?: string;
+  identifiant?: string;  // Added identifiant property
   created_at?: string;
   updated_at?: string;
 }

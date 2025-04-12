@@ -44,7 +44,7 @@ export const usePlanningDataLoader = () => {
           name: emp.prenom ? `${emp.prenom} ${emp.nom}` : emp.nom,
           department: emp.departement || undefined,
           position: emp.fonction || undefined,
-          uid: emp.uid || undefined,
+          uid: emp.identifiant || undefined,  // Changed from uid to identifiant
           role: emp.role as any || 'employee',
           schedule: [] // Les plannings seront chargés séparément pour chaque employé
         }));
@@ -74,3 +74,4 @@ export const usePlanningDataLoader = () => {
     isLoading
   };
 };
+

@@ -59,10 +59,10 @@ export type Database = {
           departement: string | null
           fonction: string | null
           id: string
-          identifiant: string | null
           nom: string
           prenom: string | null
           role: string | null
+          uid: string | null
           updated_at: string | null
         }
         Insert: {
@@ -70,10 +70,10 @@ export type Database = {
           departement?: string | null
           fonction?: string | null
           id?: string
-          identifiant?: string | null
           nom: string
           prenom?: string | null
           role?: string | null
+          uid?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -81,10 +81,10 @@ export type Database = {
           departement?: string | null
           fonction?: string | null
           id?: string
-          identifiant?: string | null
           nom?: string
           prenom?: string | null
           role?: string | null
+          uid?: string | null
           updated_at?: string | null
         }
         Relationships: []

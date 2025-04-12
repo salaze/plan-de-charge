@@ -95,7 +95,7 @@ const Employees = () => {
         const savedEmployee = {
           id: result.id,
           name: result.prenom ? `${result.prenom} ${result.nom}` : result.nom,
-          uid: result.uid || '',
+          uid: result.uid || '', // Make sure this matches your database field name
           position: result.fonction || undefined,
           department: result.departement || undefined,
           role: result.role as any || 'employee',

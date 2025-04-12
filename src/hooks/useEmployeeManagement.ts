@@ -86,7 +86,7 @@ export const useEmployeeManagement = (
         const newEmployee = {
           id: result.id,
           name: result.prenom ? `${result.prenom} ${result.nom}` : result.nom,
-          uid: result.identifiant || '',  // Using identifiant from Supabase
+          uid: result.identifiant || result.uid || '',  // Using either identifiant or uid
           position: result.fonction || undefined,
           department: result.departement || undefined,
           role: result.role as any || 'employee',

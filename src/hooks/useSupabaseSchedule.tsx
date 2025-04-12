@@ -17,7 +17,7 @@ export function useSupabaseSchedule() {
     period: DayPeriod,
     isHighlighted?: boolean,
     projectCode?: string
-  ) => {
+  ): Promise<boolean | { success: boolean; data: any }> => {
     try {
       setIsLoading(true);
       setError(null);

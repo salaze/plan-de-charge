@@ -130,7 +130,10 @@ export const usePlanningStatusUpdates = (
         status === 'projet' ? projectCode : undefined
       );
       
-      if (result && result.success) {
+      // Correction ici : vérification appropriée selon le type de retour
+      const isSuccess = typeof result === 'boolean' ? result : result.success;
+      
+      if (isSuccess) {
         console.log("Statut mis à jour avec succès dans Supabase");
         toast.success(`Statut ${period === 'AM' ? 'matin' : 'après-midi'} mis à jour et synchronisé`);
       } else {

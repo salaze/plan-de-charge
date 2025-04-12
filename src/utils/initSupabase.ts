@@ -58,7 +58,7 @@ export async function checkSupabaseTables() {
       
       console.log("Vérification des tables Supabase terminée");
       
-      // Return detailed results
+      // Return simplified result (boolean success)
       return { 
         success: statusCheck.success || employesCheck.success || scheduleCheck.success,
         details: {

@@ -13,9 +13,10 @@ export function useSyncStatus() {
   
   const checkConnection = useCallback(async () => {
     try {
-      const connected = await checkSupabaseTables();
-      setIsConnected(connected);
-      return connected;
+      const result = await checkSupabaseTables();
+      // Extrait seulement la propriété success comme valeur boolean pour setIsConnected
+      setIsConnected(result.success);
+      return result.success;
     } catch (error) {
       console.error("Erreur lors de la vérification de la connexion:", error);
       setIsConnected(false);

@@ -11,7 +11,7 @@ import {
   updateTache,
   insertConnectionLog,
   updateConnectionLog
-} from '../supabaseTableHelpers';
+} from '../supabase'; // Update the import path
 import { StatutData, EmployeData, ScheduleData, TacheData, ConnectionLogData } from '@/types/supabaseModels';
 
 // Mock the supabase client with the correct chaining structure

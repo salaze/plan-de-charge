@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -103,7 +102,7 @@ export function EmployeeTab({ employees, onEmployeesChange }: EmployeeTabProps) 
         const newEmployee = {
           id: result.id,
           name: result.prenom ? `${result.prenom} ${result.nom}` : result.nom,
-          uid: result.uid || '',
+          uid: result.identifiant || '',
           position: result.fonction || undefined,
           department: result.departement || undefined,
           role: result.role as any || 'employee',

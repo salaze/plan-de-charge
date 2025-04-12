@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -51,7 +50,8 @@ export const useSupabaseEmployees = () => {
   const addEmployee = async (employee: Employee) => {
     try {
       // Convert from UI model to Supabase model
-      const supabaseEmployee: Partial<SupabaseEmployee> = {
+      const supabaseEmployee: SupabaseEmployee = {
+        id: employee.id,
         nom: employee.name.split(' ').pop() || employee.name,
         prenom: employee.name.split(' ').slice(0, -1).join(' ') || undefined,
         departement: employee.department,
@@ -62,7 +62,7 @@ export const useSupabaseEmployees = () => {
       
       const { data, error } = await supabase
         .from('employes')
-        .insert([supabaseEmployee])
+        .insert(supabaseEmployee)
         .select();
 
       if (error) {

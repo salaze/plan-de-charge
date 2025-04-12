@@ -39,6 +39,11 @@ export function StatusChangeDialog({
     id: ensureValidUuid(project.id)
   }));
   
+  const handleSelectionConfirm = (status: StatusCode, isHighlighted?: boolean, projectCode?: string) => {
+    console.log("Sélection confirmée:", status, isHighlighted, projectCode);
+    onStatusChange(status, isHighlighted, projectCode);
+  };
+  
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px] max-w-[90vw]">
@@ -71,7 +76,7 @@ export function StatusChangeDialog({
           
           <StatusSelectorEnhanced 
             value={currentStatus}
-            onChange={onStatusChange}
+            onChange={handleSelectionConfirm}
             projects={validatedProjects}
             isHighlighted={isHighlighted}
             projectCode={projectCode}

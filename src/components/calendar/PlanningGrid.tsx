@@ -69,12 +69,18 @@ export function PlanningGrid({
   
   // Handler for status changes
   const handleStatusChange = (status: StatusCode, isHighlighted?: boolean, projectCode?: string) => {
-    if (!selectedCell) return;
+    if (!selectedCell) {
+      console.error("Aucune cellule sélectionnée");
+      return;
+    }
     
     try {
+      console.log("Changement de statut:", status, "pour la cellule:", selectedCell);
+      
       // Validate employee ID before proceeding
       const employeeId = selectedCell.employeeId;
       if (!isValidUuid(employeeId)) {
+        console.error("ID d'employé invalide:", employeeId);
         toast.error("ID d'employé invalide");
         return;
       }
@@ -118,7 +124,7 @@ export function PlanningGrid({
   // Group valid employees by department
   const departmentGroups = groupEmployeesByDepartment(validEmployees);
 
-  console.log("Employees on planning page:", validEmployees);
+  console.log("Employés sur la page de planning:", validEmployees);
   
   return (
     <>
@@ -139,7 +145,7 @@ export function PlanningGrid({
                 {group.employees.map((employee) => {
                   // Skip employees without valid IDs
                   if (!isValidUuid(employee.id)) {
-                    console.warn(`Skipping employee with invalid ID: ${employee.id}`);
+                    console.warn(`Employé ignoré avec ID invalide: ${employee.id}`);
                     return null;
                   }
                   

@@ -27,9 +27,11 @@ export function useSupabaseSchedule() {
         throw new Error(`Invalid employee ID format: ${employeeId}`);
       }
       
+      console.log("Mise à jour du statut pour l'employé:", employeeId, "date:", date, "période:", period, "statut:", status);
+      
       if (status === '') {
         // If the status is empty, delete the entry using a combination of fields
-        console.log("Deleting entry for employee:", employeeId, "date:", date, "period:", period);
+        console.log("Suppression de l'entrée pour l'employé:", employeeId, "date:", date, "période:", period);
         const { error: deleteError } = await supabase
           .from('employe_schedule')
           .delete()
@@ -38,14 +40,14 @@ export function useSupabaseSchedule() {
           .eq('period', period);
 
         if (deleteError) {
-          console.error("Delete error details:", deleteError);
+          console.error("Détails de l'erreur de suppression:", deleteError);
           throw deleteError;
         }
-        console.log("Entry deleted successfully");
+        console.log("Entrée supprimée avec succès");
         return true;
       } else {
         // Check if the entry exists already using the fields
-        console.log("Checking if entry exists for employee:", employeeId, "date:", date, "period:", period);
+        console.log("Vérification si l'entrée existe pour l'employé:", employeeId, "date:", date, "période:", period);
         const { data: existingEntry, error: fetchError } = await supabase
           .from('employe_schedule')
           .select('*')
@@ -55,13 +57,13 @@ export function useSupabaseSchedule() {
           .maybeSingle();
         
         if (fetchError) {
-          console.error("Fetch error details:", fetchError);
+          console.error("Détails de l'erreur de récupération:", fetchError);
           throw fetchError;
         }
 
         if (existingEntry) {
           // Update the existing entry
-          console.log("Updating existing entry:", existingEntry.id);
+          console.log("Mise à jour de l'entrée existante:", existingEntry.id);
           const { error: updateError } = await supabase
             .from('employe_schedule')
             .update({
@@ -72,16 +74,24 @@ export function useSupabaseSchedule() {
             .eq('id', existingEntry.id);
 
           if (updateError) {
-            console.error("Update error details:", updateError);
+            console.error("Détails de l'erreur de mise à jour:", updateError);
             throw updateError;
           }
-          console.log("Entry updated successfully");
+          console.log("Entrée mise à jour avec succès");
         } else {
           // Create a new entry with a valid UUID
           const newEntryId = generateId();
-          console.log("Creating new entry with ID:", newEntryId);
+          console.log("Création d'une nouvelle entrée avec ID:", newEntryId, {
+            id: newEntryId,
+            employe_id: employeeId,
+            date: date,
+            period: period,
+            statut_code: status,
+            project_code: projectCode,
+            is_highlighted: isHighlighted
+          });
           
-          const { error: insertError } = await supabase
+          const { data, error: insertError } = await supabase
             .from('employe_schedule')
             .insert({
               id: newEntryId,
@@ -91,13 +101,14 @@ export function useSupabaseSchedule() {
               statut_code: status,
               project_code: projectCode,
               is_highlighted: isHighlighted
-            });
+            })
+            .select();
 
           if (insertError) {
-            console.error("Insert error details:", insertError);
+            console.error("Détails de l'erreur d'insertion:", insertError);
             throw insertError;
           }
-          console.log("Entry created successfully");
+          console.log("Entrée créée avec succès:", data);
         }
 
         return true;

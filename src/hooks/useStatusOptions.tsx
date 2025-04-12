@@ -1,92 +1,57 @@
 
 import { useState, useEffect } from 'react';
-import { StatusCode } from '@/types';
+import { StatusCode, STATUS_LABELS } from '@/types';
 import { useSupabaseStatuses } from './useSupabaseStatuses';
 
-interface StatusOption {
-  value: StatusCode;
-  label: string;
-}
-
-export function useStatusOptions(defaultStatuses: StatusCode[] = []) {
-  const [availableStatuses, setAvailableStatuses] = useState<StatusOption[]>([]);
-  const { statuses: supabaseStatuses, loading } = useSupabaseStatuses();
+export const useStatusOptions = () => {
+  const [availableStatuses, setAvailableStatuses] = useState<{ value: StatusCode, label: string }[]>([]);
+  const { statuses, loading } = useSupabaseStatuses();
   
   useEffect(() => {
-    // Si nous avons des statuts depuis Supabase, les utiliser
-    if (supabaseStatuses && supabaseStatuses.length > 0) {
-      const customStatuses = supabaseStatuses
-        .filter((status) => status.code && status.code.trim() !== '')
-        .map((status) => ({
-          value: status.code,
-          label: status.libelle || status.code || 'Status'
-        }));
+    if (!loading && statuses.length > 0) {
+      // Créer les options de statut à partir des données Supabase
+      const statusOptions = statuses.map(status => ({
+        value: status.code as StatusCode,
+        label: status.libelle
+      }));
       
-      setAvailableStatuses([
-        { value: 'none', label: 'Aucun' },
-        ...customStatuses
-      ]);
-    } else {
-      // Fallback au localStorage si nécessaire
-      const savedData = localStorage.getItem('planningData');
-      if (savedData) {
-        try {
-          const data = JSON.parse(savedData);
-          if (data.statuses && data.statuses.length > 0) {
-            const localStatuses = data.statuses
-              .filter((status: any) => status.code && status.code.trim() !== '')
-              .map((status: any) => ({
-                value: status.code as StatusCode,
-                label: status.label || status.code || 'Status'
-              }));
-            
-            setAvailableStatuses([
-              { value: 'none', label: 'Aucun' },
-              ...localStatuses
-            ]);
-          } else {
-            // Utiliser les statuts par défaut si pas de données locales
-            setDefaultStatuses();
-          }
-        } catch (error) {
-          console.error("Erreur lors du parsing des données locales:", error);
-          setDefaultStatuses();
+      // Ajouter le statut "none" pour effacer la valeur
+      const allOptions = [
+        { value: '' as StatusCode, label: 'Aucun' },
+        ...statusOptions
+      ];
+      
+      setAvailableStatuses(allOptions);
+      
+      // Mettre à jour le dictionnaire STATUS_LABELS
+      statuses.forEach(status => {
+        if (status.code) {
+          STATUS_LABELS[status.code as StatusCode] = status.libelle;
         }
-      } else {
-        setDefaultStatuses();
-      }
+      });
+      
+      console.log("Options de statut chargées:", allOptions);
+    } else if (!loading && statuses.length === 0) {
+      // Utiliser des options par défaut si aucun statut n'est disponible
+      const defaultOptions = [
+        { value: '' as StatusCode, label: 'Aucun' },
+        { value: 'none' as StatusCode, label: 'Non défini' },
+        { value: 'assistance' as StatusCode, label: 'Assistance' },
+        { value: 'vigi' as StatusCode, label: 'Vigi' },
+        { value: 'projet' as StatusCode, label: 'Projet' },
+        { value: 'conges' as StatusCode, label: 'Congés' },
+        { value: 'formation' as StatusCode, label: 'Formation' }
+      ];
+      
+      setAvailableStatuses(defaultOptions);
+      console.log("Utilisation d'options de statut par défaut");
     }
-  }, [supabaseStatuses, defaultStatuses]);
+  }, [statuses, loading]);
   
-  const setDefaultStatuses = () => {
-    setAvailableStatuses([
-      { value: 'none', label: 'Aucun' },
-      { value: 'assistance', label: 'Assistance' },
-      { value: 'vigi', label: 'Vigi' },
-      { value: 'formation', label: 'Formation' },
-      { value: 'projet', label: 'Projet' },
-      { value: 'conges', label: 'Congés' },
-      { value: 'management', label: 'Management' },
-      { value: 'tp', label: 'Temps Partiel' },
-      { value: 'coordinateur', label: 'Coordinateur Vigi Ticket' },
-      { value: 'absence', label: 'Autre Absence' },
-      { value: 'regisseur', label: 'Régisseur' },
-      { value: 'demenagement', label: 'Déménagements' },
-    ]);
+  return {
+    availableStatuses,
+    loading
   };
-  
-  useEffect(() => {
-    // Écouter l'événement personnalisé pour forcer le rechargement des statuts
-    const handleCustomEvent = () => console.log("Événement de mise à jour détecté dans useStatusOptions");
-    
-    window.addEventListener('statusesUpdated', handleCustomEvent);
-    
-    return () => {
-      window.removeEventListener('statusesUpdated', handleCustomEvent);
-    };
-  }, []);
-  
-  return { availableStatuses, loading };
-}
+};
 
 export default useStatusOptions;

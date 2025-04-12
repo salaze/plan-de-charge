@@ -33,6 +33,9 @@ export const usePlanningStatusUpdates = (
     }
     
     try {
+      // Log the status update attempt
+      console.log(`Tentative de mise à jour: employee=${employeeId}, date=${date}, status=${status}, period=${period}`);
+      
       // Update the UI optimistically first
       setData((prevData) => {
         const updatedEmployees = prevData.employees.map((employee) => {
@@ -93,6 +96,7 @@ export const usePlanningStatusUpdates = (
       });
       
       // Then call Supabase to persist the change
+      console.log("Appel à Supabase pour persister le changement");
       await updateScheduleEntry(
         employeeId,
         date, 
@@ -102,9 +106,10 @@ export const usePlanningStatusUpdates = (
         status === 'projet' ? projectCode : undefined
       );
       
+      console.log("Statut mis à jour avec succès dans Supabase");
       toast.success(`Statut ${period === 'AM' ? 'matin' : 'après-midi'} mis à jour et synchronisé`);
     } catch (error) {
-      console.error("Erreur lors de la mise à jour du statut:", error);
+      console.error("Erreur détaillée lors de la mise à jour du statut:", error);
       toast.error("Impossible de mettre à jour le statut dans Supabase");
     }
   };

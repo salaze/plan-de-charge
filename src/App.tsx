@@ -25,11 +25,6 @@ const queryClient = new QueryClient({
   }
 });
 
-// Fix the TooltipWrapper to ensure it's a proper functional component
-const TooltipWrapper = ({ children }: { children: React.ReactNode }) => {
-  return <TooltipProvider>{children}</TooltipProvider>;
-};
-
 const App = () => {
   const [supabaseInitialized, setSupabaseInitialized] = useState<boolean>(false);
   const [initError, setInitError] = useState<boolean>(false);
@@ -64,7 +59,7 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
-          <TooltipWrapper>
+          <TooltipProvider>
             <Routes>
               {/* Page principale accessible sans authentification */}
               <Route path="/" element={<Index />} />
@@ -106,7 +101,7 @@ const App = () => {
             </Routes>
             <Toaster />
             <Sonner />
-          </TooltipWrapper>
+          </TooltipProvider>
         </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>

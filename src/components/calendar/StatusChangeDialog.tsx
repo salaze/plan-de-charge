@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -8,8 +8,8 @@ import {
   DialogDescription
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { StatusSelectorEnhanced } from './StatusSelectorEnhanced';
-import { StatusCode } from '@/types';
+import { StatusSelectorForm } from './status/StatusSelectorForm';
+import { StatusCode, DayPeriod } from '@/types';
 import { ensureValidUuid } from '@/utils/idUtils';
 
 interface StatusChangeDialogProps {
@@ -27,11 +27,11 @@ export function StatusChangeDialog({
   onClose,
   onStatusChange,
   currentStatus,
-  isHighlighted,
+  isHighlighted = false,
   projectCode,
   projects
 }: StatusChangeDialogProps) {
-  const [selectedPeriod, setSelectedPeriod] = useState<'AM' | 'PM'>('AM');
+  const [selectedPeriod, setSelectedPeriod] = useState<DayPeriod>('AM');
   
   // Ensure projects have valid UUIDs
   const validatedProjects = projects.map(project => ({
@@ -39,9 +39,17 @@ export function StatusChangeDialog({
     id: ensureValidUuid(project.id)
   }));
   
-  const handleSelectionConfirm = (status: StatusCode, isHighlighted?: boolean, projectCode?: string) => {
+  // Reset selected period when dialog opens
+  useEffect(() => {
+    if (isOpen) {
+      console.log("Dialog opened with status:", currentStatus, "highlighted:", isHighlighted, "projectCode:", projectCode);
+    }
+  }, [isOpen, currentStatus, isHighlighted, projectCode]);
+  
+  const handleSelectionConfirm = (status: StatusCode, isHighlighted: boolean, projectCode?: string) => {
     console.log("Sélection confirmée:", status, isHighlighted, projectCode);
     onStatusChange(status, isHighlighted, projectCode);
+    onClose();
   };
   
   return (
@@ -74,13 +82,13 @@ export function StatusChangeDialog({
             </Button>
           </div>
           
-          <StatusSelectorEnhanced 
-            value={currentStatus}
-            onChange={handleSelectionConfirm}
-            projects={validatedProjects}
-            isHighlighted={isHighlighted}
-            projectCode={projectCode}
+          <StatusSelectorForm
+            initialStatus={currentStatus}
+            initialIsHighlighted={isHighlighted}
+            initialProjectCode={projectCode || ''}
             selectedPeriod={selectedPeriod}
+            projects={validatedProjects}
+            onSubmit={handleSelectionConfirm}
           />
         </div>
       </DialogContent>

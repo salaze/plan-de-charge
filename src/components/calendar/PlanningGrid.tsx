@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { 
   Table,
   TableBody
@@ -67,6 +67,27 @@ export function PlanningGrid({
     id: ensureValidUuid(project.id)
   }));
   
+  // Log employees data for debugging
+  useEffect(() => {
+    console.log("PlanningGrid employees:", employees.length, employees.map(e => e.nom));
+  }, [employees]);
+  
+  // Find current status for a selected cell
+  const findCurrentStatus = (employeeId: string, date: string, period: DayPeriod) => {
+    const employee = employees.find(emp => emp.id === employeeId);
+    if (!employee) return { status: '' as StatusCode, isHighlighted: false };
+    
+    const dayEntry = employee.schedule.find(
+      (day) => day.date === date && day.period === period
+    );
+    
+    return {
+      status: dayEntry?.status || '' as StatusCode,
+      isHighlighted: dayEntry?.isHighlighted || false,
+      projectCode: dayEntry?.projectCode
+    };
+  };
+  
   // Handler for status changes
   const handleStatusChange = (status: StatusCode, isHighlighted?: boolean, projectCode?: string) => {
     if (!selectedCell) {
@@ -124,7 +145,12 @@ export function PlanningGrid({
   // Group valid employees by department
   const departmentGroups = groupEmployeesByDepartment(validEmployees);
 
-  console.log("Employés sur la page de planning:", validEmployees);
+  // Get current status details for the selected cell
+  const currentStatus = selectedCell 
+    ? findCurrentStatus(selectedCell.employeeId, selectedCell.date, selectedCell.period) 
+    : { status: '' as StatusCode, isHighlighted: false };
+
+  console.log("Employés sur la page de planning:", validEmployees.length);
   
   return (
     <>
@@ -168,15 +194,17 @@ export function PlanningGrid({
       </div>
       
       {/* Status change dialog */}
-      <StatusChangeDialog
-        isOpen={!!selectedCell}
-        onClose={handleCloseDialog}
-        onStatusChange={handleStatusChange}
-        currentStatus={selectedCell?.currentStatus || ''}
-        isHighlighted={selectedCell?.isHighlighted}
-        projectCode={selectedCell?.projectCode}
-        projects={validatedProjects}
-      />
+      {selectedCell && (
+        <StatusChangeDialog
+          isOpen={!!selectedCell}
+          onClose={handleCloseDialog}
+          onStatusChange={handleStatusChange}
+          currentStatus={currentStatus.status}
+          isHighlighted={currentStatus.isHighlighted}
+          projectCode={currentStatus.projectCode}
+          projects={validatedProjects}
+        />
+      )}
     </>
   );
 }

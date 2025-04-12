@@ -22,9 +22,14 @@ export function useSupabaseSchedule() {
       setIsLoading(true);
       setError(null);
 
+      // Validation
+      if (!employeeId || !date || !period) {
+        throw new Error("Paramètres manquants: employeeId, date ou period");
+      }
+
       // Ensure employee ID is a valid UUID - if not valid, we cannot proceed
       if (!isValidUuid(employeeId)) {
-        throw new Error(`Invalid employee ID format: ${employeeId}`);
+        throw new Error(`ID d'employé invalide: ${employeeId}`);
       }
       
       console.log("Mise à jour du statut pour l'employé:", employeeId, "date:", date, "période:", period, "statut:", status);
@@ -64,20 +69,21 @@ export function useSupabaseSchedule() {
         if (existingEntry) {
           // Update the existing entry
           console.log("Mise à jour de l'entrée existante:", existingEntry.id);
-          const { error: updateError } = await supabase
+          const { data, error: updateError } = await supabase
             .from('employe_schedule')
             .update({
               statut_code: status,
               project_code: projectCode,
               is_highlighted: isHighlighted
             })
-            .eq('id', existingEntry.id);
+            .eq('id', existingEntry.id)
+            .select();
 
           if (updateError) {
             console.error("Détails de l'erreur de mise à jour:", updateError);
             throw updateError;
           }
-          console.log("Entrée mise à jour avec succès");
+          console.log("Entrée mise à jour avec succès:", data);
         } else {
           // Create a new entry with a valid UUID
           const newEntryId = generateId();
@@ -143,6 +149,8 @@ export function useSupabaseSchedule() {
         console.error("Fetch schedule error:", error);
         throw error;
       }
+      
+      console.log(`Planification récupérée pour l'employé ${employeeId}:`, data?.length || 0, "entrées");
       return data || [];
     } catch (error) {
       console.error("Erreur lors de la récupération du planning:", error);

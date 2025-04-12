@@ -31,10 +31,15 @@ export const usePlanningStatusUpdates = (
       toast.error(`ID d'employé invalide: ${employeeId}`);
       return;
     }
+
+    if (!date) {
+      toast.error("Date invalide");
+      return;
+    }
     
     try {
       // Log the status update attempt
-      console.log(`Tentative de mise à jour: employee=${employeeId}, date=${date}, status=${status}, period=${period}`);
+      console.log(`Mise à jour: employé=${employeeId}, date=${date}, statut=${status}, période=${period}`);
       
       // Update the UI optimistically first
       setData((prevData) => {

@@ -23,18 +23,32 @@ export function StatusSelectorForm({
   projects,
   onSubmit
 }: StatusSelectorFormProps) {
-  const [selectedStatus, setSelectedStatus] = useState<StatusCode>(initialStatus || 'none');
+  const [selectedStatus, setSelectedStatus] = useState<StatusCode>(initialStatus || '');
   const [highlightedStatus, setHighlightedStatus] = useState(initialIsHighlighted);
   const [selectedProject, setSelectedProject] = useState(initialProjectCode || 'no-project');
   
+  console.log("StatusSelectorForm initialized with:", { 
+    initialStatus, 
+    initialIsHighlighted, 
+    initialProjectCode,
+    selectedPeriod
+  });
+  
   // Reset form when dialog reopens with new values
   useEffect(() => {
-    setSelectedStatus(initialStatus || 'none');
+    setSelectedStatus(initialStatus || '');
     setHighlightedStatus(initialIsHighlighted);
     setSelectedProject(initialProjectCode || 'no-project');
+    
+    console.log("StatusSelectorForm state reset with:", { 
+      initialStatus, 
+      initialIsHighlighted, 
+      initialProjectCode
+    });
   }, [initialStatus, initialIsHighlighted, initialProjectCode]);
   
   const handleStatusChange = (newStatus: StatusCode) => {
+    console.log("Status changed to:", newStatus);
     setSelectedStatus(newStatus);
     
     // Réinitialiser le projet sélectionné si le statut n'est pas "projet"
@@ -44,15 +58,22 @@ export function StatusSelectorForm({
   };
   
   const handleProjectChange = (projectCode: string) => {
+    console.log("Project changed to:", projectCode);
     setSelectedProject(projectCode);
   };
   
   const handleHighlightChange = (checked: boolean) => {
+    console.log("Highlight changed to:", checked);
     setHighlightedStatus(checked);
   };
   
   const handleFormSubmit = () => {
     const projectToUse = selectedStatus === 'projet' ? selectedProject : undefined;
+    console.log("Form submitted with:", { 
+      selectedStatus, 
+      highlightedStatus, 
+      projectToUse
+    });
     onSubmit(selectedStatus, highlightedStatus, projectToUse);
   };
 
@@ -66,7 +87,7 @@ export function StatusSelectorForm({
       {selectedStatus === 'projet' && (
         <ProjectSelector
           projects={projects}
-          selectedProject={selectedProject || "select-project"}
+          selectedProject={selectedProject || "no-project"}
           onProjectChange={handleProjectChange}
         />
       )}

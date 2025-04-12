@@ -10,9 +10,6 @@ export function usePlanningGrid(isAdmin: boolean) {
     employeeId: string;
     date: string;
     period: DayPeriod;
-    currentStatus: StatusCode;
-    isHighlighted?: boolean;
-    projectCode?: string;
   } | null>(null);
   
   const [selectedPeriod, setSelectedPeriod] = useState<DayPeriod>('AM');
@@ -23,29 +20,17 @@ export function usePlanningGrid(isAdmin: boolean) {
       return;
     }
     
-    // Find the current status for this cell from the schedule
-    const getCurrentStatus = (employeeId: string, date: string, period: DayPeriod, employees: any[]) => {
-      const employee = employees.find(emp => emp.id === employeeId);
-      if (!employee) return { status: '' as StatusCode };
-      
-      const dayEntry = employee.schedule.find(
-        (day: any) => day.date === date && day.period === period
-      );
-      
-      return {
-        status: dayEntry?.status || '' as StatusCode,
-        isHighlighted: dayEntry?.isHighlighted,
-        projectCode: dayEntry?.projectCode
-      };
-    };
+    if (!employeeId || !date) {
+      console.error("ID employé ou date invalide", { employeeId, date });
+      return;
+    }
+    
+    console.log("Cellule sélectionnée:", { employeeId, date, period });
     
     setSelectedCell({
       employeeId,
       date,
-      period,
-      currentStatus: '' as StatusCode, // Will be populated by the component
-      isHighlighted: false,
-      projectCode: undefined
+      period
     });
     
     setSelectedPeriod(period);

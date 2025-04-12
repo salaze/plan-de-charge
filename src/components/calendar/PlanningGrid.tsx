@@ -17,7 +17,7 @@ import { DepartmentHeader } from './DepartmentHeader';
 import { StatusChangeDialog } from './StatusChangeDialog';
 import { usePlanningGrid } from '@/hooks/usePlanningGrid';
 import { groupEmployeesByDepartment } from '@/utils/departmentUtils';
-import { ensureValidUuid } from '@/utils/idUtils';
+import { isValidUuid } from '@/utils/idUtils';
 
 interface PlanningGridProps {
   year: number;
@@ -66,12 +66,16 @@ export function PlanningGrid({
     if (!selectedCell) return;
     
     try {
-      // Validate the employee ID before updating
-      const validEmployeeId = ensureValidUuid(selectedCell.employeeId);
+      // Validate employee ID before proceeding
+      const employeeId = selectedCell.employeeId;
+      if (!isValidUuid(employeeId)) {
+        toast.error("ID d'employé invalide");
+        return;
+      }
       
       // Apply the change immediately
       onStatusChange(
-        validEmployeeId,
+        employeeId,
         selectedCell.date,
         status,
         selectedCell.period,
@@ -122,15 +126,18 @@ export function PlanningGrid({
                 
                 {/* Employee rows */}
                 {group.employees.map((employee) => {
+                  // Skip employees without valid IDs
+                  if (!isValidUuid(employee.id)) {
+                    console.warn(`Skipping employee with invalid ID: ${employee.id}`);
+                    return null;
+                  }
+                  
                   const totalStats = getTotalStats(employee);
                   
                   return (
                     <EmployeeRow
-                      key={ensureValidUuid(employee.id)}
-                      employee={{
-                        ...employee,
-                        id: ensureValidUuid(employee.id)
-                      }}
+                      key={employee.id}
+                      employee={employee}
                       visibleDays={visibleDays}
                       totalStats={totalStats}
                       onCellClick={handleCellClick}

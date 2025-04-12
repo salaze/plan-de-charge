@@ -3,7 +3,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { StatusCode, DayPeriod } from '@/types';
-import { generateId, isValidUuid, ensureValidUuid } from '@/utils/idUtils';
+import { generateId, isValidUuid } from '@/utils/idUtils';
 
 export function useSupabaseSchedule() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -22,15 +22,17 @@ export function useSupabaseSchedule() {
       setIsLoading(true);
       setError(null);
 
-      // Ensure employee ID is a valid UUID
-      const validEmployeeId = ensureValidUuid(employeeId);
+      // Ensure employee ID is a valid UUID - if not valid, we cannot proceed
+      if (!isValidUuid(employeeId)) {
+        throw new Error(`Invalid employee ID format: ${employeeId}`);
+      }
       
       if (status === '') {
         // If the status is empty, delete the entry using a combination of fields
         const { error: deleteError } = await supabase
           .from('employe_schedule')
           .delete()
-          .eq('employe_id', validEmployeeId)
+          .eq('employe_id', employeeId)
           .eq('date', date)
           .eq('period', period);
 
@@ -44,7 +46,7 @@ export function useSupabaseSchedule() {
         const { data: existingEntry, error: fetchError } = await supabase
           .from('employe_schedule')
           .select('*')
-          .eq('employe_id', validEmployeeId)
+          .eq('employe_id', employeeId)
           .eq('date', date)
           .eq('period', period)
           .maybeSingle();
@@ -77,7 +79,7 @@ export function useSupabaseSchedule() {
             .from('employe_schedule')
             .insert({
               id: newEntryId,
-              employe_id: validEmployeeId,
+              employe_id: employeeId,
               date: date,
               period: period,
               statut_code: status,
@@ -108,13 +110,16 @@ export function useSupabaseSchedule() {
       setIsLoading(true);
       setError(null);
 
-      // Ensure employee ID is a valid UUID
-      const validEmployeeId = ensureValidUuid(employeeId);
+      // Only proceed if employee ID is a valid UUID
+      if (!isValidUuid(employeeId)) {
+        console.error("Invalid employee ID format:", employeeId);
+        return [];
+      }
 
       const { data, error } = await supabase
         .from('employe_schedule')
         .select('*')
-        .eq('employe_id', validEmployeeId);
+        .eq('employe_id', employeeId);
 
       if (error) {
         console.error("Fetch schedule error:", error);

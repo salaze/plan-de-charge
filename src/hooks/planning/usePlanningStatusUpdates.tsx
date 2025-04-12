@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { MonthData, StatusCode, DayPeriod } from '@/types';
 import { useSupabaseSchedule } from '../useSupabaseSchedule';
 import { usePlanningPersistence } from './usePlanningPersistence';
-import { ensureValidUuid } from '@/utils/idUtils';
+import { isValidUuid } from '@/utils/idUtils';
 
 export const usePlanningStatusUpdates = (
   data: MonthData,
@@ -27,21 +27,14 @@ export const usePlanningStatusUpdates = (
       return;
     }
     
+    // Check if the employee ID is a valid UUID before proceeding
+    if (!isValidUuid(employeeId)) {
+      toast.error(`ID d'employé invalide: ${employeeId}`);
+      return;
+    }
+    
     try {
-      // Ensure the employee ID is a valid UUID before updating
-      const validEmployeeId = ensureValidUuid(employeeId);
-      
-      // Call the useSupabaseSchedule hook to update the entry
-      await updateScheduleEntry(
-        validEmployeeId,
-        date, 
-        status, 
-        period, 
-        isHighlighted, 
-        status === 'projet' ? projectCode : undefined
-      );
-
-      // Mettre à jour l'état local également
+      // Update the UI optimistically first
       setData((prevData) => {
         const updatedEmployees = prevData.employees.map((employee) => {
           if (employee.id === employeeId) {
@@ -99,6 +92,16 @@ export const usePlanningStatusUpdates = (
         
         return updatedData;
       });
+      
+      // Then call Supabase to persist the change
+      await updateScheduleEntry(
+        employeeId,
+        date, 
+        status, 
+        period, 
+        isHighlighted, 
+        status === 'projet' ? projectCode : undefined
+      );
       
       toast.success(`Statut ${period === 'AM' ? 'matin' : 'après-midi'} mis à jour et synchronisé`);
     } catch (error) {

@@ -18,6 +18,7 @@ import {
   AlertDialogTitle
 } from '@/components/ui/alert-dialog';
 import { createEmptyEmployee, generateId } from '@/utils';
+import { useSupabaseEmployees } from '@/hooks/useSupabaseEmployees';
 
 interface EmployeeTabProps {
   employees: Employee[];
@@ -30,6 +31,7 @@ export function EmployeeTab({ employees, onEmployeesChange }: EmployeeTabProps) 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<string>('');
   const [deleteAllDialogOpen, setDeleteAllDialogOpen] = useState(false);
+  const { deleteAllEmployees } = useSupabaseEmployees();
   
   const handleAddEmployee = () => {
     setCurrentEmployee(undefined);
@@ -50,10 +52,17 @@ export function EmployeeTab({ employees, onEmployeesChange }: EmployeeTabProps) 
     setDeleteAllDialogOpen(true);
   };
   
-  const confirmDeleteAllEmployees = () => {
-    onEmployeesChange([]);
-    toast.success('Tous les employés ont été supprimés');
-    setDeleteAllDialogOpen(false);
+  const confirmDeleteAllEmployees = async () => {
+    try {
+      await deleteAllEmployees();
+      onEmployeesChange([]);
+      toast.success('Tous les employés ont été supprimés');
+    } catch (error) {
+      console.error('Erreur lors de la suppression des employés:', error);
+      toast.error('Impossible de supprimer tous les employés');
+    } finally {
+      setDeleteAllDialogOpen(false);
+    }
   };
   
   const confirmDeleteEmployee = () => {

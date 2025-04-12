@@ -1,12 +1,13 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 // Define valid table names as literals to match what Supabase expects
 type ValidTableName = "statuts" | "employes" | "employe_schedule" | "taches" | "connection_logs" | "projets";
 
 export async function checkSupabaseTables() {
   try {
-    console.log("Checking Supabase tables...");
+    console.log("Vérification des tables Supabase...");
     
     // Try to check tables in a safer way that handles potential failures gracefully
     const checkTable = async (tableName: ValidTableName) => {
@@ -18,15 +19,15 @@ export async function checkSupabaseTables() {
           .limit(1);
           
         if (error) {
-          console.error(`Error checking ${tableName} table:`, error);
-          return false;
+          console.error(`Erreur lors de la vérification de la table ${tableName}:`, error);
+          return { success: false, error };
         } else {
-          console.log(`Successfully connected to ${tableName} table`);
-          return true;
+          console.log(`Connexion réussie à la table ${tableName}`);
+          return { success: true, data };
         }
       } catch (err) {
-        console.error(`Exception when checking ${tableName} table:`, err);
-        return false;
+        console.error(`Exception lors de la vérification de la table ${tableName}:`, err);
+        return { success: false, error: err };
       }
     };
     
@@ -34,15 +35,15 @@ export async function checkSupabaseTables() {
     const checkTableWithRetry = async (tableName: ValidTableName, retries = 1) => {
       for (let i = 0; i <= retries; i++) {
         const result = await checkTable(tableName);
-        if (result) return true;
+        if (result.success) return result;
         
         if (i < retries) {
           // Wait a bit longer between retries
           await new Promise(resolve => setTimeout(resolve, 500));
-          console.log(`Retrying check for ${tableName}, attempt ${i + 2}`);
+          console.log(`Nouvelle tentative de vérification pour ${tableName}, tentative ${i + 2}`);
         }
       }
-      return false;
+      return { success: false };
     };
     
     try {
@@ -55,16 +56,52 @@ export async function checkSupabaseTables() {
       
       const scheduleCheck = await checkTableWithRetry("employe_schedule");
       
-      console.log("Supabase tables check complete");
+      console.log("Vérification des tables Supabase terminée");
       
-      // Return true if at least one table is accessible
-      return statusCheck || employesCheck || scheduleCheck;
+      // Return detailed results
+      return { 
+        success: statusCheck.success || employesCheck.success || scheduleCheck.success,
+        details: {
+          statuts: statusCheck,
+          employes: employesCheck,
+          schedule: scheduleCheck
+        }
+      };
     } catch (e) {
-      console.error("Error in table checks:", e);
-      return false;
+      console.error("Erreur lors des vérifications des tables:", e);
+      toast.error("Erreur lors de la vérification des tables Supabase");
+      return { 
+        success: false, 
+        error: e 
+      };
     }
   } catch (error) {
-    console.error("Error during Supabase initialization:", error);
+    console.error("Erreur lors de l'initialisation de Supabase:", error);
+    toast.error("Erreur lors de l'initialisation de Supabase");
+    return { 
+      success: false, 
+      error 
+    };
+  }
+}
+
+// Fonction pour tester la connexion à Supabase directement
+export async function testSupabaseConnection() {
+  try {
+    const { data, error } = await supabase.from('statuts').select('count(*)');
+    
+    if (error) {
+      console.error("Erreur de connexion Supabase:", error);
+      toast.error("Impossible de se connecter à Supabase");
+      return false;
+    }
+    
+    console.log("Connexion Supabase établie avec succès:", data);
+    toast.success("Connexion Supabase établie avec succès");
+    return true;
+  } catch (error) {
+    console.error("Exception lors du test de connexion Supabase:", error);
+    toast.error("Erreur lors de la connexion à Supabase");
     return false;
   }
 }

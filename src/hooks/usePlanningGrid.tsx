@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
 import { StatusCode, DayPeriod } from '@/types';
+import { useSupabaseSchedule } from './useSupabaseSchedule';
 
 export function usePlanningGrid(isAdmin: boolean) {
   const isMobile = useIsMobile();
@@ -13,6 +14,25 @@ export function usePlanningGrid(isAdmin: boolean) {
   } | null>(null);
   
   const [selectedPeriod, setSelectedPeriod] = useState<DayPeriod>('AM');
+  const { testConnection } = useSupabaseSchedule();
+  
+  // Test the Supabase connection when needed
+  const runConnectionTest = async () => {
+    try {
+      const result = await testConnection();
+      if (result && result.connected) {
+        toast.success("Connexion à Supabase établie");
+        return true;
+      } else {
+        console.error("Échec de la connexion à Supabase:", result?.error);
+        toast.error("Impossible de se connecter à Supabase");
+        return false;
+      }
+    } catch (err) {
+      console.error("Erreur lors du test de connexion:", err);
+      return false;
+    }
+  };
   
   const handleCellClick = (employeeId: string, date: string, period: DayPeriod) => {
     if (!isAdmin) {
@@ -66,6 +86,7 @@ export function usePlanningGrid(isAdmin: boolean) {
     setSelectedPeriod,
     handleCellClick,
     handleCloseDialog,
-    getVisibleDays
+    getVisibleDays,
+    runConnectionTest
   };
 }

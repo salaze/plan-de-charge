@@ -53,7 +53,9 @@ export function StatusChangeDialog({
   };
   
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open) onClose();
+    }}>
       <DialogContent className="sm:max-w-[425px] max-w-[90vw]">
         <DialogHeader>
           <DialogTitle>

@@ -15,7 +15,7 @@ export const useStatusOptions = () => {
         toast.error("Impossible de charger les statuts depuis Supabase");
       }
       
-      if (statuses.length > 0) {
+      if (statuses && statuses.length > 0) {
         // Créer les options de statut à partir des données Supabase
         const statusOptions = statuses.map(status => ({
           value: status.code as StatusCode,

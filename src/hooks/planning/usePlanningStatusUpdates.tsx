@@ -10,8 +10,27 @@ export const usePlanningStatusUpdates = (
   setData: React.Dispatch<React.SetStateAction<MonthData>>,
   isAdmin: boolean
 ) => {
-  const { updateScheduleEntry } = useSupabaseSchedule();
+  const { updateScheduleEntry, testConnection } = useSupabaseSchedule();
   const { saveDataToLocalStorage } = usePlanningPersistence();
+  
+  // Fonction pour tester la connexion à Supabase
+  const checkSupabaseConnection = async () => {
+    try {
+      const result = await testConnection();
+      if (result.connected) {
+        toast.success("Connexion à Supabase établie avec succès");
+        return true;
+      } else {
+        toast.error("Impossible de se connecter à Supabase");
+        console.error("Erreur de connexion Supabase:", result.error);
+        return false;
+      }
+    } catch (error) {
+      console.error("Erreur lors du test de connexion Supabase:", error);
+      toast.error("Erreur lors du test de connexion à Supabase");
+      return false;
+    }
+  };
   
   const handleStatusChange = async (
     employeeId: string,
@@ -39,7 +58,7 @@ export const usePlanningStatusUpdates = (
     
     try {
       // Log the status update attempt
-      console.log(`Mise à jour: employé=${employeeId}, date=${date}, statut=${status}, période=${period}`);
+      console.log(`MISE À JOUR: employé=${employeeId}, date=${date}, statut=${status}, période=${period}`);
       
       // Update the UI optimistically first
       setData((prevData) => {
@@ -102,7 +121,7 @@ export const usePlanningStatusUpdates = (
       
       // Then call Supabase to persist the change
       console.log("Appel à Supabase pour persister le changement");
-      await updateScheduleEntry(
+      const result = await updateScheduleEntry(
         employeeId,
         date, 
         status, 
@@ -111,15 +130,24 @@ export const usePlanningStatusUpdates = (
         status === 'projet' ? projectCode : undefined
       );
       
-      console.log("Statut mis à jour avec succès dans Supabase");
-      toast.success(`Statut ${period === 'AM' ? 'matin' : 'après-midi'} mis à jour et synchronisé`);
+      if (result && result.success) {
+        console.log("Statut mis à jour avec succès dans Supabase");
+        toast.success(`Statut ${period === 'AM' ? 'matin' : 'après-midi'} mis à jour et synchronisé`);
+      } else {
+        console.error("Échec de la mise à jour dans Supabase");
+        toast.warning("Mise à jour locale effectuée, mais échec de la synchronisation avec Supabase");
+      }
     } catch (error) {
       console.error("Erreur détaillée lors de la mise à jour du statut:", error);
       toast.error("Impossible de mettre à jour le statut dans Supabase");
+      
+      // Test the connection to see if that's the issue
+      checkSupabaseConnection();
     }
   };
   
   return {
-    handleStatusChange
+    handleStatusChange,
+    checkSupabaseConnection
   };
 };

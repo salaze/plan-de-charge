@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Table,
   TableBody
@@ -18,6 +18,7 @@ import { StatusChangeDialog } from './StatusChangeDialog';
 import { usePlanningGrid } from '@/hooks/usePlanningGrid';
 import { groupEmployeesByDepartment } from '@/utils/departmentUtils';
 import { isValidUuid, ensureValidUuid } from '@/utils/idUtils';
+import { testSupabaseConnection } from '@/utils/initSupabase';
 
 interface PlanningGridProps {
   year: number;
@@ -43,6 +44,8 @@ export function PlanningGrid({
   onStatusChange,
   isAdmin
 }: PlanningGridProps) {
+  const [connectionTested, setConnectionTested] = useState(false);
+  
   // Extract grid functionality to a custom hook
   const {
     selectedCell,
@@ -71,6 +74,23 @@ export function PlanningGrid({
   useEffect(() => {
     console.log("PlanningGrid employees:", employees.length, employees.map(e => e.name));
   }, [employees]);
+  
+  // Test connection to Supabase on component mount
+  useEffect(() => {
+    // Only test once
+    if (!connectionTested && isAdmin) {
+      const testConnection = async () => {
+        try {
+          await testSupabaseConnection();
+          setConnectionTested(true);
+        } catch (error) {
+          console.error("Erreur lors du test de connexion:", error);
+        }
+      };
+      
+      testConnection();
+    }
+  }, [isAdmin, connectionTested]);
   
   // Find current status for a selected cell
   const findCurrentStatus = (employeeId: string, date: string, period: DayPeriod) => {

@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { PlanningGrid } from '@/components/calendar/PlanningGrid';
 import { LegendModal } from '@/components/calendar/LegendModal';
@@ -7,9 +7,13 @@ import { PlanningToolbar } from '@/components/planning/PlanningToolbar';
 import { usePlanningState } from '@/hooks/usePlanningState';
 import { useAuth } from '@/contexts/AuthContext';
 import { SupabaseStatusIndicator } from '@/components/supabase/SupabaseStatusIndicator';
+import { Button } from '@/components/ui/button';
+import { testSupabaseConnection } from '@/utils/initSupabase';
+import { toast } from 'sonner';
 
 const Index = () => {
   const { isAdmin } = useAuth();
+  const [isCheckingConnection, setIsCheckingConnection] = useState(false);
   const {
     data,
     currentYear,
@@ -24,16 +28,43 @@ const Index = () => {
   // Log employees when they load
   useEffect(() => {
     if (data.employees) {
-      console.log("Employees loaded on index page:", data.employees);
+      console.log("Employés chargés sur la page d'index:", data.employees);
     }
   }, [data.employees]);
+  
+  const handleTestConnection = async () => {
+    setIsCheckingConnection(true);
+    try {
+      const isConnected = await testSupabaseConnection();
+      if (isConnected) {
+        toast.success("Connexion réussie à Supabase");
+      } else {
+        toast.error("Échec de connexion à Supabase");
+      }
+    } catch (error) {
+      console.error("Erreur lors du test de connexion:", error);
+      toast.error("Erreur lors du test de connexion");
+    } finally {
+      setIsCheckingConnection(false);
+    }
+  };
   
   return (
     <Layout>
       <div className="space-y-6 animate-fade-in">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold">Planning</h1>
-          <div className="flex items-center">
+          <div className="flex items-center gap-2">
+            {isAdmin && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleTestConnection}
+                disabled={isCheckingConnection}
+              >
+                {isCheckingConnection ? 'Test en cours...' : 'Tester Supabase'}
+              </Button>
+            )}
             <SupabaseStatusIndicator />
           </div>
         </div>

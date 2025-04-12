@@ -48,7 +48,7 @@ export function StatusSelectorForm({
   }, [initialStatus, initialIsHighlighted, initialProjectCode]);
   
   const handleStatusChange = (newStatus: StatusCode) => {
-    console.log("Status changed to:", newStatus);
+    console.log("Changement de statut:", newStatus);
     setSelectedStatus(newStatus);
     
     // Réinitialiser le projet sélectionné si le statut n'est pas "projet"
@@ -58,23 +58,27 @@ export function StatusSelectorForm({
   };
   
   const handleProjectChange = (projectCode: string) => {
-    console.log("Project changed to:", projectCode);
+    console.log("Changement de projet:", projectCode);
     setSelectedProject(projectCode);
   };
   
   const handleHighlightChange = (checked: boolean) => {
-    console.log("Highlight changed to:", checked);
+    console.log("Changement de mise en évidence:", checked);
     setHighlightedStatus(checked);
   };
   
-  const handleFormSubmit = () => {
-    const projectToUse = selectedStatus === 'projet' ? selectedProject : undefined;
-    console.log("Form submitted with:", { 
-      selectedStatus, 
-      highlightedStatus, 
-      projectToUse
-    });
-    onSubmit(selectedStatus, highlightedStatus, projectToUse);
+  const handleSubmit = () => {
+    try {
+      const projectToUse = selectedStatus === 'projet' ? selectedProject : undefined;
+      console.log("Formulaire soumis avec:", { 
+        selectedStatus, 
+        highlightedStatus, 
+        projectToUse
+      });
+      onSubmit(selectedStatus, highlightedStatus, projectToUse);
+    } catch (error) {
+      console.error("Erreur lors de la soumission du formulaire:", error);
+    }
   };
 
   return (
@@ -98,7 +102,7 @@ export function StatusSelectorForm({
       />
       
       <FormActions
-        onSubmit={handleFormSubmit}
+        onSubmit={handleSubmit}
         selectedStatus={selectedStatus}
         selectedProject={selectedProject}
         selectedPeriod={selectedPeriod}

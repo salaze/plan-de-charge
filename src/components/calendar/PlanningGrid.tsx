@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { toast } from 'sonner';
 import { calculateEmployeeStats } from '@/utils';
-import { StatusCode, DayPeriod } from '@/types';
+import { StatusCode, DayPeriod, Employee } from '@/types';
 import { StatusChangeDialog } from './StatusChangeDialog';
 import { usePlanningGrid } from '@/hooks/usePlanningGrid';
 import { groupEmployeesByDepartment } from '@/utils/departmentUtils';

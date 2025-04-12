@@ -31,7 +31,7 @@ export function EmployeeTab({ employees, onEmployeesChange }: EmployeeTabProps) 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<string>('');
   const [deleteAllDialogOpen, setDeleteAllDialogOpen] = useState(false);
-  const { deleteAllEmployees } = useSupabaseEmployees();
+  const { deleteAllEmployees, addEmployee, updateEmployee, deleteEmployee } = useSupabaseEmployees();
   
   const handleAddEmployee = () => {
     setCurrentEmployee(undefined);
@@ -65,38 +65,60 @@ export function EmployeeTab({ employees, onEmployeesChange }: EmployeeTabProps) 
     }
   };
   
-  const confirmDeleteEmployee = () => {
+  const confirmDeleteEmployee = async () => {
     if (!employeeToDelete) return;
     
-    const updatedEmployees = employees.filter((emp: Employee) => emp.id !== employeeToDelete);
-    onEmployeesChange(updatedEmployees);
+    try {
+      await deleteEmployee(employeeToDelete);
+      const updatedEmployees = employees.filter((emp: Employee) => emp.id !== employeeToDelete);
+      onEmployeesChange(updatedEmployees);
+    } catch (error) {
+      console.error('Erreur lors de la suppression de l\'employé:', error);
+      toast.error('Impossible de supprimer l\'employé');
+    }
     
-    toast.success('Employé supprimé avec succès');
     setDeleteDialogOpen(false);
     setEmployeeToDelete('');
   };
   
-  const handleSaveEmployee = (employee: Employee) => {
-    let updatedEmployees: Employee[];
-    
-    if (employee.id) {
-      // Mettre à jour un employé existant
-      updatedEmployees = employees.map((emp: Employee) => 
-        emp.id === employee.id ? employee : emp
-      );
-      toast.success('Employé modifié avec succès');
-    } else {
-      // Ajouter un nouvel employé
-      const newEmployee = {
-        ...employee,
-        id: generateId(),
-        schedule: []
-      };
-      updatedEmployees = [...employees, newEmployee];
-      toast.success('Employé ajouté avec succès');
+  const handleSaveEmployee = async (employee: Employee) => {
+    try {
+      let updatedEmployees: Employee[];
+      
+      if (employee.id) {
+        // Mettre à jour un employé existant
+        await updateEmployee(employee.id, employee);
+        updatedEmployees = employees.map((emp: Employee) => 
+          emp.id === employee.id ? employee : emp
+        );
+        toast.success('Employé modifié avec succès');
+      } else {
+        // Ajouter un nouvel employé
+        const result = await addEmployee({
+          ...employee,
+          id: generateId(),
+          schedule: []
+        });
+        
+        const newEmployee = {
+          id: result.id,
+          name: result.prenom ? `${result.prenom} ${result.nom}` : result.nom,
+          uid: result.uid || '',
+          position: result.fonction || undefined,
+          department: result.departement || undefined,
+          role: result.role as any || 'employee',
+          schedule: []
+        };
+        
+        updatedEmployees = [...employees, newEmployee];
+        toast.success('Employé ajouté avec succès');
+      }
+      
+      onEmployeesChange(updatedEmployees);
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde de l\'employé:', error);
+      toast.error('Impossible de sauvegarder l\'employé');
     }
-    
-    onEmployeesChange(updatedEmployees);
   };
 
   return (

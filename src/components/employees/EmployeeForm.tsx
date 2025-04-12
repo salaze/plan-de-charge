@@ -11,7 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Employee } from '@/types';
 
-// Import our new components
+// Import our components
 import { EmployeeNameField } from './form/EmployeeNameField';
 import { EmployeeUidField } from './form/EmployeeUidField';
 import { EmployeeContactField } from './form/EmployeeContactField';

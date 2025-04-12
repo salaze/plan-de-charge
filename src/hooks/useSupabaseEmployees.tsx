@@ -42,26 +42,34 @@ export const useSupabaseEmployees = () => {
     } catch (error) {
       console.error('Erreur lors du chargement des employés:', error);
       setError('Impossible de charger les employés depuis Supabase');
-      
-      // Ne pas utiliser le fallback localStorage car nous voulons vider la liste
       setEmployees([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const addEmployee = async (employee: Omit<SupabaseEmployee, 'id' | 'created_at' | 'updated_at'>) => {
+  const addEmployee = async (employee: Employee) => {
     try {
+      // Convert from UI model to Supabase model
+      const supabaseEmployee: Partial<SupabaseEmployee> = {
+        nom: employee.name.split(' ').pop() || employee.name,
+        prenom: employee.name.split(' ').slice(0, -1).join(' ') || undefined,
+        departement: employee.department,
+        fonction: employee.position,
+        uid: employee.uid,
+        role: employee.role
+      };
+      
       const { data, error } = await supabase
         .from('employes')
-        .insert([employee])
+        .insert([supabaseEmployee])
         .select();
 
       if (error) {
         throw error;
       }
 
-      setEmployees(prev => [...prev, data[0]]);
+      await fetchEmployees(); // Refresh the employee list
       return data[0];
     } catch (error) {
       console.error('Erreur lors de l\'ajout de l\'employé:', error);
@@ -70,11 +78,24 @@ export const useSupabaseEmployees = () => {
     }
   };
 
-  const updateEmployee = async (id: string, employee: Partial<SupabaseEmployee>) => {
+  const updateEmployee = async (id: string, employee: Partial<Employee>) => {
     try {
+      // Convert from UI model to Supabase model
+      const supabaseEmployee: Partial<SupabaseEmployee> = {};
+      
+      if (employee.name) {
+        supabaseEmployee.nom = employee.name.split(' ').pop() || employee.name;
+        supabaseEmployee.prenom = employee.name.split(' ').slice(0, -1).join(' ') || undefined;
+      }
+      
+      if (employee.department !== undefined) supabaseEmployee.departement = employee.department;
+      if (employee.position !== undefined) supabaseEmployee.fonction = employee.position;
+      if (employee.uid !== undefined) supabaseEmployee.uid = employee.uid;
+      if (employee.role !== undefined) supabaseEmployee.role = employee.role;
+      
       const { data, error } = await supabase
         .from('employes')
-        .update(employee)
+        .update(supabaseEmployee)
         .eq('id', id)
         .select();
 
@@ -82,7 +103,7 @@ export const useSupabaseEmployees = () => {
         throw error;
       }
 
-      setEmployees(prev => prev.map(e => e.id === id ? data[0] : e));
+      await fetchEmployees(); // Refresh the employee list
       return data[0];
     } catch (error) {
       console.error('Erreur lors de la mise à jour de l\'employé:', error);
@@ -103,6 +124,7 @@ export const useSupabaseEmployees = () => {
       }
 
       setEmployees(prev => prev.filter(e => e.id !== id));
+      toast.success('Employé supprimé avec succès');
     } catch (error) {
       console.error('Erreur lors de la suppression de l\'employé:', error);
       toast.error('Impossible de supprimer l\'employé');

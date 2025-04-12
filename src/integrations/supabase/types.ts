@@ -9,36 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      connection_logs: {
-        Row: {
-          created_at: string | null
-          event_type: string | null
-          id: string
-          ip_address: string | null
-          user_agent: string | null
-          user_id: string | null
-          user_name: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          event_type?: string | null
-          id?: string
-          ip_address?: string | null
-          user_agent?: string | null
-          user_id?: string | null
-          user_name?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          event_type?: string | null
-          id?: string
-          ip_address?: string | null
-          user_agent?: string | null
-          user_id?: string | null
-          user_name?: string | null
-        }
-        Relationships: []
-      }
       employe_schedule: {
         Row: {
           created_at: string | null
@@ -89,10 +59,10 @@ export type Database = {
           departement: string | null
           fonction: string | null
           id: string
+          identifiant: string | null
           nom: string
           prenom: string | null
           role: string | null
-          uid: string | null
           updated_at: string | null
         }
         Insert: {
@@ -100,10 +70,10 @@ export type Database = {
           departement?: string | null
           fonction?: string | null
           id?: string
+          identifiant?: string | null
           nom: string
           prenom?: string | null
           role?: string | null
-          uid?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -111,10 +81,10 @@ export type Database = {
           departement?: string | null
           fonction?: string | null
           id?: string
+          identifiant?: string | null
           nom?: string
           prenom?: string | null
           role?: string | null
-          uid?: string | null
           updated_at?: string | null
         }
         Relationships: []

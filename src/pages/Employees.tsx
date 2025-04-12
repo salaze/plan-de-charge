@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Layout } from '@/components/layout/Layout';
 import { EmployeeList } from '@/components/employees/EmployeeList';
@@ -16,18 +16,33 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Employee } from '@/types';
 import { generateId } from '@/utils';
+import { useSupabaseEmployees } from '@/hooks/useSupabaseEmployees';
 
 const Employees = () => {
-  // Récupérer les employés du localStorage
-  const [employees, setEmployees] = useState<Employee[]>(() => {
-    const savedData = localStorage.getItem('planningData');
-    return savedData ? JSON.parse(savedData).employees || [] : [];
-  });
+  const { employees: supabaseEmployees, loading, error, addEmployee, updateEmployee, deleteEmployee } = useSupabaseEmployees();
+  const [employees, setEmployees] = useState<Employee[]>([]);
   
   const [formOpen, setFormOpen] = useState(false);
   const [currentEmployee, setCurrentEmployee] = useState<Employee | undefined>(undefined);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<string>('');
+  
+  // Convert Supabase employees to the app's format
+  useEffect(() => {
+    if (!loading) {
+      const convertedEmployees = supabaseEmployees.map(emp => ({
+        id: emp.id,
+        name: emp.prenom ? `${emp.prenom} ${emp.nom}` : emp.nom,
+        department: emp.departement || undefined,
+        position: emp.fonction || undefined,
+        uid: emp.uid || undefined,
+        role: emp.role as any || 'employee',
+        schedule: []
+      }));
+      
+      setEmployees(convertedEmployees);
+    }
+  }, [supabaseEmployees, loading]);
   
   const handleAddEmployee = () => {
     setCurrentEmployee(undefined);
@@ -44,57 +59,55 @@ const Employees = () => {
     setDeleteDialogOpen(true);
   };
   
-  const confirmDeleteEmployee = () => {
+  const confirmDeleteEmployee = async () => {
     if (!employeeToDelete) return;
     
-    const updatedEmployees = employees.filter(emp => emp.id !== employeeToDelete);
-    setEmployees(updatedEmployees);
-    
-    // Mettre à jour le localStorage
-    const savedData = localStorage.getItem('planningData');
-    if (savedData) {
-      const data = JSON.parse(savedData);
-      data.employees = updatedEmployees;
-      localStorage.setItem('planningData', JSON.stringify(data));
-    } else {
-      localStorage.setItem('planningData', JSON.stringify({ employees: updatedEmployees }));
+    try {
+      await deleteEmployee(employeeToDelete);
+      setEmployees(prev => prev.filter(emp => emp.id !== employeeToDelete));
+      toast.success('Employé supprimé avec succès');
+    } catch (error) {
+      console.error('Erreur lors de la suppression de l\'employé:', error);
+      toast.error('Impossible de supprimer l\'employé');
     }
     
-    toast.success('Employé supprimé avec succès');
     setDeleteDialogOpen(false);
     setEmployeeToDelete('');
   };
   
-  const handleSaveEmployee = (employee: Employee) => {
-    let updatedEmployees: Employee[];
-    
-    if (employee.id) {
-      // Mettre à jour un employé existant
-      updatedEmployees = employees.map(emp => 
-        emp.id === employee.id ? employee : emp
-      );
-      toast.success('Employé modifié avec succès');
-    } else {
-      // Ajouter un nouvel employé
-      const newEmployee = {
-        ...employee,
-        id: generateId(),
-        schedule: []
-      };
-      updatedEmployees = [...employees, newEmployee];
-      toast.success('Employé ajouté avec succès');
-    }
-    
-    setEmployees(updatedEmployees);
-    
-    // Mettre à jour le localStorage
-    const savedData = localStorage.getItem('planningData');
-    if (savedData) {
-      const data = JSON.parse(savedData);
-      data.employees = updatedEmployees;
-      localStorage.setItem('planningData', JSON.stringify(data));
-    } else {
-      localStorage.setItem('planningData', JSON.stringify({ employees: updatedEmployees }));
+  const handleSaveEmployee = async (employee: Employee) => {
+    try {
+      if (employee.id) {
+        // Mettre à jour un employé existant
+        await updateEmployee(employee.id, employee);
+        setEmployees(prev => prev.map(emp => emp.id === employee.id ? employee : emp));
+        toast.success('Employé modifié avec succès');
+      } else {
+        // Ajouter un nouvel employé
+        const newEmployee = {
+          ...employee,
+          id: generateId(),
+          schedule: []
+        };
+        
+        const result = await addEmployee(newEmployee);
+        
+        const savedEmployee = {
+          id: result.id,
+          name: result.prenom ? `${result.prenom} ${result.nom}` : result.nom,
+          uid: result.uid || '',
+          position: result.fonction || undefined,
+          department: result.departement || undefined,
+          role: result.role as any || 'employee',
+          schedule: []
+        };
+        
+        setEmployees(prev => [...prev, savedEmployee]);
+        toast.success('Employé ajouté avec succès');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde de l\'employé:', error);
+      toast.error('Impossible de sauvegarder l\'employé');
     }
   };
   
@@ -104,12 +117,19 @@ const Employees = () => {
         <h1 className="text-3xl font-bold mb-6">Gestion des employés</h1>
         
         <div className="glass-panel p-6 animate-scale-in">
-          <EmployeeList 
-            employees={employees}
-            onAddEmployee={handleAddEmployee}
-            onEditEmployee={handleEditEmployee}
-            onDeleteEmployee={handleDeleteEmployee}
-          />
+          {loading ? (
+            <div className="flex justify-center items-center h-40">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+              <span className="ml-3 text-muted-foreground">Chargement des employés...</span>
+            </div>
+          ) : (
+            <EmployeeList 
+              employees={employees}
+              onAddEmployee={handleAddEmployee}
+              onEditEmployee={handleEditEmployee}
+              onDeleteEmployee={handleDeleteEmployee}
+            />
+          )}
         </div>
         
         <EmployeeForm 

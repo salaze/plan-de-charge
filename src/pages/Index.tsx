@@ -12,16 +12,13 @@ const Index = () => {
   const { isAdmin } = useAuth();
   const {
     data,
-    originalData,
     currentYear,
     currentMonth,
-    filters,
     isLegendOpen,
     isLoading,
     setIsLegendOpen,
     handleMonthChange,
-    handleStatusChange,
-    handleFiltersChange
+    handleStatusChange
   } = usePlanningState();
   
   return (
@@ -37,13 +34,8 @@ const Index = () => {
         <PlanningToolbar 
           year={currentYear}
           month={currentMonth}
-          isAdmin={isAdmin}
-          employees={originalData.employees || []}
-          projects={originalData.projects || []}
-          filters={filters}
           onMonthChange={handleMonthChange}
           onShowLegend={() => setIsLegendOpen(true)}
-          onFiltersChange={handleFiltersChange}
         />
         
         <div className="glass-panel p-1 md:p-4 animate-scale-in overflow-x-auto">

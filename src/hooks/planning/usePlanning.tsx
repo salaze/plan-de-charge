@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePlanningDataLoader } from './usePlanningDataLoader';
-import { usePlanningFilters } from './usePlanningFilters';
 import { usePlanningStatusUpdates } from './usePlanningStatusUpdates';
 import { usePlanningPersistence } from './usePlanningPersistence';
 import { useEffect } from 'react';
@@ -10,7 +9,6 @@ import { useEffect } from 'react';
 export const usePlanning = () => {
   const { isAdmin } = useAuth();
   const { data, setData, isLoading } = usePlanningDataLoader();
-  const { filters, filteredData, handleFiltersChange } = usePlanningFilters(data);
   const { handleStatusChange } = usePlanningStatusUpdates(data, setData, isAdmin);
   const { saveDataToLocalStorage } = usePlanningPersistence();
   
@@ -18,7 +16,7 @@ export const usePlanning = () => {
   const [currentMonth, setCurrentMonth] = useState(typeof data.month === 'number' ? data.month : new Date().getMonth());
   const [isLegendOpen, setIsLegendOpen] = useState(false);
   
-  // Sauvegarde immédiate lors des changements
+  // Save immediately when data changes
   useEffect(() => {
     saveDataToLocalStorage(data);
   }, [data, saveDataToLocalStorage]);
@@ -29,17 +27,14 @@ export const usePlanning = () => {
   };
   
   return {
-    data: filteredData,
-    originalData: data,
+    data: data,
     currentYear,
     currentMonth,
-    filters,
     isLegendOpen,
     isLoading,
     setIsLegendOpen,
     handleMonthChange,
-    handleStatusChange,
-    handleFiltersChange
+    handleStatusChange
   };
 };
 

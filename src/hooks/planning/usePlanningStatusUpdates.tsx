@@ -1,5 +1,4 @@
 
-import { useState } from 'react';
 import { toast } from 'sonner';
 import { MonthData, StatusCode, DayPeriod } from '@/types';
 import { useSupabaseSchedule } from '../useSupabaseSchedule';
@@ -51,7 +50,7 @@ export const usePlanningStatusUpdates = (
                 newSchedule.splice(existingStatusIndex, 1);
                 return { ...employee, schedule: newSchedule };
               } else {
-                // Sinon, mettre à jour l'entrée existante
+                // Update existing entry
                 const newSchedule = [...employee.schedule];
                 newSchedule[existingStatusIndex] = {
                   date,

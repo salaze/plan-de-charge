@@ -30,6 +30,17 @@ export function StatusOptionsList({ selectedStatus, onStatusChange }: StatusOpti
     }
   }, [loading]);
   
+  // Memoize the status options to avoid unnecessary re-renders
+  const statusOptions = React.useMemo(() => {
+    return availableStatuses.map((status) => (
+      <StatusOption 
+        key={status.value} 
+        value={status.value} 
+        label={status.label} 
+      />
+    ));
+  }, [availableStatuses]);
+  
   return (
     <div className="space-y-3">
       <Label className="text-base">Sélectionner un statut</Label>
@@ -55,13 +66,7 @@ export function StatusOptionsList({ selectedStatus, onStatusChange }: StatusOpti
               ))}
             </>
           ) : (
-            availableStatuses.map((status) => (
-              <StatusOption 
-                key={status.value} 
-                value={status.value} 
-                label={status.label} 
-              />
-            ))
+            statusOptions
           )}
         </RadioGroup>
       )}

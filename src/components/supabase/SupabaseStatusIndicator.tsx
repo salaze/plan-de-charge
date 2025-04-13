@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Database, CheckCircle, XCircle, AlertCircle, RefreshCw } from 'lucide-react';
 import { useSyncStatus } from '@/hooks/useSyncStatus';
@@ -10,6 +10,8 @@ import { isSupabaseClientInitialized, checkSupabaseConnectionFast } from '@/util
 export function SupabaseStatusIndicator() {
   const { isConnected, lastSyncTime, checkConnection } = useSyncStatus();
   const [isChecking, setIsChecking] = useState(false);
+  const lastCheckRef = useRef<number>(0);
+  const checkTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // Vérifier l'initialisation du client au chargement
   useEffect(() => {
@@ -19,6 +21,26 @@ export function SupabaseStatusIndicator() {
       toast.error("Erreur d'initialisation du client Supabase");
     }
   }, []);
+  
+  // Éviter les multiples vérifications en parallèle
+  useEffect(() => {
+    if (checkTimeoutRef.current) {
+      clearTimeout(checkTimeoutRef.current);
+    }
+    
+    // Si l'état est indéterminé (null), lancer une vérification automatique
+    if (isConnected === null && !isChecking) {
+      checkTimeoutRef.current = setTimeout(() => {
+        handleRefreshClick(new Event('auto-check') as any);
+      }, 1000);
+    }
+    
+    return () => {
+      if (checkTimeoutRef.current) {
+        clearTimeout(checkTimeoutRef.current);
+      }
+    };
+  }, [isConnected, isChecking]);
   
   const getStatusIcon = () => {
     if (isChecking) {
@@ -51,12 +73,25 @@ export function SupabaseStatusIndicator() {
     
     if (isChecking) return;
     
+    // Éviter des clics multiples rapides
+    const now = Date.now();
+    if (now - lastCheckRef.current < 2000) {
+      console.log("Vérification ignorée - trop rapprochée");
+      return;
+    }
+    
+    lastCheckRef.current = now;
     setIsChecking(true);
     toast.info("Vérification de la connexion Supabase...");
     
     try {
-      // Utiliser la fonction de test de connexion rapide
-      const fastResult = await checkSupabaseConnectionFast();
+      // Utiliser la fonction de test de connexion rapide avec un délai maximum de 5 secondes
+      const checkPromise = checkSupabaseConnectionFast();
+      const timeoutPromise = new Promise<boolean>((_, reject) => {
+        setTimeout(() => reject(new Error("Timeout de la vérification")), 5000);
+      });
+      
+      const fastResult = await Promise.race([checkPromise, timeoutPromise]);
       
       if (fastResult) {
         toast.success("Connexion à Supabase établie");

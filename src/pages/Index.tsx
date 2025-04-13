@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useCallback } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { PlanningGrid } from '@/components/calendar/PlanningGrid';
@@ -8,10 +7,10 @@ import { usePlanningState } from '@/hooks/usePlanningState';
 import { useAuth } from '@/contexts/AuthContext';
 import { SupabaseStatusIndicator } from '@/components/supabase/SupabaseStatusIndicator';
 import { Button } from '@/components/ui/button';
-import { testSupabaseConnection } from '@/utils/initSupabase';
+import { checkSupabaseConnectionFast } from '@/utils/supabase/connectionChecker';
 import { toast } from 'sonner';
 import { checkTableExists } from '@/utils/supabase/statusTableChecker';
-import { AlertCircle, CheckCircle } from 'lucide-react';
+import { AlertCircle, CheckCircle, RefreshCw } from 'lucide-react';
 
 const Index = () => {
   const { isAdmin } = useAuth();
@@ -41,24 +40,12 @@ const Index = () => {
     if (isCheckingConnection) return;
     
     setIsCheckingConnection(true);
-    setLastConnectionResult(null);
     
     try {
       console.log("Lancement du test de connexion à Supabase...");
       
-      // Utiliser un timeout pour limiter la durée du test
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error("Timeout")), 3000);
-      });
-      
-      // Lancer le test avec un timeout
-      const isConnected = await Promise.race([
-        testSupabaseConnection(),
-        timeoutPromise.then(() => {
-          toast.error("Timeout lors du test de connexion");
-          return false;
-        })
-      ]);
+      // Utiliser le test de connexion rapide
+      const isConnected = await checkSupabaseConnectionFast();
       
       setLastConnectionResult(!!isConnected);
       
@@ -89,14 +76,9 @@ const Index = () => {
           // Vérifier aussi les tables nécessaires (de façon non bloquante)
           try {
             const statusTableExists = await checkTableExists('statuts');
-            const scheduleTableExists = await checkTableExists('employe_schedule');
             
             if (!statusTableExists) {
               toast.warning("La table 'statuts' n'est pas accessible. Certaines fonctionnalités peuvent être limitées.");
-            }
-            
-            if (!scheduleTableExists) {
-              toast.warning("La table 'employe_schedule' n'est pas accessible. Les modifications ne seront pas enregistrées dans Supabase.");
             }
           } catch (error) {
             console.error("Erreur lors de la vérification des tables:", error);
@@ -108,7 +90,6 @@ const Index = () => {
     }
   }, [isAdmin, handleTestConnection]);
   
-  // Reste du composant inchangé
   return (
     <Layout>
       <div className="space-y-6 animate-fade-in">
@@ -126,8 +107,8 @@ const Index = () => {
                 >
                   {isCheckingConnection ? (
                     <>
-                      <div className="animate-spin h-4 w-4 border-2 border-t-transparent rounded-full" />
-                      Test en cours...
+                      <RefreshCw className="h-4 w-4 animate-spin" />
+                      <span className="ml-1">Test en cours...</span>
                     </>
                   ) : (
                     <>
@@ -136,7 +117,7 @@ const Index = () => {
                       ) : lastConnectionResult === false ? (
                         <AlertCircle className="h-4 w-4 text-red-500" />
                       ) : null}
-                      Tester Supabase
+                      <span className="ml-1">Tester Supabase</span>
                     </>
                   )}
                 </Button>

@@ -1,14 +1,15 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Database, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Database, CheckCircle, XCircle, AlertCircle, RefreshCw } from 'lucide-react';
 import { useSyncStatus } from '@/hooks/useSyncStatus';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { isSupabaseClientInitialized } from '@/utils/supabase/connectionChecker';
+import { isSupabaseClientInitialized, checkSupabaseConnectionFast } from '@/utils/supabase/connectionChecker';
 
 export function SupabaseStatusIndicator() {
   const { isConnected, lastSyncTime, checkConnection } = useSyncStatus();
+  const [isChecking, setIsChecking] = useState(false);
   
   // Vérifier l'initialisation du client au chargement
   useEffect(() => {
@@ -20,7 +21,9 @@ export function SupabaseStatusIndicator() {
   }, []);
   
   const getStatusIcon = () => {
-    if (isConnected === null) {
+    if (isChecking) {
+      return <RefreshCw className="h-4 w-4 animate-spin text-blue-400" />;
+    } else if (isConnected === null) {
       return <AlertCircle className="h-4 w-4 text-yellow-400" />;
     } else if (isConnected) {
       return <CheckCircle className="h-4 w-4 text-green-500" />;
@@ -30,7 +33,9 @@ export function SupabaseStatusIndicator() {
   };
   
   const getStatusText = () => {
-    if (isConnected === null) {
+    if (isChecking) {
+      return "Vérification en cours...";
+    } else if (isConnected === null) {
       return "Vérification de la connexion...";
     } else if (isConnected) {
       return lastSyncTime
@@ -41,16 +46,35 @@ export function SupabaseStatusIndicator() {
     }
   };
   
-  const handleRefreshClick = (e: React.MouseEvent) => {
+  const handleRefreshClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    
+    if (isChecking) return;
+    
+    setIsChecking(true);
     toast.info("Vérification de la connexion Supabase...");
-    checkConnection().then(result => {
-      if (result) {
+    
+    try {
+      // Utiliser la fonction de test de connexion rapide
+      const fastResult = await checkSupabaseConnectionFast();
+      
+      if (fastResult) {
         toast.success("Connexion à Supabase établie");
       } else {
-        toast.error("Échec de connexion à Supabase");
+        // Si le test rapide échoue, essayer avec la méthode plus complète
+        const result = await checkConnection();
+        if (result) {
+          toast.success("Connexion à Supabase établie");
+        } else {
+          toast.error("Échec de connexion à Supabase");
+        }
       }
-    });
+    } catch (error) {
+      console.error("Erreur lors de la vérification:", error);
+      toast.error("Erreur lors de la vérification de la connexion");
+    } finally {
+      setIsChecking(false);
+    }
   };
 
   return (
@@ -60,10 +84,13 @@ export function SupabaseStatusIndicator() {
         size="sm" 
         className={cn(
           "rounded-full flex items-center space-x-1 px-2 py-1",
-          isConnected ? "hover:bg-green-100 dark:hover:bg-green-900" : "hover:bg-red-100 dark:hover:bg-red-900"
+          isConnected ? "hover:bg-green-100 dark:hover:bg-green-900" : 
+          isConnected === false ? "hover:bg-red-100 dark:hover:bg-red-900" :
+          "hover:bg-yellow-100 dark:hover:bg-yellow-900"
         )}
         onClick={handleRefreshClick}
         title={getStatusText()}
+        disabled={isChecking}
       >
         <Database className="h-4 w-4 mr-1" />
         {getStatusIcon()}

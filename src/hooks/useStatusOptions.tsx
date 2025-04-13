@@ -1,12 +1,15 @@
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { StatusCode, STATUS_LABELS, STATUS_COLORS } from '@/types';
 import { useSupabaseStatuses } from './useSupabaseStatuses';
 import { toast } from 'sonner';
 
 export const useStatusOptions = () => {
   const [availableStatuses, setAvailableStatuses] = useState<{ value: StatusCode, label: string }[]>([]);
-  const { statuses, loading, error } = useSupabaseStatuses();
+  const { statuses, loading, error, fetchStatuses } = useSupabaseStatuses();
+  const retryCount = useRef(0);
+  const cacheExpiry = useRef<number>(0);
+  const MAX_RETRIES = 2;
   
   // Optimisation avec useMemo pour éviter des recalculs inutiles
   const processedStatuses = useMemo(() => {
@@ -49,11 +52,33 @@ export const useStatusOptions = () => {
   // Mettre à jour les options disponibles quand les statuts changent
   useEffect(() => {
     setAvailableStatuses(processedStatuses);
+    // Reset retry count when statuses load successfully
+    if (statuses && statuses.length > 0) {
+      retryCount.current = 0;
+      cacheExpiry.current = Date.now() + 5 * 60 * 1000; // 5 minutes cache
+    }
   }, [processedStatuses]);
+  
+  // Automatiquement réessayer de charger les statuts en cas d'erreur
+  useEffect(() => {
+    if (error && retryCount.current < MAX_RETRIES) {
+      const retryDelay = Math.pow(2, retryCount.current) * 1000; // Exponential backoff
+      
+      console.log(`Nouvelle tentative de chargement des statuts dans ${retryDelay}ms (${retryCount.current + 1}/${MAX_RETRIES})`);
+      
+      const timer = setTimeout(() => {
+        retryCount.current += 1;
+        fetchStatuses(true); // Force refresh on retry
+      }, retryDelay);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [error, fetchStatuses]);
   
   return {
     availableStatuses,
-    loading
+    loading,
+    error
   };
 };
 

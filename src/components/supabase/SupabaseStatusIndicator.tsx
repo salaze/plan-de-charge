@@ -5,7 +5,7 @@ import { Database, CheckCircle, XCircle, AlertCircle, RefreshCw } from 'lucide-r
 import { useSyncStatus } from '@/hooks/useSyncStatus';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { isSupabaseClientInitialized, checkSupabaseConnectionFast } from '@/utils/supabase/connectionChecker';
+import { isSupabaseClientInitialized, checkSupabaseConnectionFast } from '@/utils/supabase/connection';
 
 export function SupabaseStatusIndicator() {
   const { isConnected, lastSyncTime, checkConnection } = useSyncStatus();

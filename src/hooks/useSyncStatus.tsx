@@ -4,7 +4,11 @@ import { checkSupabaseTables } from '@/utils/initSupabase';
 import { SupabaseTable } from '@/types/supabase';
 import { syncTableData } from '@/services/syncService';
 import { fetchFromTable } from '@/utils/supabaseHelpers';
-import { checkSupabaseConnectionFast, checkCompleteSupabaseConnection } from '@/utils/supabase/connectionChecker';
+import { 
+  checkSupabaseConnectionFast, 
+  checkCompleteSupabaseConnection,
+  ConnectionTestResult 
+} from '@/utils/supabase/connection';
 
 export function useSyncStatus() {
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
@@ -59,7 +63,7 @@ export function useSyncStatus() {
         // Seconde approche: test complet
         const completeResult = await Promise.race([checkCompleteSupabaseConnection(), timeoutPromise]);
         
-        if (completeResult.success) {
+        if (completeResult && completeResult.success) {
           console.log("Connexion Supabase établie via test complet");
           setIsConnected(true);
           isCheckingRef.current = false;

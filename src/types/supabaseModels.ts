@@ -86,6 +86,7 @@ export type TableDataType = {
   'employes': EmployeData;
   'employe_schedule': ScheduleData;
   'taches': TacheData;
+  'connection_logs': ConnectionLogData;
 }
 
 // Define an explicit mapping for TableDataTypes

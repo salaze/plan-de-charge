@@ -5,7 +5,8 @@ import {
   StatutData, 
   EmployeData, 
   ScheduleData, 
-  TacheData, 
+  TacheData,
+  ConnectionLogData, 
   SyncResult
 } from '@/types/supabaseModels';
 import { checkRecordExists } from '@/utils/supabaseHelpers';
@@ -17,7 +18,9 @@ import {
   insertSchedule,
   updateSchedule,
   insertTache,
-  updateTache
+  updateTache,
+  insertConnectionLog,
+  updateConnectionLog
 } from '@/utils/supabaseTableHelpers';
 import { SupabaseTable } from '@/types/supabase';
 
@@ -51,6 +54,8 @@ export async function syncTableData<T extends SupabaseTable>(
           return await updateSchedule(idValue, data as Partial<ScheduleData>);
         case 'taches':
           return await updateTache(idValue, data as Partial<TacheData>);
+        case 'connection_logs':
+          return await updateConnectionLog(idValue, data as Partial<ConnectionLogData>);
         default:
           return {
             success: false,
@@ -68,6 +73,8 @@ export async function syncTableData<T extends SupabaseTable>(
           return await insertSchedule(data as ScheduleData);
         case 'taches':
           return await insertTache(data as TacheData);
+        case 'connection_logs':
+          return await insertConnectionLog(data as ConnectionLogData);
         default:
           return {
             success: false,

@@ -2,7 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 
 // Define valid table names to match Supabase's expected types
-type ValidTableName = "statuts" | "employes" | "employe_schedule" | "taches" | "connection_logs" | "projets";
+type ValidTableName = "statuts" | "employes" | "employe_schedule" | "taches";
 
 // Helper function to check if record exists
 export async function checkRecordExists(
@@ -13,7 +13,7 @@ export async function checkRecordExists(
   try {
     // Use type assertion to tell TypeScript that the table name is valid
     const { data, error } = await supabase
-      .from(table as any)
+      .from(table as ValidTableName)
       .select(idField)
       .eq(idField, idValue)
       .maybeSingle();
@@ -31,7 +31,7 @@ export async function fetchFromTable(table: ValidTableName): Promise<unknown[] |
   try {
     // Use type assertion to tell TypeScript that the table name is valid
     const { data, error } = await supabase
-      .from(table as any)
+      .from(table as ValidTableName)
       .select('*');
     
     if (error) throw error;

@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { StatusCode } from '@/types';
@@ -18,14 +19,24 @@ export const useSupabaseStatuses = () => {
   const [statuses, setStatuses] = useState<SupabaseStatus[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const statusesCache = useRef<SupabaseStatus[] | null>(null);
+  const lastFetchTime = useRef<number>(0);
+  const CACHE_TTL = 60000; // 1 minute cache
 
-  useEffect(() => {
-    fetchStatuses();
-  }, []);
-
-  const fetchStatuses = async () => {
+  const fetchStatuses = useCallback(async (forceRefresh = false) => {
+    // Utiliser le cache si disponible et récent, sauf si forceRefresh est true
+    const now = Date.now();
+    if (!forceRefresh && statusesCache.current && (now - lastFetchTime.current < CACHE_TTL)) {
+      console.log("Utilisation du cache pour les statuts");
+      setStatuses(statusesCache.current);
+      setLoading(false);
+      return statusesCache.current;
+    }
+    
     try {
       setLoading(true);
+      console.log("Chargement des statuts depuis Supabase...");
+      
       const { data, error } = await supabase
         .from('statuts')
         .select('*')
@@ -40,31 +51,56 @@ export const useSupabaseStatuses = () => {
           ...item,
           code: item.code as StatusCode
         }));
+        
+        // Mettre en cache les données
+        statusesCache.current = typedData;
+        lastFetchTime.current = now;
+        
         setStatuses(typedData);
+        console.log("Statuts chargés:", typedData.length);
       }
+      
+      setLoading(false);
+      return data;
     } catch (error) {
       console.error('Erreur lors du chargement des statuts:', error);
       setError('Impossible de charger les statuts depuis Supabase');
       
+      // Utiliser les données du localStorage en cas d'erreur
       const savedData = localStorage.getItem('planningData');
       if (savedData) {
-        const data = JSON.parse(savedData);
-        if (data.statuses && data.statuses.length > 0) {
-          const localStatuses: SupabaseStatus[] = data.statuses.map((s: any) => ({
-            id: s.id,
-            code: s.code as StatusCode,
-            libelle: s.label,
-            couleur: s.color
-          }));
-          setStatuses(localStatuses);
-          toast.info('Utilisation des statuts stockés localement');
+        try {
+          const data = JSON.parse(savedData);
+          if (data.statuses && data.statuses.length > 0) {
+            const localStatuses: SupabaseStatus[] = data.statuses.map((s: any) => ({
+              id: s.id || ensureValidUuid(crypto.randomUUID()),
+              code: s.code as StatusCode,
+              libelle: s.label,
+              couleur: s.color
+            }));
+            setStatuses(localStatuses);
+            toast.info('Utilisation des statuts stockés localement');
+            
+            // Cache aussi les données locales
+            statusesCache.current = localStatuses;
+            lastFetchTime.current = now;
+          }
+        } catch (e) {
+          console.error("Erreur lors du parsing des données locales:", e);
         }
       }
-    } finally {
+      
       setLoading(false);
+      return null;
     }
-  };
+  }, []);
 
+  // Chargement initial des statuts
+  useEffect(() => {
+    fetchStatuses();
+  }, [fetchStatuses]);
+
+  // Le reste du hook reste inchangé
   const addStatus = async (status: Omit<SupabaseStatus, 'created_at' | 'updated_at'>) => {
     try {
       const validId = ensureValidUuid(status.id);

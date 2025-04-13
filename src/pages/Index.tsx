@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { PlanningGrid } from '@/components/calendar/PlanningGrid';
 import { LegendModal } from '@/components/calendar/LegendModal';
@@ -35,45 +35,32 @@ const Index = () => {
     }
   }, [data.employees]);
   
-  // Vérifier la connexion au démarrage
-  useEffect(() => {
-    if (isAdmin) {
-      handleTestConnection();
-      
-      // Vérifier aussi les tables nécessaires
-      const checkTables = async () => {
-        try {
-          const statusTableExists = await checkTableExists('statuts');
-          const scheduleTableExists = await checkTableExists('employe_schedule');
-          
-          if (!statusTableExists) {
-            toast.warning("La table 'statuts' n'est pas accessible. Certaines fonctionnalités peuvent être limitées.");
-          }
-          
-          if (!scheduleTableExists) {
-            toast.warning("La table 'employe_schedule' n'est pas accessible. Les modifications ne seront pas enregistrées dans Supabase.");
-          }
-        } catch (error) {
-          console.error("Erreur lors de la vérification des tables:", error);
-        }
-      };
-      
-      checkTables();
-    }
-  }, [isAdmin]);
-  
-  const handleTestConnection = async () => {
+  // Vérifier la connexion au démarrage de façon optimisée
+  const handleTestConnection = useCallback(async () => {
+    // Éviter plusieurs tests simultanés
+    if (isCheckingConnection) return;
+    
     setIsCheckingConnection(true);
     setLastConnectionResult(null);
     
     try {
       console.log("Lancement du test de connexion à Supabase...");
       
-      // Ajout d'un délai court pour éviter les problèmes de rate limit
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Utiliser un timeout pour limiter la durée du test
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("Timeout")), 3000);
+      });
       
-      const isConnected = await testSupabaseConnection();
-      setLastConnectionResult(isConnected);
+      // Lancer le test avec un timeout
+      const isConnected = await Promise.race([
+        testSupabaseConnection(),
+        timeoutPromise.then(() => {
+          toast.error("Timeout lors du test de connexion");
+          return false;
+        })
+      ]);
+      
+      setLastConnectionResult(!!isConnected);
       
       if (isConnected) {
         toast.success("Connexion réussie à Supabase");
@@ -89,8 +76,39 @@ const Index = () => {
     } finally {
       setIsCheckingConnection(false);
     }
-  };
+  }, [isCheckingConnection]);
   
+  // Vérifier la connexion au démarrage, mais pas à chaque rendu
+  useEffect(() => {
+    if (isAdmin) {
+      const initialCheck = async () => {
+        // Ne pas bloquer l'interface pendant le chargement
+        setTimeout(async () => {
+          await handleTestConnection();
+          
+          // Vérifier aussi les tables nécessaires (de façon non bloquante)
+          try {
+            const statusTableExists = await checkTableExists('statuts');
+            const scheduleTableExists = await checkTableExists('employe_schedule');
+            
+            if (!statusTableExists) {
+              toast.warning("La table 'statuts' n'est pas accessible. Certaines fonctionnalités peuvent être limitées.");
+            }
+            
+            if (!scheduleTableExists) {
+              toast.warning("La table 'employe_schedule' n'est pas accessible. Les modifications ne seront pas enregistrées dans Supabase.");
+            }
+          } catch (error) {
+            console.error("Erreur lors de la vérification des tables:", error);
+          }
+        }, 1000);
+      };
+      
+      initialCheck();
+    }
+  }, [isAdmin, handleTestConnection]);
+  
+  // Reste du composant inchangé
   return (
     <Layout>
       <div className="space-y-6 animate-fade-in">

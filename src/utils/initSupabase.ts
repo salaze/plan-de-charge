@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { SupabaseTable } from '@/types/supabase';
@@ -89,49 +88,50 @@ export async function checkSupabaseTables() {
   }
 }
 
-// Fonction pour tester la connexion à Supabase directement
+// Fonction optimisée pour tester la connexion à Supabase directement
 export async function testSupabaseConnection() {
   try {
-    console.log("Test de la connexion à Supabase...");
+    console.log("Test optimisé de la connexion à Supabase...");
     
-    // Essai 1: Vérifier la table statuts (la plus légère)
-    const { data: statusData, error: statusError } = await supabase
-      .from('statuts')
-      .select('count')
-      .single();
+    // Ajouter un timeout pour éviter les attentes trop longues
+    const timeout = (ms: number) => new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Timeout')), ms)
+    );
+    
+    // Essai simple avec timeout: Vérifier la table statuts (la plus légère)
+    try {
+      const testPromise = supabase
+        .from('statuts' as any)
+        .select('count')
+        .limit(1)
+        .single();
       
-    if (!statusError) {
-      console.log("Connexion Supabase réussie via table statuts:", statusData);
-      return true;
-    }
-    
-    console.warn("Échec du premier test via statuts, tentative avec employes...");
-    
-    // Essai 2: Vérifier la table employes
-    const { data: employesData, error: employesError } = await supabase
-      .from('employes')
-      .select('count')
-      .single();
+      // Attendre au maximum 2.5 secondes
+      await Promise.race([
+        testPromise,
+        timeout(2500)
+      ]);
       
-    if (!employesError) {
-      console.log("Connexion Supabase réussie via table employes:", employesData);
+      console.log("Connexion Supabase réussie via test rapide");
       return true;
+    } catch (error) {
+      // Si timeout ou erreur, essayer une requête encore plus simple
+      console.warn("Premier test échoué, tentative avec auth.getSession", error);
+      
+      try {
+        const { data, error } = await Promise.race([
+          supabase.auth.getSession(),
+          timeout(2000)
+        ]) as any;
+        
+        if (!error) {
+          console.log("Connexion Supabase établie via auth:", data);
+          return true;
+        }
+      } catch (e) {
+        console.error("Échec du second test:", e);
+      }
     }
-    
-    // Essai 3: Vérification simple pour voir si la connexion est établie
-    const { data, error } = await supabase.auth.getSession();
-    
-    if (!error) {
-      console.log("Connexion Supabase établie via auth:", data);
-      return true;
-    }
-    
-    // Si tous les essais échouent, afficher les erreurs détaillées
-    console.error("Échec de tous les tests de connexion:", { 
-      statusError, 
-      employesError, 
-      authError: error 
-    });
     
     return false;
   } catch (error) {

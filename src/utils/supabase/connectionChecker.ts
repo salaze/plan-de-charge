@@ -2,8 +2,8 @@
 import { supabase } from '@/integrations/supabase/client';
 
 /**
- * Effectue une vérification complète de la connexion à Supabase
- * avec plusieurs méthodes de test différentes
+ * Effectue une vérification rapide de la connexion à Supabase
+ * en utilisant la méthode la plus légère possible
  */
 export async function checkCompleteSupabaseConnection(): Promise<{
   success: boolean;
@@ -16,7 +16,7 @@ export async function checkCompleteSupabaseConnection(): Promise<{
   }
 }> {
   try {
-    console.log("Vérification complète de la connexion Supabase...");
+    console.log("Vérification optimisée de la connexion Supabase...");
     
     // Résultats de test
     const results = {
@@ -29,51 +29,38 @@ export async function checkCompleteSupabaseConnection(): Promise<{
       }
     };
 
-    // Test 1: Table statuts
+    // Test rapide avec timeout pour éviter les longues attentes
+    const timeout = (ms: number) => new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Timeout')), ms)
+    );
+    
+    // Test uniquement sur la table statuts (la plus importante et légère)
     try {
-      const { data: statusData, error: statusError } = await supabase
-        .from('statuts')
+      const testPromise = supabase
+        .from('statuts' as any)
         .select('count')
+        .limit(1)
         .single();
+        
+      // Ajouter un timeout de 3 secondes maximum
+      const { data, error } = await Promise.race([
+        testPromise,
+        timeout(3000).then(() => { throw new Error('Timeout de connexion') })
+      ]) as any;
       
-      if (!statusError && statusData) {
+      if (!error && data) {
         results.details.statuts = true;
-        // Check if count exists and is a number
-        if (statusData && typeof statusData === 'object' && 'count' in statusData && 
-            typeof statusData.count === 'number') {
-          results.details.statusCount = statusData.count;
-        }
-        results.success = true; // Au moins un test a réussi
+        results.success = true;
       }
     } catch (e) {
-      console.error("Échec du test sur la table statuts:", e);
+      console.warn("Échec du test rapide sur la table statuts:", e);
     }
     
-    // Test 2: Table employes
-    try {
-      const { data: employesData, error: employesError } = await supabase
-        .from('employes')
-        .select('count')
-        .single();
-      
-      if (!employesError && employesData) {
-        results.details.employes = true;
-        // Check if count exists and is a number
-        if (employesData && typeof employesData === 'object' && 'count' in employesData && 
-            typeof employesData.count === 'number') {
-          results.details.employeCount = employesData.count;
-        }
-        results.success = true; // Au moins un test a réussi
-      }
-    } catch (e) {
-      console.error("Échec du test sur la table employes:", e);
-    }
-    
-    console.log("Résultats de la vérification complète:", results);
+    console.log("Résultats de la vérification rapide:", results);
     return results;
     
   } catch (error) {
-    console.error("Erreur lors de la vérification complète:", error);
+    console.error("Erreur lors de la vérification:", error);
     return {
       success: false,
       details: {
@@ -85,6 +72,7 @@ export async function checkCompleteSupabaseConnection(): Promise<{
 
 /**
  * Vérifie si le client Supabase est correctement initialisé
+ * en utilisant uniquement des opérations synchrones
  */
 export function isSupabaseClientInitialized(): boolean {
   try {

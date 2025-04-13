@@ -12,6 +12,7 @@ export function SupabaseStatusIndicator() {
   const [isChecking, setIsChecking] = useState(false);
   const lastCheckRef = useRef<number>(0);
   const checkTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const initialCheckDone = useRef<boolean>(false);
   
   // Vérifier l'initialisation du client au chargement
   useEffect(() => {
@@ -26,18 +27,22 @@ export function SupabaseStatusIndicator() {
   useEffect(() => {
     if (checkTimeoutRef.current) {
       clearTimeout(checkTimeoutRef.current);
+      checkTimeoutRef.current = null;
     }
     
-    // Si l'état est indéterminé (null), lancer une vérification automatique
-    if (isConnected === null && !isChecking) {
+    // Si l'état est indéterminé (null) et que la vérification initiale n'a pas été faite,
+    // lancer une unique vérification automatique
+    if (isConnected === null && !isChecking && !initialCheckDone.current) {
+      initialCheckDone.current = true;
       checkTimeoutRef.current = setTimeout(() => {
         handleRefreshClick(new Event('auto-check') as any);
-      }, 1000);
+      }, 2000);
     }
     
     return () => {
       if (checkTimeoutRef.current) {
         clearTimeout(checkTimeoutRef.current);
+        checkTimeoutRef.current = null;
       }
     };
   }, [isConnected, isChecking]);
@@ -68,14 +73,14 @@ export function SupabaseStatusIndicator() {
     }
   };
   
-  const handleRefreshClick = async (e: React.MouseEvent) => {
+  const handleRefreshClick = async (e: React.MouseEvent | Event) => {
     e.stopPropagation();
     
     if (isChecking) return;
     
     // Éviter des clics multiples rapides
     const now = Date.now();
-    if (now - lastCheckRef.current < 2000) {
+    if (now - lastCheckRef.current < 5000) { // Increased from 2000ms to 5000ms
       console.log("Vérification ignorée - trop rapprochée");
       return;
     }

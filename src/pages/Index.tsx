@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useCallback } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { PlanningGrid } from '@/components/calendar/PlanningGrid';
@@ -7,7 +8,7 @@ import { usePlanningState } from '@/hooks/usePlanningState';
 import { useAuth } from '@/contexts/AuthContext';
 import { SupabaseStatusIndicator } from '@/components/supabase/SupabaseStatusIndicator';
 import { Button } from '@/components/ui/button';
-import { checkSupabaseConnectionFast } from '@/utils/supabase/connectionChecker';
+import { checkSupabaseConnectionFast } from '@/utils/supabase/connection';
 import { toast } from 'sonner';
 import { checkTableExists } from '@/utils/supabase/statusTableChecker';
 import { AlertCircle, CheckCircle, RefreshCw } from 'lucide-react';
@@ -16,6 +17,7 @@ const Index = () => {
   const { isAdmin } = useAuth();
   const [isCheckingConnection, setIsCheckingConnection] = useState(false);
   const [lastConnectionResult, setLastConnectionResult] = useState<boolean | null>(null);
+  const [initialCheckDone, setInitialCheckDone] = useState(false);
   const {
     data,
     currentYear,
@@ -67,11 +69,12 @@ const Index = () => {
   
   // Vérifier la connexion au démarrage, mais pas à chaque rendu
   useEffect(() => {
-    if (isAdmin) {
+    if (isAdmin && !initialCheckDone) {
       const initialCheck = async () => {
         // Ne pas bloquer l'interface pendant le chargement
         setTimeout(async () => {
           await handleTestConnection();
+          setInitialCheckDone(true);
           
           // Vérifier aussi les tables nécessaires (de façon non bloquante)
           try {
@@ -88,7 +91,7 @@ const Index = () => {
       
       initialCheck();
     }
-  }, [isAdmin, handleTestConnection]);
+  }, [isAdmin, handleTestConnection, initialCheckDone]);
   
   return (
     <Layout>

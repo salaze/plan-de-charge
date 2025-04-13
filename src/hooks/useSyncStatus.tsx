@@ -18,8 +18,9 @@ export function useSyncStatus() {
   const [connectionCheckCount, setConnectionCheckCount] = useState(0);
   const lastCheckTime = useRef<number>(0);
   const isCheckingRef = useRef<boolean>(false);
-  const CHECK_INTERVAL = 60000; // 1 minute
-  const CHECK_DEBOUNCE = 2000; // 2 seconds minimum between checks
+  const initialCheckDone = useRef<boolean>(false);
+  const CHECK_INTERVAL = 300000; // 5 minutes (increased from 1 minute to reduce checking frequency)
+  const CHECK_DEBOUNCE = 5000; // 5 seconds minimum between checks (increased from 2 seconds)
   
   const checkConnection = useCallback(async () => {
     try {
@@ -64,7 +65,7 @@ export function useSyncStatus() {
         // Seconde approche: test complet
         const completeResult = await Promise.race([checkCompleteSupabaseConnection(), timeoutPromise]);
         
-        // Fixed: Properly check if completeResult has success property
+        // Properly check if completeResult has success property
         if (completeResult && typeof completeResult === 'object' && 'success' in completeResult && completeResult.success) {
           console.log("Connexion Supabase établie via test complet");
           setIsConnected(true);
@@ -79,7 +80,7 @@ export function useSyncStatus() {
         // Troisième approche: Essayer de vérifier les tables
         const tablesResult = await Promise.race([checkSupabaseTables(), timeoutPromise]);
         
-        // Fixed: Properly check if tablesResult has success property
+        // Properly check if tablesResult has success property
         if (tablesResult && typeof tablesResult === 'object' && 'success' in tablesResult && tablesResult.success) {
           console.log("Connexion Supabase établie via checkSupabaseTables");
           setIsConnected(true);
@@ -107,15 +108,16 @@ export function useSyncStatus() {
     let isMounted = true;
     
     const checkInitialConnection = async () => {
-      if (isMounted && isConnected === null) {
+      if (isMounted && isConnected === null && !initialCheckDone.current) {
+        initialCheckDone.current = true; // Mark as done before the check to prevent multiple initial checks
         await checkConnection();
       }
     };
     
     // Initial check with a slight delay to avoid simultaneous checks
-    const initialTimer = setTimeout(checkInitialConnection, 800);
+    const initialTimer = setTimeout(checkInitialConnection, 1500);
     
-    // Periodic check 
+    // Periodic check with much reduced frequency
     const interval = setInterval(() => {
       if (isMounted) {
         checkConnection();

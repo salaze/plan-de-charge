@@ -43,25 +43,6 @@ export interface TacheData {
   created_at: string;
 }
 
-export interface ConnectionLogData {
-  id?: string;
-  event_type?: string;
-  user_id?: string;
-  user_name?: string;
-  ip_address?: string;
-  user_agent?: string;
-  created_at?: string;
-}
-
-export interface ProjetData {
-  id?: string;
-  code: string;
-  name: string;
-  color: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
 // Define a simple interface for the return type of sync functions
 export interface SyncResult {
   success: boolean;
@@ -94,8 +75,6 @@ export type TableDataType = {
   'employes': EmployeData;
   'employe_schedule': ScheduleData;
   'taches': TacheData;
-  'connection_logs': ConnectionLogData;
-  'projets': ProjetData;
 }
 
 // Define an explicit mapping for TableDataTypes

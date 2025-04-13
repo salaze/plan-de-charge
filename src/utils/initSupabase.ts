@@ -1,19 +1,17 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-
-// Define valid table names as literals to match what Supabase expects
-type ValidTableName = "statuts" | "employes" | "employe_schedule" | "taches";
+import { SupabaseTable } from '@/types/supabase';
 
 export async function checkSupabaseTables() {
   try {
     console.log("Vérification des tables Supabase...");
     
     // Try to check tables in a safer way that handles potential failures gracefully
-    const checkTable = async (tableName: ValidTableName) => {
+    const checkTable = async (tableName: SupabaseTable) => {
       try {
-        // Use a type assertion to match the expected table names
         const { data, error } = await supabase
-          .from(tableName as "statuts" | "employes" | "employe_schedule" | "taches")
+          .from(tableName)
           .select('id')
           .limit(1);
           
@@ -31,7 +29,7 @@ export async function checkSupabaseTables() {
     };
     
     // Add retry mechanism for more reliability
-    const checkTableWithRetry = async (tableName: ValidTableName, retries = 1) => {
+    const checkTableWithRetry = async (tableName: SupabaseTable, retries = 1) => {
       for (let i = 0; i <= retries; i++) {
         const result = await checkTable(tableName);
         if (result.success) return result;

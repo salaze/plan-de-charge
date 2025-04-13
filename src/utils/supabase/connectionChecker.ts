@@ -38,8 +38,9 @@ export async function checkCompleteSupabaseConnection(): Promise<{
       
       if (!statusError && statusData) {
         results.details.statuts = true;
-        // Check if the count is a number before using it
-        if (statusData.count !== undefined && typeof statusData.count === 'number') {
+        // Check if count exists and is a number
+        if (statusData && typeof statusData === 'object' && 'count' in statusData && 
+            typeof statusData.count === 'number') {
           results.details.statusCount = statusData.count;
         }
         results.success = true; // Au moins un test a réussi
@@ -57,8 +58,9 @@ export async function checkCompleteSupabaseConnection(): Promise<{
       
       if (!employesError && employesData) {
         results.details.employes = true;
-        // Check if the count is a number before using it
-        if (employesData.count !== undefined && typeof employesData.count === 'number') {
+        // Check if count exists and is a number
+        if (employesData && typeof employesData === 'object' && 'count' in employesData && 
+            typeof employesData.count === 'number') {
           results.details.employeCount = employesData.count;
         }
         results.success = true; // Au moins un test a réussi

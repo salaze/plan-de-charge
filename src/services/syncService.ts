@@ -6,9 +6,7 @@ import {
   EmployeData, 
   ScheduleData, 
   TacheData, 
-  ConnectionLogData,
-  SyncResult,
-  ProjetData
+  SyncResult
 } from '@/types/supabaseModels';
 import { checkRecordExists } from '@/utils/supabaseHelpers';
 import {
@@ -19,16 +17,12 @@ import {
   insertSchedule,
   updateSchedule,
   insertTache,
-  updateTache,
-  insertConnectionLog,
-  updateConnectionLog
+  updateTache
 } from '@/utils/supabaseTableHelpers';
-
-// Define valid table names to match Supabase's expected types
-type ValidTableName = "statuts" | "employes" | "employe_schedule" | "taches" | "connection_logs" | "projets";
+import { SupabaseTable } from '@/types/supabase';
 
 // Type-safe sync function for specific table types
-export async function syncTableData<T extends ValidTableName>(
+export async function syncTableData<T extends SupabaseTable>(
   data: Record<string, any>,
   table: T,
   idField: string = 'id'
@@ -57,14 +51,6 @@ export async function syncTableData<T extends ValidTableName>(
           return await updateSchedule(idValue, data as Partial<ScheduleData>);
         case 'taches':
           return await updateTache(idValue, data as Partial<TacheData>);
-        case 'connection_logs':
-          return await updateConnectionLog(idValue, data as Partial<ConnectionLogData>);
-        case 'projets':
-          // We'd need to implement these functions
-          return {
-            success: false,
-            error: new Error(`Update operation not implemented for table: ${table}`)
-          };
         default:
           return {
             success: false,
@@ -82,14 +68,6 @@ export async function syncTableData<T extends ValidTableName>(
           return await insertSchedule(data as ScheduleData);
         case 'taches':
           return await insertTache(data as TacheData);
-        case 'connection_logs':
-          return await insertConnectionLog(data as ConnectionLogData);
-        case 'projets':
-          // We'd need to implement this function
-          return {
-            success: false,
-            error: new Error(`Insert operation not implemented for table: ${table}`)
-          };
         default:
           return {
             success: false,

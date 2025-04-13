@@ -24,11 +24,6 @@ import {
   updateTache 
 } from './supabase/taskHelpers';
 
-import { 
-  insertConnectionLog,
-  updateConnectionLog
-} from './supabase/logHelpers';
-
 // Re-export all helpers for backward compatibility
 export {
   insertStatut,
@@ -38,7 +33,5 @@ export {
   insertSchedule,
   updateSchedule,
   insertTache,
-  updateTache,
-  insertConnectionLog,
-  updateConnectionLog
+  updateTache
 };

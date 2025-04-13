@@ -11,7 +11,7 @@ export async function checkSupabaseTables() {
     const checkTable = async (tableName: SupabaseTable) => {
       try {
         const { data, error } = await supabase
-          .from(tableName)
+          .from(tableName as any)
           .select('id')
           .limit(1);
           

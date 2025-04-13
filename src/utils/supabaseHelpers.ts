@@ -11,7 +11,7 @@ export async function checkRecordExists(
   try {
     // Use explicit type assertion to avoid recursive type instantiation
     const result = await supabase
-      .from(table)
+      .from(table as any)
       .select(idField)
       .eq(idField, idValue)
       .maybeSingle();
@@ -28,7 +28,7 @@ export async function checkRecordExists(
 export async function fetchFromTable(table: SupabaseTable): Promise<unknown[] | null> {
   try {
     const { data, error } = await supabase
-      .from(table)
+      .from(table as any)
       .select('*');
     
     if (error) throw error;

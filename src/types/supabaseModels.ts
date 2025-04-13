@@ -43,7 +43,7 @@ export interface TacheData {
   created_at: string;
 }
 
-// Add the missing ConnectionLogData interface
+// Connection log data interface
 export interface ConnectionLogData {
   id?: string;
   event_type: string;

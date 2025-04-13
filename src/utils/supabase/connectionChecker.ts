@@ -33,12 +33,15 @@ export async function checkCompleteSupabaseConnection(): Promise<{
     try {
       const { data: statusData, error: statusError } = await supabase
         .from('statuts')
-        .select('count(*)')
+        .select('count')
         .single();
       
-      if (!statusError) {
+      if (!statusError && statusData) {
         results.details.statuts = true;
-        results.details.statusCount = statusData?.count || 0;
+        // Check if the count is a number before using it
+        if (statusData.count !== undefined && typeof statusData.count === 'number') {
+          results.details.statusCount = statusData.count;
+        }
         results.success = true; // Au moins un test a réussi
       }
     } catch (e) {
@@ -49,12 +52,15 @@ export async function checkCompleteSupabaseConnection(): Promise<{
     try {
       const { data: employesData, error: employesError } = await supabase
         .from('employes')
-        .select('count(*)')
+        .select('count')
         .single();
       
-      if (!employesError) {
+      if (!employesError && employesData) {
         results.details.employes = true;
-        results.details.employeCount = employesData?.count || 0;
+        // Check if the count is a number before using it
+        if (employesData.count !== undefined && typeof employesData.count === 'number') {
+          results.details.employeCount = employesData.count;
+        }
         results.success = true; // Au moins un test a réussi
       }
     } catch (e) {

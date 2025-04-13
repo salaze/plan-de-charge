@@ -12,9 +12,8 @@ export async function checkSupabaseTables() {
     // Try to check tables in a safer way that handles potential failures gracefully
     const checkTable = async (tableName: ValidTableName) => {
       try {
-        // Use type assertion to tell TypeScript that the table name is valid
         const { data, error } = await supabase
-          .from(tableName as any)
+          .from(tableName)
           .select('id')
           .limit(1);
           
@@ -100,7 +99,7 @@ export async function testSupabaseConnection() {
     // Essai 1: Vérifier la table statuts (la plus légère)
     const { data: statusData, error: statusError } = await supabase
       .from('statuts')
-      .select('count(*)')
+      .select('count')
       .single();
       
     if (!statusError) {
@@ -113,7 +112,7 @@ export async function testSupabaseConnection() {
     // Essai 2: Vérifier la table employes
     const { data: employesData, error: employesError } = await supabase
       .from('employes')
-      .select('count(*)')
+      .select('count')
       .single();
       
     if (!employesError) {
@@ -122,10 +121,10 @@ export async function testSupabaseConnection() {
     }
     
     // Essai 3: Vérification simple pour voir si la connexion est établie
-    const { data, error } = await supabase.rpc('get_service_status');
+    const { data, error } = await supabase.auth.getSession();
     
     if (!error) {
-      console.log("Connexion Supabase établie via RPC:", data);
+      console.log("Connexion Supabase établie via auth:", data);
       return true;
     }
     
@@ -133,7 +132,7 @@ export async function testSupabaseConnection() {
     console.error("Échec de tous les tests de connexion:", { 
       statusError, 
       employesError, 
-      rpcError: error 
+      authError: error 
     });
     
     return false;

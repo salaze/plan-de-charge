@@ -3,3 +3,6 @@
 export * from './connectionVerifier';
 export * from './fastConnectionTest';
 export * from './completeConnectionTest';
+export * from './healthCheck';
+export * from './tableQueries';
+export * from './sessionTest';

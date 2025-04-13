@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { checkSupabaseTables } from '@/utils/initSupabase';
@@ -63,7 +64,8 @@ export function useSyncStatus() {
         // Seconde approche: test complet
         const completeResult = await Promise.race([checkCompleteSupabaseConnection(), timeoutPromise]);
         
-        if (completeResult && completeResult.success) {
+        // Fixed: Properly check if completeResult has success property
+        if (completeResult && typeof completeResult === 'object' && 'success' in completeResult && completeResult.success) {
           console.log("Connexion Supabase établie via test complet");
           setIsConnected(true);
           isCheckingRef.current = false;
@@ -75,9 +77,10 @@ export function useSyncStatus() {
       
       try {
         // Troisième approche: Essayer de vérifier les tables
-        const result = await Promise.race([checkSupabaseTables(), timeoutPromise]);
+        const tablesResult = await Promise.race([checkSupabaseTables(), timeoutPromise]);
         
-        if (result.success) {
+        // Fixed: Properly check if tablesResult has success property
+        if (tablesResult && typeof tablesResult === 'object' && 'success' in tablesResult && tablesResult.success) {
           console.log("Connexion Supabase établie via checkSupabaseTables");
           setIsConnected(true);
           isCheckingRef.current = false;

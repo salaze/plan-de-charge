@@ -1,6 +1,9 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { isSupabaseClientInitialized, createTimeout, SUPABASE_URL, SUPABASE_KEY } from './connectionVerifier';
+import { testTableQueries } from './tableQueries';
+import { healthCheckTest } from './healthCheck';
+import { sessionTest } from './sessionTest';
 
 /**
  * Type for connection test results
@@ -50,82 +53,32 @@ export async function checkCompleteSupabaseConnection(): Promise<ConnectionTestR
     
     // Test avec la méthode de transport la plus légère possible (health check)
     try {
-      const healthCheck = await Promise.race([
-        fetch(`${SUPABASE_URL}/rest/v1/`, {
-          headers: {
-            'apikey': SUPABASE_KEY,
-            'Content-Type': 'application/json'
-          }
-        }),
-        createTimeout(3000)
-      ]);
-      
-      if (healthCheck instanceof Response && healthCheck.ok) {
-        console.log("Connexion au serveur Supabase établie");
+      const healthCheckResult = await healthCheckTest();
+      if (healthCheckResult) {
+        console.log("Connexion au serveur Supabase établie via health check");
         results.success = true;
         return results;
       }
     } catch (e) {
       console.warn("Échec de la vérification de base:", e);
-      // Continue with additional checks
     }
     
-    // Test uniquement sur la table statuts (la plus importante et légère)
-    try {
-      const testPromise = supabase
-        .from('statuts')
-        .select('count')
-        .limit(1)
-        .maybeSingle();
-        
-      // Ajouter un timeout de 2 secondes maximum
-      const { data, error } = await Promise.race([
-        testPromise,
-        createTimeout(3000).then(() => { throw new Error('Timeout de connexion') })
-      ]) as any;
-      
-      if (!error && data) {
+    // Test sur les tables principales
+    const tableTestResult = await testTableQueries();
+    if (tableTestResult.success) {
+      if (tableTestResult.table === 'statuts') {
         results.details.statuts = true;
-        results.success = true;
-        return results;
-      }
-    } catch (e) {
-      console.warn("Échec du test rapide sur la table statuts:", e);
-      // Try other methods
-    }
-    
-    // Si le test sur statuts échoue, essayer la table employes
-    try {
-      const testPromise = supabase
-        .from('employes')
-        .select('count')
-        .limit(1)
-        .maybeSingle();
-          
-      // Ajouter un timeout de 3 secondes maximum
-      const { data, error } = await Promise.race([
-        testPromise,
-        createTimeout(3000).then(() => { throw new Error('Timeout de connexion') })
-      ]) as any;
-      
-      if (!error && data) {
+      } else if (tableTestResult.table === 'employes') {
         results.details.employes = true;
-        results.success = true;
-        return results;
       }
-    } catch (e) {
-      console.warn("Échec du test rapide sur la table employes:", e);
+      results.success = true;
+      return results;
     }
     
     // Dernier recours: vérifier la session
     try {
-      const sessionCheck = await Promise.race([
-        supabase.auth.getSession(),
-        createTimeout(2000)
-      ]);
-      
-      // Type guard to check if sessionCheck is an object with data property
-      if (sessionCheck && typeof sessionCheck === 'object' && 'data' in sessionCheck) {
+      const sessionCheckResult = await sessionTest();
+      if (sessionCheckResult) {
         console.log("Connexion Supabase validée via le service d'authentification");
         results.success = true;
         return results;

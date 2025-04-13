@@ -19,8 +19,9 @@ export function useSyncStatus() {
   const lastCheckTime = useRef<number>(0);
   const isCheckingRef = useRef<boolean>(false);
   const initialCheckDone = useRef<boolean>(false);
-  const CHECK_INTERVAL = 300000; // 5 minutes (increased from 1 minute to reduce checking frequency)
-  const CHECK_DEBOUNCE = 5000; // 5 seconds minimum between checks (increased from 2 seconds)
+  // Augmenter l'intervalle à 30 minutes pour réduire les vérifications en arrière-plan
+  const CHECK_INTERVAL = 1800000; // 30 minutes (increased from 5 minutes)
+  const CHECK_DEBOUNCE = 10000; // 10 seconds minimum between checks (increased from 5 seconds)
   
   const checkConnection = useCallback(async () => {
     try {
@@ -61,41 +62,12 @@ export function useSyncStatus() {
         console.warn("Test rapide échoué:", e);
       }
       
-      try {
-        // Seconde approche: test complet
-        const completeResult = await Promise.race([checkCompleteSupabaseConnection(), timeoutPromise]);
-        
-        // Properly check if completeResult has success property
-        if (completeResult && typeof completeResult === 'object' && 'success' in completeResult && completeResult.success) {
-          console.log("Connexion Supabase établie via test complet");
-          setIsConnected(true);
-          isCheckingRef.current = false;
-          return true;
-        }
-      } catch (e) {
-        console.warn("Test complet échoué:", e);
-      }
-      
-      try {
-        // Troisième approche: Essayer de vérifier les tables
-        const tablesResult = await Promise.race([checkSupabaseTables(), timeoutPromise]);
-        
-        // Properly check if tablesResult has success property
-        if (tablesResult && typeof tablesResult === 'object' && 'success' in tablesResult && tablesResult.success) {
-          console.log("Connexion Supabase établie via checkSupabaseTables");
-          setIsConnected(true);
-          isCheckingRef.current = false;
-          return true;
-        }
-      } catch (e) {
-        console.warn("Test des tables échoué:", e);
-      }
-      
-      // Si tout échoue, marquer comme non connecté
-      console.error("Échec de toutes les tentatives de connexion");
+      // Si le test rapide échoue, on considère que la connexion est perdue
+      console.error("Échec du test de connexion");
       setIsConnected(false);
       isCheckingRef.current = false;
       return false;
+      
     } catch (error) {
       console.error("Erreur lors de la vérification de la connexion:", error);
       setIsConnected(false);
@@ -115,19 +87,14 @@ export function useSyncStatus() {
     };
     
     // Initial check with a slight delay to avoid simultaneous checks
-    const initialTimer = setTimeout(checkInitialConnection, 1500);
+    const initialTimer = setTimeout(checkInitialConnection, 2500);
     
-    // Periodic check with much reduced frequency
-    const interval = setInterval(() => {
-      if (isMounted) {
-        checkConnection();
-      }
-    }, CHECK_INTERVAL);
+    // Désactiver la vérification périodique pour éviter les requêtes en boucle
+    // La connexion sera vérifiée seulement lorsque nécessaire (sync ou fetch)
     
     return () => {
       isMounted = false;
       clearTimeout(initialTimer);
-      clearInterval(interval);
     };
   }, [checkConnection, isConnected]);
   

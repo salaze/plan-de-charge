@@ -14,7 +14,7 @@ export function SupabaseStatusIndicator() {
   const checkTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const initialCheckDone = useRef<boolean>(false);
   
-  // Vérifier l'initialisation du client au chargement
+  // Vérifier l'initialisation du client au chargement une seule fois
   useEffect(() => {
     const clientInitialized = isSupabaseClientInitialized();
     if (!clientInitialized) {
@@ -23,29 +23,16 @@ export function SupabaseStatusIndicator() {
     }
   }, []);
   
-  // Éviter les multiples vérifications en parallèle
+  // Simplification des vérifications automatiques
   useEffect(() => {
-    if (checkTimeoutRef.current) {
-      clearTimeout(checkTimeoutRef.current);
-      checkTimeoutRef.current = null;
-    }
-    
-    // Si l'état est indéterminé (null) et que la vérification initiale n'a pas été faite,
-    // lancer une unique vérification automatique
-    if (isConnected === null && !isChecking && !initialCheckDone.current) {
-      initialCheckDone.current = true;
-      checkTimeoutRef.current = setTimeout(() => {
-        handleRefreshClick(new Event('auto-check') as any);
-      }, 2000);
-    }
-    
+    // Annuler toute vérification en cours lors du démontage
     return () => {
       if (checkTimeoutRef.current) {
         clearTimeout(checkTimeoutRef.current);
         checkTimeoutRef.current = null;
       }
     };
-  }, [isConnected, isChecking]);
+  }, []);
   
   const getStatusIcon = () => {
     if (isChecking) {
@@ -78,9 +65,9 @@ export function SupabaseStatusIndicator() {
     
     if (isChecking) return;
     
-    // Éviter des clics multiples rapides
+    // Éviter des clics multiples rapides avec un délai plus long
     const now = Date.now();
-    if (now - lastCheckRef.current < 5000) { // Increased from 2000ms to 5000ms
+    if (now - lastCheckRef.current < 10000) { // Augmenté à 10 secondes
       console.log("Vérification ignorée - trop rapprochée");
       return;
     }
@@ -90,24 +77,13 @@ export function SupabaseStatusIndicator() {
     toast.info("Vérification de la connexion Supabase...");
     
     try {
-      // Utiliser la fonction de test de connexion rapide avec un délai maximum de 5 secondes
-      const checkPromise = checkSupabaseConnectionFast();
-      const timeoutPromise = new Promise<boolean>((_, reject) => {
-        setTimeout(() => reject(new Error("Timeout de la vérification")), 5000);
-      });
+      // Utiliser la fonction de test simplifiée
+      const result = await checkConnection();
       
-      const fastResult = await Promise.race([checkPromise, timeoutPromise]);
-      
-      if (fastResult) {
+      if (result) {
         toast.success("Connexion à Supabase établie");
       } else {
-        // Si le test rapide échoue, essayer avec la méthode plus complète
-        const result = await checkConnection();
-        if (result) {
-          toast.success("Connexion à Supabase établie");
-        } else {
-          toast.error("Échec de connexion à Supabase");
-        }
+        toast.error("Échec de connexion à Supabase");
       }
     } catch (error) {
       console.error("Erreur lors de la vérification:", error);

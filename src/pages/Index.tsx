@@ -36,7 +36,7 @@ const Index = () => {
     }
   }, [data.employees]);
   
-  // Vérifier la connexion au démarrage de façon optimisée
+  // Vérification de connexion optimisée qui ne s'exécute qu'une seule fois
   const handleTestConnection = useCallback(async () => {
     // Éviter plusieurs tests simultanés
     if (isCheckingConnection) return;
@@ -67,32 +67,12 @@ const Index = () => {
     }
   }, [isCheckingConnection]);
   
-  // Vérifier la connexion au démarrage, mais pas à chaque rendu
+  // Vérifier la connexion uniquement à la demande explicite de l'utilisateur
+  // et non automatiquement au démarrage
   useEffect(() => {
-    if (isAdmin && !initialCheckDone) {
-      const initialCheck = async () => {
-        // Ne pas bloquer l'interface pendant le chargement
-        setTimeout(async () => {
-          await handleTestConnection();
-          setInitialCheckDone(true);
-          
-          // Vérifier aussi les tables nécessaires (de façon non bloquante)
-          try {
-            const statusTableExists = await checkTableExists('statuts');
-            
-            if (!statusTableExists) {
-              toast.warning("La table 'statuts' n'est pas accessible. Certaines fonctionnalités peuvent être limitées.");
-            }
-          } catch (error) {
-            console.error("Erreur lors de la vérification des tables:", error);
-          }
-        }, 1000);
-      };
-      
-      initialCheck();
-    }
-  }, [isAdmin, handleTestConnection, initialCheckDone]);
-  
+    // Aucun check automatique
+  }, []);
+
   return (
     <Layout>
       <div className="space-y-6 animate-fade-in">

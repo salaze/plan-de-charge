@@ -11,10 +11,12 @@ import { Button } from '@/components/ui/button';
 import { testSupabaseConnection } from '@/utils/initSupabase';
 import { toast } from 'sonner';
 import { checkTableExists } from '@/utils/supabase/statusTableChecker';
+import { AlertCircle, CheckCircle } from 'lucide-react';
 
 const Index = () => {
   const { isAdmin } = useAuth();
   const [isCheckingConnection, setIsCheckingConnection] = useState(false);
+  const [lastConnectionResult, setLastConnectionResult] = useState<boolean | null>(null);
   const {
     data,
     currentYear,
@@ -40,15 +42,19 @@ const Index = () => {
       
       // Vérifier aussi les tables nécessaires
       const checkTables = async () => {
-        const statusTableExists = await checkTableExists('statuts');
-        const scheduleTableExists = await checkTableExists('employe_schedule');
-        
-        if (!statusTableExists) {
-          toast.warning("La table 'statuts' n'est pas accessible. Certaines fonctionnalités peuvent être limitées.");
-        }
-        
-        if (!scheduleTableExists) {
-          toast.warning("La table 'employe_schedule' n'est pas accessible. Les modifications ne seront pas enregistrées dans Supabase.");
+        try {
+          const statusTableExists = await checkTableExists('statuts');
+          const scheduleTableExists = await checkTableExists('employe_schedule');
+          
+          if (!statusTableExists) {
+            toast.warning("La table 'statuts' n'est pas accessible. Certaines fonctionnalités peuvent être limitées.");
+          }
+          
+          if (!scheduleTableExists) {
+            toast.warning("La table 'employe_schedule' n'est pas accessible. Les modifications ne seront pas enregistrées dans Supabase.");
+          }
+        } catch (error) {
+          console.error("Erreur lors de la vérification des tables:", error);
         }
       };
       
@@ -58,16 +64,28 @@ const Index = () => {
   
   const handleTestConnection = async () => {
     setIsCheckingConnection(true);
+    setLastConnectionResult(null);
+    
     try {
+      console.log("Lancement du test de connexion à Supabase...");
+      
+      // Ajout d'un délai court pour éviter les problèmes de rate limit
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       const isConnected = await testSupabaseConnection();
+      setLastConnectionResult(isConnected);
+      
       if (isConnected) {
         toast.success("Connexion réussie à Supabase");
+        console.log("Test de connexion réussi");
       } else {
         toast.error("Échec de connexion à Supabase");
+        console.error("Test de connexion échoué");
       }
     } catch (error) {
       console.error("Erreur lors du test de connexion:", error);
       toast.error("Erreur lors du test de connexion");
+      setLastConnectionResult(false);
     } finally {
       setIsCheckingConnection(false);
     }
@@ -80,16 +98,33 @@ const Index = () => {
           <h1 className="text-2xl font-bold">Planning</h1>
           <div className="flex items-center gap-2">
             {isAdmin && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleTestConnection}
-                disabled={isCheckingConnection}
-              >
-                {isCheckingConnection ? 'Test en cours...' : 'Tester Supabase'}
-              </Button>
+              <div className="flex items-center">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleTestConnection}
+                  disabled={isCheckingConnection}
+                  className="flex items-center gap-2"
+                >
+                  {isCheckingConnection ? (
+                    <>
+                      <div className="animate-spin h-4 w-4 border-2 border-t-transparent rounded-full" />
+                      Test en cours...
+                    </>
+                  ) : (
+                    <>
+                      {lastConnectionResult === true ? (
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                      ) : lastConnectionResult === false ? (
+                        <AlertCircle className="h-4 w-4 text-red-500" />
+                      ) : null}
+                      Tester Supabase
+                    </>
+                  )}
+                </Button>
+                <SupabaseStatusIndicator />
+              </div>
             )}
-            <SupabaseStatusIndicator />
           </div>
         </div>
         

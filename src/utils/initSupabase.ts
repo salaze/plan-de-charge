@@ -47,24 +47,31 @@ export async function checkSupabaseTables() {
     };
     
     try {
-      // Check each table with sequential execution to avoid rate limiting issues
-      const statusCheck = await checkTableWithRetry("statuts");
-      await new Promise(resolve => setTimeout(resolve, 200)); 
+      // Check the statuts table first as it's the most critical for the app
+      console.log("Tentative de vérification de la table statuts...");
+      const statusCheck = await checkTableWithRetry("statuts", 2);
       
-      const employesCheck = await checkTableWithRetry("employes");
-      await new Promise(resolve => setTimeout(resolve, 200)); 
+      if (statusCheck.success) {
+        console.log("Connexion à la table statuts réussie");
+        return { success: true, details: { statuts: statusCheck } };
+      }
       
-      const scheduleCheck = await checkTableWithRetry("employe_schedule");
+      // If statuts failed, try employes table
+      console.log("Tentative de vérification de la table employes...");
+      const employesCheck = await checkTableWithRetry("employes", 1);
       
-      console.log("Vérification des tables Supabase terminée");
+      if (employesCheck.success) {
+        console.log("Connexion à la table employes réussie");
+        return { success: true, details: { employes: employesCheck } };
+      }
       
-      // Return simplified result (boolean success)
+      // If both failed, return failure
+      console.log("Échec de la connexion aux tables principales");
       return { 
-        success: statusCheck.success || employesCheck.success || scheduleCheck.success,
+        success: false,
         details: {
           statuts: statusCheck,
-          employes: employesCheck,
-          schedule: scheduleCheck
+          employes: employesCheck
         }
       };
     } catch (e) {
@@ -88,20 +95,50 @@ export async function checkSupabaseTables() {
 // Fonction pour tester la connexion à Supabase directement
 export async function testSupabaseConnection() {
   try {
-    const { data, error } = await supabase.from('statuts').select('count(*)');
+    console.log("Test de la connexion à Supabase...");
     
-    if (error) {
-      console.error("Erreur de connexion Supabase:", error);
-      toast.error("Impossible de se connecter à Supabase");
-      return false;
+    // Essai 1: Vérifier la table statuts (la plus légère)
+    const { data: statusData, error: statusError } = await supabase
+      .from('statuts')
+      .select('count(*)')
+      .single();
+      
+    if (!statusError) {
+      console.log("Connexion Supabase réussie via table statuts:", statusData);
+      return true;
     }
     
-    console.log("Connexion Supabase établie avec succès:", data);
-    toast.success("Connexion Supabase établie avec succès");
-    return true;
+    console.warn("Échec du premier test via statuts, tentative avec employes...");
+    
+    // Essai 2: Vérifier la table employes
+    const { data: employesData, error: employesError } = await supabase
+      .from('employes')
+      .select('count(*)')
+      .single();
+      
+    if (!employesError) {
+      console.log("Connexion Supabase réussie via table employes:", employesData);
+      return true;
+    }
+    
+    // Essai 3: Vérification simple pour voir si la connexion est établie
+    const { data, error } = await supabase.rpc('get_service_status');
+    
+    if (!error) {
+      console.log("Connexion Supabase établie via RPC:", data);
+      return true;
+    }
+    
+    // Si tous les essais échouent, afficher les erreurs détaillées
+    console.error("Échec de tous les tests de connexion:", { 
+      statusError, 
+      employesError, 
+      rpcError: error 
+    });
+    
+    return false;
   } catch (error) {
     console.error("Exception lors du test de connexion Supabase:", error);
-    toast.error("Erreur lors de la connexion à Supabase");
     return false;
   }
 }

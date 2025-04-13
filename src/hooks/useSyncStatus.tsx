@@ -10,19 +10,49 @@ export function useSyncStatus() {
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
   const [isConnected, setIsConnected] = useState<boolean | null>(null);
+  const [connectionCheckCount, setConnectionCheckCount] = useState(0);
   
   const checkConnection = useCallback(async () => {
     try {
+      console.log("Vérification de la connexion Supabase (#" + (connectionCheckCount + 1) + ")");
+      setConnectionCheckCount(prev => prev + 1);
+      
+      // Première approche: Essayer de vérifier toutes les tables
       const result = await checkSupabaseTables();
-      // Extrait seulement la propriété success comme valeur boolean pour setIsConnected
-      setIsConnected(result.success);
-      return result.success;
+      
+      if (result.success) {
+        console.log("Connexion Supabase établie via checkSupabaseTables");
+        setIsConnected(true);
+        return true;
+      }
+      
+      // Seconde approche: Essayer une requête simple sur la table statuts
+      try {
+        console.log("Tentative directe sur la table statuts...");
+        const { data, error } = await supabase
+          .from('statuts')
+          .select('count(*)')
+          .single();
+        
+        if (!error) {
+          console.log("Connexion Supabase établie via requête simple sur statuts");
+          setIsConnected(true);
+          return true;
+        }
+      } catch (e) {
+        console.warn("Échec de la requête simple sur statuts:", e);
+      }
+      
+      // Si tout échoue, marquer comme non connecté
+      console.error("Échec de toutes les tentatives de connexion");
+      setIsConnected(false);
+      return false;
     } catch (error) {
       console.error("Erreur lors de la vérification de la connexion:", error);
       setIsConnected(false);
       return false;
     }
-  }, []);
+  }, [connectionCheckCount]);
   
   useEffect(() => {
     let isMounted = true;
@@ -39,7 +69,7 @@ export function useSyncStatus() {
       if (isMounted) {
         checkConnection();
       }
-    }, 30000);
+    }, 60000); // Vérification toutes les minutes au lieu de toutes les 30 secondes
     
     return () => {
       isMounted = false;

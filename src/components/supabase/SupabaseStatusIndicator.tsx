@@ -1,12 +1,23 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Database, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { useSyncStatus } from '@/hooks/useSyncStatus';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
+import { isSupabaseClientInitialized } from '@/utils/supabase/connectionChecker';
 
 export function SupabaseStatusIndicator() {
   const { isConnected, lastSyncTime, checkConnection } = useSyncStatus();
+  
+  // Vérifier l'initialisation du client au chargement
+  useEffect(() => {
+    const clientInitialized = isSupabaseClientInitialized();
+    if (!clientInitialized) {
+      console.error("Client Supabase non correctement initialisé");
+      toast.error("Erreur d'initialisation du client Supabase");
+    }
+  }, []);
   
   const getStatusIcon = () => {
     if (isConnected === null) {
@@ -32,7 +43,14 @@ export function SupabaseStatusIndicator() {
   
   const handleRefreshClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    checkConnection();
+    toast.info("Vérification de la connexion Supabase...");
+    checkConnection().then(result => {
+      if (result) {
+        toast.success("Connexion à Supabase établie");
+      } else {
+        toast.error("Échec de connexion à Supabase");
+      }
+    });
   };
 
   return (

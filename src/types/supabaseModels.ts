@@ -43,6 +43,17 @@ export interface TacheData {
   created_at: string;
 }
 
+// Add the missing ConnectionLogData interface
+export interface ConnectionLogData {
+  id?: string;
+  event_type: string;
+  user_id?: string;
+  user_name?: string;
+  ip_address?: string;
+  user_agent?: string;
+  created_at?: string;
+}
+
 // Define a simple interface for the return type of sync functions
 export interface SyncResult {
   success: boolean;

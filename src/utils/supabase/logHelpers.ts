@@ -14,8 +14,10 @@ export async function insertConnectionLog(data: ConnectionLogData): Promise<Sync
       user_agent: data.user_agent
     };
     
+    // Note: We're using a type assertion here since 'connection_logs' is not in SupabaseTable type
+    // This will work at runtime but bypasses TypeScript's type checking
     const result = await supabase
-      .from('connection_logs' as any)
+      .from('connection_logs' as any) 
       .insert(insertData)
       .select();
     
@@ -36,6 +38,7 @@ export async function updateConnectionLog(idValue: string, data: Partial<Connect
     if (data.ip_address !== undefined) updateData.ip_address = data.ip_address;
     if (data.user_agent !== undefined) updateData.user_agent = data.user_agent;
     
+    // Note: We're using a type assertion here since 'connection_logs' is not in SupabaseTable type
     const result = await supabase
       .from('connection_logs' as any)
       .update(updateData)

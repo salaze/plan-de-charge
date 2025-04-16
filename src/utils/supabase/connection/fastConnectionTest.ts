@@ -10,7 +10,7 @@ export async function checkSupabaseConnectionFast(): Promise<boolean> {
     console.log("Vérification rapide de la connexion Supabase...");
     
     // Ajouter un timeout pour éviter les attentes trop longues
-    const timeout = (ms: number) => new Promise((_, reject) => 
+    const timeout = (ms: number) => new Promise<never>((_, reject) => 
       setTimeout(() => reject(new Error('Timeout')), ms)
     );
     

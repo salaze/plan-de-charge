@@ -8,7 +8,8 @@ import { toast } from 'sonner';
 import { isSupabaseClientInitialized } from '@/utils/supabase/connection';
 
 export function SupabaseStatusIndicator() {
-  const { isConnected, lastSyncTime, checkConnection } = useSyncStatus();
+  const syncStatus = useSyncStatus();
+  const { isConnected, lastSyncTime, checkConnection } = syncStatus;
   const [isChecking, setIsChecking] = useState(false);
   const lastCheckRef = useRef<number>(0);
   

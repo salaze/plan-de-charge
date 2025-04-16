@@ -17,7 +17,7 @@ export function useSyncStatus() {
   const connectionChecked = useRef<boolean>(false);
   
   // Intervalles de vérification plus longs pour éviter les boucles
-  const CHECK_DEBOUNCE = 20000; // 20 secondes minimum entre les vérifications
+  const CHECK_DEBOUNCE = 30000; // 30 secondes minimum entre les vérifications
   
   const checkConnection = useCallback(async () => {
     try {
@@ -68,29 +68,14 @@ export function useSyncStatus() {
     }
   }, [connectionCheckCount, isConnected]);
   
-  // Une seule vérification initiale à l'initialisation du hook
+  // Une seule vérification initiale à l'initialisation du hook, seulement si explicitement demandé
   useEffect(() => {
-    let isMounted = true;
-    
-    // Effectuer une vérification unique au démarrage avec un délai
-    if (!connectionChecked.current) {
-      const timer = setTimeout(async () => {
-        if (isMounted && isConnected === null) {
-          console.log("Vérification initiale de connexion");
-          await checkConnection();
-        }
-      }, 3000); // Délai pour laisser l'application se stabiliser
-      
-      return () => {
-        isMounted = false;
-        clearTimeout(timer);
-      };
-    }
-    
+    // Le hook est initialisé, mais on ne lance pas automatiquement la vérification
+    // Cette vérification sera lancée par l'utilisateur ou lors d'une opération de synchronisation
     return () => {
-      isMounted = false;
+      // Nettoyage
     };
-  }, [checkConnection, isConnected]);
+  }, []);
   
   const syncWithSupabase = useCallback(async (
     data: Record<string, any>,

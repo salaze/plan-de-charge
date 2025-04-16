@@ -17,7 +17,7 @@ export async function checkSupabaseConnectionFast(): Promise<boolean> {
             'Content-Type': 'application/json'
           }
         }),
-        createTimeout(3500)
+        createTimeout(5000) // Augmented timeout
       ]);
       
       if (response instanceof Response && response.ok) {
@@ -32,7 +32,7 @@ export async function checkSupabaseConnectionFast(): Promise<boolean> {
     try {
       const { data, error } = await Promise.race([
         supabase.from('statuts').select('count').limit(1).maybeSingle(),
-        createTimeout(3500)
+        createTimeout(5000) // Augmented timeout
       ]) as any;
       
       if (!error && data) {
@@ -43,15 +43,10 @@ export async function checkSupabaseConnectionFast(): Promise<boolean> {
       console.warn("Méthode 2 échouée:", e);
     }
     
-    // Méthode 3: Simple vérification de session avec timeout plus long
+    // Méthode 3: Simple vérification de session
     try {
-      const sessionResult = await Promise.race([
-        supabase.auth.getSession(),
-        createTimeout(3000)
-      ]);
-      
-      // Type guard to check if sessionResult is an object with data property
-      if (sessionResult && typeof sessionResult === 'object' && 'data' in sessionResult) {
+      const { data } = await supabase.auth.getSession();
+      if (data && data.session) {
         console.log("Connexion Supabase réussie via auth.getSession");
         return true;
       }
@@ -59,7 +54,7 @@ export async function checkSupabaseConnectionFast(): Promise<boolean> {
       console.warn("Méthode 3 échouée:", e);
     }
     
-    // Toutes les méthodes ont échoué
+    console.warn("Toutes les méthodes de connexion ont échoué");
     return false;
   } catch (error) {
     console.error("Erreur lors de la vérification rapide:", error);

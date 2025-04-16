@@ -10,8 +10,8 @@ import { SupabaseStatusIndicator } from '@/components/supabase/SupabaseStatusInd
 import { Button } from '@/components/ui/button';
 import { checkSupabaseConnectionFast } from '@/utils/supabase/connection';
 import { toast } from 'sonner';
-import { checkTableExists } from '@/utils/supabase/statusTableChecker';
-import { AlertCircle, CheckCircle, RefreshCw } from 'lucide-react';
+import { CheckCircle, RefreshCw } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const Index = () => {
   const { isAdmin } = useAuth();
@@ -31,30 +31,57 @@ const Index = () => {
   // Log employees when they load
   useEffect(() => {
     if (data.employees) {
-      console.log("Employés chargés sur la page d'index:", data.employees);
+      console.log("Employés chargés sur la page d'index:", data.employees.length);
     }
   }, [data.employees]);
   
-  const handleTestConnection = useCallback(async () => {
-    // Éviter plusieurs tests simultanés
+  // Function to establish Supabase connection
+  const establishConnection = useCallback(async () => {
     if (isCheckingConnection) return;
     
     setIsCheckingConnection(true);
     
     try {
-      console.log("Lancement du test de connexion à Supabase...");
+      // Try to establish a simple Supabase session
+      const { data } = await supabase.auth.getSession();
+      console.log("Session initiale:", data ? "Existante" : "Non trouvée");
       
-      // Utiliser le test de connexion rapide
+      // Use the fast connection check
       const isConnected = await checkSupabaseConnectionFast();
       
-      setLastConnectionResult(!!isConnected);
+      setLastConnectionResult(isConnected);
+      
+      if (isConnected) {
+        toast.success("Connexion automatique réussie à Supabase");
+        console.log("Connexion initiale à Supabase réussie");
+      } else {
+        console.warn("Connexion initiale à Supabase échouée");
+      }
+    } catch (error) {
+      console.error("Erreur lors de l'établissement de connexion:", error);
+      setLastConnectionResult(false);
+    } finally {
+      setIsCheckingConnection(false);
+    }
+  }, [isCheckingConnection]);
+  
+  // Connection check handler
+  const handleTestConnection = useCallback(async () => {
+    // Avoid simultaneous checks
+    if (isCheckingConnection) return;
+    
+    setIsCheckingConnection(true);
+    toast.info("Test de connexion à Supabase...");
+    
+    try {
+      const isConnected = await checkSupabaseConnectionFast();
+      
+      setLastConnectionResult(isConnected);
       
       if (isConnected) {
         toast.success("Connexion réussie à Supabase");
-        console.log("Test de connexion réussi");
       } else {
         toast.error("Échec de connexion à Supabase");
-        console.error("Test de connexion échoué");
       }
     } catch (error) {
       console.error("Erreur lors du test de connexion:", error);
@@ -65,17 +92,16 @@ const Index = () => {
     }
   }, [isCheckingConnection]);
   
-  // Effectuer une vérification unique au démarrage
+  // Establish connection on component mount with a delay
   useEffect(() => {
-    // Vérification initiale avec délai pour éviter les conflits
+    // Add a short delay to avoid React initialization issues
     const timer = setTimeout(() => {
-      if (lastConnectionResult === null) {
-        handleTestConnection();
-      }
+      console.log("Tentative d'établissement automatique de la connexion");
+      establishConnection();
     }, 2000);
     
     return () => clearTimeout(timer);
-  }, [handleTestConnection, lastConnectionResult]);
+  }, [establishConnection]);
 
   return (
     <Layout>
@@ -99,11 +125,9 @@ const Index = () => {
                     </>
                   ) : (
                     <>
-                      {lastConnectionResult === true ? (
+                      {lastConnectionResult === true && (
                         <CheckCircle className="h-4 w-4 text-green-500" />
-                      ) : lastConnectionResult === false ? (
-                        <AlertCircle className="h-4 w-4 text-red-500" />
-                      ) : null}
+                      )}
                       <span className="ml-1">Tester Supabase</span>
                     </>
                   )}

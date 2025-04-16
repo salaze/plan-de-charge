@@ -14,41 +14,80 @@ export async function checkSupabaseConnectionFast(): Promise<boolean> {
       setTimeout(() => reject(new Error('Timeout')), ms)
     );
     
-    // Essai simple: Vérifier la table statuts (la plus légère)
-    try {
-      const { data, error } = await Promise.race([
-        supabase
-          .from('statuts')
-          .select('count')
-          .limit(1)
-          .single(),
-        timeout(3000)
-      ]) as any;
+    // Essais en parallèle avec race condition pour une vérification plus rapide
+    const tests = [
+      // Test 1: Vérifier la table statuts (la plus légère)
+      (async () => {
+        try {
+          const { data, error } = await Promise.race([
+            supabase
+              .from('statuts')
+              .select('count')
+              .limit(1)
+              .single(),
+            timeout(3000)
+          ]) as any;
+          
+          if (!error && data) {
+            console.log("Connexion Supabase réussie via table statuts");
+            return true;
+          }
+          return false;
+        } catch (e) {
+          console.warn("Premier test échoué", e);
+          return false;
+        }
+      })(),
       
-      if (!error && data) {
-        console.log("Connexion Supabase réussie via table statuts");
-        return true;
-      }
-    } catch (e) {
-      console.warn("Premier test échoué, tentative avec auth.getSession", e);
+      // Test 2: Vérifier la session
+      (async () => {
+        try {
+          const { data } = await Promise.race([
+            supabase.auth.getSession(),
+            timeout(2000)
+          ]) as any;
+          
+          if (data && data.session) {
+            console.log("Connexion Supabase réussie via auth.getSession");
+            return true;
+          }
+          return false;
+        } catch (e) {
+          console.warn("Second test échoué", e);
+          return false;
+        }
+      })(),
+      
+      // Test 3: Vérification alternative si les deux premiers échouent
+      (async () => {
+        try {
+          const { count } = await Promise.race([
+            supabase
+              .rpc('get_service_status'),
+            timeout(1500)
+          ]) as any;
+          
+          if (count !== undefined) {
+            console.log("Connexion Supabase réussie via RPC");
+            return true;
+          }
+          return false;
+        } catch (e) {
+          console.warn("Troisième test échoué", e);
+          return false;
+        }
+      })()
+    ];
+    
+    // Attendre le premier test réussi, ou tous les échecs
+    const results = await Promise.all(tests);
+    const isConnected = results.some(result => result === true);
+    
+    if (isConnected) {
+      return true;
     }
     
-    // Essai alternatif: Vérifier la session
-    try {
-      const { data } = await Promise.race([
-        supabase.auth.getSession(),
-        timeout(2000)
-      ]) as any;
-      
-      if (data && data.session) {
-        console.log("Connexion Supabase réussie via auth.getSession");
-        return true;
-      }
-    } catch (e) {
-      console.error("Échec du second test:", e);
-    }
-    
-    console.error("Tous les tests de connexion ont échoué");
+    console.warn("Tous les tests de connexion ont échoué");
     return false;
   } catch (error) {
     console.error("Exception lors du test de connexion Supabase:", error);

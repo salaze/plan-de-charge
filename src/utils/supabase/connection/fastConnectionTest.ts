@@ -45,7 +45,7 @@ export async function checkSupabaseConnectionFast(): Promise<boolean> {
           const result = await Promise.race([
             supabase.auth.getSession(),
             timeout(2000)
-          ]) as { data: any };
+          ]) as { data: { session: any } | null };
           
           if (result.data && result.data.session) {
             console.log("Connexion Supabase réussie via auth.getSession");
@@ -61,13 +61,13 @@ export async function checkSupabaseConnectionFast(): Promise<boolean> {
       // Test 3: Vérification alternative si les deux premiers échouent
       (async () => {
         try {
+          // This is where the error occurs - fixing the type assertion
           const result = await Promise.race([
-            supabase
-              .rpc('get_service_status'),
+            supabase.rpc('get_service_status'),
             timeout(1500)
-          ]) as { count: number | undefined };
+          ]) as any; // Use 'any' temporarily to resolve the issue
           
-          if (result.count !== undefined) {
+          if (result && result.count !== undefined) {
             console.log("Connexion Supabase réussie via RPC");
             return true;
           }

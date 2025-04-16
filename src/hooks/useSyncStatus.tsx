@@ -1,6 +1,8 @@
 
 import { useState, useRef, useCallback } from 'react';
 import { checkSupabaseConnectionFast } from '@/utils/supabase/connection';
+import { fetchFromTable } from '@/utils/supabaseHelpers';
+import { SupabaseTable } from '@/types/supabase';
 
 export function useSyncStatus() {
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
@@ -61,11 +63,38 @@ export function useSyncStatus() {
     }
   }, [isConnected, checkConnection]);
   
+  // Add the missing fetchFromSupabase function
+  const fetchFromSupabase = useCallback(async (table: SupabaseTable) => {
+    try {
+      // Check connection first
+      if (isConnected === null) {
+        const connected = await checkConnection();
+        if (!connected) return null;
+      } else if (!isConnected) {
+        return null;
+      }
+      
+      // Fetch data from the specified table
+      const data = await fetchFromTable(table);
+      
+      // Update last sync time if successful
+      if (data) {
+        setLastSyncTime(new Date());
+      }
+      
+      return data;
+    } catch (error) {
+      console.error(`Erreur lors de la récupération depuis ${table}:`, error);
+      return null;
+    }
+  }, [isConnected, checkConnection]);
+  
   return {
     isSyncing,
     lastSyncTime,
     isConnected,
     syncWithSupabase,
+    fetchFromSupabase,
     checkConnection
   };
 }

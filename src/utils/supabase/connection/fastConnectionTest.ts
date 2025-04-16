@@ -10,7 +10,7 @@ export async function checkSupabaseConnectionFast(): Promise<boolean> {
     console.log("Vérification rapide de la connexion Supabase...");
     
     // Ajouter un timeout pour éviter les attentes trop longues
-    const timeout = (ms: number): Promise<never> => new Promise<never>((_, reject) => 
+    const timeout = <T>(ms: number): Promise<T> => new Promise<T>((_, reject) => 
       setTimeout(() => reject(new Error('Timeout')), ms)
     );
     
@@ -25,7 +25,7 @@ export async function checkSupabaseConnectionFast(): Promise<boolean> {
               .select('count')
               .limit(1)
               .single(),
-            timeout(3000)
+            timeout<never>(3000)
           ]) as { data: any, error: any };
           
           if (!result.error && result.data) {
@@ -44,7 +44,7 @@ export async function checkSupabaseConnectionFast(): Promise<boolean> {
         try {
           const result = await Promise.race([
             supabase.auth.getSession(),
-            timeout(2000)
+            timeout<never>(2000)
           ]) as { data: { session: any } | null };
           
           if (result.data && result.data.session) {
@@ -61,11 +61,15 @@ export async function checkSupabaseConnectionFast(): Promise<boolean> {
       // Test 3: Vérification alternative si les deux premiers échouent
       (async () => {
         try {
-          // Fix the type issue by using proper type assertion
-          const rpcPromise = supabase.rpc('get_service_status') as Promise<any>;
+          // First convert to unknown, then to a Promise to handle the type correctly
+          const rpcPromise = supabase.rpc('get_service_status') as unknown as Promise<{
+            data: { count: number } | null;
+            error: any;
+          }>;
+          
           const result = await Promise.race([
             rpcPromise,
-            timeout(1500)
+            timeout<never>(1500)
           ]);
           
           if (result && result.data && result.data.count !== undefined) {

@@ -70,7 +70,8 @@ export async function checkSupabaseConnectionFast(): Promise<boolean> {
           
           const result = await Promise.race([
             rpcPromise,
-            timeout<never>(1500)
+            // Fix for the type error - using any instead of string
+            timeout<any>(1500)
           ]);
           
           if (result && 'data' in result && result.data && 'count' in result.data) {

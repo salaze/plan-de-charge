@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Database, CheckCircle, XCircle, AlertCircle, RefreshCw } from 'lucide-react';
+import { Database, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { useSyncStatus } from '@/hooks/useSyncStatus';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -24,7 +24,7 @@ export function SupabaseStatusIndicator() {
   
   const getStatusIcon = () => {
     if (isChecking) {
-      return <RefreshCw className="h-4 w-4 animate-spin text-blue-400" />;
+      return <AlertCircle className="h-4 w-4 animate-pulse text-blue-400" />;
     } else if (isConnected === null) {
       return <AlertCircle className="h-4 w-4 text-yellow-400" />;
     } else if (isConnected) {
@@ -36,47 +36,15 @@ export function SupabaseStatusIndicator() {
   
   const getStatusText = () => {
     if (isChecking) {
-      return "Vérification en cours...";
+      return "Vérification...";
     } else if (isConnected === null) {
-      return "État non vérifié";
+      return "Statut inconnu";
     } else if (isConnected) {
       return lastSyncTime
-        ? `Connecté à Supabase (dernière sync: ${new Date(lastSyncTime).toLocaleTimeString()})`
-        : "Connecté à Supabase";
+        ? `Connecté (sync: ${new Date(lastSyncTime).toLocaleTimeString()})`
+        : "Connecté";
     } else {
-      return "Non connecté à Supabase";
-    }
-  };
-  
-  const handleRefreshClick = async (e: React.MouseEvent | Event) => {
-    e.stopPropagation();
-    
-    if (isChecking) return;
-    
-    // Éviter des clics multiples rapides
-    const now = Date.now();
-    if (now - lastCheckRef.current < 15000) { // 15 secondes de délai entre les vérifications
-      console.log("Vérification ignorée - trop rapprochée");
-      return;
-    }
-    
-    lastCheckRef.current = now;
-    setIsChecking(true);
-    toast.info("Vérification de la connexion Supabase...");
-    
-    try {
-      const result = await checkConnection();
-      
-      if (result) {
-        toast.success("Connexion à Supabase établie");
-      } else {
-        toast.error("Échec de connexion à Supabase");
-      }
-    } catch (error) {
-      console.error("Erreur lors de la vérification:", error);
-      toast.error("Erreur lors de la vérification de la connexion");
-    } finally {
-      setIsChecking(false);
+      return "Non connecté";
     }
   };
 
@@ -91,9 +59,7 @@ export function SupabaseStatusIndicator() {
           isConnected === false ? "hover:bg-red-100 dark:hover:bg-red-900" :
           "hover:bg-yellow-100 dark:hover:bg-yellow-900"
         )}
-        onClick={handleRefreshClick}
         title={getStatusText()}
-        disabled={isChecking}
       >
         <Database className="h-4 w-4 mr-1" />
         {getStatusIcon()}

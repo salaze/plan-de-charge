@@ -1,6 +1,5 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { createTimeout, SUPABASE_URL, SUPABASE_KEY } from './connectionVerifier';
 
 /**
  * Effectue une vérification optimisée et rapide de la connexion 
@@ -8,56 +7,51 @@ import { createTimeout, SUPABASE_URL, SUPABASE_KEY } from './connectionVerifier'
  */
 export async function checkSupabaseConnectionFast(): Promise<boolean> {
   try {
-    // Méthode 1: Test direct avec fetch et timeout plus long
-    try {
-      const response = await Promise.race([
-        fetch(`${SUPABASE_URL}/rest/v1/`, {
-          headers: {
-            'apikey': SUPABASE_KEY,
-            'Content-Type': 'application/json'
-          }
-        }),
-        createTimeout(5000) // Augmented timeout
-      ]);
-      
-      if (response instanceof Response && response.ok) {
-        console.log("Connexion Supabase réussie via test HTTP rapide");
-        return true;
-      }
-    } catch (e) {
-      console.warn("Méthode 1 échouée:", e);
-    }
+    console.log("Vérification rapide de la connexion Supabase...");
     
-    // Méthode 2: Test sur la table statuts avec un timeout plus long
+    // Ajouter un timeout pour éviter les attentes trop longues
+    const timeout = (ms: number) => new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Timeout')), ms)
+    );
+    
+    // Essai simple: Vérifier la table statuts (la plus légère)
     try {
       const { data, error } = await Promise.race([
-        supabase.from('statuts').select('count').limit(1).maybeSingle(),
-        createTimeout(5000) // Augmented timeout
+        supabase
+          .from('statuts')
+          .select('count')
+          .limit(1)
+          .single(),
+        timeout(3000)
       ]) as any;
       
       if (!error && data) {
-        console.log("Connexion Supabase réussie via requête statuts");
+        console.log("Connexion Supabase réussie via table statuts");
         return true;
       }
     } catch (e) {
-      console.warn("Méthode 2 échouée:", e);
+      console.warn("Premier test échoué, tentative avec auth.getSession", e);
     }
     
-    // Méthode 3: Simple vérification de session
+    // Essai alternatif: Vérifier la session
     try {
-      const { data } = await supabase.auth.getSession();
+      const { data } = await Promise.race([
+        supabase.auth.getSession(),
+        timeout(2000)
+      ]) as any;
+      
       if (data && data.session) {
         console.log("Connexion Supabase réussie via auth.getSession");
         return true;
       }
     } catch (e) {
-      console.warn("Méthode 3 échouée:", e);
+      console.error("Échec du second test:", e);
     }
     
-    console.warn("Toutes les méthodes de connexion ont échoué");
+    console.error("Tous les tests de connexion ont échoué");
     return false;
   } catch (error) {
-    console.error("Erreur lors de la vérification rapide:", error);
+    console.error("Exception lors du test de connexion Supabase:", error);
     return false;
   }
 }

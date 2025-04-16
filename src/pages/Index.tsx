@@ -17,7 +17,6 @@ const Index = () => {
   const { isAdmin } = useAuth();
   const [isCheckingConnection, setIsCheckingConnection] = useState(false);
   const [lastConnectionResult, setLastConnectionResult] = useState<boolean | null>(null);
-  const [initialCheckDone, setInitialCheckDone] = useState(false);
   const {
     data,
     currentYear,
@@ -36,7 +35,6 @@ const Index = () => {
     }
   }, [data.employees]);
   
-  // Vérification de connexion optimisée qui ne s'exécute qu'une seule fois
   const handleTestConnection = useCallback(async () => {
     // Éviter plusieurs tests simultanés
     if (isCheckingConnection) return;
@@ -67,11 +65,17 @@ const Index = () => {
     }
   }, [isCheckingConnection]);
   
-  // Vérifier la connexion uniquement à la demande explicite de l'utilisateur
-  // et non automatiquement au démarrage
+  // Effectuer une vérification unique au démarrage
   useEffect(() => {
-    // Aucun check automatique
-  }, []);
+    // Vérification initiale avec délai pour éviter les conflits
+    const timer = setTimeout(() => {
+      if (lastConnectionResult === null) {
+        handleTestConnection();
+      }
+    }, 2000);
+    
+    return () => clearTimeout(timer);
+  }, [handleTestConnection, lastConnectionResult]);
 
   return (
     <Layout>

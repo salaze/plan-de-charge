@@ -5,14 +5,12 @@ import { Database, CheckCircle, XCircle, AlertCircle, RefreshCw } from 'lucide-r
 import { useSyncStatus } from '@/hooks/useSyncStatus';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { isSupabaseClientInitialized, checkSupabaseConnectionFast } from '@/utils/supabase/connection';
+import { isSupabaseClientInitialized } from '@/utils/supabase/connection';
 
 export function SupabaseStatusIndicator() {
   const { isConnected, lastSyncTime, checkConnection } = useSyncStatus();
   const [isChecking, setIsChecking] = useState(false);
   const lastCheckRef = useRef<number>(0);
-  const checkTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const initialCheckDone = useRef<boolean>(false);
   
   // Vérifier l'initialisation du client au chargement une seule fois
   useEffect(() => {
@@ -21,17 +19,6 @@ export function SupabaseStatusIndicator() {
       console.error("Client Supabase non correctement initialisé");
       toast.error("Erreur d'initialisation du client Supabase");
     }
-  }, []);
-  
-  // Simplification des vérifications automatiques
-  useEffect(() => {
-    // Annuler toute vérification en cours lors du démontage
-    return () => {
-      if (checkTimeoutRef.current) {
-        clearTimeout(checkTimeoutRef.current);
-        checkTimeoutRef.current = null;
-      }
-    };
   }, []);
   
   const getStatusIcon = () => {
@@ -50,7 +37,7 @@ export function SupabaseStatusIndicator() {
     if (isChecking) {
       return "Vérification en cours...";
     } else if (isConnected === null) {
-      return "Vérification de la connexion...";
+      return "État non vérifié";
     } else if (isConnected) {
       return lastSyncTime
         ? `Connecté à Supabase (dernière sync: ${new Date(lastSyncTime).toLocaleTimeString()})`
@@ -65,9 +52,9 @@ export function SupabaseStatusIndicator() {
     
     if (isChecking) return;
     
-    // Éviter des clics multiples rapides avec un délai plus long
+    // Éviter des clics multiples rapides
     const now = Date.now();
-    if (now - lastCheckRef.current < 10000) { // Augmenté à 10 secondes
+    if (now - lastCheckRef.current < 15000) { // 15 secondes de délai entre les vérifications
       console.log("Vérification ignorée - trop rapprochée");
       return;
     }
@@ -77,7 +64,6 @@ export function SupabaseStatusIndicator() {
     toast.info("Vérification de la connexion Supabase...");
     
     try {
-      // Utiliser la fonction de test simplifiée
       const result = await checkConnection();
       
       if (result) {

@@ -8,7 +8,7 @@ import { createTimeout, SUPABASE_URL, SUPABASE_KEY } from './connectionVerifier'
  */
 export async function checkSupabaseConnectionFast(): Promise<boolean> {
   try {
-    // Méthode 1: Test direct avec fetch et timeout
+    // Méthode 1: Test direct avec fetch et timeout plus long
     try {
       const response = await Promise.race([
         fetch(`${SUPABASE_URL}/rest/v1/`, {
@@ -17,7 +17,7 @@ export async function checkSupabaseConnectionFast(): Promise<boolean> {
             'Content-Type': 'application/json'
           }
         }),
-        createTimeout(2500)
+        createTimeout(3500)
       ]);
       
       if (response instanceof Response && response.ok) {
@@ -28,11 +28,11 @@ export async function checkSupabaseConnectionFast(): Promise<boolean> {
       console.warn("Méthode 1 échouée:", e);
     }
     
-    // Méthode 2: Test sur la table statuts avec un timeout court
+    // Méthode 2: Test sur la table statuts avec un timeout plus long
     try {
       const { data, error } = await Promise.race([
         supabase.from('statuts').select('count').limit(1).maybeSingle(),
-        createTimeout(2500)
+        createTimeout(3500)
       ]) as any;
       
       if (!error && data) {
@@ -43,11 +43,11 @@ export async function checkSupabaseConnectionFast(): Promise<boolean> {
       console.warn("Méthode 2 échouée:", e);
     }
     
-    // Méthode 3: Simple vérification de session
+    // Méthode 3: Simple vérification de session avec timeout plus long
     try {
       const sessionResult = await Promise.race([
         supabase.auth.getSession(),
-        createTimeout(2000)
+        createTimeout(3000)
       ]);
       
       // Type guard to check if sessionResult is an object with data property

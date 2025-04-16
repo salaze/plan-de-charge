@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { PlanningGrid } from '@/components/calendar/PlanningGrid';
 import { LegendModal } from '@/components/calendar/LegendModal';
@@ -7,16 +7,9 @@ import { PlanningToolbar } from '@/components/planning/PlanningToolbar';
 import { usePlanningState } from '@/hooks/usePlanningState';
 import { useAuth } from '@/contexts/AuthContext';
 import { SupabaseStatusIndicator } from '@/components/supabase/SupabaseStatusIndicator';
-import { Button } from '@/components/ui/button';
-import { checkSupabaseConnectionFast } from '@/utils/supabase/connection';
-import { toast } from 'sonner';
-import { CheckCircle, RefreshCw } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 
 const Index = () => {
   const { isAdmin } = useAuth();
-  const [isCheckingConnection, setIsCheckingConnection] = useState(false);
-  const [lastConnectionResult, setLastConnectionResult] = useState<boolean | null>(null);
   const {
     data,
     currentYear,
@@ -34,74 +27,6 @@ const Index = () => {
       console.log("Employés chargés sur la page d'index:", data.employees.length);
     }
   }, [data.employees]);
-  
-  // Function to establish Supabase connection
-  const establishConnection = useCallback(async () => {
-    if (isCheckingConnection) return;
-    
-    setIsCheckingConnection(true);
-    
-    try {
-      // Try to establish a simple Supabase session
-      const { data } = await supabase.auth.getSession();
-      console.log("Session initiale:", data ? "Existante" : "Non trouvée");
-      
-      // Use the fast connection check
-      const isConnected = await checkSupabaseConnectionFast();
-      
-      setLastConnectionResult(isConnected);
-      
-      if (isConnected) {
-        toast.success("Connexion automatique réussie à Supabase");
-        console.log("Connexion initiale à Supabase réussie");
-      } else {
-        console.warn("Connexion initiale à Supabase échouée");
-      }
-    } catch (error) {
-      console.error("Erreur lors de l'établissement de connexion:", error);
-      setLastConnectionResult(false);
-    } finally {
-      setIsCheckingConnection(false);
-    }
-  }, [isCheckingConnection]);
-  
-  // Connection check handler
-  const handleTestConnection = useCallback(async () => {
-    // Avoid simultaneous checks
-    if (isCheckingConnection) return;
-    
-    setIsCheckingConnection(true);
-    toast.info("Test de connexion à Supabase...");
-    
-    try {
-      const isConnected = await checkSupabaseConnectionFast();
-      
-      setLastConnectionResult(isConnected);
-      
-      if (isConnected) {
-        toast.success("Connexion réussie à Supabase");
-      } else {
-        toast.error("Échec de connexion à Supabase");
-      }
-    } catch (error) {
-      console.error("Erreur lors du test de connexion:", error);
-      toast.error("Erreur lors du test de connexion");
-      setLastConnectionResult(false);
-    } finally {
-      setIsCheckingConnection(false);
-    }
-  }, [isCheckingConnection]);
-  
-  // Establish connection on component mount with a delay
-  useEffect(() => {
-    // Add a short delay to avoid React initialization issues
-    const timer = setTimeout(() => {
-      console.log("Tentative d'établissement automatique de la connexion");
-      establishConnection();
-    }, 2000);
-    
-    return () => clearTimeout(timer);
-  }, [establishConnection]);
 
   return (
     <Layout>
@@ -111,27 +36,6 @@ const Index = () => {
           <div className="flex items-center gap-2">
             {isAdmin && (
               <div className="flex items-center">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleTestConnection}
-                  disabled={isCheckingConnection}
-                  className="flex items-center gap-2"
-                >
-                  {isCheckingConnection ? (
-                    <>
-                      <RefreshCw className="h-4 w-4 animate-spin" />
-                      <span className="ml-1">Test en cours...</span>
-                    </>
-                  ) : (
-                    <>
-                      {lastConnectionResult === true && (
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                      )}
-                      <span className="ml-1">Tester Supabase</span>
-                    </>
-                  )}
-                </Button>
                 <SupabaseStatusIndicator />
               </div>
             )}

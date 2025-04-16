@@ -25,7 +25,7 @@ export async function checkSupabaseConnectionFast(): Promise<boolean> {
               .select('count')
               .limit(1)
               .single(),
-            timeout<never>(3000)
+            timeout<any>(3000)
           ]) as { data: any, error: any };
           
           if (!result.error && result.data) {
@@ -44,7 +44,7 @@ export async function checkSupabaseConnectionFast(): Promise<boolean> {
         try {
           const result = await Promise.race([
             supabase.auth.getSession(),
-            timeout<never>(2000)
+            timeout<any>(2000)
           ]) as { data: { session: any } | null };
           
           if (result.data && result.data.session) {
@@ -70,7 +70,7 @@ export async function checkSupabaseConnectionFast(): Promise<boolean> {
           
           const result = await Promise.race([
             rpcPromise,
-            // Fix for the type error - using any instead of string
+            // Fix for the type error - using any instead of never
             timeout<any>(1500)
           ]);
           

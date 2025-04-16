@@ -1,6 +1,6 @@
 
 export * from './dateUtils';
-export * from './exportUtils';
+export * from './export';
 export * from './idUtils';
 export * from './sampleDataUtils';
 export * from './statsUtils';

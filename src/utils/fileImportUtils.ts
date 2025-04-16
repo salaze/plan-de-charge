@@ -1,7 +1,7 @@
 
 import { MonthData } from '@/types';
 import { toast } from 'sonner';
-import { importFromExcel } from './exportUtils';
+import { importFromExcel } from './export/excelImport';
 
 /**
  * Handle file import from an input element

@@ -26,7 +26,7 @@ export async function checkSupabaseConnectionFast(): Promise<boolean> {
               .limit(1)
               .single(),
             timeout(3000)
-          ]) as any;
+          ]) as { data: any, error: any };
           
           if (!error && data) {
             console.log("Connexion Supabase réussie via table statuts");
@@ -45,7 +45,7 @@ export async function checkSupabaseConnectionFast(): Promise<boolean> {
           const { data } = await Promise.race([
             supabase.auth.getSession(),
             timeout(2000)
-          ]) as any;
+          ]) as { data: any };
           
           if (data && data.session) {
             console.log("Connexion Supabase réussie via auth.getSession");
@@ -65,7 +65,7 @@ export async function checkSupabaseConnectionFast(): Promise<boolean> {
             supabase
               .rpc('get_service_status'),
             timeout(1500)
-          ]) as any;
+          ]) as { count: number | undefined };
           
           if (count !== undefined) {
             console.log("Connexion Supabase réussie via RPC");

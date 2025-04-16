@@ -61,18 +61,19 @@ export async function checkSupabaseConnectionFast(): Promise<boolean> {
       // Test 3: Vérification alternative si les deux premiers échouent
       (async () => {
         try {
-          // First convert to unknown, then to a Promise to handle the type correctly
-          const rpcPromise = supabase.rpc('get_service_status') as unknown as Promise<{
-            data: { count: number } | null;
-            error: any;
-          }>;
+          // Since we're using an RPC function, we need to handle the typing correctly
+          // Here we use type assertions to specify the expected return type structure
+          type RpcResult = { data: { count: number } | null; error: any };
+          
+          // Use a proper type assertion chain for the RPC call
+          const rpcPromise = supabase.rpc('get_service_status') as unknown as Promise<RpcResult>;
           
           const result = await Promise.race([
             rpcPromise,
             timeout<never>(1500)
           ]);
           
-          if (result && result.data && result.data.count !== undefined) {
+          if (result && 'data' in result && result.data && 'count' in result.data) {
             console.log("Connexion Supabase réussie via RPC");
             return true;
           }

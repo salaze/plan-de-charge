@@ -10,5 +10,3 @@ export * from './fileImportUtils';
 export * from './employeeExportUtils';
 export * from './statsExportUtils';
 export * from './holidayUtils';
-export * from './supabaseHelpers';
-export * from './supabase'; // Note the update here - we're now exporting from the supabase folder

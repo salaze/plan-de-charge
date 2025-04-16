@@ -1,33 +1,38 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Info } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Filter, Info } from 'lucide-react';
 
 interface ToolbarActionsProps {
+  hasActiveFilters: boolean;
   onShowLegend: () => void;
+  onShowFilters: () => void;
 }
 
-export function ToolbarActions({ onShowLegend }: ToolbarActionsProps) {
+export function ToolbarActions({ 
+  hasActiveFilters, 
+  onShowLegend, 
+  onShowFilters 
+}: ToolbarActionsProps) {
   return (
     <div className="flex flex-wrap gap-2">
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button 
-              variant="outline" 
-              onClick={onShowLegend}
-              className="transition-all hover:bg-secondary"
-            >
-              <Info className="mr-2 h-4 w-4" />
-              Légende
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Afficher la légende des statuts</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      <Button 
+        variant="outline" 
+        onClick={onShowLegend}
+        className="transition-all hover:bg-secondary"
+      >
+        <Info className="mr-2 h-4 w-4" />
+        Légende
+      </Button>
+      
+      <Button 
+        variant={hasActiveFilters ? "default" : "outline"}
+        className={hasActiveFilters ? "" : "transition-all hover:bg-secondary"}
+        onClick={onShowFilters}
+      >
+        <Filter className="mr-2 h-4 w-4" />
+        Filtres {hasActiveFilters && "(Actifs)"}
+      </Button>
     </div>
   );
 }

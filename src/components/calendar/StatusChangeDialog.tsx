@@ -1,16 +1,14 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle,
-  DialogDescription
+  DialogTitle
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { StatusSelectorForm } from './status/StatusSelectorForm';
-import { StatusCode, DayPeriod } from '@/types';
-import { ensureValidUuid } from '@/utils/idUtils';
+import { StatusSelectorEnhanced } from './StatusSelectorEnhanced';
+import { StatusCode } from '@/types';
 
 interface StatusChangeDialogProps {
   isOpen: boolean;
@@ -27,43 +25,19 @@ export function StatusChangeDialog({
   onClose,
   onStatusChange,
   currentStatus,
-  isHighlighted = false,
+  isHighlighted,
   projectCode,
   projects
 }: StatusChangeDialogProps) {
-  const [selectedPeriod, setSelectedPeriod] = useState<DayPeriod>('AM');
-  
-  // Ensure projects have valid UUIDs
-  const validatedProjects = projects.map(project => ({
-    ...project,
-    id: ensureValidUuid(project.id)
-  }));
-  
-  // Reset selected period when dialog opens
-  useEffect(() => {
-    if (isOpen) {
-      console.log("Dialog opened with status:", currentStatus, "highlighted:", isHighlighted, "projectCode:", projectCode);
-    }
-  }, [isOpen, currentStatus, isHighlighted, projectCode]);
-  
-  const handleSelectionConfirm = (status: StatusCode, isHighlighted: boolean, projectCode?: string) => {
-    console.log("Sélection confirmée:", status, isHighlighted, projectCode);
-    onStatusChange(status, isHighlighted, projectCode);
-    onClose();
-  };
+  const [selectedPeriod, setSelectedPeriod] = useState<'AM' | 'PM'>('AM');
   
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => {
-      if (!open) onClose();
-    }}>
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px] max-w-[90vw]">
         <DialogHeader>
           <DialogTitle>
             Modifier le statut {selectedPeriod === 'AM' ? '(Matin)' : '(Après-midi)'}
           </DialogTitle>
-          <DialogDescription>
-            Sélectionnez un statut pour cette période
-          </DialogDescription>
         </DialogHeader>
         
         <div className="grid gap-4 py-4">
@@ -84,13 +58,13 @@ export function StatusChangeDialog({
             </Button>
           </div>
           
-          <StatusSelectorForm
-            initialStatus={currentStatus}
-            initialIsHighlighted={isHighlighted}
-            initialProjectCode={projectCode || ''}
+          <StatusSelectorEnhanced 
+            value={currentStatus}
+            onChange={onStatusChange}
+            projects={projects}
+            isHighlighted={isHighlighted}
+            projectCode={projectCode}
             selectedPeriod={selectedPeriod}
-            projects={validatedProjects}
-            onSubmit={handleSelectionConfirm}
           />
         </div>
       </DialogContent>

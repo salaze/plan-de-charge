@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
 import { StatusCode, DayPeriod } from '@/types';
-import { useSupabaseSchedule } from './useSupabaseSchedule';
 
 export function usePlanningGrid(isAdmin: boolean) {
   const isMobile = useIsMobile();
@@ -11,28 +10,12 @@ export function usePlanningGrid(isAdmin: boolean) {
     employeeId: string;
     date: string;
     period: DayPeriod;
+    currentStatus: StatusCode;
+    isHighlighted?: boolean;
+    projectCode?: string;
   } | null>(null);
   
   const [selectedPeriod, setSelectedPeriod] = useState<DayPeriod>('AM');
-  const { testConnection } = useSupabaseSchedule();
-  
-  // Test the Supabase connection when needed
-  const runConnectionTest = async () => {
-    try {
-      const result = await testConnection();
-      if (result && result.connected) {
-        toast.success("Connexion à Supabase établie");
-        return true;
-      } else {
-        console.error("Échec de la connexion à Supabase:", result?.error);
-        toast.error("Impossible de se connecter à Supabase");
-        return false;
-      }
-    } catch (err) {
-      console.error("Erreur lors du test de connexion:", err);
-      return false;
-    }
-  };
   
   const handleCellClick = (employeeId: string, date: string, period: DayPeriod) => {
     if (!isAdmin) {
@@ -40,17 +23,29 @@ export function usePlanningGrid(isAdmin: boolean) {
       return;
     }
     
-    if (!employeeId || !date) {
-      console.error("ID employé ou date invalide", { employeeId, date });
-      return;
-    }
-    
-    console.log("Cellule sélectionnée:", { employeeId, date, period });
+    // Find the current status for this cell from the schedule
+    const getCurrentStatus = (employeeId: string, date: string, period: DayPeriod, employees: any[]) => {
+      const employee = employees.find(emp => emp.id === employeeId);
+      if (!employee) return { status: '' as StatusCode };
+      
+      const dayEntry = employee.schedule.find(
+        (day: any) => day.date === date && day.period === period
+      );
+      
+      return {
+        status: dayEntry?.status || '' as StatusCode,
+        isHighlighted: dayEntry?.isHighlighted,
+        projectCode: dayEntry?.projectCode
+      };
+    };
     
     setSelectedCell({
       employeeId,
       date,
-      period
+      period,
+      currentStatus: '' as StatusCode, // Will be populated by the component
+      isHighlighted: false,
+      projectCode: undefined
     });
     
     setSelectedPeriod(period);
@@ -86,7 +81,6 @@ export function usePlanningGrid(isAdmin: boolean) {
     setSelectedPeriod,
     handleCellClick,
     handleCloseDialog,
-    getVisibleDays,
-    runConnectionTest
+    getVisibleDays
   };
 }

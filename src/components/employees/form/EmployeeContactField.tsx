@@ -12,7 +12,7 @@ interface EmployeeContactFieldProps {
 export function EmployeeContactField({ uid, onChange }: EmployeeContactFieldProps) {
   return (
     <div className="grid gap-2">
-      <Label htmlFor="uid">Identifiant *</Label>
+      <Label htmlFor="uid">UID *</Label>
       <div className="flex items-center gap-2 relative">
         <Fingerprint className="h-4 w-4 absolute left-3 text-muted-foreground" />
         <Input
@@ -20,7 +20,7 @@ export function EmployeeContactField({ uid, onChange }: EmployeeContactFieldProp
           type="text"
           value={uid}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="Identifiant unique de l'employé"
+          placeholder="UID de l'employé"
           className="pl-10"
           required
         />

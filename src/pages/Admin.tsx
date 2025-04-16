@@ -6,12 +6,11 @@ import { StatusCode, STATUS_LABELS, STATUS_COLORS } from '@/types';
 import { generateId } from '@/utils';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { AdminTabs } from '@/components/admin/AdminTabs';
-import { useSupabaseEmployees } from '@/hooks/useSupabaseEmployees';
 
 const Admin = () => {
-  const { employees: supabaseEmployees, loading } = useSupabaseEmployees();
   const [data, setData] = useState(() => {
-    return { 
+    const savedData = localStorage.getItem('planningData');
+    return savedData ? JSON.parse(savedData) : { 
       projects: [], 
       employees: [],
       statuses: [] 
@@ -38,27 +37,6 @@ const Admin = () => {
     }
   }, []);
   
-  // Charger les employés depuis Supabase
-  useEffect(() => {
-    if (!loading) {
-      const convertedEmployees = supabaseEmployees.map(emp => ({
-        id: emp.id,
-        name: emp.prenom ? `${emp.prenom} ${emp.nom}` : emp.nom,
-        department: emp.departement || undefined,
-        position: emp.fonction || undefined,
-        uid: emp.identifiant || undefined,  // Changed from uid to identifiant
-        role: emp.role as any || 'employee',
-        schedule: []
-      }));
-      
-      setData(prevData => ({
-        ...prevData,
-        employees: convertedEmployees
-      }));
-    }
-  }, [supabaseEmployees, loading]);
-  
-  // Save to localStorage on data change
   useEffect(() => {
     if (data) {
       const savedData = localStorage.getItem('planningData');

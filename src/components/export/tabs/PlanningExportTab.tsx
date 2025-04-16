@@ -22,7 +22,7 @@ const PlanningExportTab: React.FC<PlanningExportTabProps> = ({
   const defaultStatuses: StatusCode[] = ['assistance', 'absence', 'conges', 'formation', 'permanence'];
   
   // Get available statuses using our custom hook
-  const { statuses, loading } = useAvailableStatuses(defaultStatuses);
+  const statuses = useAvailableStatuses(defaultStatuses);
   
   return (
     <div className="space-y-4">
@@ -34,7 +34,7 @@ const PlanningExportTab: React.FC<PlanningExportTabProps> = ({
         />
       </div>
       
-      {statuses && <StatusLegendCard statuses={statuses} />}
+      <StatusLegendCard statuses={statuses} />
     </div>
   );
 };

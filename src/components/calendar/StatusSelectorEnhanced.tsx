@@ -32,9 +32,7 @@ export function StatusSelectorEnhanced({
   const [selectedStatus, setSelectedStatus] = useState<StatusCode>(value || 'none');
   
   // Use our custom hook to get available statuses
-  const { availableStatuses, loading } = useStatusOptions();
-  
-  console.log("StatusSelectorEnhanced: Statut initial:", value, "Projet initial:", projectCode, "Statuts disponibles:", availableStatuses);
+  const availableStatuses = useStatusOptions();
   
   // Reset form when dialog reopens with new values
   useEffect(() => {
@@ -44,7 +42,6 @@ export function StatusSelectorEnhanced({
   }, [value, isHighlighted, projectCode]);
   
   const handleStatusChange = (newStatus: StatusCode) => {
-    console.log("Changement de statut:", newStatus);
     setSelectedStatus(newStatus);
     
     // Réinitialiser le projet sélectionné si le statut n'est pas "projet"
@@ -54,12 +51,10 @@ export function StatusSelectorEnhanced({
   };
   
   const handleProjectChange = (projectCode: string) => {
-    console.log("Changement de projet:", projectCode);
     setSelectedProject(projectCode);
   };
   
   const handleHighlightChange = (checked: boolean) => {
-    console.log("Changement de mise en évidence:", checked);
     setHighlightedStatus(checked);
   };
   
@@ -69,14 +64,10 @@ export function StatusSelectorEnhanced({
       return;
     }
     
-    console.log("Soumission du formulaire:", {
-      status: selectedStatus,
-      highlighted: highlightedStatus,
-      project: selectedStatus === 'projet' ? selectedProject : undefined
-    });
-    
     const projectToUse = selectedStatus === 'projet' ? selectedProject : undefined;
     onChange(selectedStatus, highlightedStatus, projectToUse);
+    
+    toast.success(`Statut ${selectedPeriod === 'AM' ? 'matin' : 'après-midi'} enregistré avec succès`);
   };
   
   return (
@@ -88,17 +79,13 @@ export function StatusSelectorEnhanced({
           onValueChange={(value) => handleStatusChange(value as StatusCode)}
           className="grid grid-cols-2 gap-2"
         >
-          {loading ? (
-            <div>Chargement des statuts...</div>
-          ) : (
-            availableStatuses.map((status) => (
-              <StatusOption 
-                key={status.value} 
-                value={status.value} 
-                label={status.label} 
-              />
-            ))
-          )}
+          {availableStatuses.map((status) => (
+            <StatusOption 
+              key={status.value} 
+              value={status.value} 
+              label={status.label} 
+            />
+          ))}
         </RadioGroup>
       </div>
       

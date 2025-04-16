@@ -3,15 +3,24 @@ import { useState } from 'react';
 import { usePlanningData } from './usePlanningData';
 import { useDateSelection } from './useDateSelection';
 
-// This hook is kept for compatibility but functionality is removed
 export const useExportActions = (selectedDepartment: string) => {
   const planningData = usePlanningData();
   const { currentYear, currentMonth } = useDateSelection();
   
-  // Empty functions since export functionality is removed
-  const handleExport = () => {};
-  const handleExportEmployees = () => {};
-  const handleExportStats = () => {};
+  const handleExport = () => {
+    const element = document.querySelector('[data-action="export-planning"]') as HTMLButtonElement;
+    if (element) element.click();
+  };
+  
+  const handleExportEmployees = () => {
+    const element = document.querySelector('[data-action="export-employees"]') as HTMLButtonElement;
+    if (element) element.click();
+  };
+  
+  const handleExportStats = () => {
+    const element = document.querySelector('[data-action="export-stats"]') as HTMLButtonElement;
+    if (element) element.click();
+  };
   
   return {
     handleExport,

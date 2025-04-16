@@ -10,7 +10,7 @@ export async function checkSupabaseConnectionFast(): Promise<boolean> {
     console.log("Vérification rapide de la connexion Supabase...");
     
     // Ajouter un timeout pour éviter les attentes trop longues
-    const timeout = (ms: number) => new Promise<never>((_, reject) => 
+    const timeout = (ms: number): Promise<never> => new Promise<never>((_, reject) => 
       setTimeout(() => reject(new Error('Timeout')), ms)
     );
     
@@ -19,7 +19,7 @@ export async function checkSupabaseConnectionFast(): Promise<boolean> {
       // Test 1: Vérifier la table statuts (la plus légère)
       (async () => {
         try {
-          const { data, error } = await Promise.race([
+          const result = await Promise.race([
             supabase
               .from('statuts')
               .select('count')
@@ -28,7 +28,7 @@ export async function checkSupabaseConnectionFast(): Promise<boolean> {
             timeout(3000)
           ]) as { data: any, error: any };
           
-          if (!error && data) {
+          if (!result.error && result.data) {
             console.log("Connexion Supabase réussie via table statuts");
             return true;
           }
@@ -42,12 +42,12 @@ export async function checkSupabaseConnectionFast(): Promise<boolean> {
       // Test 2: Vérifier la session
       (async () => {
         try {
-          const { data } = await Promise.race([
+          const result = await Promise.race([
             supabase.auth.getSession(),
             timeout(2000)
           ]) as { data: any };
           
-          if (data && data.session) {
+          if (result.data && result.data.session) {
             console.log("Connexion Supabase réussie via auth.getSession");
             return true;
           }
@@ -61,13 +61,13 @@ export async function checkSupabaseConnectionFast(): Promise<boolean> {
       // Test 3: Vérification alternative si les deux premiers échouent
       (async () => {
         try {
-          const { count } = await Promise.race([
+          const result = await Promise.race([
             supabase
               .rpc('get_service_status'),
             timeout(1500)
           ]) as { count: number | undefined };
           
-          if (count !== undefined) {
+          if (result.count !== undefined) {
             console.log("Connexion Supabase réussie via RPC");
             return true;
           }

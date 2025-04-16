@@ -8,15 +8,24 @@ export const useAvailableStatuses = (defaultStatuses: StatusCode[] = []) => {
   useEffect(() => {
     // Fonction pour récupérer les statuts depuis localStorage
     const loadStatuses = () => {
-      const savedData = localStorage.getItem('planningData');
-      const data = savedData ? JSON.parse(savedData) : { statuses: [] };
-      
-      // Si nous avons des statuts personnalisés, extraire les codes
-      if (data.statuses && data.statuses.length > 0) {
-        setStatuses(data.statuses.map((s: any) => s.code as StatusCode));
-      } else {
-        // Utiliser les statuts par défaut fournis
-        setStatuses(defaultStatuses);
+      try {
+        const savedData = localStorage.getItem('planningData');
+        const data = savedData ? JSON.parse(savedData) : { statuses: [] };
+        
+        // Si nous avons des statuts personnalisés, extraire les codes
+        if (Array.isArray(data.statuses) && data.statuses.length > 0) {
+          const validStatuses = data.statuses
+            .filter((s: any) => s && s.code) // Make sure each status has a code
+            .map((s: any) => s.code as StatusCode);
+            
+          setStatuses(validStatuses.length > 0 ? validStatuses : defaultStatuses);
+        } else {
+          // Utiliser les statuts par défaut fournis
+          setStatuses(defaultStatuses);
+        }
+      } catch (error) {
+        console.error('Error loading statuses:', error);
+        setStatuses(defaultStatuses); // Fallback to defaults on error
       }
     };
     

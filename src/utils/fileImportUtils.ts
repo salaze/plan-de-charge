@@ -19,12 +19,20 @@ export const handleFileImport = (event: React.ChangeEvent<HTMLInputElement>, onS
         const importedData = await importFromExcel(result);
         
         if (importedData) {
+          // Ensure importedData has all required properties and arrays
+          const safeData: MonthData = {
+            year: importedData.year || new Date().getFullYear(),
+            month: typeof importedData.month === 'number' ? importedData.month : new Date().getMonth(),
+            employees: Array.isArray(importedData.employees) ? importedData.employees : [],
+            projects: Array.isArray(importedData.projects) ? importedData.projects : []
+          };
+          
           // Save to localStorage
-          localStorage.setItem('planningData', JSON.stringify(importedData));
+          localStorage.setItem('planningData', JSON.stringify(safeData));
           
           // Callback if provided
           if (onSuccess) {
-            onSuccess(importedData);
+            onSuccess(safeData);
           }
           
           toast.success('Données importées avec succès');

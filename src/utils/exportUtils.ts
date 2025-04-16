@@ -10,7 +10,7 @@ import { generateId } from './idUtils';
  */
 export const exportToExcel = (data: MonthData): void => {
   try {
-    if (!data || !data.employees) {
+    if (!data || !Array.isArray(data.employees)) {
       throw new Error('No data to export');
     }
 
@@ -76,7 +76,7 @@ export const importFromExcel = async (file: string | ArrayBuffer): Promise<Month
     }
     
     // Extract dates from header row
-    const headerRow = data[0] as string[];
+    const headerRow = Array.isArray(data[0]) ? data[0] : [];
     const dates: string[] = [];
     
     for (let i = 1; i < headerRow.length; i++) {
@@ -96,7 +96,7 @@ export const importFromExcel = async (file: string | ArrayBuffer): Promise<Month
     // Create employees from data rows
     const employees: Employee[] = [];
     for (let i = 1; i < data.length; i++) {
-      const row = data[i] as string[];
+      const row = Array.isArray(data[i]) ? data[i] : [];
       if (!row[0]) continue; // Skip empty rows
       
       const employeeName = row[0];
@@ -136,7 +136,7 @@ export const importFromExcel = async (file: string | ArrayBuffer): Promise<Month
       });
     }
     
-    // Create and return MonthData
+    // Create and return MonthData with safe defaults
     return {
       year,
       month,

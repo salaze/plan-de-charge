@@ -12,24 +12,43 @@ export function useStatusOptions(defaultStatuses: StatusCode[] = []) {
   
   useEffect(() => {
     const loadStatuses = () => {
-      const savedData = localStorage.getItem('planningData');
-      const data = savedData ? JSON.parse(savedData) : { statuses: [] };
-      
-      // Si nous avons des statuts personnalisés, les utiliser
-      if (data.statuses && data.statuses.length > 0) {
-        const customStatuses = data.statuses
-          .filter((status: any) => status.code && status.code.trim() !== '') // Filter out any empty codes
-          .map((status: any) => ({
-            value: status.code as StatusCode,
-            label: status.label || status.code || 'Status'
-          }));
+      try {
+        const savedData = localStorage.getItem('planningData');
+        const data = savedData ? JSON.parse(savedData) : { statuses: [] };
         
-        setAvailableStatuses([
-          { value: 'none', label: 'Aucun' },
-          ...customStatuses
-        ]);
-      } else {
-        // Sinon, utiliser les statuts par défaut fournis
+        // Si nous avons des statuts personnalisés, les utiliser
+        if (Array.isArray(data.statuses) && data.statuses.length > 0) {
+          const customStatuses = data.statuses
+            .filter((status: any) => status && status.code && status.code.trim() !== '') // Filter out any empty codes
+            .map((status: any) => ({
+              value: status.code as StatusCode,
+              label: status.label || status.code || 'Status'
+            }));
+          
+          setAvailableStatuses([
+            { value: 'none', label: 'Aucun' },
+            ...customStatuses
+          ]);
+        } else {
+          // Sinon, utiliser les statuts par défaut fournis
+          setAvailableStatuses([
+            { value: 'none', label: 'Aucun' },
+            { value: 'assistance', label: 'Assistance' },
+            { value: 'vigi', label: 'Vigi' },
+            { value: 'formation', label: 'Formation' },
+            { value: 'projet', label: 'Projet' },
+            { value: 'conges', label: 'Congés' },
+            { value: 'management', label: 'Management' },
+            { value: 'tp', label: 'Temps Partiel' },
+            { value: 'coordinateur', label: 'Coordinateur Vigi Ticket' },
+            { value: 'absence', label: 'Autre Absence' },
+            { value: 'regisseur', label: 'Régisseur' },
+            { value: 'demenagement', label: 'Déménagements' },
+          ]);
+        }
+      } catch (error) {
+        console.error('Error loading status options:', error);
+        // Use default options on error
         setAvailableStatuses([
           { value: 'none', label: 'Aucun' },
           { value: 'assistance', label: 'Assistance' },
@@ -37,12 +56,6 @@ export function useStatusOptions(defaultStatuses: StatusCode[] = []) {
           { value: 'formation', label: 'Formation' },
           { value: 'projet', label: 'Projet' },
           { value: 'conges', label: 'Congés' },
-          { value: 'management', label: 'Management' },
-          { value: 'tp', label: 'Temps Partiel' },
-          { value: 'coordinateur', label: 'Coordinateur Vigi Ticket' },
-          { value: 'absence', label: 'Autre Absence' },
-          { value: 'regisseur', label: 'Régisseur' },
-          { value: 'demenagement', label: 'Déménagements' },
         ]);
       }
     };

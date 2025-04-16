@@ -9,36 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      connection_logs: {
-        Row: {
-          created_at: string
-          event_type: string | null
-          id: string
-          ip_address: string | null
-          user_agent: string | null
-          user_id: string | null
-          user_name: string | null
-        }
-        Insert: {
-          created_at?: string
-          event_type?: string | null
-          id?: string
-          ip_address?: string | null
-          user_agent?: string | null
-          user_id?: string | null
-          user_name?: string | null
-        }
-        Update: {
-          created_at?: string
-          event_type?: string | null
-          id?: string
-          ip_address?: string | null
-          user_agent?: string | null
-          user_id?: string | null
-          user_name?: string | null
-        }
-        Relationships: []
-      }
       employe_schedule: {
         Row: {
           created_at: string | null
@@ -89,8 +59,8 @@ export type Database = {
           departement: string | null
           fonction: string | null
           id: string
+          identifiant: string | null
           nom: string
-          password: string | null
           prenom: string | null
           role: string | null
           uid: string | null
@@ -101,8 +71,8 @@ export type Database = {
           departement?: string | null
           fonction?: string | null
           id?: string
+          identifiant?: string | null
           nom: string
-          password?: string | null
           prenom?: string | null
           role?: string | null
           uid?: string | null
@@ -113,8 +83,8 @@ export type Database = {
           departement?: string | null
           fonction?: string | null
           id?: string
+          identifiant?: string | null
           nom?: string
-          password?: string | null
           prenom?: string | null
           role?: string | null
           uid?: string | null
@@ -152,17 +122,17 @@ export type Database = {
         }
         Relationships: []
       }
-      Taches: {
+      taches: {
         Row: {
-          created_at: string
+          created_at: string | null
           id: number
         }
         Insert: {
-          created_at?: string
+          created_at?: string | null
           id?: number
         }
         Update: {
-          created_at?: string
+          created_at?: string | null
           id?: number
         }
         Relationships: []

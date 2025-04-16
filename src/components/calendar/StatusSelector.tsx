@@ -14,14 +14,21 @@ interface StatusSelectorProps {
 export function StatusSelector({ value, onChange }: StatusSelectorProps) {
   // Récupérer les statuts disponibles depuis localStorage
   const getAvailableStatuses = (): StatusCode[] => {
-    const savedData = localStorage.getItem('planningData');
-    const data = savedData ? JSON.parse(savedData) : { statuses: [] };
-    
-    // Si nous avons des statuts personnalisés, extraire les codes
-    if (data.statuses && data.statuses.length > 0) {
-      return [...data.statuses
-        .filter((s: any) => s.code && s.code.trim() !== '') // Filtrer les codes vides
-        .map((s: any) => s.code as StatusCode), 'none'];
+    try {
+      const savedData = localStorage.getItem('planningData');
+      const data = savedData ? JSON.parse(savedData) : { statuses: [] };
+      
+      // Si nous avons des statuts personnalisés, extraire les codes
+      if (Array.isArray(data.statuses) && data.statuses.length > 0) {
+        const statusCodes = data.statuses
+          .filter((s: any) => s && s.code && s.code.trim() !== '') // Filtrer les codes vides
+          .map((s: any) => s.code as StatusCode);
+          
+        return [...statusCodes, 'none'];
+      }
+    } catch (error) {
+      console.error('Error fetching available statuses:', error);
+      // Fall back to default statuses on error
     }
     
     // Statuts par défaut

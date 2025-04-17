@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { Layout } from '@/components/layout/Layout';
 
 // Import our new components and hooks
-import SupabaseAlert from '@/components/export/SupabaseAlert';
 import DepartmentFilter from '@/components/export/DepartmentFilter';
 import ExportTabs from '@/components/export/ExportTabs';
 import { useImportPlanning } from '@/hooks/useImportPlanning';
@@ -30,8 +29,6 @@ const Export = () => {
     <Layout>
       <div className="space-y-6 animate-fade-in">
         <h1 className="text-3xl font-bold">Exporter les données</h1>
-        
-        <SupabaseAlert />
         
         <DepartmentFilter 
           selectedDepartment={selectedDepartment}

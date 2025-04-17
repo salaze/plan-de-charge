@@ -3,24 +3,26 @@ import { DayStatus } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 
 /**
+ * Checks if a date is a weekend day or holiday
+ * @param date Date to check
+ * @returns boolean
+ */
+export const isWeekendOrHoliday = async (date: Date): Promise<boolean> => {
+  const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+  if (isWeekend) return true;
+  
+  const dateString = date.toISOString().split('T')[0];
+  return await isHoliday(dateString);
+};
+
+/**
  * Checks if a date is a French holiday
  * @param date Date to check in format YYYY-MM-DD
  * @returns Promise<boolean>
  */
 export const isHoliday = async (date: string): Promise<boolean> => {
   try {
-    // Try to check if this date is a holiday in Supabase
-    const { data, error } = await supabase
-      .from('holidays')
-      .select('*')
-      .eq('date', date)
-      .single();
-      
-    if (!error && data) {
-      return true;
-    }
-    
-    // If there was an error or no data, fall back to hardcoded holidays
+    // Fall back to hardcoded holidays since 'holidays' table doesn't exist yet
     // This is a simplified approach - in reality, we should calculate these dynamically
     const holidays2024 = [
       "2024-01-01", // Jour de l'an

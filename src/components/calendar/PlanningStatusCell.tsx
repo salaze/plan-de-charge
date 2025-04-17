@@ -3,7 +3,6 @@ import React from 'react';
 import { TableCell } from '@/components/ui/table';
 import { StatusCell } from './StatusCell';
 import { StatusCode } from '@/types';
-import { isWeekendOrHoliday } from '@/utils/holidayUtils';
 
 interface PlanningStatusCellProps {
   day: Date;

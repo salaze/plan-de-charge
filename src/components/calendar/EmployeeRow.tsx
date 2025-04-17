@@ -3,9 +3,8 @@ import React from 'react';
 import { TableRow, TableCell } from '@/components/ui/table';
 import { Employee, StatusCode, DayPeriod } from '@/types';
 import { getEmployeeStatusForDate } from '@/utils/employeeUtils';
-import { isWeekendOrHoliday } from '@/utils/holidayUtils';
-import { PlanningStatusCell } from './PlanningStatusCell';
 import { formatDate } from '@/utils';
+import { PlanningStatusCell } from './PlanningStatusCell';
 
 interface EmployeeRowProps {
   employee: Employee;

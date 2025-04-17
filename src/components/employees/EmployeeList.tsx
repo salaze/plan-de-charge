@@ -12,22 +12,69 @@ import {
 } from '@/components/ui/table';
 import { Employee } from '@/types';
 import { PasswordManager } from '@/components/employees/PasswordManager';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface EmployeeListProps {
   employees: Employee[];
   onAddEmployee: () => void;
   onEditEmployee: (employee: Employee) => void;
   onDeleteEmployee: (employeeId: string) => void;
+  loading?: boolean;
 }
 
 export function EmployeeList({
   employees,
   onAddEmployee,
   onEditEmployee,
-  onDeleteEmployee
+  onDeleteEmployee,
+  loading = false
 }: EmployeeListProps) {
   const sortedEmployees = [...employees].sort((a, b) => a.name.localeCompare(b.name));
   
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-semibold flex items-center gap-2">
+            <User className="h-5 w-5" />
+            <span>Liste des employés</span>
+          </h2>
+          <Button disabled size="sm" className="flex items-center gap-1">
+            <UserPlus className="h-4 w-4" />
+            <span>Ajouter</span>
+          </Button>
+        </div>
+        
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nom</TableHead>
+                <TableHead>UID</TableHead>
+                <TableHead>Fonction</TableHead>
+                <TableHead>Département</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                  <TableCell><Skeleton className="h-5 w-20" /></TableCell>
+                  <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                  <TableCell><Skeleton className="h-5 w-28" /></TableCell>
+                  <TableCell className="text-right">
+                    <Skeleton className="h-8 w-24 ml-auto" />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">

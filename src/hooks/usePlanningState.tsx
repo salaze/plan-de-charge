@@ -5,51 +5,89 @@ import { MonthData, StatusCode, DayPeriod, FilterOptions } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { createSampleData } from '@/utils';
 import { filterData } from '@/utils/dataFilterUtils';
+import { fetchEmployees, fetchSchedule, saveScheduleEntry, deleteScheduleEntry } from '@/utils/supabaseUtils';
+import { getExistingProjects } from '@/utils/export/projectUtils';
 
 export const usePlanningState = () => {
   const { isAdmin } = useAuth();
 
   const [data, setData] = useState<MonthData>(() => {
-    // Récupérer les données depuis le localStorage ou créer des données de démo
-    const savedData = localStorage.getItem('planningData');
-    
-    if (savedData) {
-      try {
-        const parsedData = JSON.parse(savedData);
-        
-        // Assurer que les données ont la structure correcte
-        if (!parsedData.year) parsedData.year = new Date().getFullYear();
-        if (!parsedData.month && parsedData.month !== 0) parsedData.month = new Date().getMonth();
-        if (!Array.isArray(parsedData.employees)) parsedData.employees = [];
-        
-        // Assurer que la structure contient des projets
-        if (!parsedData.projects) {
-          parsedData.projects = [
-            { id: '1', code: 'P001', name: 'Développement interne', color: '#4CAF50' },
-            { id: '2', code: 'P002', name: 'Client A', color: '#2196F3' },
-            { id: '3', code: 'P003', name: 'Client B', color: '#FF9800' },
-            { id: '4', code: 'P004', name: 'Maintenance préventive', color: '#9C27B0' },
-            { id: '5', code: 'P005', name: 'Mission externe', color: '#00BCD4' },
-          ];
-        }
-        
-        return parsedData;
-      } catch (error) {
-        console.error("Erreur lors de la lecture des données:", error);
-        return createDefaultData();
-      }
-    } else {
-      return createDefaultData();
-    }
+    // Create default data structure that will be populated with Supabase data
+    return {
+      year: new Date().getFullYear(),
+      month: new Date().getMonth(),
+      employees: [],
+      projects: getExistingProjects()
+    };
   });
   
-  const [currentYear, setCurrentYear] = useState(data.year || new Date().getFullYear());
-  const [currentMonth, setCurrentMonth] = useState(typeof data.month === 'number' ? data.month : new Date().getMonth());
+  const [loading, setLoading] = useState(true);
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [filters, setFilters] = useState<FilterOptions>({});
   const [isLegendOpen, setIsLegendOpen] = useState(false);
 
   // Données filtrées basées sur les filtres appliqués
   const [filteredData, setFilteredData] = useState<MonthData>(data);
+
+  // Load data from Supabase on component mount
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      
+      try {
+        // Load employees from Supabase
+        const employees = await fetchEmployees();
+        
+        // Load schedule for each employee
+        for (let i = 0; i < employees.length; i++) {
+          const schedule = await fetchSchedule(employees[i].id);
+          employees[i].schedule = schedule;
+        }
+        
+        // Update state with loaded data
+        setData(prevData => ({
+          ...prevData,
+          employees
+        }));
+        
+        // Also store in localStorage for compatibility with existing functionality
+        localStorage.setItem('planningData', JSON.stringify({
+          year: currentYear,
+          month: currentMonth,
+          employees,
+          projects: getExistingProjects()
+        }));
+      } catch (error) {
+        console.error('Error loading data from Supabase:', error);
+        
+        // Fall back to localStorage if Supabase fails
+        const savedData = localStorage.getItem('planningData');
+        if (savedData) {
+          try {
+            const parsedData = JSON.parse(savedData);
+            
+            // Ensure data has the correct structure
+            if (!parsedData.year) parsedData.year = new Date().getFullYear();
+            if (!parsedData.month && parsedData.month !== 0) parsedData.month = new Date().getMonth();
+            if (!Array.isArray(parsedData.employees)) parsedData.employees = [];
+            if (!parsedData.projects) parsedData.projects = getExistingProjects();
+            
+            setData(parsedData);
+          } catch (error) {
+            console.error("Error reading localStorage data:", error);
+            setData(createDefaultData());
+          }
+        } else {
+          setData(createDefaultData());
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadData();
+  }, [currentYear, currentMonth]);
 
   // Appliquer les filtres lorsqu'ils changent
   useEffect(() => {
@@ -59,20 +97,11 @@ export const usePlanningState = () => {
 
   function createDefaultData() {
     const sampleData = createSampleData();
-    
-    // Ajouter des projets aux données de démo
-    sampleData.projects = [
-      { id: '1', code: 'P001', name: 'Développement interne', color: '#4CAF50' },
-      { id: '2', code: 'P002', name: 'Client A', color: '#2196F3' },
-      { id: '3', code: 'P003', name: 'Client B', color: '#FF9800' },
-      { id: '4', code: 'P004', name: 'Maintenance préventive', color: '#9C27B0' },
-      { id: '5', code: 'P005', name: 'Mission externe', color: '#00BCD4' },
-    ];
-    
+    sampleData.projects = getExistingProjects();
     return sampleData;
   }
 
-  // Sauvegarde automatique des données 
+  // Save data to Supabase and localStorage
   const saveDataToLocalStorage = useCallback((updatedData: MonthData) => {
     localStorage.setItem('planningData', JSON.stringify(updatedData));
   }, []);
@@ -87,7 +116,7 @@ export const usePlanningState = () => {
     setCurrentMonth(month);
   };
   
-  const handleStatusChange = (
+  const handleStatusChange = async (
     employeeId: string,
     date: string,
     status: StatusCode,
@@ -100,6 +129,7 @@ export const usePlanningState = () => {
       return;
     }
     
+    // Update the local state first for immediate feedback
     setData((prevData) => {
       const updatedEmployees = prevData.employees.map((employee) => {
         if (employee.id === employeeId) {
@@ -157,6 +187,26 @@ export const usePlanningState = () => {
       
       return updatedData;
     });
+    
+    // Then update in Supabase
+    try {
+      if (status === '') {
+        // Delete the entry
+        await deleteScheduleEntry(employeeId, date, period);
+      } else {
+        // Save the entry
+        await saveScheduleEntry(employeeId, {
+          date,
+          status,
+          period,
+          isHighlighted,
+          projectCode: status === 'projet' ? projectCode : undefined
+        });
+      }
+    } catch (error) {
+      console.error('Error updating status in Supabase:', error);
+      toast.error('Erreur lors de la mise à jour du statut');
+    }
   };
 
   // Gestionnaire pour mettre à jour les filtres
@@ -183,6 +233,7 @@ export const usePlanningState = () => {
     currentMonth,
     filters,
     isLegendOpen,
+    loading,
     setIsLegendOpen,
     handleMonthChange,
     handleStatusChange,

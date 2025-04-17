@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Layout } from '@/components/layout/Layout';
 import { EmployeeList } from '@/components/employees/EmployeeList';
@@ -16,85 +16,139 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Employee } from '@/types';
 import { generateId } from '@/utils';
+import { fetchEmployees, saveEmployee, deleteEmployee } from '@/utils/supabaseUtils';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Employees = () => {
-  // Récupérer les employés du localStorage
-  const [employees, setEmployees] = useState<Employee[]>(() => {
-    const savedData = localStorage.getItem('planningData');
-    return savedData ? JSON.parse(savedData).employees || [] : [];
-  });
-  
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [loading, setLoading] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
   const [currentEmployee, setCurrentEmployee] = useState<Employee | undefined>(undefined);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<string>('');
+  const { isAdmin } = useAuth();
+  
+  // Load employees from Supabase
+  useEffect(() => {
+    const loadEmployees = async () => {
+      setLoading(true);
+      const data = await fetchEmployees();
+      setEmployees(data);
+      setLoading(false);
+      
+      // Also update localStorage for compatibility with existing functionality
+      const savedData = localStorage.getItem('planningData');
+      if (savedData) {
+        const planningData = JSON.parse(savedData);
+        planningData.employees = data;
+        localStorage.setItem('planningData', JSON.stringify(planningData));
+      } else {
+        localStorage.setItem('planningData', JSON.stringify({
+          year: new Date().getFullYear(),
+          month: new Date().getMonth(),
+          employees: data,
+          projects: []
+        }));
+      }
+    };
+    
+    loadEmployees();
+  }, []);
   
   const handleAddEmployee = () => {
+    if (!isAdmin) {
+      toast.error("Vous n'avez pas les droits pour ajouter un employé");
+      return;
+    }
+    
     setCurrentEmployee(undefined);
     setFormOpen(true);
   };
   
   const handleEditEmployee = (employee: Employee) => {
+    if (!isAdmin) {
+      toast.error("Vous n'avez pas les droits pour modifier un employé");
+      return;
+    }
+    
     setCurrentEmployee(employee);
     setFormOpen(true);
   };
   
   const handleDeleteEmployee = (employeeId: string) => {
+    if (!isAdmin) {
+      toast.error("Vous n'avez pas les droits pour supprimer un employé");
+      return;
+    }
+    
     setEmployeeToDelete(employeeId);
     setDeleteDialogOpen(true);
   };
   
-  const confirmDeleteEmployee = () => {
-    if (!employeeToDelete) return;
+  const confirmDeleteEmployee = async () => {
+    if (!employeeToDelete || !isAdmin) return;
     
-    const updatedEmployees = employees.filter(emp => emp.id !== employeeToDelete);
-    setEmployees(updatedEmployees);
+    const success = await deleteEmployee(employeeToDelete);
     
-    // Mettre à jour le localStorage
-    const savedData = localStorage.getItem('planningData');
-    if (savedData) {
-      const data = JSON.parse(savedData);
-      data.employees = updatedEmployees;
-      localStorage.setItem('planningData', JSON.stringify(data));
-    } else {
-      localStorage.setItem('planningData', JSON.stringify({ employees: updatedEmployees }));
+    if (success) {
+      const updatedEmployees = employees.filter(emp => emp.id !== employeeToDelete);
+      setEmployees(updatedEmployees);
+      
+      // Also update localStorage for compatibility
+      const savedData = localStorage.getItem('planningData');
+      if (savedData) {
+        const data = JSON.parse(savedData);
+        data.employees = updatedEmployees;
+        localStorage.setItem('planningData', JSON.stringify(data));
+      }
     }
     
-    toast.success('Employé supprimé avec succès');
     setDeleteDialogOpen(false);
     setEmployeeToDelete('');
   };
   
-  const handleSaveEmployee = (employee: Employee) => {
-    let updatedEmployees: Employee[];
+  const handleSaveEmployee = async (employee: Employee) => {
+    if (!isAdmin) {
+      toast.error("Vous n'avez pas les droits pour modifier un employé");
+      return;
+    }
     
-    if (employee.id) {
-      // Mettre à jour un employé existant
-      updatedEmployees = employees.map(emp => 
-        emp.id === employee.id ? employee : emp
-      );
-      toast.success('Employé modifié avec succès');
-    } else {
-      // Ajouter un nouvel employé
-      const newEmployee = {
-        ...employee,
+    let updatedEmployee = employee;
+    
+    // Add ID if it's a new employee
+    if (!updatedEmployee.id) {
+      updatedEmployee = {
+        ...updatedEmployee,
         id: generateId(),
         schedule: []
       };
-      updatedEmployees = [...employees, newEmployee];
-      toast.success('Employé ajouté avec succès');
     }
     
-    setEmployees(updatedEmployees);
+    const success = await saveEmployee(updatedEmployee);
     
-    // Mettre à jour le localStorage
-    const savedData = localStorage.getItem('planningData');
-    if (savedData) {
-      const data = JSON.parse(savedData);
-      data.employees = updatedEmployees;
-      localStorage.setItem('planningData', JSON.stringify(data));
-    } else {
-      localStorage.setItem('planningData', JSON.stringify({ employees: updatedEmployees }));
+    if (success) {
+      // Update the local state
+      let updatedEmployees: Employee[];
+      
+      if (employee.id) {
+        // Update existing employee
+        updatedEmployees = employees.map(emp => 
+          emp.id === employee.id ? updatedEmployee : emp
+        );
+      } else {
+        // Add new employee
+        updatedEmployees = [...employees, updatedEmployee];
+      }
+      
+      setEmployees(updatedEmployees);
+      
+      // Also update localStorage for compatibility
+      const savedData = localStorage.getItem('planningData');
+      if (savedData) {
+        const data = JSON.parse(savedData);
+        data.employees = updatedEmployees;
+        localStorage.setItem('planningData', JSON.stringify(data));
+      }
     }
   };
   
@@ -109,6 +163,7 @@ const Employees = () => {
             onAddEmployee={handleAddEmployee}
             onEditEmployee={handleEditEmployee}
             onDeleteEmployee={handleDeleteEmployee}
+            loading={loading}
           />
         </div>
         

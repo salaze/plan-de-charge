@@ -6,6 +6,7 @@ import { LegendModal } from '@/components/calendar/LegendModal';
 import { PlanningToolbar } from '@/components/planning/PlanningToolbar';
 import { usePlanningState } from '@/hooks/usePlanningState';
 import { useAuth } from '@/contexts/AuthContext';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const Index = () => {
   const { isAdmin } = useAuth();
@@ -16,6 +17,7 @@ const Index = () => {
     currentMonth,
     filters,
     isLegendOpen,
+    loading,
     setIsLegendOpen,
     handleMonthChange,
     handleStatusChange,
@@ -38,14 +40,24 @@ const Index = () => {
         />
         
         <div className="glass-panel p-1 md:p-4 animate-scale-in overflow-x-auto">
-          <PlanningGrid 
-            year={currentYear} 
-            month={currentMonth} 
-            employees={data.employees || []}
-            projects={data.projects || []}
-            onStatusChange={handleStatusChange}
-            isAdmin={isAdmin}
-          />
+          {loading ? (
+            <div className="space-y-4">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+            </div>
+          ) : (
+            <PlanningGrid 
+              year={currentYear} 
+              month={currentMonth} 
+              employees={data.employees || []}
+              projects={data.projects || []}
+              onStatusChange={handleStatusChange}
+              isAdmin={isAdmin}
+            />
+          )}
         </div>
         
         <LegendModal 

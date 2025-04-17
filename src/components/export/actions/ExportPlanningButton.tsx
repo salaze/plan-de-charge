@@ -3,7 +3,7 @@ import React from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { FileSpreadsheet } from 'lucide-react';
-import { exportToExcel } from '@/utils/exportUtils';
+import { exportToExcel } from '@/utils/export/excelExport';
 import { MonthData } from '@/types';
 
 interface ExportPlanningButtonProps {

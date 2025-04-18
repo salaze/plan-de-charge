@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Layout } from '@/components/layout/Layout';
@@ -6,6 +5,7 @@ import { StatusCode, STATUS_LABELS, STATUS_COLORS } from '@/types';
 import { generateId } from '@/utils';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { AdminTabs } from '@/components/admin/AdminTabs';
+import { RealtimeMonitor } from '@/components/RealtimeMonitor';
 
 const Admin = () => {
   const [data, setData] = useState(() => {
@@ -17,12 +17,10 @@ const Admin = () => {
     };
   });
   
-  // Initialiser les statuts si c'est le premier accès
   useEffect(() => {
     if (!data.statuses || data.statuses.length === 0) {
-      // Créer des statuts par défaut à partir des STATUS_LABELS et STATUS_COLORS
       const defaultStatuses = Object.entries(STATUS_LABELS)
-        .filter(([code]) => code !== '') // Ignorer le statut vide
+        .filter(([code]) => code !== '')
         .map(([code, label]) => ({
           id: generateId(),
           code: code as StatusCode,
@@ -42,7 +40,6 @@ const Admin = () => {
       const savedData = localStorage.getItem('planningData');
       const fullData = savedData ? JSON.parse(savedData) : {};
       
-      // Mettre à jour les projets, les employés et les statuts dans le localStorage
       localStorage.setItem('planningData', JSON.stringify({
         ...fullData,
         projects: data.projects,
@@ -77,6 +74,8 @@ const Admin = () => {
     <Layout>
       <div className="space-y-6 animate-fade-in">
         <AdminHeader />
+        
+        <RealtimeMonitor />
         
         <AdminTabs 
           projects={data.projects || []}

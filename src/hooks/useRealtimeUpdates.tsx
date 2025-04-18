@@ -1,6 +1,7 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Employee } from '@/types';
+import { Employee, StatusCode } from '@/types';
 
 export function useRealtimeEmployeeSchedule() {
   const [updates, setUpdates] = useState<any[]>([]);
@@ -69,7 +70,12 @@ export function useRealtimeEmployees() {
 }
 
 export function useRealtimeStatuses() {
-  const [updates, setUpdates] = useState<any[]>([]);
+  const [updates, setUpdates] = useState<{
+    id: string;
+    code: StatusCode;
+    libelle: string;
+    couleur: string;
+  }[]>([]);
 
   useEffect(() => {
     const channel = supabase
@@ -83,7 +89,12 @@ export function useRealtimeStatuses() {
         },
         (payload) => {
           console.log('New status:', payload);
-          setUpdates(prev => [...prev, payload.new]);
+          setUpdates(prev => [...prev, {
+            id: payload.new.id,
+            code: payload.new.code,
+            libelle: payload.new.libelle,
+            couleur: payload.new.couleur
+          }]);
         }
       )
       .subscribe();

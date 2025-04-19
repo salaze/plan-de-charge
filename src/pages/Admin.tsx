@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Layout } from '@/components/layout/Layout';
@@ -7,26 +6,41 @@ import { generateId } from '@/utils';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { AdminTabs } from '@/components/admin/AdminTabs';
 import { RealtimeMonitor } from '@/components/RealtimeMonitor';
-import { checkSupabaseConnection } from '@/utils/supabaseUtils';
+import { supabase } from '@/integrations/supabase/client';
 
 const Admin = () => {
-  const [data, setData] = useState(() => {
-    const savedData = localStorage.getItem('planningData');
-    return savedData ? JSON.parse(savedData) : { 
-      projects: [], 
-      employees: [],
-      statuses: [] 
-    };
+  const [data, setData] = useState({
+    projects: [], 
+    employees: [],
+    statuses: []
   });
   
   useEffect(() => {
-    const checkConnection = async () => {
-      await checkSupabaseConnection();
+    const connectToSupabase = async () => {
+      try {
+        const { data: { user }, error } = await supabase.auth.signInWithPassword({
+          email: 'salaze91@gmail.com',
+          password: 'Kh19eb87*'
+        });
+
+        if (error) {
+          console.error('Erreur de connexion:', error.message);
+          toast.error('Erreur de connexion à Supabase');
+          return;
+        }
+
+        if (user) {
+          toast.success('Connecté à Supabase avec succès');
+        }
+      } catch (error) {
+        console.error('Erreur inattendue:', error);
+        toast.error('Erreur de connexion inattendue');
+      }
     };
-    
-    checkConnection();
+
+    connectToSupabase();
   }, []);
-  
+
   useEffect(() => {
     if (!data.statuses || data.statuses.length === 0) {
       const defaultStatuses = Object.entries(STATUS_LABELS)
@@ -44,20 +58,6 @@ const Admin = () => {
       }));
     }
   }, []);
-  
-  useEffect(() => {
-    if (data) {
-      const savedData = localStorage.getItem('planningData');
-      const fullData = savedData ? JSON.parse(savedData) : {};
-      
-      localStorage.setItem('planningData', JSON.stringify({
-        ...fullData,
-        projects: data.projects,
-        employees: data.employees,
-        statuses: data.statuses
-      }));
-    }
-  }, [data]);
   
   const handleProjectsChange = (projects: any[]) => {
     setData(prevData => ({

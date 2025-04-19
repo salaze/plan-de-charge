@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Layout } from '@/components/layout/Layout';
@@ -15,11 +16,8 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Employee } from '@/types';
 import { generateId } from '@/utils';
-import { fetchEmployees, saveEmployee, deleteEmployee, checkSupabaseConnection } from '@/utils/supabase';
+import { fetchEmployees, saveEmployee, deleteEmployee } from '@/utils/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { AlertCircle, CloudOff, RefreshCw } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
 
 const Employees = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -28,34 +26,34 @@ const Employees = () => {
   const [currentEmployee, setCurrentEmployee] = useState<Employee | undefined>(undefined);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<string>('');
-  const [isOffline, setIsOffline] = useState(false);
   const { isAdmin } = useAuth();
   
   // Function to load employees data
   const loadEmployees = async () => {
     setLoading(true);
-    
-    // Check connection first
-    const isOnline = await checkSupabaseConnection();
-    setIsOffline(!isOnline);
-    
-    const data = await fetchEmployees();
-    setEmployees(data);
-    setLoading(false);
-    
-    // Also update localStorage for compatibility with existing functionality
-    const savedData = localStorage.getItem('planningData');
-    if (savedData) {
-      const planningData = JSON.parse(savedData);
-      planningData.employees = data;
-      localStorage.setItem('planningData', JSON.stringify(planningData));
-    } else {
-      localStorage.setItem('planningData', JSON.stringify({
-        year: new Date().getFullYear(),
-        month: new Date().getMonth(),
-        employees: data,
-        projects: []
-      }));
+    try {
+      const data = await fetchEmployees();
+      setEmployees(data);
+      
+      // Also update localStorage for compatibility with existing functionality
+      const savedData = localStorage.getItem('planningData');
+      if (savedData) {
+        const planningData = JSON.parse(savedData);
+        planningData.employees = data;
+        localStorage.setItem('planningData', JSON.stringify(planningData));
+      } else {
+        localStorage.setItem('planningData', JSON.stringify({
+          year: new Date().getFullYear(),
+          month: new Date().getMonth(),
+          employees: data,
+          projects: []
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading employees:', error);
+      toast.error('Erreur lors du chargement des employés');
+    } finally {
+      setLoading(false);
     }
   };
   
@@ -97,23 +95,28 @@ const Employees = () => {
   const confirmDeleteEmployee = async () => {
     if (!employeeToDelete || !isAdmin) return;
     
-    const success = await deleteEmployee(employeeToDelete);
-    
-    if (success) {
-      const updatedEmployees = employees.filter(emp => emp.id !== employeeToDelete);
-      setEmployees(updatedEmployees);
+    try {
+      const success = await deleteEmployee(employeeToDelete);
       
-      // Also update localStorage for compatibility
-      const savedData = localStorage.getItem('planningData');
-      if (savedData) {
-        const data = JSON.parse(savedData);
-        data.employees = updatedEmployees;
-        localStorage.setItem('planningData', JSON.stringify(data));
+      if (success) {
+        const updatedEmployees = employees.filter(emp => emp.id !== employeeToDelete);
+        setEmployees(updatedEmployees);
+        
+        // Also update localStorage for compatibility
+        const savedData = localStorage.getItem('planningData');
+        if (savedData) {
+          const data = JSON.parse(savedData);
+          data.employees = updatedEmployees;
+          localStorage.setItem('planningData', JSON.stringify(data));
+        }
       }
+    } catch (error) {
+      console.error('Error deleting employee:', error);
+      toast.error('Erreur lors de la suppression de l\'employé');
+    } finally {
+      setDeleteDialogOpen(false);
+      setEmployeeToDelete('');
     }
-    
-    setDeleteDialogOpen(false);
-    setEmployeeToDelete('');
   };
   
   const handleSaveEmployee = async (employee: Employee) => {
@@ -133,60 +136,45 @@ const Employees = () => {
       };
     }
     
-    const success = await saveEmployee(updatedEmployee);
-    
-    if (success) {
-      // Update the local state
-      let updatedEmployees: Employee[];
+    try {
+      const success = await saveEmployee(updatedEmployee);
       
-      if (employee.id) {
-        // Update existing employee
-        updatedEmployees = employees.map(emp => 
-          emp.id === employee.id ? updatedEmployee : emp
-        );
-      } else {
-        // Add new employee
-        updatedEmployees = [...employees, updatedEmployee];
+      if (success) {
+        // Update the local state
+        let updatedEmployees: Employee[];
+        
+        if (employee.id) {
+          // Update existing employee
+          updatedEmployees = employees.map(emp => 
+            emp.id === employee.id ? updatedEmployee : emp
+          );
+        } else {
+          // Add new employee
+          updatedEmployees = [...employees, updatedEmployee];
+        }
+        
+        setEmployees(updatedEmployees);
+        
+        // Also update localStorage for compatibility
+        const savedData = localStorage.getItem('planningData');
+        if (savedData) {
+          const data = JSON.parse(savedData);
+          data.employees = updatedEmployees;
+          localStorage.setItem('planningData', JSON.stringify(data));
+        }
+        
+        setFormOpen(false);
       }
-      
-      setEmployees(updatedEmployees);
-      
-      // Also update localStorage for compatibility
-      const savedData = localStorage.getItem('planningData');
-      if (savedData) {
-        const data = JSON.parse(savedData);
-        data.employees = updatedEmployees;
-        localStorage.setItem('planningData', JSON.stringify(data));
-      }
-      
-      setFormOpen(false);
+    } catch (error) {
+      console.error('Error saving employee:', error);
+      toast.error('Erreur lors de la sauvegarde de l\'employé');
     }
-  };
-  
-  // Function to try reconnecting to Supabase
-  const handleTryReconnect = () => {
-    toast.info("Tentative de reconnexion à la base de données...");
-    loadEmployees();
   };
   
   return (
     <Layout>
       <div className="space-y-6 animate-fade-in">
         <h1 className="text-3xl font-bold mb-6">Gestion des employés</h1>
-        
-        {isOffline && (
-          <Alert className="bg-amber-50 border-amber-200">
-            <CloudOff className="h-4 w-4" />
-            <AlertTitle>Mode Hors-ligne</AlertTitle>
-            <AlertDescription className="flex justify-between items-center">
-              <span>Vous travaillez actuellement en mode hors-ligne. Les modifications sont enregistrées localement.</span>
-              <Button variant="outline" size="sm" onClick={handleTryReconnect} className="ml-4">
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Réessayer la connexion
-              </Button>
-            </AlertDescription>
-          </Alert>
-        )}
         
         <div className="glass-panel p-6 animate-scale-in">
           <EmployeeList 

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Layout } from '@/components/layout/Layout';
@@ -7,9 +8,6 @@ import { AdminHeader } from '@/components/admin/AdminHeader';
 import { AdminTabs } from '@/components/admin/AdminTabs';
 import { RealtimeMonitor } from '@/components/RealtimeMonitor';
 import { checkSupabaseConnection } from '@/utils/supabaseUtils';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { CloudOff, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 const Admin = () => {
   const [data, setData] = useState(() => {
@@ -21,18 +19,12 @@ const Admin = () => {
     };
   });
   
-  const [isOffline, setIsOffline] = useState(false);
-  
   useEffect(() => {
     const checkConnection = async () => {
-      const isOnline = await checkSupabaseConnection();
-      setIsOffline(!isOnline);
+      await checkSupabaseConnection();
     };
     
     checkConnection();
-    
-    const interval = setInterval(checkConnection, 60000); // every minute
-    return () => clearInterval(interval);
   }, []);
   
   useEffect(() => {
@@ -88,30 +80,10 @@ const Admin = () => {
     }));
   };
   
-  const handleTryReconnect = async () => {
-    toast.info("Tentative de reconnexion à la base de données...");
-    const isOnline = await checkSupabaseConnection();
-    setIsOffline(!isOnline);
-  };
-  
   return (
     <Layout>
       <div className="space-y-6 animate-fade-in">
         <AdminHeader />
-        
-        {isOffline && (
-          <Alert className="bg-amber-50 border-amber-200">
-            <CloudOff className="h-4 w-4" />
-            <AlertTitle>Mode Hors-ligne</AlertTitle>
-            <AlertDescription className="flex justify-between items-center">
-              <span>Vous travaillez actuellement en mode hors-ligne. Les modifications sont enregistrées localement.</span>
-              <Button variant="outline" size="sm" onClick={handleTryReconnect} className="ml-4">
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Réessayer la connexion
-              </Button>
-            </AlertDescription>
-          </Alert>
-        )}
         
         <RealtimeMonitor />
         

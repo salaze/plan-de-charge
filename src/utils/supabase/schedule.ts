@@ -1,19 +1,8 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { DayStatus } from '@/types';
-import { getOfflineMode } from './connection';
 
 export const fetchSchedule = async (employeeId: string) => {
-  if (getOfflineMode()) {
-    const savedData = localStorage.getItem('planningData');
-    if (savedData) {
-      const data = JSON.parse(savedData);
-      const employee = data.employees.find((emp: any) => emp.id === employeeId);
-      return employee?.schedule || [];
-    }
-    return [];
-  }
-  
   try {
     const { data, error } = await supabase
       .from('employe_schedule')
@@ -32,14 +21,7 @@ export const fetchSchedule = async (employeeId: string) => {
     })) as DayStatus[];
   } catch (error) {
     console.error('Error fetching schedule:', error);
-    
-    const savedData = localStorage.getItem('planningData');
-    if (savedData) {
-      const data = JSON.parse(savedData);
-      const employee = data.employees.find((emp: any) => emp.id === employeeId);
-      return employee?.schedule || [];
-    }
-    return [];
+    throw error;
   }
 };
 
@@ -64,7 +46,7 @@ export const saveScheduleEntry = async (
     return true;
   } catch (error) {
     console.error('Error saving schedule entry:', error);
-    return false;
+    throw error;
   }
 };
 
@@ -87,6 +69,6 @@ export const deleteScheduleEntry = async (
     return true;
   } catch (error) {
     console.error('Error deleting schedule entry:', error);
-    return false;
+    throw error;
   }
 };

@@ -60,27 +60,7 @@ export const usePlanningState = () => {
         }));
       } catch (error) {
         console.error('Error loading data from Supabase:', error);
-        
-        // Fall back to localStorage if Supabase fails
-        const savedData = localStorage.getItem('planningData');
-        if (savedData) {
-          try {
-            const parsedData = JSON.parse(savedData);
-            
-            // Ensure data has the correct structure
-            if (!parsedData.year) parsedData.year = new Date().getFullYear();
-            if (!parsedData.month && parsedData.month !== 0) parsedData.month = new Date().getMonth();
-            if (!Array.isArray(parsedData.employees)) parsedData.employees = [];
-            if (!parsedData.projects) parsedData.projects = getExistingProjects();
-            
-            setData(parsedData);
-          } catch (error) {
-            console.error("Error reading localStorage data:", error);
-            setData(createDefaultData());
-          }
-        } else {
-          setData(createDefaultData());
-        }
+        toast.error('Erreur lors du chargement des données');
       } finally {
         setLoading(false);
       }
@@ -95,13 +75,7 @@ export const usePlanningState = () => {
     setFilteredData(filtered);
   }, [data, filters]);
 
-  function createDefaultData() {
-    const sampleData = createSampleData();
-    sampleData.projects = getExistingProjects();
-    return sampleData;
-  }
-
-  // Save data to Supabase and localStorage
+  // Save data to localStorage for compatibility
   const saveDataToLocalStorage = useCallback((updatedData: MonthData) => {
     localStorage.setItem('planningData', JSON.stringify(updatedData));
   }, []);
@@ -129,67 +103,67 @@ export const usePlanningState = () => {
       return;
     }
     
-    // Update the local state first for immediate feedback
-    setData((prevData) => {
-      const updatedEmployees = prevData.employees.map((employee) => {
-        if (employee.id === employeeId) {
-          // Trouver si un statut existe déjà pour cette date et période
-          const existingStatusIndex = employee.schedule.findIndex(
-            (day) => day.date === date && day.period === period
-          );
-          
-          if (existingStatusIndex >= 0) {
-            // Mise à jour d'un statut existant
-            if (status === '') {
-              // Si le nouveau statut est vide, supprimer l'entrée
-              const newSchedule = [...employee.schedule];
-              newSchedule.splice(existingStatusIndex, 1);
-              return { ...employee, schedule: newSchedule };
-            } else {
-              // Sinon, mettre à jour l'entrée existante
-              const newSchedule = [...employee.schedule];
-              newSchedule[existingStatusIndex] = {
-                date,
-                status,
-                period,
-                isHighlighted,
-                projectCode: status === 'projet' ? projectCode : undefined
-              };
-              return { ...employee, schedule: newSchedule };
-            }
-          } else if (status !== '') {
-            // Ajout d'un nouveau statut
-            return {
-              ...employee,
-              schedule: [
-                ...employee.schedule,
-                {
+    try {
+      // Update the local state first for immediate feedback
+      setData((prevData) => {
+        const updatedEmployees = prevData.employees.map((employee) => {
+          if (employee.id === employeeId) {
+            // Trouver si un statut existe déjà pour cette date et période
+            const existingStatusIndex = employee.schedule.findIndex(
+              (day) => day.date === date && day.period === period
+            );
+            
+            if (existingStatusIndex >= 0) {
+              // Mise à jour d'un statut existant
+              if (status === '') {
+                // Si le nouveau statut est vide, supprimer l'entrée
+                const newSchedule = [...employee.schedule];
+                newSchedule.splice(existingStatusIndex, 1);
+                return { ...employee, schedule: newSchedule };
+              } else {
+                // Sinon, mettre à jour l'entrée existante
+                const newSchedule = [...employee.schedule];
+                newSchedule[existingStatusIndex] = {
                   date,
                   status,
                   period,
                   isHighlighted,
                   projectCode: status === 'projet' ? projectCode : undefined
-                }
-              ]
-            };
+                };
+                return { ...employee, schedule: newSchedule };
+              }
+            } else if (status !== '') {
+              // Ajout d'un nouveau statut
+              return {
+                ...employee,
+                schedule: [
+                  ...employee.schedule,
+                  {
+                    date,
+                    status,
+                    period,
+                    isHighlighted,
+                    projectCode: status === 'projet' ? projectCode : undefined
+                  }
+                ]
+              };
+            }
           }
-        }
-        return employee;
+          return employee;
+        });
+        
+        const updatedData = {
+          ...prevData,
+          employees: updatedEmployees
+        };
+        
+        // Sauvegarder immédiatement les données mises à jour
+        saveDataToLocalStorage(updatedData);
+        
+        return updatedData;
       });
       
-      const updatedData = {
-        ...prevData,
-        employees: updatedEmployees
-      };
-      
-      // Sauvegarder immédiatement les données mises à jour
-      saveDataToLocalStorage(updatedData);
-      
-      return updatedData;
-    });
-    
-    // Then update in Supabase
-    try {
+      // Then update in Supabase
       if (status === '') {
         // Delete the entry
         await deleteScheduleEntry(employeeId, date, period);
@@ -227,8 +201,8 @@ export const usePlanningState = () => {
   };
 
   return {
-    data: filteredData, // Utiliser les données filtrées
-    originalData: data, // Conserver l'accès aux données originales si nécessaire
+    data: filteredData,
+    originalData: data,
     currentYear,
     currentMonth,
     filters,

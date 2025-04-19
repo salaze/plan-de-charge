@@ -25,6 +25,6 @@ export const syncWithSupabase = async (data: MonthData) => {
   } catch (error) {
     console.error('Error synchronizing with Supabase:', error);
     toast.error('Erreur lors de la synchronisation avec Supabase');
-    return false;
+    throw error;
   }
 };

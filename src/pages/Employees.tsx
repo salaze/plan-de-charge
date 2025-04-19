@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Layout } from '@/components/layout/Layout';
@@ -16,7 +15,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Employee } from '@/types';
 import { generateId } from '@/utils';
-import { fetchEmployees, saveEmployee, deleteEmployee, checkSupabaseConnection } from '@/utils/supabaseUtils';
+import { fetchEmployees, saveEmployee, deleteEmployee, checkSupabaseConnection } from '@/utils/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { AlertCircle, CloudOff, RefreshCw } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -176,7 +175,7 @@ const Employees = () => {
         <h1 className="text-3xl font-bold mb-6">Gestion des employés</h1>
         
         {isOffline && (
-          <Alert variant="warning" className="bg-amber-50 border-amber-200">
+          <Alert className="bg-amber-50 border-amber-200">
             <CloudOff className="h-4 w-4" />
             <AlertTitle>Mode Hors-ligne</AlertTitle>
             <AlertDescription className="flex justify-between items-center">

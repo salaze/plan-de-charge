@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Layout } from '@/components/layout/Layout';
@@ -24,7 +23,6 @@ const Admin = () => {
   
   const [isOffline, setIsOffline] = useState(false);
   
-  // Check connection status
   useEffect(() => {
     const checkConnection = async () => {
       const isOnline = await checkSupabaseConnection();
@@ -33,7 +31,6 @@ const Admin = () => {
     
     checkConnection();
     
-    // Check connection status periodically
     const interval = setInterval(checkConnection, 60000); // every minute
     return () => clearInterval(interval);
   }, []);
@@ -91,7 +88,6 @@ const Admin = () => {
     }));
   };
   
-  // Function to try reconnecting to Supabase
   const handleTryReconnect = async () => {
     toast.info("Tentative de reconnexion à la base de données...");
     const isOnline = await checkSupabaseConnection();
@@ -104,7 +100,7 @@ const Admin = () => {
         <AdminHeader />
         
         {isOffline && (
-          <Alert variant="warning" className="bg-amber-50 border-amber-200">
+          <Alert className="bg-amber-50 border-amber-200">
             <CloudOff className="h-4 w-4" />
             <AlertTitle>Mode Hors-ligne</AlertTitle>
             <AlertDescription className="flex justify-between items-center">

@@ -28,10 +28,11 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Edit, Plus, Trash } from 'lucide-react';
+import { Edit, Plus, Trash, Wifi, WifiOff } from 'lucide-react';
 import { generateId } from '@/utils';
 import { StatusCode, STATUS_LABELS, STATUS_COLORS } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface Status {
   id: string;
@@ -43,9 +44,16 @@ interface Status {
 interface StatusManagerProps {
   statuses: Status[];
   onStatusesChange: (statuses: Status[]) => void;
+  isLoading?: boolean;
+  isConnected?: boolean;
 }
 
-export function StatusManager({ statuses, onStatusesChange }: StatusManagerProps) {
+export function StatusManager({ 
+  statuses, 
+  onStatusesChange,
+  isLoading = false,
+  isConnected = true
+}: StatusManagerProps) {
   const [formOpen, setFormOpen] = useState(false);
   const [currentStatus, setCurrentStatus] = useState<Status | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -102,13 +110,15 @@ export function StatusManager({ statuses, onStatusesChange }: StatusManagerProps
       const statusToRemove = statuses.find(status => status.id === statusToDelete);
       
       if (statusToRemove) {
-        // Supprimer de Supabase
-        const { error } = await supabase
-          .from('statuts')
-          .delete()
-          .eq('id', statusToDelete);
-          
-        if (error) throw error;
+        if (isConnected) {
+          // Supprimer de Supabase
+          const { error } = await supabase
+            .from('statuts')
+            .delete()
+            .eq('id', statusToDelete);
+            
+          if (error) throw error;
+        }
       }
       
       // Mettre à jour l'état local
@@ -146,16 +156,18 @@ export function StatusManager({ statuses, onStatusesChange }: StatusManagerProps
     try {
       if (currentStatus) {
         // Mettre à jour un statut existant
-        const { error } = await supabase
-          .from('statuts')
-          .update({
-            code: code,
-            libelle: label,
-            couleur: color
-          })
-          .eq('id', currentStatus.id);
-          
-        if (error) throw error;
+        if (isConnected) {
+          const { error } = await supabase
+            .from('statuts')
+            .update({
+              code: code,
+              libelle: label,
+              couleur: color
+            })
+            .eq('id', currentStatus.id);
+            
+          if (error) throw error;
+        }
           
         // Mettre à jour l'état local
         const updatedStatuses = statuses.map(status => 
@@ -175,17 +187,19 @@ export function StatusManager({ statuses, onStatusesChange }: StatusManagerProps
           color
         };
         
-        const { error } = await supabase
-          .from('statuts')
-          .insert({
-            id: newStatus.id,
-            code: code,
-            libelle: label,
-            couleur: color,
-            display_order: 0
-          });
-          
-        if (error) throw error;
+        if (isConnected) {
+          const { error } = await supabase
+            .from('statuts')
+            .insert({
+              id: newStatus.id,
+              code: code,
+              libelle: label,
+              couleur: color,
+              display_order: 0
+            });
+            
+          if (error) throw error;
+        }
         
         // Mettre à jour l'état local
         const updatedStatuses = [...statuses, newStatus];
@@ -224,14 +238,53 @@ export function StatusManager({ statuses, onStatusesChange }: StatusManagerProps
     { value: 'bg-gray-500 text-white', label: 'Gris' },
   ];
   
-  return (
-    <>
+  if (isLoading) {
+    return (
       <Card className="w-full">
         <CardHeader>
           <CardTitle>Gestion des statuts</CardTitle>
           <CardDescription>
             Ajouter, modifier ou supprimer des statuts et leur code associé
           </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex justify-end mb-4">
+            <Skeleton className="h-10 w-40" />
+          </div>
+          
+          <div className="space-y-4">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  return (
+    <>
+      <Card className="w-full">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Gestion des statuts</CardTitle>
+            <CardDescription>
+              Ajouter, modifier ou supprimer des statuts et leur code associé
+            </CardDescription>
+          </div>
+          <div className="flex items-center">
+            {isConnected ? (
+              <div className="flex items-center text-xs text-green-600 font-medium mr-4">
+                <Wifi className="h-3 w-3 mr-1" />
+                <span>Connecté</span>
+              </div>
+            ) : (
+              <div className="flex items-center text-xs text-amber-600 font-medium mr-4">
+                <WifiOff className="h-3 w-3 mr-1" />
+                <span>Hors ligne</span>
+              </div>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           <div className="flex justify-end mb-4">

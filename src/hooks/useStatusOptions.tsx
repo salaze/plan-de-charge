@@ -19,11 +19,18 @@ export function useStatusOptions(defaultStatuses: StatusCode[] = []) {
       setIsLoading(true);
       try {
         console.log("Chargement des options de statut depuis Supabase...");
+        // Utiliser un mécanisme de timeout pour éviter des attentes trop longues
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 secondes de timeout
+        
         const { data: statusData, error } = await supabase
           .from('statuts')
           .select('code, libelle')
-          .order('display_order', { ascending: true });
+          .order('display_order', { ascending: true })
+          .abortSignal(controller.signal);
           
+        clearTimeout(timeoutId);
+        
         if (error) {
           console.error("Erreur lors du chargement des options de statut:", error);
           throw error;

@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { UserRole, Employee } from '@/types';
 import { toast } from 'sonner';
 
@@ -33,6 +33,7 @@ export const useAuth = () => {
 // Create a separate component that will use the useNavigate hook
 const AuthProviderWithNavigate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [user, setUser] = useState<User>(null);
   
   useEffect(() => {

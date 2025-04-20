@@ -7,7 +7,7 @@ import DepartmentFilter from '@/components/export/DepartmentFilter';
 import ExportTabs from '@/components/export/ExportTabs';
 import { useImportPlanning } from '@/hooks/useImportPlanning';
 import { useImportEmployees } from '@/hooks/useImportEmployees';
-import { usePlanningData } from '@/hooks/usePlanningData';
+import { usePlanningData } from '@/hooks/planning/usePlanningData';
 import { useDateSelection } from '@/hooks/useDateSelection';
 import { useExportActions } from '@/hooks/useExportActions';
 import { ExportPlanningButton } from '@/components/export/actions/ExportPlanningButton';

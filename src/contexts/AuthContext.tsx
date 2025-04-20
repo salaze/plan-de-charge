@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, NavigateFunction } from 'react-router-dom';
 import { UserRole, Employee } from '@/types';
 import { toast } from 'sonner';
 
@@ -30,10 +30,11 @@ export const useAuth = () => {
   return context;
 };
 
-// Create a separate component that will use the useNavigate hook
-const AuthProviderWithNavigate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const navigate = useNavigate();
-  const location = useLocation();
+// Split implementation into a context component that doesn't use router hooks
+const AuthProviderImpl: React.FC<{ 
+  children: React.ReactNode; 
+  navigate: NavigateFunction;
+}> = ({ children, navigate }) => {
   const [user, setUser] = useState<User>(null);
   
   useEffect(() => {
@@ -175,7 +176,11 @@ const AuthProviderWithNavigate: React.FC<{ children: React.ReactNode }> = ({ chi
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-// Export a wrapper component that doesn't use hooks directly
+// Wrapper component that safely uses router hooks
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return <AuthProviderWithNavigate>{children}</AuthProviderWithNavigate>;
+  // Get the navigate function from the router context
+  const navigate = useNavigate();
+  
+  // This ensures useNavigate is only called inside a Router context
+  return <AuthProviderImpl navigate={navigate}>{children}</AuthProviderImpl>;
 };

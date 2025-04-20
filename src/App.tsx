@@ -13,6 +13,7 @@ import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import Admin from "./pages/Admin";
 import AdminLogin from "./pages/AdminLogin";
+import Export from "./pages/Export";
 
 const queryClient = new QueryClient();
 
@@ -24,8 +25,8 @@ const TooltipWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) =
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <BrowserRouter>
-      <AuthProvider>
-        <TooltipWrapper>
+      <TooltipWrapper>
+        <AuthProvider>
           <Routes>
             {/* Page principale accessible sans authentification */}
             <Route path="/" element={<Index />} />
@@ -54,6 +55,14 @@ const App = () => (
                 </AdminRoute>
               } 
             />
+            <Route 
+              path="/export" 
+              element={
+                <AdminRoute>
+                  <Export />
+                </AdminRoute>
+              } 
+            />
             <Route path="/login" element={<AdminLogin />} />
             <Route 
               path="/admin" 
@@ -67,8 +76,8 @@ const App = () => (
           </Routes>
           <Toaster />
           <Sonner />
-        </TooltipWrapper>
-      </AuthProvider>
+        </AuthProvider>
+      </TooltipWrapper>
     </BrowserRouter>
   </QueryClientProvider>
 );

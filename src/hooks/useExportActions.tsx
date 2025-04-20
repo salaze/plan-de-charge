@@ -4,7 +4,7 @@ import { usePlanningData } from './planning/usePlanningData';
 import { useDateSelection } from './useDateSelection';
 
 export const useExportActions = (selectedDepartment: string) => {
-  const planningData = usePlanningData();
+  const { data: planningData } = usePlanningData();
   const { currentYear, currentMonth } = useDateSelection();
   
   const handleExport = () => {

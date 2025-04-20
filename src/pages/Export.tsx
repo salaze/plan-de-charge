@@ -22,7 +22,7 @@ const Export = () => {
   const { date, currentYear, currentMonth, setCurrentYear, setCurrentMonth } = useDateSelection();
   const { importedData, handleImportSuccess } = useImportPlanning();
   const { importedEmployees, handleImportEmployees } = useImportEmployees();
-  const planningData = usePlanningData();
+  const { data: planningData } = usePlanningData();
   const { handleExport, handleExportEmployees, handleExportStats } = useExportActions(selectedDepartment);
   
   return (

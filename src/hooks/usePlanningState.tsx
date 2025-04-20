@@ -5,7 +5,8 @@ import { MonthData, StatusCode, DayPeriod, FilterOptions } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { createSampleData } from '@/utils';
 import { filterData } from '@/utils/dataFilterUtils';
-import { fetchEmployees, fetchSchedule, saveScheduleEntry, deleteScheduleEntry } from '@/utils/supabaseUtils';
+import { fetchEmployees } from '@/utils/supabase/employees';
+import { fetchSchedule, saveScheduleEntry, deleteScheduleEntry } from '@/utils/supabase/schedule';
 import { getExistingProjects } from '@/utils/export/projectUtils';
 
 export const usePlanningState = () => {
@@ -26,6 +27,8 @@ export const usePlanningState = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [filters, setFilters] = useState<FilterOptions>({});
   const [isLegendOpen, setIsLegendOpen] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const maxRetries = 3;
 
   // Données filtrées basées sur les filtres appliqués
   const [filteredData, setFilteredData] = useState<MonthData>(data);
@@ -36,13 +39,22 @@ export const usePlanningState = () => {
       setLoading(true);
       
       try {
+        console.log(`Tentative de chargement des données (essai ${retryCount + 1}/${maxRetries})...`);
+        
         // Load employees from Supabase
         const employees = await fetchEmployees();
+        console.log(`${employees.length} employés récupérés de Supabase`);
         
         // Load schedule for each employee
         for (let i = 0; i < employees.length; i++) {
-          const schedule = await fetchSchedule(employees[i].id);
-          employees[i].schedule = schedule;
+          try {
+            const schedule = await fetchSchedule(employees[i].id);
+            employees[i].schedule = schedule;
+            console.log(`Planning chargé pour l'employé ${employees[i].name}: ${schedule.length} entrées`);
+          } catch (scheduleError) {
+            console.error(`Erreur lors du chargement du planning pour ${employees[i].name}:`, scheduleError);
+            employees[i].schedule = [];
+          }
         }
         
         // Update state with loaded data
@@ -58,9 +70,33 @@ export const usePlanningState = () => {
           employees,
           projects: getExistingProjects()
         }));
+        
+        // Reset retry count on success
+        setRetryCount(0);
       } catch (error) {
         console.error('Error loading data from Supabase:', error);
-        toast.error('Erreur lors du chargement des données');
+        
+        if (retryCount < maxRetries - 1) {
+          // Increment retry count and try again after a delay
+          setRetryCount(prev => prev + 1);
+          setTimeout(() => {
+            loadData();
+          }, 2000); // Wait 2 seconds before retrying
+          return;
+        } else {
+          toast.error('Erreur persistante lors du chargement des données. Vérifiez votre connexion réseau.');
+          // Load from localStorage as a fallback
+          try {
+            const savedData = localStorage.getItem('planningData');
+            if (savedData) {
+              const parsedData = JSON.parse(savedData);
+              setData(parsedData);
+              console.log("Données chargées depuis le cache local");
+            }
+          } catch (localError) {
+            console.error('Erreur lors du chargement des données depuis le cache:', localError);
+          }
+        }
       } finally {
         setLoading(false);
       }
@@ -88,6 +124,7 @@ export const usePlanningState = () => {
   const handleMonthChange = (year: number, month: number) => {
     setCurrentYear(year);
     setCurrentMonth(month);
+    setRetryCount(0); // Reset retry count when changing months
   };
   
   const handleStatusChange = async (
@@ -167,6 +204,7 @@ export const usePlanningState = () => {
       if (status === '') {
         // Delete the entry
         await deleteScheduleEntry(employeeId, date, period);
+        console.log(`Entrée supprimée pour ${employeeId} le ${date} (${period})`);
       } else {
         // Save the entry
         await saveScheduleEntry(employeeId, {
@@ -176,10 +214,11 @@ export const usePlanningState = () => {
           isHighlighted,
           projectCode: status === 'projet' ? projectCode : undefined
         });
+        console.log(`Entrée enregistrée pour ${employeeId} le ${date} (${period}): statut=${status}`);
       }
     } catch (error) {
       console.error('Error updating status in Supabase:', error);
-      toast.error('Erreur lors de la mise à jour du statut');
+      toast.error('Erreur lors de la mise à jour du statut. Vérifiez votre connexion internet.');
     }
   };
 

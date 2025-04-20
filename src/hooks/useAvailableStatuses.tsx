@@ -2,20 +2,29 @@
 import { useState, useEffect } from 'react';
 import { StatusCode } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export const useAvailableStatuses = (defaultStatuses: StatusCode[] = []) => {
   const [statuses, setStatuses] = useState<StatusCode[]>(defaultStatuses);
+  const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
     // Fonction pour récupérer les statuts depuis Supabase
     const loadStatusesFromSupabase = async () => {
+      setIsLoading(true);
       try {
+        console.log("Chargement des statuts depuis Supabase...");
         const { data, error } = await supabase
           .from('statuts')
           .select('code')
           .order('display_order', { ascending: true });
           
-        if (error) throw error;
+        if (error) {
+          console.error("Erreur lors du chargement des statuts:", error);
+          throw error;
+        }
+        
+        console.log("Statuts récupérés:", data);
         
         // Si nous avons des statuts depuis Supabase, les utiliser
         if (Array.isArray(data) && data.length > 0) {
@@ -23,16 +32,19 @@ export const useAvailableStatuses = (defaultStatuses: StatusCode[] = []) => {
             .filter((s) => s && s.code) // S'assurer que chaque statut a un code
             .map((s) => s.code as StatusCode);
             
+          console.log("Statuts valides:", validStatuses);
           setStatuses(validStatuses.length > 0 ? validStatuses : defaultStatuses);
-          return; // Sortir de la fonction si les statuts ont été chargés avec succès
+        } else {
+          // Si nous n'avons pas de statuts depuis Supabase, utiliser le localStorage
+          console.log("Aucun statut trouvé dans Supabase, chargement depuis localStorage");
+          loadStatusesFromLocalStorage();
         }
-        
-        // Si nous n'avons pas de statuts depuis Supabase, utiliser le localStorage
-        loadStatusesFromLocalStorage();
       } catch (error) {
         console.error('Error loading statuses from Supabase:', error);
         // En cas d'erreur, charger depuis localStorage
         loadStatusesFromLocalStorage();
+      } finally {
+        setIsLoading(false);
       }
     };
     
@@ -42,15 +54,19 @@ export const useAvailableStatuses = (defaultStatuses: StatusCode[] = []) => {
         const savedData = localStorage.getItem('planningData');
         const data = savedData ? JSON.parse(savedData) : { statuses: [] };
         
+        console.log("Données du localStorage:", data);
+        
         // Si nous avons des statuts personnalisés, extraire les codes
         if (Array.isArray(data.statuses) && data.statuses.length > 0) {
           const validStatuses = data.statuses
             .filter((s: any) => s && s.code) // S'assurer que chaque statut a un code
             .map((s: any) => s.code as StatusCode);
             
+          console.log("Statuts valides depuis localStorage:", validStatuses);
           setStatuses(validStatuses.length > 0 ? validStatuses : defaultStatuses);
         } else {
           // Utiliser les statuts par défaut fournis
+          console.log("Utilisation des statuts par défaut:", defaultStatuses);
           setStatuses(defaultStatuses);
         }
       } catch (error) {
@@ -72,8 +88,8 @@ export const useAvailableStatuses = (defaultStatuses: StatusCode[] = []) => {
           schema: 'public',
           table: 'statuts'
         },
-        (_payload) => {
-          console.log('Status change detected, refreshing available statuses');
+        (payload) => {
+          console.log('Status change detected, refreshing available statuses', payload);
           loadStatusesFromSupabase();
         }
       )
@@ -101,7 +117,7 @@ export const useAvailableStatuses = (defaultStatuses: StatusCode[] = []) => {
     };
   }, [defaultStatuses]);
   
-  return statuses;
+  return { statuses, isLoading };
 };
 
 export default useAvailableStatuses;

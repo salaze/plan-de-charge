@@ -9,6 +9,7 @@ import { StatusOption } from './StatusOption';
 import { ProjectSelector } from './ProjectSelector';
 import { HighlightOption } from './HighlightOption';
 import { toast } from 'sonner';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface StatusSelectorEnhancedProps {
   value: StatusCode;
@@ -32,7 +33,7 @@ export function StatusSelectorEnhanced({
   const [selectedStatus, setSelectedStatus] = useState<StatusCode>(value || 'none');
   
   // Use our custom hook to get available statuses
-  const availableStatuses = useStatusOptions();
+  const { availableStatuses, isLoading } = useStatusOptions();
   
   // Reset form when dialog reopens with new values
   useEffect(() => {
@@ -69,6 +70,20 @@ export function StatusSelectorEnhanced({
     
     toast.success(`Statut ${selectedPeriod === 'AM' ? 'matin' : 'après-midi'} enregistré avec succès`);
   };
+  
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-6 w-32 mb-3" />
+        <div className="grid grid-cols-2 gap-2">
+          {[...Array(6)].map((_, i) => (
+            <Skeleton key={i} className="h-10 w-full" />
+          ))}
+        </div>
+        <Skeleton className="h-10 w-full mt-4" />
+      </div>
+    );
+  }
   
   return (
     <div className="space-y-6">

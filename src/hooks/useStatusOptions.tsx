@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { StatusCode } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface StatusOption {
   value: StatusCode;
@@ -10,17 +11,25 @@ interface StatusOption {
 
 export function useStatusOptions(defaultStatuses: StatusCode[] = []) {
   const [availableStatuses, setAvailableStatuses] = useState<StatusOption[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
     // Fonction pour charger les statuts depuis Supabase
     const loadStatusesFromSupabase = async () => {
+      setIsLoading(true);
       try {
+        console.log("Chargement des options de statut depuis Supabase...");
         const { data: statusData, error } = await supabase
           .from('statuts')
           .select('code, libelle')
           .order('display_order', { ascending: true });
           
-        if (error) throw error;
+        if (error) {
+          console.error("Erreur lors du chargement des options de statut:", error);
+          throw error;
+        }
+        
+        console.log("Options de statut récupérées:", statusData);
         
         if (Array.isArray(statusData) && statusData.length > 0) {
           const supabaseStatuses = statusData
@@ -30,19 +39,22 @@ export function useStatusOptions(defaultStatuses: StatusCode[] = []) {
               label: status.libelle || status.code || 'Status'
             }));
           
+          console.log("Options de statut valides:", supabaseStatuses);
           setAvailableStatuses([
             { value: 'none', label: 'Aucun' },
             ...supabaseStatuses
           ]);
-          return; // Sortir de la fonction si les statuts de Supabase sont chargés avec succès
+        } else {
+          // Si nous n'avons pas pu charger depuis Supabase, essayer le localStorage
+          console.log("Aucune option de statut trouvée dans Supabase, chargement depuis localStorage");
+          loadStatusesFromLocalStorage();
         }
-        
-        // Si nous n'avons pas pu charger depuis Supabase, essayer le localStorage
-        loadStatusesFromLocalStorage();
       } catch (error) {
         console.error('Error loading status options from Supabase:', error);
         // En cas d'erreur, charger depuis localStorage
         loadStatusesFromLocalStorage();
+      } finally {
+        setIsLoading(false);
       }
     };
     
@@ -51,6 +63,8 @@ export function useStatusOptions(defaultStatuses: StatusCode[] = []) {
       try {
         const savedData = localStorage.getItem('planningData');
         const data = savedData ? JSON.parse(savedData) : { statuses: [] };
+        
+        console.log("Données du localStorage pour les options:", data);
         
         // Si nous avons des statuts personnalisés, les utiliser
         if (Array.isArray(data.statuses) && data.statuses.length > 0) {
@@ -61,12 +75,14 @@ export function useStatusOptions(defaultStatuses: StatusCode[] = []) {
               label: status.label || status.code || 'Status'
             }));
           
+          console.log("Options de statut personnalisées:", customStatuses);
           setAvailableStatuses([
             { value: 'none', label: 'Aucun' },
             ...customStatuses
           ]);
         } else {
           // Sinon, utiliser les statuts par défaut
+          console.log("Utilisation des options de statut par défaut");
           setAvailableStatuses([
             { value: 'none', label: 'Aucun' },
             { value: 'assistance', label: 'Assistance' },
@@ -109,8 +125,8 @@ export function useStatusOptions(defaultStatuses: StatusCode[] = []) {
           schema: 'public',
           table: 'statuts'
         },
-        (_payload) => {
-          console.log('Status change detected, refreshing options');
+        (payload) => {
+          console.log('Status change detected, refreshing options', payload);
           loadStatusesFromSupabase();
         }
       )
@@ -136,7 +152,7 @@ export function useStatusOptions(defaultStatuses: StatusCode[] = []) {
     };
   }, [defaultStatuses]);
   
-  return availableStatuses;
+  return { availableStatuses, isLoading };
 }
 
 export default useStatusOptions;

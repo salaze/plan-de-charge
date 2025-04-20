@@ -8,12 +8,13 @@ import { filterData } from '@/utils/dataFilterUtils';
 import { fetchEmployees } from '@/utils/supabase/employees';
 import { fetchSchedule, saveScheduleEntry, deleteScheduleEntry } from '@/utils/supabase/schedule';
 import { getExistingProjects } from '@/utils/export/projectUtils';
+import { checkSupabaseConnection } from '@/utils/supabase/connection';
 
 export const usePlanningState = () => {
   const { isAdmin } = useAuth();
 
   const [data, setData] = useState<MonthData>(() => {
-    // Create default data structure that will be populated with Supabase data
+    // Créer une structure de données par défaut qui sera remplie avec les données de Supabase
     return {
       year: new Date().getFullYear(),
       month: new Date().getMonth(),
@@ -28,12 +29,13 @@ export const usePlanningState = () => {
   const [filters, setFilters] = useState<FilterOptions>({});
   const [isLegendOpen, setIsLegendOpen] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [isOnline, setIsOnline] = useState(true);
   const maxRetries = 3;
 
   // Données filtrées basées sur les filtres appliqués
   const [filteredData, setFilteredData] = useState<MonthData>(data);
 
-  // Load data from Supabase on component mount
+  // Charger les données depuis Supabase au montage du composant
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
@@ -41,11 +43,39 @@ export const usePlanningState = () => {
       try {
         console.log(`Tentative de chargement des données (essai ${retryCount + 1}/${maxRetries})...`);
         
-        // Load employees from Supabase
+        // Vérifier la connexion à Supabase d'abord
+        const isConnected = await checkSupabaseConnection();
+        setIsOnline(isConnected);
+        
+        if (!isConnected) {
+          console.log("Connexion à Supabase impossible, tentative de chargement depuis le cache local");
+          // Charger depuis localStorage comme fallback
+          try {
+            const savedData = localStorage.getItem('planningData');
+            if (savedData) {
+              const parsedData = JSON.parse(savedData);
+              setData(parsedData);
+              console.log("Données chargées depuis le cache local");
+              toast.info("Mode hors ligne: utilisation des données en cache", {
+                duration: 5000,
+              });
+            } else {
+              // Si pas de données en cache, créer des exemples
+              const sampleData = createSampleData();
+              setData(sampleData);
+              console.log("Pas de cache disponible, création de données exemple");
+            }
+          } catch (localError) {
+            console.error('Erreur lors du chargement des données depuis le cache:', localError);
+          }
+          return;
+        }
+        
+        // Charger les employés depuis Supabase
         const employees = await fetchEmployees();
         console.log(`${employees.length} employés récupérés de Supabase`);
         
-        // Load schedule for each employee
+        // Charger le planning pour chaque employé
         for (let i = 0; i < employees.length; i++) {
           try {
             const schedule = await fetchSchedule(employees[i].id);
@@ -57,13 +87,13 @@ export const usePlanningState = () => {
           }
         }
         
-        // Update state with loaded data
+        // Mettre à jour l'état avec les données chargées
         setData(prevData => ({
           ...prevData,
           employees
         }));
         
-        // Also store in localStorage for compatibility with existing functionality
+        // Stocker également dans localStorage pour compatibilité avec les fonctionnalités existantes
         localStorage.setItem('planningData', JSON.stringify({
           year: currentYear,
           month: currentMonth,
@@ -71,27 +101,44 @@ export const usePlanningState = () => {
           projects: getExistingProjects()
         }));
         
-        // Reset retry count on success
+        // Réinitialiser le compteur de tentatives en cas de succès
         setRetryCount(0);
-      } catch (error) {
-        console.error('Error loading data from Supabase:', error);
+      } catch (error: any) {
+        console.error('Erreur lors du chargement des données depuis Supabase:', error);
         
         if (retryCount < maxRetries - 1) {
-          // Increment retry count and try again after a delay
+          // Incrémenter le compteur de tentatives et réessayer après un délai
           setRetryCount(prev => prev + 1);
           setTimeout(() => {
             loadData();
-          }, 2000); // Wait 2 seconds before retrying
+          }, 2000 * (retryCount + 1)); // Attendre plus longtemps à chaque nouvel essai
           return;
         } else {
-          toast.error('Erreur persistante lors du chargement des données. Vérifiez votre connexion réseau.');
-          // Load from localStorage as a fallback
+          // Après le nombre maximum de tentatives, basculer en mode hors ligne
+          setIsOnline(false);
+          
+          if (error.message?.includes('NetworkError')) {
+            toast.error('Problème de connexion réseau. Basculement en mode hors ligne.', {
+              duration: 5000,
+            });
+          } else {
+            toast.error('Erreur persistante lors du chargement des données. Vérifiez votre connexion réseau.', {
+              duration: 5000,
+            });
+          }
+          
+          // Charger depuis localStorage comme fallback
           try {
             const savedData = localStorage.getItem('planningData');
             if (savedData) {
               const parsedData = JSON.parse(savedData);
               setData(parsedData);
               console.log("Données chargées depuis le cache local");
+            } else {
+              // Si pas de données en cache, créer des exemples
+              const sampleData = createSampleData();
+              setData(sampleData);
+              console.log("Pas de cache disponible, création de données exemple");
             }
           } catch (localError) {
             console.error('Erreur lors du chargement des données depuis le cache:', localError);
@@ -111,7 +158,7 @@ export const usePlanningState = () => {
     setFilteredData(filtered);
   }, [data, filters]);
 
-  // Save data to localStorage for compatibility
+  // Sauvegarder les données dans localStorage pour compatibilité
   const saveDataToLocalStorage = useCallback((updatedData: MonthData) => {
     localStorage.setItem('planningData', JSON.stringify(updatedData));
   }, []);
@@ -124,7 +171,7 @@ export const usePlanningState = () => {
   const handleMonthChange = (year: number, month: number) => {
     setCurrentYear(year);
     setCurrentMonth(month);
-    setRetryCount(0); // Reset retry count when changing months
+    setRetryCount(0); // Réinitialiser le compteur de tentatives lors du changement de mois
   };
   
   const handleStatusChange = async (
@@ -141,7 +188,7 @@ export const usePlanningState = () => {
     }
     
     try {
-      // Update the local state first for immediate feedback
+      // Mettre à jour l'état local d'abord pour un retour immédiat
       setData((prevData) => {
         const updatedEmployees = prevData.employees.map((employee) => {
           if (employee.id === employeeId) {
@@ -200,24 +247,38 @@ export const usePlanningState = () => {
         return updatedData;
       });
       
-      // Then update in Supabase
-      if (status === '') {
-        // Delete the entry
-        await deleteScheduleEntry(employeeId, date, period);
-        console.log(`Entrée supprimée pour ${employeeId} le ${date} (${period})`);
+      // Si nous sommes en ligne, mettre à jour dans Supabase
+      if (isOnline) {
+        // Vérifier la connexion avant d'envoyer la mise à jour
+        const isConnected = await checkSupabaseConnection();
+        
+        if (!isConnected) {
+          toast.warning("Mode hors ligne: les modifications seront synchronisées plus tard", {
+            duration: 5000,
+          });
+          return;
+        }
+        
+        if (status === '') {
+          // Supprimer l'entrée
+          await deleteScheduleEntry(employeeId, date, period);
+          console.log(`Entrée supprimée pour ${employeeId} le ${date} (${period})`);
+        } else {
+          // Sauvegarder l'entrée
+          await saveScheduleEntry(employeeId, {
+            date,
+            status,
+            period,
+            isHighlighted,
+            projectCode: status === 'projet' ? projectCode : undefined
+          });
+          console.log(`Entrée enregistrée pour ${employeeId} le ${date} (${period}): statut=${status}`);
+        }
       } else {
-        // Save the entry
-        await saveScheduleEntry(employeeId, {
-          date,
-          status,
-          period,
-          isHighlighted,
-          projectCode: status === 'projet' ? projectCode : undefined
-        });
-        console.log(`Entrée enregistrée pour ${employeeId} le ${date} (${period}): statut=${status}`);
+        console.log("Mode hors ligne: les modifications seront synchronisées ultérieurement");
       }
     } catch (error) {
-      console.error('Error updating status in Supabase:', error);
+      console.error('Erreur lors de la mise à jour du statut dans Supabase:', error);
       toast.error('Erreur lors de la mise à jour du statut. Vérifiez votre connexion internet.');
     }
   };
@@ -247,6 +308,7 @@ export const usePlanningState = () => {
     filters,
     isLegendOpen,
     loading,
+    isOnline,
     setIsLegendOpen,
     handleMonthChange,
     handleStatusChange,

@@ -1,10 +1,11 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FilterOptions } from '@/types';
 import { filterData } from '@/utils/dataFilterUtils';
 import { usePlanningSync } from './planning/usePlanningSync';
 import { usePlanningData } from './planning/usePlanningData';
 import { useStatusUpdater } from './planning/useStatusUpdater';
+import { toast } from 'sonner';
 
 export const usePlanningState = () => {
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
@@ -20,7 +21,7 @@ export const usePlanningState = () => {
   const [filteredData, setFilteredData] = useState(data);
 
   // Apply filters when they change
-  useState(() => {
+  useEffect(() => {
     const filtered = filterData(data, filters);
     setFilteredData(filtered);
   }, [data, filters]);

@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export const useStatusUpdater = (
   data: MonthData,
-  setData: (data: MonthData) => void,
+  setData: React.Dispatch<React.SetStateAction<MonthData>>,
   isOnline: boolean,
   saveDataToLocalStorage: (data: MonthData) => void
 ) => {

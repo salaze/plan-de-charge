@@ -8,10 +8,13 @@ import { checkSupabaseConnection } from '@/utils/supabase/connection';
 import { createSampleData } from '@/utils';
 import { getExistingProjects } from '@/utils/export/projectUtils';
 
-export const usePlanningData = (currentYear: number, currentMonth: number) => {
+export const usePlanningData = (currentYear?: number, currentMonth?: number) => {
+  const year = currentYear || new Date().getFullYear();
+  const month = currentMonth || new Date().getMonth();
+  
   const [data, setData] = useState<MonthData>(() => ({
-    year: new Date().getFullYear(),
-    month: new Date().getMonth(),
+    year: year,
+    month: month,
     employees: [],
     projects: getExistingProjects()
   }));
@@ -67,8 +70,8 @@ export const usePlanningData = (currentYear: number, currentMonth: number) => {
         
         setData(prevData => ({
           ...prevData,
-          year: currentYear,
-          month: currentMonth,
+          year: year,
+          month: month,
           employees
         }));
         
@@ -88,7 +91,7 @@ export const usePlanningData = (currentYear: number, currentMonth: number) => {
     };
     
     loadData();
-  }, [currentYear, currentMonth, retryCount]);
+  }, [year, month, retryCount]);
 
   return { data, setData, loading, isOnline };
 };

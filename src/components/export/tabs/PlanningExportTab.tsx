@@ -18,11 +18,16 @@ const PlanningExportTab: React.FC<PlanningExportTabProps> = ({
   handleImportSuccess,
   importedData
 }) => {
-  // Default statuses for the planning export legend
+  // Default statuses for the planning export legend - mais à utiliser après avoir récupéré les statuts
   const defaultStatuses: StatusCode[] = ['assistance', 'absence', 'conges', 'formation', 'permanence'];
   
-  // Get available statuses using our custom hook
-  const { statuses, isLoading } = useAvailableStatuses(defaultStatuses);
+  // Get available statuses using our custom hook, sans passer d'argument
+  const { statuses, isLoading } = useAvailableStatuses();
+  
+  // Filtrer les statuts pour n'afficher que ceux qui nous intéressent dans la légende d'export
+  const filteredStatuses = statuses.filter(status => 
+    defaultStatuses.includes(status.code as StatusCode)
+  );
   
   return (
     <div className="space-y-4">
@@ -35,7 +40,7 @@ const PlanningExportTab: React.FC<PlanningExportTabProps> = ({
       </div>
       
       <StatusLegendCard 
-        statuses={statuses} 
+        statuses={filteredStatuses} 
         isLoading={isLoading} 
       />
     </div>

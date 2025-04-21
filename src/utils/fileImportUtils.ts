@@ -2,6 +2,9 @@
 import { MonthData } from '@/types';
 import { toast } from 'sonner';
 import { importFromExcel } from './export/excelImport';
+import { supabase } from '@/integrations/supabase/client';
+import { saveEmployee } from './supabase/employees';
+import { saveScheduleEntry } from './supabase/schedule';
 
 /**
  * Handle file import from an input element
@@ -19,7 +22,6 @@ export const handleFileImport = (event: React.ChangeEvent<HTMLInputElement>, onS
         const importedData = await importFromExcel(result);
         
         if (importedData) {
-          // Ensure importedData has all required properties and arrays
           const safeData: MonthData = {
             year: importedData.year || new Date().getFullYear(),
             month: typeof importedData.month === 'number' ? importedData.month : new Date().getMonth(),
@@ -27,15 +29,31 @@ export const handleFileImport = (event: React.ChangeEvent<HTMLInputElement>, onS
             projects: Array.isArray(importedData.projects) ? importedData.projects : []
           };
           
-          // Save to localStorage
-          localStorage.setItem('planningData', JSON.stringify(safeData));
-          
-          // Callback if provided
-          if (onSuccess) {
-            onSuccess(safeData);
+          // Sync directly with Supabase
+          try {
+            // Save employees
+            for (const employee of safeData.employees) {
+              await saveEmployee(employee);
+              
+              // Save schedule for each employee
+              for (const scheduleItem of employee.schedule) {
+                await saveScheduleEntry(employee.id, scheduleItem);
+              }
+            }
+            
+            // Save projects if needed
+            // This would require a new Supabase table and utility functions
+            
+            // Callback if provided
+            if (onSuccess) {
+              onSuccess(safeData);
+            }
+            
+            toast.success('Données importées et synchronisées avec Supabase');
+          } catch (syncError) {
+            console.error('Erreur lors de la synchronisation avec Supabase:', syncError);
+            toast.error('Erreur lors de la synchronisation des données importées avec Supabase');
           }
-          
-          toast.success('Données importées avec succès');
         }
       }
     } catch (error) {

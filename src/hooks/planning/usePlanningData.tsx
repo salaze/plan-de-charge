@@ -5,7 +5,6 @@ import { toast } from 'sonner';
 import { fetchEmployees } from '@/utils/supabase/employees';
 import { fetchSchedule } from '@/utils/supabase/schedule';
 import { checkSupabaseConnection } from '@/utils/supabase/connection';
-import { createSampleData } from '@/utils';
 import { getExistingProjects } from '@/utils/export/projectUtils';
 
 export const usePlanningData = (currentYear?: number, currentMonth?: number) => {
@@ -16,46 +15,39 @@ export const usePlanningData = (currentYear?: number, currentMonth?: number) => 
     year: year,
     month: month,
     employees: [],
-    projects: getExistingProjects()
+    projects: []
   }));
   
   const [loading, setLoading] = useState(true);
   const [isOnline, setIsOnline] = useState(true);
-  const [retryCount, setRetryCount] = useState(0);
-  const maxRetries = 3;
+  const [connectionError, setConnectionError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
+      setConnectionError(null);
       
       try {
-        console.log(`Tentative de chargement des données (essai ${retryCount + 1}/${maxRetries})...`);
+        console.log(`Chargement des données depuis Supabase...`);
         
         const isConnected = await checkSupabaseConnection();
         setIsOnline(isConnected);
         
         if (!isConnected) {
-          console.log("Connexion à Supabase impossible, tentative de chargement depuis le cache local");
-          try {
-            const savedData = localStorage.getItem('planningData');
-            if (savedData) {
-              setData(JSON.parse(savedData));
-              console.log("Données chargées depuis le cache local");
-              toast.info("Mode hors ligne: utilisation des données en cache", {
-                duration: 5000,
-              });
-            } else {
-              setData(createSampleData());
-              console.log("Pas de cache disponible, création de données exemple");
-            }
-          } catch (localError) {
-            console.error('Erreur lors du chargement des données depuis le cache:', localError);
-          }
+          const errorMsg = "Impossible de se connecter à Supabase. Veuillez vérifier votre connexion internet.";
+          console.error(errorMsg);
+          setConnectionError(errorMsg);
+          toast.error(errorMsg);
+          setLoading(false);
           return;
         }
         
         const employees = await fetchEmployees();
         console.log(`${employees.length} employés récupérés de Supabase`);
+        
+        if (employees.length === 0) {
+          toast.warning("Aucun employé trouvé dans la base de données");
+        }
         
         for (let i = 0; i < employees.length; i++) {
           try {
@@ -68,30 +60,29 @@ export const usePlanningData = (currentYear?: number, currentMonth?: number) => 
           }
         }
         
-        setData(prevData => ({
-          ...prevData,
+        // Récupérer les projets depuis Supabase
+        const projects = await getExistingProjects();
+        
+        setData({
           year: year,
           month: month,
-          employees
-        }));
+          employees,
+          projects
+        });
         
-        setRetryCount(0);
       } catch (error) {
         console.error('Error loading data:', error);
-        if (retryCount < maxRetries - 1) {
-          setRetryCount(prev => prev + 1);
-          setTimeout(() => loadData(), 2000 * (retryCount + 1));
-          return;
-        }
+        const errorMsg = "Erreur lors du chargement des données. Veuillez réessayer.";
+        setConnectionError(errorMsg);
         setIsOnline(false);
-        toast.error('Erreur lors du chargement des données');
+        toast.error(errorMsg);
       } finally {
         setLoading(false);
       }
     };
     
     loadData();
-  }, [year, month, retryCount]);
+  }, [year, month]);
 
-  return { data, setData, loading, isOnline };
+  return { data, setData, loading, isOnline, connectionError };
 };

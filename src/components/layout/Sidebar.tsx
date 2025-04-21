@@ -1,18 +1,29 @@
 
 import React from "react";
+import { useOnlineStatus } from '@/hooks/useOnlineStatus';
+import { Badge } from '@/components/ui/badge';
+
 interface SidebarProps {
   isSidebarOpen: boolean;
   setIsSidebarOpen: (open: boolean) => void;
 }
+
 export function Sidebar({ isSidebarOpen }: SidebarProps) {
+  const isOnline = useOnlineStatus();
+  
   return (
     <aside
       className={`${
         isSidebarOpen ? "block" : "hidden"
       } md:block bg-white border-r min-w-[200px] p-4 h-full`}
     >
+      <div className="mb-4">
+        <Badge variant={isOnline ? "success" : "destructive"} className="w-full justify-center">
+          {isOnline ? "Connecté" : "Déconnecté"}
+        </Badge>
+      </div>
+      
       <nav>
-        {/* Ajoutez ici vos liens de navigation */}
         <ul className="space-y-2">
           <li>
             <a href="/admin" className="font-semibold text-gray-700">

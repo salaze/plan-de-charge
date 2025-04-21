@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { importEmployeesFromExcel } from '@/utils/employeeExportUtils';
 import { Employee } from '@/types';
+import { saveEmployee } from '@/utils/supabase/employees';
 
 export const useImportEmployees = () => {
   const [importedEmployees, setImportedEmployees] = useState<Employee[] | null>(null);
@@ -20,36 +21,17 @@ export const useImportEmployees = () => {
           const employees = await importEmployeesFromExcel(result);
           
           if (employees && employees.length > 0) {
-            setImportedEmployees(employees);
-            
-            const savedData = localStorage.getItem('planningData');
-            if (savedData) {
-              const data = JSON.parse(savedData);
-              
-              const existingEmployees = data.employees || [];
-              const employeeMap = new Map();
-              
-              existingEmployees.forEach(emp => employeeMap.set(emp.id, emp));
-              employees.forEach(emp => {
-                const existing = employeeMap.get(emp.id);
-                if (existing) {
-                  emp.schedule = existing.schedule || [];
-                }
-                employeeMap.set(emp.id, emp);
-              });
-              
-              data.employees = Array.from(employeeMap.values());
-              localStorage.setItem('planningData', JSON.stringify(data));
-            } else {
-              localStorage.setItem('planningData', JSON.stringify({ 
-                year: new Date().getFullYear(),
-                month: new Date().getMonth(),
-                employees,
-                projects: []
-              }));
+            // Synchroniser directement avec Supabase
+            for (const employee of employees) {
+              try {
+                await saveEmployee(employee);
+              } catch (syncError) {
+                console.error(`Erreur lors de la synchronisation de l'employé ${employee.name}:`, syncError);
+              }
             }
             
-            toast.success(`${employees.length} employés importés avec succès`);
+            setImportedEmployees(employees);
+            toast.success(`${employees.length} employés importés et synchronisés avec Supabase`);
           }
         }
       } catch (error) {

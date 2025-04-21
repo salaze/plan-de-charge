@@ -18,6 +18,9 @@ import { Employee } from '@/types';
 import { generateId } from '@/utils';
 import { fetchEmployees, saveEmployee, deleteEmployee } from '@/utils/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { checkSupabaseConnection } from '@/utils/supabase/connection';
 
 const Employees = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -26,32 +29,38 @@ const Employees = () => {
   const [currentEmployee, setCurrentEmployee] = useState<Employee | undefined>(undefined);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<string>('');
+  const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [isConnected, setIsConnected] = useState(true);
   const { isAdmin } = useAuth();
   
   // Function to load employees data
   const loadEmployees = async () => {
     setLoading(true);
+    setConnectionError(null);
+    
     try {
+      const isConnected = await checkSupabaseConnection();
+      setIsConnected(isConnected);
+      
+      if (!isConnected) {
+        const errorMsg = "Impossible de se connecter à Supabase. Veuillez vérifier votre connexion internet.";
+        setConnectionError(errorMsg);
+        toast.error(errorMsg);
+        setLoading(false);
+        return;
+      }
+      
       const data = await fetchEmployees();
       setEmployees(data);
       
-      // Also update localStorage for compatibility with existing functionality
-      const savedData = localStorage.getItem('planningData');
-      if (savedData) {
-        const planningData = JSON.parse(savedData);
-        planningData.employees = data;
-        localStorage.setItem('planningData', JSON.stringify(planningData));
-      } else {
-        localStorage.setItem('planningData', JSON.stringify({
-          year: new Date().getFullYear(),
-          month: new Date().getMonth(),
-          employees: data,
-          projects: []
-        }));
+      if (data.length === 0) {
+        toast.warning("Aucun employé trouvé dans la base de données");
       }
     } catch (error) {
       console.error('Error loading employees:', error);
-      toast.error('Erreur lors du chargement des employés');
+      const errorMsg = "Erreur lors du chargement des employés depuis Supabase";
+      setConnectionError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -68,6 +77,11 @@ const Employees = () => {
       return;
     }
     
+    if (!isConnected) {
+      toast.error("Impossible d'ajouter un employé : connexion à Supabase indisponible");
+      return;
+    }
+    
     setCurrentEmployee(undefined);
     setFormOpen(true);
   };
@@ -78,6 +92,11 @@ const Employees = () => {
       return;
     }
     
+    if (!isConnected) {
+      toast.error("Impossible de modifier un employé : connexion à Supabase indisponible");
+      return;
+    }
+    
     setCurrentEmployee(employee);
     setFormOpen(true);
   };
@@ -85,6 +104,11 @@ const Employees = () => {
   const handleDeleteEmployee = (employeeId: string) => {
     if (!isAdmin) {
       toast.error("Vous n'avez pas les droits pour supprimer un employé");
+      return;
+    }
+    
+    if (!isConnected) {
+      toast.error("Impossible de supprimer un employé : connexion à Supabase indisponible");
       return;
     }
     
@@ -101,14 +125,7 @@ const Employees = () => {
       if (success) {
         const updatedEmployees = employees.filter(emp => emp.id !== employeeToDelete);
         setEmployees(updatedEmployees);
-        
-        // Also update localStorage for compatibility
-        const savedData = localStorage.getItem('planningData');
-        if (savedData) {
-          const data = JSON.parse(savedData);
-          data.employees = updatedEmployees;
-          localStorage.setItem('planningData', JSON.stringify(data));
-        }
+        toast.success("Employé supprimé avec succès");
       }
     } catch (error) {
       console.error('Error deleting employee:', error);
@@ -122,6 +139,11 @@ const Employees = () => {
   const handleSaveEmployee = async (employee: Employee) => {
     if (!isAdmin) {
       toast.error("Vous n'avez pas les droits pour modifier un employé");
+      return;
+    }
+    
+    if (!isConnected) {
+      toast.error("Impossible de sauvegarder un employé : connexion à Supabase indisponible");
       return;
     }
     
@@ -154,15 +176,6 @@ const Employees = () => {
         }
         
         setEmployees(updatedEmployees);
-        
-        // Also update localStorage for compatibility
-        const savedData = localStorage.getItem('planningData');
-        if (savedData) {
-          const data = JSON.parse(savedData);
-          data.employees = updatedEmployees;
-          localStorage.setItem('planningData', JSON.stringify(data));
-        }
-        
         setFormOpen(false);
       }
     } catch (error) {
@@ -176,15 +189,26 @@ const Employees = () => {
       <div className="space-y-6 animate-fade-in">
         <h1 className="text-3xl font-bold mb-6">Gestion des employés</h1>
         
-        <div className="glass-panel p-6 animate-scale-in">
-          <EmployeeList 
-            employees={employees}
-            onAddEmployee={handleAddEmployee}
-            onEditEmployee={handleEditEmployee}
-            onDeleteEmployee={handleDeleteEmployee}
-            loading={loading}
-          />
-        </div>
+        {connectionError ? (
+          <div className="glass-panel p-6 animate-scale-in">
+            <div className="flex flex-col items-center justify-center text-center p-6">
+              <AlertCircle className="h-12 w-12 text-destructive mb-4" />
+              <h3 className="text-xl font-bold mb-2">Erreur de connexion</h3>
+              <p className="text-muted-foreground mb-4">{connectionError}</p>
+              <Button onClick={() => loadEmployees()}>Réessayer</Button>
+            </div>
+          </div>
+        ) : (
+          <div className="glass-panel p-6 animate-scale-in">
+            <EmployeeList 
+              employees={employees}
+              onAddEmployee={handleAddEmployee}
+              onEditEmployee={handleEditEmployee}
+              onDeleteEmployee={handleDeleteEmployee}
+              loading={loading}
+            />
+          </div>
+        )}
         
         <EmployeeForm 
           open={formOpen}
@@ -211,6 +235,20 @@ const Employees = () => {
                 Supprimer
               </AlertDialogAction>
             </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+        
+        <AlertDialog open={!isConnected && !loading}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Connexion perdue à Supabase</AlertDialogTitle>
+              <AlertDialogDescription>
+                La connexion avec la base de données a été perdue. Vérifiez votre connexion internet et réessayez.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="flex justify-end">
+              <Button onClick={() => loadEmployees()}>Réessayer</Button>
+            </div>
           </AlertDialogContent>
         </AlertDialog>
       </div>

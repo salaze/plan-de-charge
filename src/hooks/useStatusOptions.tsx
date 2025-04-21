@@ -9,7 +9,7 @@ interface StatusOption {
   label: string;
 }
 
-export function useStatusOptions(defaultStatuses: StatusCode[] = []) {
+export function useStatusOptions() {
   const [availableStatuses, setAvailableStatuses] = useState<StatusOption[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -52,70 +52,21 @@ export function useStatusOptions(defaultStatuses: StatusCode[] = []) {
             ...supabaseStatuses
           ]);
         } else {
-          // Si nous n'avons pas pu charger depuis Supabase, essayer le localStorage
-          console.log("Aucune option de statut trouvée dans Supabase, chargement depuis localStorage");
-          loadStatusesFromLocalStorage();
+          toast.error("Aucun statut trouvé dans la base de données");
+          // Statuts par défaut minimaux au cas où
+          setAvailableStatuses([
+            { value: 'none', label: 'Aucun' }
+          ]);
         }
       } catch (error) {
         console.error('Error loading status options from Supabase:', error);
-        // En cas d'erreur, charger depuis localStorage
-        loadStatusesFromLocalStorage();
+        toast.error("Erreur lors du chargement des options de statut");
+        // Statut par défaut minimal en cas d'erreur
+        setAvailableStatuses([
+          { value: 'none', label: 'Aucun' }
+        ]);
       } finally {
         setIsLoading(false);
-      }
-    };
-    
-    // Fonction de secours pour charger les statuts depuis localStorage
-    const loadStatusesFromLocalStorage = () => {
-      try {
-        const savedData = localStorage.getItem('planningData');
-        const data = savedData ? JSON.parse(savedData) : { statuses: [] };
-        
-        console.log("Données du localStorage pour les options:", data);
-        
-        // Si nous avons des statuts personnalisés, les utiliser
-        if (Array.isArray(data.statuses) && data.statuses.length > 0) {
-          const customStatuses = data.statuses
-            .filter((status: any) => status && status.code && status.code.trim() !== '') // Filtrer les codes vides
-            .map((status: any) => ({
-              value: status.code as StatusCode,
-              label: status.label || status.code || 'Status'
-            }));
-          
-          console.log("Options de statut personnalisées:", customStatuses);
-          setAvailableStatuses([
-            { value: 'none', label: 'Aucun' },
-            ...customStatuses
-          ]);
-        } else {
-          // Sinon, utiliser les statuts par défaut
-          console.log("Utilisation des options de statut par défaut");
-          setAvailableStatuses([
-            { value: 'none', label: 'Aucun' },
-            { value: 'assistance', label: 'Assistance' },
-            { value: 'vigi', label: 'Vigi' },
-            { value: 'formation', label: 'Formation' },
-            { value: 'projet', label: 'Projet' },
-            { value: 'conges', label: 'Congés' },
-            { value: 'management', label: 'Management' },
-            { value: 'tp', label: 'Temps Partiel' },
-            { value: 'coordinateur', label: 'Coordinateur Vigi Ticket' },
-            { value: 'absence', label: 'Autre Absence' },
-            { value: 'regisseur', label: 'Régisseur' },
-            { value: 'demenagement', label: 'Déménagements' },
-          ]);
-        }
-      } catch (error) {
-        console.error('Error loading status options from localStorage:', error);
-        // Utiliser les statuts par défaut
-        setAvailableStatuses([
-          { value: 'none', label: 'Aucun' },
-          { value: 'assistance', label: 'Assistance' },
-          { value: 'vigi', label: 'Vigi' },
-          { value: 'formation', label: 'Formation' },
-          { value: 'projet', label: 'Projet' },
-          { value: 'conges', label: 'Congés' },
-        ]);
       }
     };
     
@@ -139,25 +90,10 @@ export function useStatusOptions(defaultStatuses: StatusCode[] = []) {
       )
       .subscribe();
     
-    // Écouter les changements dans le localStorage
-    const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === 'planningData') {
-        loadStatusesFromLocalStorage();
-      }
-    };
-    
-    // Écouter l'événement personnalisé pour forcer le rechargement des statuts
-    const handleCustomEvent = () => loadStatusesFromSupabase();
-    
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('statusesUpdated', handleCustomEvent);
-    
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('statusesUpdated', handleCustomEvent);
       supabase.removeChannel(channel);
     };
-  }, [defaultStatuses]);
+  }, []);
   
   return { availableStatuses, isLoading };
 }

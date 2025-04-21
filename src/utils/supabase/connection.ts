@@ -25,7 +25,6 @@ export const checkSupabaseConnection = async () => {
     }
     
     console.log("Connexion à Supabase établie avec succès");
-    toast.success('Connexion à Supabase établie');
     return true;
   } catch (error) {
     console.error('Erreur de vérification de connexion Supabase:', error);
@@ -34,10 +33,9 @@ export const checkSupabaseConnection = async () => {
     if (error instanceof DOMException && error.name === 'AbortError') {
       toast.error('Délai de connexion à Supabase dépassé. Vérifiez votre connexion internet.');
     } else {
-      toast.error('Erreur de connexion à la base de données. Utilisation des données locales.');
+      toast.error('Erreur de connexion à la base de données.');
     }
     
-    console.log("Basculement vers les données en cache local");
     return false;
   }
 };

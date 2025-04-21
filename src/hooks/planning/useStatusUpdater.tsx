@@ -8,8 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 export const useStatusUpdater = (
   data: MonthData,
   setData: React.Dispatch<React.SetStateAction<MonthData>>,
-  isOnline: boolean,
-  saveDataToLocalStorage: (data: MonthData) => void
+  isOnline: boolean
 ) => {
   const { isAdmin } = useAuth();
 
@@ -26,7 +25,13 @@ export const useStatusUpdater = (
       return;
     }
     
+    if (!isOnline) {
+      toast.error("Impossible de mettre à jour le statut : connexion à Supabase indisponible");
+      return;
+    }
+    
     try {
+      // Mise à jour de l'état local (UI)
       setData((prevData) => {
         const updatedEmployees = prevData.employees.map((employee) => {
           if (employee.id === employeeId) {
@@ -69,32 +74,27 @@ export const useStatusUpdater = (
           return employee;
         });
         
-        const updatedData = {
+        return {
           ...prevData,
           employees: updatedEmployees
         };
-        
-        saveDataToLocalStorage(updatedData);
-        
-        return updatedData;
       });
 
-      if (isOnline) {
-        if (status === '') {
-          await deleteScheduleEntry(employeeId, date, period);
-        } else {
-          await saveScheduleEntry(employeeId, {
-            date,
-            status,
-            period,
-            isHighlighted,
-            projectCode: status === 'projet' ? projectCode : undefined
-          });
-        }
+      // Synchronisation avec Supabase
+      if (status === '') {
+        await deleteScheduleEntry(employeeId, date, period);
+      } else {
+        await saveScheduleEntry(employeeId, {
+          date,
+          status,
+          period,
+          isHighlighted,
+          projectCode: status === 'projet' ? projectCode : undefined
+        });
       }
     } catch (error) {
       console.error('Error updating status:', error);
-      toast.error('Erreur lors de la mise à jour du statut');
+      toast.error('Erreur lors de la mise à jour du statut dans Supabase');
     }
   };
 

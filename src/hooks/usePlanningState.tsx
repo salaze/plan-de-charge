@@ -13,9 +13,9 @@ export const usePlanningState = () => {
   const [filters, setFilters] = useState<FilterOptions>({});
   const [isLegendOpen, setIsLegendOpen] = useState(false);
 
-  const { data, setData, loading, isOnline } = usePlanningData(currentYear, currentMonth);
-  const { saveDataToLocalStorage, handleSync } = usePlanningSync(data);
-  const { handleStatusChange } = useStatusUpdater(data, setData, isOnline, saveDataToLocalStorage);
+  const { data, setData, loading, isOnline, connectionError } = usePlanningData(currentYear, currentMonth);
+  const { handleSync } = usePlanningSync(data);
+  const { handleStatusChange } = useStatusUpdater(data, setData, isOnline);
 
   // Filtered data based on applied filters
   const [filteredData, setFilteredData] = useState(data);
@@ -55,6 +55,7 @@ export const usePlanningState = () => {
     isLegendOpen,
     loading,
     isOnline,
+    connectionError,
     setIsLegendOpen,
     handleMonthChange,
     handleStatusChange,

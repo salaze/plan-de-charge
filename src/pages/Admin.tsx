@@ -3,12 +3,14 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Layout } from '@/components/layout/Layout';
 import { StatusCode, STATUS_LABELS, STATUS_COLORS } from '@/types';
-import { generateId } from '@/utils';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { AdminTabs } from '@/components/admin/AdminTabs';
 import { RealtimeMonitor } from '@/components/RealtimeMonitor';
 import { supabase } from '@/integrations/supabase/client';
-import { checkSupabaseConnection } from '@/utils/supabase';
+import { checkSupabaseConnection } from '@/utils/supabase/connection';
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription } from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
+import { AlertCircle } from 'lucide-react';
 
 const Admin = () => {
   const [data, setData] = useState({
@@ -16,28 +18,34 @@ const Admin = () => {
     employees: [],
     statuses: []
   });
-  const [isConnected, setIsConnected] = useState(false);
+  const [isConnected, setIsConnected] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
   
   // Fonction pour se connecter à Supabase
   useEffect(() => {
     const connectToSupabase = async () => {
       setIsLoading(true);
+      setConnectionError(null);
       try {
         const isConnected = await checkSupabaseConnection();
         setIsConnected(isConnected);
         
-        if (isConnected) {
-          // Charger toutes les données depuis Supabase
-          await fetchAllData();
-        } else {
-          // Charger depuis localStorage si la connexion échoue
-          loadFromLocalStorage();
+        if (!isConnected) {
+          const errorMsg = "Impossible de se connecter à Supabase. Veuillez vérifier votre connexion internet.";
+          setConnectionError(errorMsg);
+          toast.error(errorMsg);
+          setIsLoading(false);
+          return;
         }
+        
+        // Charger toutes les données depuis Supabase
+        await fetchAllData();
       } catch (error) {
         console.error('Erreur de connexion inattendue:', error);
-        toast.error('Erreur de connexion à Supabase, chargement des données locales');
-        loadFromLocalStorage();
+        const errorMsg = "Erreur de connexion à Supabase.";
+        setConnectionError(errorMsg);
+        toast.error(errorMsg);
       } finally {
         setIsLoading(false);
       }
@@ -67,9 +75,9 @@ const Admin = () => {
       if (employeeError) throw employeeError;
 
       // 3. Récupérer les projets (à implémenter côté Supabase)
-      // Pour l'instant, nous utilisons les projets stockés localement
-      const savedData = localStorage.getItem('planningData');
-      const localData = savedData ? JSON.parse(savedData) : { projects: [] };
+      // Pour l'instant, nous récupérons les projets depuis un autre endroit
+      // À terme, il faudrait avoir une table 'projets' dans Supabase
+      const projects = [];
       
       // Mise à jour des données
       setData({
@@ -89,7 +97,7 @@ const Admin = () => {
           uid: emp.uid,
           schedule: []
         })) || [],
-        projects: localData.projects || []
+        projects: projects || []
       });
 
       // Mettre à jour les STATUS_LABELS et STATUS_COLORS globaux
@@ -109,73 +117,12 @@ const Admin = () => {
       }
 
       toast.success('Données chargées depuis Supabase');
-      
-      // Sauvegarde locale pour le mode hors ligne
-      localStorage.setItem('planningData', JSON.stringify({
-        ...localData,
-        employees: employeeData?.map(emp => ({
-          id: emp.id,
-          name: emp.nom,
-          email: emp.identifiant,
-          position: emp.fonction,
-          department: emp.departement,
-          role: emp.role || 'employee',
-          uid: emp.uid,
-          schedule: []
-        })) || [],
-        statuses: statusData?.map(status => ({
-          id: status.id,
-          code: status.code,
-          label: status.libelle,
-          color: status.couleur
-        })) || []
-      }));
-      
     } catch (error) {
       console.error('Erreur lors du chargement des données:', error);
       toast.error('Erreur lors du chargement des données');
-      loadFromLocalStorage();
+      setConnectionError("Erreur lors du chargement des données depuis Supabase");
     } finally {
       setIsLoading(false);
-    }
-  };
-  
-  // Fonction pour charger les données depuis le localStorage
-  const loadFromLocalStorage = () => {
-    try {
-      const savedData = localStorage.getItem('planningData');
-      if (savedData) {
-        const localData = JSON.parse(savedData);
-        
-        setData({
-          projects: localData.projects || [],
-          employees: localData.employees || [],
-          statuses: localData.statuses || []
-        });
-        
-        // Mettre à jour les STATUS_LABELS et STATUS_COLORS globaux
-        if (localData.statuses && localData.statuses.length > 0) {
-          localData.statuses.forEach((status: any) => {
-            if (status.code) {
-              // @ts-ignore - Mise à jour dynamique
-              STATUS_LABELS[status.code] = status.label;
-              // @ts-ignore - Mise à jour dynamique
-              STATUS_COLORS[status.code] = status.color;
-            }
-          });
-          
-          // Déclencher un événement personnalisé pour informer les autres composants
-          const event = new CustomEvent('statusesUpdated');
-          window.dispatchEvent(event);
-        }
-        
-        toast.info('Données chargées depuis le cache local');
-      } else {
-        toast.warning('Aucune donnée en cache');
-      }
-    } catch (error) {
-      console.error('Erreur lors du chargement des données depuis localStorage:', error);
-      toast.error('Erreur lors du chargement des données locales');
     }
   };
   
@@ -185,16 +132,8 @@ const Admin = () => {
       projects
     }));
     
-    // Sauvegarder les projets dans localStorage
-    const savedData = localStorage.getItem('planningData');
-    const localData = savedData ? JSON.parse(savedData) : {};
-    
-    localStorage.setItem('planningData', JSON.stringify({
-      ...localData,
-      projects
-    }));
-    
-    toast.success('Projets sauvegardés localement');
+    // À implémenter côté Supabase dès qu'une table projets sera créée
+    toast.success('Projets sauvegardés');
   };
   
   const handleStatusesChange = async (statuses: any[]) => {
@@ -219,7 +158,7 @@ const Admin = () => {
         
         toast.success('Statuts synchronisés avec Supabase');
       } else {
-        toast.warning('Mode hors ligne: Statuts sauvegardés localement uniquement');
+        toast.error("Impossible de synchroniser : connexion à Supabase indisponible");
       }
       
       // Mettre à jour les STATUS_LABELS et STATUS_COLORS globaux
@@ -231,15 +170,6 @@ const Admin = () => {
           STATUS_COLORS[status.code] = status.color;
         }
       });
-      
-      // Sauvegarder les statuts dans localStorage
-      const savedData = localStorage.getItem('planningData');
-      const localData = savedData ? JSON.parse(savedData) : {};
-      
-      localStorage.setItem('planningData', JSON.stringify({
-        ...localData,
-        statuses
-      }));
       
       // Déclencher un événement personnalisé pour informer les autres composants
       const event = new CustomEvent('statusesUpdated');
@@ -275,17 +205,8 @@ const Admin = () => {
         
         toast.success('Employés synchronisés avec Supabase');
       } else {
-        toast.warning('Mode hors ligne: Employés sauvegardés localement uniquement');
+        toast.error("Impossible de synchroniser : connexion à Supabase indisponible");
       }
-      
-      // Sauvegarder les employés dans localStorage
-      const savedData = localStorage.getItem('planningData');
-      const localData = savedData ? JSON.parse(savedData) : {};
-      
-      localStorage.setItem('planningData', JSON.stringify({
-        ...localData,
-        employees
-      }));
     } catch (error) {
       console.error('Erreur lors de la synchronisation des employés:', error);
       toast.error('Erreur lors de la synchronisation des employés');
@@ -339,29 +260,11 @@ const Admin = () => {
     };
   }, [isConnected]);
   
-  // Initialiser les statuts par défaut si nécessaire
-  useEffect(() => {
-    if (!data.statuses || data.statuses.length === 0) {
-      const defaultStatuses = Object.entries(STATUS_LABELS)
-        .filter(([code]) => code !== '')
-        .map(([code, label]) => ({
-          id: generateId(),
-          code: code as StatusCode,
-          label,
-          color: STATUS_COLORS[code as StatusCode]
-        }));
-      
-      setData(prevData => ({
-        ...prevData,
-        statuses: defaultStatuses
-      }));
-    }
-  }, [data.statuses]);
-  
   // Fonction pour forcer un rechargement des données
   const handleRefresh = async () => {
     try {
       setIsLoading(true);
+      setConnectionError(null);
       const isConnected = await checkSupabaseConnection();
       setIsConnected(isConnected);
       
@@ -369,12 +272,15 @@ const Admin = () => {
         await fetchAllData();
         toast.success('Données rechargées avec succès depuis Supabase');
       } else {
-        loadFromLocalStorage();
-        toast.warning('Mode hors ligne: données chargées depuis le cache local');
+        const errorMsg = "Impossible de se connecter à Supabase pour recharger les données.";
+        setConnectionError(errorMsg);
+        toast.error(errorMsg);
       }
     } catch (error) {
       console.error('Erreur lors du rechargement des données:', error);
-      toast.error('Erreur lors du rechargement des données');
+      const errorMsg = "Erreur lors du rechargement des données.";
+      setConnectionError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -385,18 +291,45 @@ const Admin = () => {
       <div className="space-y-6 animate-fade-in">
         <AdminHeader onRefresh={handleRefresh} isOffline={!isConnected} isLoading={isLoading} />
         
-        <RealtimeMonitor />
+        {connectionError ? (
+          <div className="glass-panel p-6 animate-scale-in">
+            <div className="flex flex-col items-center justify-center text-center p-6">
+              <AlertCircle className="h-12 w-12 text-destructive mb-4" />
+              <h3 className="text-xl font-bold mb-2">Erreur de connexion</h3>
+              <p className="text-muted-foreground mb-4">{connectionError}</p>
+              <Button onClick={handleRefresh}>Réessayer</Button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <RealtimeMonitor />
+            
+            <AdminTabs 
+              projects={data.projects || []}
+              employees={data.employees || []}
+              statuses={data.statuses || []}
+              onProjectsChange={handleProjectsChange}
+              onStatusesChange={handleStatusesChange}
+              onEmployeesChange={handleEmployeesChange}
+              isLoading={isLoading}
+              isConnected={isConnected}
+            />
+          </>
+        )}
         
-        <AdminTabs 
-          projects={data.projects || []}
-          employees={data.employees || []}
-          statuses={data.statuses || []}
-          onProjectsChange={handleProjectsChange}
-          onStatusesChange={handleStatusesChange}
-          onEmployeesChange={handleEmployeesChange}
-          isLoading={isLoading}
-          isConnected={isConnected}
-        />
+        <AlertDialog open={!isConnected && !isLoading}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Connexion perdue à Supabase</AlertDialogTitle>
+              <AlertDialogDescription>
+                La connexion avec la base de données a été perdue. Vérifiez votre connexion internet et réessayez.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="flex justify-end">
+              <Button onClick={handleRefresh}>Réessayer</Button>
+            </div>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </Layout>
   );

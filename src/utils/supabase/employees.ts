@@ -2,15 +2,14 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Employee } from '@/types';
 import { toast } from 'sonner';
-import { createEmptyEmployee } from '@/utils/employeeUtils';
 
 export const fetchEmployees = async () => {
   try {
-    console.log("Tentative de récupération des employés depuis Supabase...");
+    console.log("Récupération des employés depuis Supabase...");
     
-    // Ajouter un timeout pour éviter d'attendre indéfiniment
+    // Add a timeout to avoid waiting indefinitely
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 secondes de timeout
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 seconds timeout
     
     const { data: employees, error } = await supabase
       .from('employes')
@@ -42,26 +41,11 @@ export const fetchEmployees = async () => {
     // Message d'erreur spécifique pour les problèmes de réseau
     if (error.message?.includes('NetworkError') || error.name === 'AbortError') {
       toast.error('Problème de connexion au serveur. Vérifiez votre réseau.');
-      console.log("Problème de connexion réseau détecté");
     } else {
       toast.error('Erreur lors de la récupération des employés');
     }
     
-    // En cas d'erreur, essayer de charger depuis le stockage local
-    try {
-      const savedData = localStorage.getItem('planningData');
-      if (savedData) {
-        const parsedData = JSON.parse(savedData);
-        if (parsedData.employees && parsedData.employees.length > 0) {
-          console.log(`Fallback: ${parsedData.employees.length} employés chargés depuis le cache local`);
-          return parsedData.employees as Employee[];
-        }
-      }
-    } catch (localError) {
-      console.error('Erreur lors du chargement du cache local:', localError);
-    }
-    
-    // Si tout échoue, retourner un tableau vide
+    // No fallback to localStorage, return empty array instead
     return [];
   }
 };
@@ -88,7 +72,6 @@ export const saveEmployee = async (employee: Employee) => {
   } catch (error: any) {
     console.error('Erreur lors de la sauvegarde de l\'employé:', error);
     
-    // Message d'erreur spécifique pour les problèmes de réseau
     if (error.message?.includes('NetworkError')) {
       toast.error('Problème de connexion au serveur. Vérifiez votre réseau.');
     } else {
@@ -113,7 +96,6 @@ export const deleteEmployee = async (employeeId: string) => {
   } catch (error: any) {
     console.error('Erreur lors de la suppression de l\'employé:', error);
     
-    // Message d'erreur spécifique pour les problèmes de réseau
     if (error.message?.includes('NetworkError')) {
       toast.error('Problème de connexion au serveur. Vérifiez votre réseau.');
     } else {

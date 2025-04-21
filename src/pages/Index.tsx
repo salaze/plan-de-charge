@@ -7,7 +7,7 @@ import { PlanningToolbar } from '@/components/planning/PlanningToolbar';
 import { usePlanningState } from '@/hooks/usePlanningState';
 import { useAuth } from '@/contexts/AuthContext';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription } from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { AlertCircle } from 'lucide-react';
 
@@ -28,6 +28,10 @@ const Index = () => {
     handleStatusChange,
     handleFiltersChange
   } = usePlanningState();
+  
+  const handleReconnect = () => {
+    window.location.reload();
+  };
   
   return (
     <Layout>
@@ -50,7 +54,7 @@ const Index = () => {
               <AlertCircle className="h-12 w-12 text-destructive mb-4" />
               <h3 className="text-xl font-bold mb-2">Erreur de connexion</h3>
               <p className="text-muted-foreground mb-4">{connectionError}</p>
-              <Button onClick={() => window.location.reload()}>Réessayer</Button>
+              <Button onClick={handleReconnect}>Réessayer</Button>
             </div>
           </div>
         ) : (
@@ -82,17 +86,17 @@ const Index = () => {
           projects={data.projects || []}
         />
         
-        <AlertDialog open={!isOnline && !loading}>
+        <AlertDialog open={!isOnline && !loading && !connectionError}>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Connexion perdue à Supabase</AlertDialogTitle>
               <AlertDialogDescription>
-                La connexion avec la base de données a été perdue. Vérifiez votre connexion internet et réessayez.
+                La connexion avec la base de données a été perdue. L'application ne peut pas fonctionner sans connexion internet. Vérifiez votre réseau et réessayez.
               </AlertDialogDescription>
             </AlertDialogHeader>
-            <div className="flex justify-end">
-              <Button onClick={() => window.location.reload()}>Réessayer</Button>
-            </div>
+            <AlertDialogFooter>
+              <Button onClick={handleReconnect}>Reconnecter</Button>
+            </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
       </div>

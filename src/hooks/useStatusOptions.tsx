@@ -19,9 +19,9 @@ export function useStatusOptions() {
       setIsLoading(true);
       try {
         console.log("Chargement des options de statut depuis Supabase...");
-        // Utiliser un mécanisme de timeout pour éviter des attentes trop longues
+        // Timeout plus court pour échouer plus rapidement en cas d'absence de connexion
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 secondes de timeout
+        const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 secondes de timeout
         
         const { data: statusData, error } = await supabase
           .from('statuts')
@@ -53,7 +53,6 @@ export function useStatusOptions() {
           ]);
         } else {
           toast.error("Aucun statut trouvé dans la base de données");
-          // Statuts par défaut minimaux au cas où
           setAvailableStatuses([
             { value: 'none', label: 'Aucun' }
           ]);
@@ -61,7 +60,6 @@ export function useStatusOptions() {
       } catch (error) {
         console.error('Error loading status options from Supabase:', error);
         toast.error("Erreur lors du chargement des options de statut");
-        // Statut par défaut minimal en cas d'erreur
         setAvailableStatuses([
           { value: 'none', label: 'Aucun' }
         ]);
@@ -73,7 +71,7 @@ export function useStatusOptions() {
     // Charger les statuts immédiatement
     loadStatusesFromSupabase();
     
-    // S'abonner aux changements en temps réel des statuts
+    // S'abonner aux changements en temps réel des statuts avec une meilleure gestion
     const channel = supabase
       .channel('status-options-realtime')
       .on(
@@ -84,7 +82,8 @@ export function useStatusOptions() {
           table: 'statuts'
         },
         (payload) => {
-          console.log('Status change detected, refreshing options', payload);
+          console.log('Changement de statut détecté, actualisation des options:', payload);
+          toast.info('Nouvelles options de statut disponibles, actualisation en cours...');
           loadStatusesFromSupabase();
         }
       )

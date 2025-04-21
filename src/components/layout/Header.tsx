@@ -1,7 +1,8 @@
 
 import React from "react";
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, WifiOff } from 'lucide-react';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
+import { Button } from '@/components/ui/button';
 
 interface HeaderProps {
   isSidebarOpen: boolean;
@@ -10,6 +11,10 @@ interface HeaderProps {
 
 export function Header({ isSidebarOpen, setIsSidebarOpen }: HeaderProps) {
   const isOnline = useOnlineStatus();
+  
+  const handleRefresh = () => {
+    window.location.reload();
+  };
   
   return (
     <header className="flex items-center justify-between mb-4">
@@ -25,9 +30,14 @@ export function Header({ isSidebarOpen, setIsSidebarOpen }: HeaderProps) {
       </div>
       
       {!isOnline && (
-        <div className="flex items-center text-destructive">
-          <AlertCircle className="h-5 w-5 mr-2" />
-          <span className="text-sm font-medium">Déconnecté du serveur</span>
+        <div className="flex items-center">
+          <div className="flex items-center text-destructive mr-2">
+            <WifiOff className="h-5 w-5 mr-2" />
+            <span className="text-sm font-medium hidden sm:inline">Déconnecté du serveur</span>
+          </div>
+          <Button size="sm" variant="outline" onClick={handleRefresh}>
+            Reconnecter
+          </Button>
         </div>
       )}
     </header>

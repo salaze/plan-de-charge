@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { MonthData, Employee } from '@/types';
+import { MonthData } from '@/types';
 import { toast } from 'sonner';
 import { fetchEmployees } from '@/utils/supabase/employees';
 import { fetchSchedule } from '@/utils/supabase/schedule';

@@ -4,7 +4,6 @@ import { Layout } from '@/components/layout/Layout';
 import { StatusCode, STATUS_LABELS, STATUS_COLORS } from '@/types';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { AdminTabs } from '@/components/admin/AdminTabs';
-import { RealtimeMonitor } from '@/components/RealtimeMonitor';
 import { supabase } from '@/integrations/supabase/client';
 import { checkSupabaseConnection } from '@/utils/supabase/connection';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription } from '@/components/ui/alert-dialog';
@@ -21,7 +20,6 @@ const Admin = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   
-  // Fonction pour se connecter à Supabase
   useEffect(() => {
     const connectToSupabase = async () => {
       setIsLoading(true);
@@ -38,7 +36,6 @@ const Admin = () => {
           return;
         }
         
-        // Charger toutes les données depuis Supabase
         await fetchAllData();
       } catch (error) {
         console.error('Erreur de connexion inattendue:', error);
@@ -53,12 +50,10 @@ const Admin = () => {
     connectToSupabase();
   }, []);
 
-  // Fonction pour récupérer toutes les données depuis Supabase
   const fetchAllData = async () => {
     try {
       setIsLoading(true);
       
-      // 1. Récupérer les statuts
       const { data: statusData, error: statusError } = await supabase
         .from('statuts')
         .select('*')
@@ -66,19 +61,14 @@ const Admin = () => {
 
       if (statusError) throw statusError;
 
-      // 2. Récupérer les employés
       const { data: employeeData, error: employeeError } = await supabase
         .from('employes')
         .select('*');
 
       if (employeeError) throw employeeError;
 
-      // 3. Récupérer les projets (à implémenter côté Supabase)
-      // Pour l'instant, nous récupérons les projets depuis un autre endroit
-      // À terme, il faudrait avoir une table 'projets' dans Supabase
       const projects = [];
       
-      // Mise à jour des données
       setData({
         statuses: statusData?.map(status => ({
           id: status.id,
@@ -99,18 +89,14 @@ const Admin = () => {
         projects: projects || []
       });
 
-      // Mettre à jour les STATUS_LABELS et STATUS_COLORS globaux
       if (statusData && statusData.length > 0) {
         statusData.forEach((status) => {
           if (status.code) {
-            // @ts-ignore - Mise à jour dynamique
             STATUS_LABELS[status.code] = status.libelle;
-            // @ts-ignore - Mise à jour dynamique
             STATUS_COLORS[status.code] = status.couleur;
           }
         });
         
-        // Déclencher un événement personnalisé pour informer les autres composants
         const event = new CustomEvent('statusesUpdated');
         window.dispatchEvent(event);
       }
@@ -131,20 +117,17 @@ const Admin = () => {
       projects
     }));
     
-    // À implémenter côté Supabase dès qu'une table projets sera créée
     toast.success('Projets sauvegardés');
   };
   
   const handleStatusesChange = async (statuses: any[]) => {
     try {
-      // Mise à jour locale des données
       setData(prevData => ({
         ...prevData,
         statuses
       }));
       
       if (isConnected) {
-        // Synchroniser avec Supabase
         for (const status of statuses) {
           await supabase.from('statuts').upsert({
             id: status.id,
@@ -160,17 +143,13 @@ const Admin = () => {
         toast.error("Impossible de synchroniser : connexion à Supabase indisponible");
       }
       
-      // Mettre à jour les STATUS_LABELS et STATUS_COLORS globaux
       statuses.forEach((status) => {
         if (status.code) {
-          // @ts-ignore - Mise à jour dynamique
           STATUS_LABELS[status.code] = status.label;
-          // @ts-ignore - Mise à jour dynamique
           STATUS_COLORS[status.code] = status.color;
         }
       });
       
-      // Déclencher un événement personnalisé pour informer les autres composants
       const event = new CustomEvent('statusesUpdated');
       window.dispatchEvent(event);
     } catch (error) {
@@ -181,14 +160,12 @@ const Admin = () => {
   
   const handleEmployeesChange = async (employees: any[]) => {
     try {
-      // Mise à jour locale des données
       setData(prevData => ({
         ...prevData,
         employees
       }));
       
       if (isConnected) {
-        // Synchroniser avec Supabase
         for (const employee of employees) {
           await supabase.from('employes').upsert({
             id: employee.id,
@@ -212,56 +189,49 @@ const Admin = () => {
     }
   };
   
-  // Effet pour écouter les changements en temps réel de Supabase
   useEffect(() => {
     if (!isConnected) return;
     
-    // S'abonner aux changements de statuts
     const statusChannel = supabase
       .channel('statuses-changes')
       .on(
         'postgres_changes',
         {
-          event: '*', // Écouter tous les événements (INSERT, UPDATE, DELETE)
+          event: '*',
           schema: 'public',
           table: 'statuts'
         },
         (payload) => {
           console.log('Changement de statut détecté:', payload);
           toast.info('Données de statut mises à jour sur le serveur, actualisation...');
-          // Recharger les données après un changement
           fetchAllData();
         }
       )
       .subscribe();
       
-    // S'abonner aux changements d'employés
     const employeesChannel = supabase
       .channel('employees-changes')
       .on(
         'postgres_changes',
         {
-          event: '*', // Écouter tous les événements (INSERT, UPDATE, DELETE)
+          event: '*',
           schema: 'public',
           table: 'employes'
         },
         (payload) => {
           console.log('Changement d\'employé détecté:', payload);
           toast.info('Données d\'employé mises à jour sur le serveur, actualisation...');
-          // Recharger les données après un changement
           fetchAllData();
         }
       )
       .subscribe();
       
     return () => {
-      // Nettoyer les abonnements
       supabase.removeChannel(statusChannel);
       supabase.removeChannel(employeesChannel);
     };
   }, [isConnected]);
   
-  // Fonction pour forcer un rechargement des données
   const handleRefresh = async () => {
     try {
       setIsLoading(true);
@@ -303,8 +273,6 @@ const Admin = () => {
           </div>
         ) : (
           <>
-            <RealtimeMonitor />
-            
             <AdminTabs 
               projects={data.projects || []}
               employees={data.employees || []}

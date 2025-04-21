@@ -43,7 +43,6 @@ export function AdminTabs({
           </AlertDescription>
         </Alert>
       )}
-      
       <Tabs defaultValue="statuses" className="w-full">
         <TabsList className="grid grid-cols-5 mb-4">
           <TabsTrigger value="projects" className="flex items-center gap-2">
@@ -67,15 +66,14 @@ export function AdminTabs({
             <span>Paramètres</span>
           </TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="projects" className="space-y-4">
-          <ProjectManager 
-            projects={projects} 
+          <ProjectManager
+            projects={projects}
             onProjectsChange={onProjectsChange}
-            isLoading={isLoading}
           />
         </TabsContent>
-        
+
         <TabsContent value="statuses" className="space-y-4">
           <StatusManager
             statuses={statuses}
@@ -84,27 +82,23 @@ export function AdminTabs({
             isConnected={isConnected}
           />
         </TabsContent>
-        
+
         <TabsContent value="employees">
           <EmployeeTab
             employees={employees}
             onEmployeesChange={onEmployeesChange}
-            isLoading={isLoading}
           />
         </TabsContent>
-        
+
         <TabsContent value="roles">
-          <RoleManagement 
-            employees={employees} 
+          <RoleManagement
+            employees={employees}
             onEmployeesChange={onEmployeesChange}
-            isLoading={isLoading}
           />
         </TabsContent>
-        
+
         <TabsContent value="settings">
-          <SettingsTab 
-            isConnected={isConnected}
-          />
+          <SettingsTab />
         </TabsContent>
       </Tabs>
     </>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Card,
@@ -64,18 +63,14 @@ export function StatusManager({
   const [color, setColor] = useState('bg-green-500 text-white');
   
   useEffect(() => {
-    // Mettre à jour les STATUS_LABELS et STATUS_COLORS globaux
     if (statuses && statuses.length > 0) {
       statuses.forEach((status) => {
         if (status.code) {
-          // @ts-ignore - Mise à jour dynamique
           STATUS_LABELS[status.code] = status.label;
-          // @ts-ignore - Mise à jour dynamique
           STATUS_COLORS[status.code] = status.color;
         }
       });
       
-      // Déclencher un événement personnalisé pour informer les autres composants
       const event = new CustomEvent('statusesUpdated');
       window.dispatchEvent(event);
     }
@@ -106,12 +101,10 @@ export function StatusManager({
     if (!statusToDelete) return;
     
     try {
-      // Trouver le statut à supprimer
       const statusToRemove = statuses.find(status => status.id === statusToDelete);
       
       if (statusToRemove) {
         if (isConnected) {
-          // Supprimer de Supabase
           const { error } = await supabase
             .from('statuts')
             .delete()
@@ -121,7 +114,6 @@ export function StatusManager({
         }
       }
       
-      // Mettre à jour l'état local
       const updatedStatuses = statuses.filter(status => status.id !== statusToDelete);
       onStatusesChange(updatedStatuses);
       
@@ -143,7 +135,6 @@ export function StatusManager({
       return;
     }
     
-    // Vérifier si le code est déjà utilisé (sauf pour le statut en cours d'édition)
     const codeExists = statuses.some(s => 
       s.code === code && s.id !== (currentStatus?.id || '')
     );
@@ -155,7 +146,6 @@ export function StatusManager({
     
     try {
       if (currentStatus) {
-        // Mettre à jour un statut existant
         if (isConnected) {
           const { error } = await supabase
             .from('statuts')
@@ -169,7 +159,6 @@ export function StatusManager({
           if (error) throw error;
         }
           
-        // Mettre à jour l'état local
         const updatedStatuses = statuses.map(status => 
           status.id === currentStatus.id 
             ? { ...status, code, label, color } 
@@ -179,7 +168,6 @@ export function StatusManager({
         
         toast.success('Statut modifié avec succès');
       } else {
-        // Ajouter un nouveau statut
         const newStatus: Status = {
           id: generateId(),
           code,
@@ -201,20 +189,15 @@ export function StatusManager({
           if (error) throw error;
         }
         
-        // Mettre à jour l'état local
         const updatedStatuses = [...statuses, newStatus];
         onStatusesChange(updatedStatuses);
         
-        // Mettre à jour les STATUS_LABELS et STATUS_COLORS globaux
-        // @ts-ignore - Mise à jour dynamique
         STATUS_LABELS[code] = label;
-        // @ts-ignore - Mise à jour dynamique
         STATUS_COLORS[code] = color;
         
         toast.success('Statut ajouté avec succès');
       }
       
-      // Déclencher un événement personnalisé pour informer les autres composants
       const event = new CustomEvent('statusesUpdated');
       window.dispatchEvent(event);
       
@@ -225,7 +208,6 @@ export function StatusManager({
     }
   };
   
-  // Liste prédéfinie de classes Tailwind pour les couleurs
   const colorOptions = [
     { value: 'bg-green-500 text-white', label: 'Vert' },
     { value: 'bg-blue-500 text-white', label: 'Bleu' },

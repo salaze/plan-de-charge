@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -58,13 +57,11 @@ export function EmployeeTab({ employees, onEmployeesChange }: EmployeeTabProps) 
     let updatedEmployees: Employee[];
     
     if (employee.id) {
-      // Mettre à jour un employé existant
       updatedEmployees = employees.map((emp: Employee) => 
         emp.id === employee.id ? employee : emp
       );
       toast.success('Employé modifié avec succès');
     } else {
-      // Ajouter un nouvel employé
       const newEmployee = {
         ...employee,
         id: generateId(),

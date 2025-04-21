@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { toast } from 'sonner';
 import { Employee, UserRole } from '@/types';
@@ -6,10 +5,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { EmployeeRoleSelector } from './EmployeeRoleSelector';
 import { useAuth } from '@/contexts/AuthContext';
+
 interface RoleManagementProps {
   employees: Employee[];
   onEmployeesChange: (updatedEmployees: Employee[]) => void;
 }
+
 export function RoleManagement({
   employees,
   onEmployeesChange
@@ -17,6 +18,7 @@ export function RoleManagement({
   const {
     updateUserRoles
   } = useAuth();
+
   const handleRoleChange = (employeeId: string, newRole: UserRole) => {
     // Mettre à jour le rôle dans le contexte d'authentification
     updateUserRoles(employeeId, newRole);
@@ -33,6 +35,7 @@ export function RoleManagement({
     });
     onEmployeesChange(updatedEmployees);
   };
+
   return <Card>
       <CardHeader>
         <CardTitle>Gestion des rôles</CardTitle>

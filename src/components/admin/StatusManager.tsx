@@ -145,66 +145,44 @@ export function StatusManager({
     }
     
     try {
-      if (currentStatus) {
-        if (isConnected) {
-          const { error } = await supabase
-            .from('statuts')
-            .update({
-              code: code,
-              libelle: label,
-              couleur: color
-            })
-            .eq('id', currentStatus.id);
+      const newStatus = currentStatus 
+        ? { ...currentStatus, code, label, color }
+        : {
+            id: generateId(),
+            code,
+            label,
+            color
+          };
+      
+      if (isConnected) {
+        const { error } = await supabase
+          .from('statuts')
+          .upsert({
+            id: newStatus.id,
+            code: newStatus.code,
+            libelle: newStatus.label,
+            couleur: newStatus.color,
+            display_order: currentStatus?.display_order || 0
+          });
             
-          if (error) throw error;
+        if (error) {
+          console.error('Erreur Supabase:', error);
+          throw new Error(error.message);
         }
-          
-        const updatedStatuses = statuses.map(status => 
-          status.id === currentStatus.id 
-            ? { ...status, code, label, color } 
-            : status
-        );
-        onStatusesChange(updatedStatuses);
-        
-        toast.success('Statut modifié avec succès');
-      } else {
-        const newStatus: Status = {
-          id: generateId(),
-          code,
-          label,
-          color
-        };
-        
-        if (isConnected) {
-          const { error } = await supabase
-            .from('statuts')
-            .insert({
-              id: newStatus.id,
-              code: code,
-              libelle: label,
-              couleur: color,
-              display_order: 0
-            });
-            
-          if (error) throw error;
-        }
-        
-        const updatedStatuses = [...statuses, newStatus];
-        onStatusesChange(updatedStatuses);
-        
-        STATUS_LABELS[code] = label;
-        STATUS_COLORS[code] = color;
-        
-        toast.success('Statut ajouté avec succès');
       }
       
-      const event = new CustomEvent('statusesUpdated');
-      window.dispatchEvent(event);
+      const updatedStatuses = currentStatus
+        ? statuses.map(s => s.id === currentStatus.id ? newStatus : s)
+        : [...statuses, newStatus];
+        
+      onStatusesChange(updatedStatuses);
       
+      toast.success(currentStatus ? 'Statut modifié avec succès' : 'Statut ajouté avec succès');
       setFormOpen(false);
+      
     } catch (error) {
-      console.error('Erreur lors de la sauvegarde du statut:', error);
-      toast.error('Erreur lors de la sauvegarde du statut');
+      console.error('Erreur détaillée:', error);
+      toast.error(`Erreur lors de la sauvegarde: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
     }
   };
   

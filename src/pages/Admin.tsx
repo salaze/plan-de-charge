@@ -50,32 +50,36 @@ const Admin = () => {
   return (
     <Layout>
       <div className="space-y-6 animate-fade-in">
-        <AdminHeader onRefresh={handleRefresh} isOffline={!isConnected} isLoading={isLoading} />
-        
-        {connectionError ? (
-          <AdminError error={connectionError} onRetry={handleRefresh} />
-        ) : (
-          <AdminTabs 
-            projects={data.projects || []}
-            employees={data.employees || []}
-            statuses={data.statuses || []}
-            onProjectsChange={handleProjectsChange}
-            onStatusesChange={handleStatusesChange}
-            onEmployeesChange={handleEmployeesChange}
-            isLoading={isLoading}
-            isConnected={isConnected}
-          />
-        )}
+        <div className="bg-white shadow-sm rounded-lg">
+          <AdminHeader onRefresh={handleRefresh} isOffline={!isConnected} isLoading={isLoading} />
+          
+          {connectionError ? (
+            <AdminError error={connectionError} onRetry={handleRefresh} />
+          ) : (
+            <div className="p-6">
+              <AdminTabs 
+                projects={data.projects || []}
+                employees={data.employees || []}
+                statuses={data.statuses || []}
+                onProjectsChange={handleProjectsChange}
+                onStatusesChange={handleStatusesChange}
+                onEmployeesChange={handleEmployeesChange}
+                isLoading={isLoading}
+                isConnected={isConnected}
+              />
+            </div>
+          )}
+        </div>
         
         <AlertDialog open={!isConnected && !isLoading}>
-          <AlertDialogContent>
+          <AlertDialogContent className="sm:max-w-[425px]">
             <AlertDialogHeader>
               <AlertDialogTitle>Connexion perdue à Supabase</AlertDialogTitle>
               <AlertDialogDescription>
                 La connexion avec la base de données a été perdue. Vérifiez votre connexion internet et réessayez.
               </AlertDialogDescription>
             </AlertDialogHeader>
-            <div className="flex justify-end">
+            <div className="flex justify-end space-x-2">
               <Button onClick={handleRefresh}>Réessayer</Button>
             </div>
           </AlertDialogContent>

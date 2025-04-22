@@ -9,7 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, RefreshCw } from 'lucide-react';
 
 const Index = () => {
   const { isAdmin } = useAuth();
@@ -26,7 +26,8 @@ const Index = () => {
     setIsLegendOpen,
     handleMonthChange,
     handleStatusChange,
-    handleFiltersChange
+    handleFiltersChange,
+    refreshData
   } = usePlanningState();
   
   const handleReconnect = () => {
@@ -36,17 +37,30 @@ const Index = () => {
   return (
     <Layout>
       <div className="space-y-6 animate-fade-in">
-        <PlanningToolbar 
-          year={currentYear}
-          month={currentMonth}
-          isAdmin={isAdmin}
-          employees={originalData.employees || []}
-          projects={originalData.projects || []}
-          filters={filters}
-          onMonthChange={handleMonthChange}
-          onShowLegend={() => setIsLegendOpen(true)}
-          onFiltersChange={handleFiltersChange}
-        />
+        <div className="flex justify-between items-center">
+          <PlanningToolbar 
+            year={currentYear}
+            month={currentMonth}
+            isAdmin={isAdmin}
+            employees={originalData.employees || []}
+            projects={originalData.projects || []}
+            filters={filters}
+            onMonthChange={handleMonthChange}
+            onShowLegend={() => setIsLegendOpen(true)}
+            onFiltersChange={handleFiltersChange}
+          />
+          
+          <Button 
+            variant="outline"
+            size="sm"
+            onClick={refreshData}
+            className="flex items-center gap-1"
+            disabled={loading}
+          >
+            <RefreshCw className="h-4 w-4" />
+            <span>Actualiser</span>
+          </Button>
+        </div>
         
         {connectionError ? (
           <div className="glass-panel p-6 animate-scale-in">

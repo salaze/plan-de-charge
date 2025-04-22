@@ -84,5 +84,10 @@ export const usePlanningData = (currentYear?: number, currentMonth?: number) => 
     loadData();
   }, [year, month]);
 
-  return { data, setData, loading, isOnline, connectionError };
+  // Ajout d'une fonction de rechargement manuel des données
+  const reloadData = async () => {
+    await loadData();
+  };
+
+  return { data, setData, loading, isOnline, connectionError, reloadData };
 };

@@ -1,20 +1,12 @@
 
-import React from 'react';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Plus } from 'lucide-react';
-import { Project } from './projects/types';
+import React, { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Project, ProjectFormData } from './projects/types';
 import { ProjectTable } from './projects/ProjectTable';
 import { ProjectForm } from './projects/ProjectForm';
 import { DeleteDialog } from './projects/DeleteDialog';
 import { useProjectManager } from './projects/useProjectManager';
+import { toast } from 'sonner';
 
 interface ProjectManagerProps {
   projects: Project[];
@@ -24,59 +16,87 @@ interface ProjectManagerProps {
 export function ProjectManager({ projects, onProjectsChange }: ProjectManagerProps) {
   const {
     formOpen,
-    setFormOpen,
+    currentProject,
     deleteDialogOpen,
-    formData,
+    projectToDelete,
+    setFormOpen,
+    setCurrentProject,
+    setDeleteDialogOpen,
+    setProjectToDelete,
     handleAddProject,
     handleEditProject,
-    handleDeleteProject,
-    confirmDeleteProject,
-    handleFormChange,
-    handleSaveProject
-  } = useProjectManager(projects, onProjectsChange);
-  
+    generateProjectId
+  } = useProjectManager();
+
+  const handleDeleteProject = (projectId: string) => {
+    setProjectToDelete(projectId);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteProject = () => {
+    if (!projectToDelete) return;
+
+    const updatedProjects = projects.filter(
+      (project: Project) => project.id !== projectToDelete
+    );
+    onProjectsChange(updatedProjects);
+
+    toast.success('Projet supprimé avec succès');
+    setDeleteDialogOpen(false);
+    setProjectToDelete('');
+  };
+
+  const handleSaveProject = (projectData: ProjectFormData) => {
+    let updatedProjects: Project[];
+
+    if (currentProject) {
+      // Update existing project
+      updatedProjects = projects.map((project: Project) =>
+        project.id === currentProject.id
+          ? { ...project, ...projectData }
+          : project
+      );
+      toast.success('Projet modifié avec succès');
+    } else {
+      // Create new project
+      const newProject = {
+        ...projectData,
+        id: generateProjectId()
+      };
+      updatedProjects = [...projects, newProject];
+      toast.success('Projet ajouté avec succès');
+    }
+
+    onProjectsChange(updatedProjects);
+    setFormOpen(false);
+  };
+
   return (
     <>
-      <Card className="w-full">
+      <Card>
         <CardHeader>
           <CardTitle>Gestion des projets</CardTitle>
           <CardDescription>
-            Ajouter, modifier ou supprimer des projets et leur code associé
+            Ajouter, modifier ou supprimer des projets
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex justify-end mb-4">
-            <Button onClick={handleAddProject} className="flex items-center">
-              <Plus className="mr-2 h-4 w-4" />
-              Ajouter un projet
-            </Button>
-          </div>
-          
           <ProjectTable
             projects={projects}
+            onAddProject={handleAddProject}
             onEditProject={handleEditProject}
             onDeleteProject={handleDeleteProject}
           />
         </CardContent>
       </Card>
-      
-      <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {formData.code ? 'Modifier un projet' : 'Ajouter un projet'}
-            </DialogTitle>
-          </DialogHeader>
-          
-          <ProjectForm
-            formData={formData}
-            onSubmit={handleSaveProject}
-            onClose={() => setFormOpen(false)}
-            onChange={handleFormChange}
-          />
-        </DialogContent>
-      </Dialog>
-      
+
+      <ProjectForm
+        open={formOpen}
+        onClose={() => setFormOpen(false)}
+        onSave={handleSaveProject}
+        project={currentProject}
+      />
+
       <DeleteDialog
         open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}

@@ -13,7 +13,7 @@ export const usePlanningState = () => {
   const [filters, setFilters] = useState<FilterOptions>({});
   const [isLegendOpen, setIsLegendOpen] = useState(false);
 
-  const { data, setData, loading, isOnline, connectionError } = usePlanningData(currentYear, currentMonth);
+  const { data, setData, loading, isOnline, connectionError, reloadData } = usePlanningData(currentYear, currentMonth);
   const { handleSync } = usePlanningSync(data);
   const { handleStatusChange } = useStatusUpdater(data, setData, isOnline);
 
@@ -46,6 +46,13 @@ export const usePlanningState = () => {
     }
   };
 
+  // Fonction pour forcer le rechargement des données
+  const refreshData = async () => {
+    toast.info("Actualisation des données...");
+    await reloadData();
+    toast.success("Données actualisées");
+  };
+
   return {
     data: filteredData,
     originalData: data,
@@ -59,7 +66,8 @@ export const usePlanningState = () => {
     setIsLegendOpen,
     handleMonthChange,
     handleStatusChange,
-    handleFiltersChange
+    handleFiltersChange,
+    refreshData
   };
 };
 

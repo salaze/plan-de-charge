@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,6 +16,8 @@ import {
   AlertDialogTitle
 } from '@/components/ui/alert-dialog';
 import { createEmptyEmployee, generateId } from '@/utils';
+import { useRealtimeSync } from '@/hooks/useRealtimeSync'; 
+import { supabase } from '@/integrations/supabase/client';
 
 interface EmployeeTabProps {
   employees: Employee[];
@@ -26,6 +29,13 @@ export function EmployeeTab({ employees, onEmployeesChange }: EmployeeTabProps) 
   const [currentEmployee, setCurrentEmployee] = useState<Employee | undefined>(undefined);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<string>('');
+  
+  // Ajout de la synchronisation en temps réel pour les employés
+  useRealtimeSync(true, () => {
+    // Actualiser les données des employés après un changement
+    console.log("Changement détecté dans les données, actualisation...");
+    // Cette fonction sera appelée quand des changements sont détectés
+  });
   
   const handleAddEmployee = () => {
     setCurrentEmployee(undefined);
@@ -42,36 +52,100 @@ export function EmployeeTab({ employees, onEmployeesChange }: EmployeeTabProps) 
     setDeleteDialogOpen(true);
   };
   
-  const confirmDeleteEmployee = () => {
+  const confirmDeleteEmployee = async () => {
     if (!employeeToDelete) return;
     
-    const updatedEmployees = employees.filter((emp: Employee) => emp.id !== employeeToDelete);
-    onEmployeesChange(updatedEmployees);
-    
-    toast.success('Employé supprimé avec succès');
-    setDeleteDialogOpen(false);
-    setEmployeeToDelete('');
+    try {
+      // Supprimer l'employé de la base de données Supabase
+      const { error } = await supabase
+        .from('employes')
+        .delete()
+        .eq('id', employeeToDelete);
+      
+      if (error) {
+        console.error('Erreur lors de la suppression de l\'employé:', error);
+        toast.error('Erreur lors de la suppression de l\'employé');
+        return;
+      }
+      
+      // Mettre à jour l'état local
+      const updatedEmployees = employees.filter((emp: Employee) => emp.id !== employeeToDelete);
+      onEmployeesChange(updatedEmployees);
+      
+      toast.success('Employé supprimé avec succès');
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+      toast.error('Une erreur est survenue lors de la suppression');
+    } finally {
+      setDeleteDialogOpen(false);
+      setEmployeeToDelete('');
+    }
   };
   
-  const handleSaveEmployee = (employee: Employee) => {
-    let updatedEmployees: Employee[];
-    
-    if (employee.id) {
-      updatedEmployees = employees.map((emp: Employee) => 
-        emp.id === employee.id ? employee : emp
-      );
-      toast.success('Employé modifié avec succès');
-    } else {
-      const newEmployee = {
-        ...employee,
-        id: generateId(),
-        schedule: []
-      };
-      updatedEmployees = [...employees, newEmployee];
-      toast.success('Employé ajouté avec succès');
+  const handleSaveEmployee = async (employee: Employee) => {
+    try {
+      let updatedEmployees: Employee[];
+      let newEmployee = employee;
+      
+      if (employee.id) {
+        // Mise à jour d'un employé existant
+        const { error } = await supabase
+          .from('employes')
+          .update({
+            nom: employee.name,
+            identifiant: employee.email || '',
+            fonction: employee.position || '',
+            departement: employee.department || '',
+            uid: employee.uid || ''
+          })
+          .eq('id', employee.id);
+        
+        if (error) {
+          console.error('Erreur lors de la mise à jour de l\'employé:', error);
+          toast.error('Erreur lors de la mise à jour de l\'employé');
+          return;
+        }
+        
+        updatedEmployees = employees.map((emp: Employee) => 
+          emp.id === employee.id ? employee : emp
+        );
+        toast.success('Employé modifié avec succès');
+      } else {
+        // Création d'un nouvel employé
+        const employeeId = generateId();
+        newEmployee = {
+          ...employee,
+          id: employeeId,
+          schedule: []
+        };
+        
+        const { error } = await supabase
+          .from('employes')
+          .insert({
+            id: employeeId,
+            nom: newEmployee.name,
+            identifiant: newEmployee.email || '',
+            fonction: newEmployee.position || '',
+            departement: newEmployee.department || '',
+            uid: newEmployee.uid || ''
+          });
+        
+        if (error) {
+          console.error('Erreur lors de la création de l\'employé:', error);
+          toast.error('Erreur lors de la création de l\'employé');
+          return;
+        }
+        
+        updatedEmployees = [...employees, newEmployee];
+        toast.success('Employé ajouté avec succès');
+      }
+      
+      onEmployeesChange(updatedEmployees);
+      setFormOpen(false);
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
+      toast.error('Une erreur est survenue lors de la sauvegarde');
     }
-    
-    onEmployeesChange(updatedEmployees);
   };
 
   return (

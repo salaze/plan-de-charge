@@ -26,7 +26,7 @@ export function Header({ isSidebarOpen, setIsSidebarOpen }: HeaderProps) {
         >
           <span className="material-icons">{isSidebarOpen ? "close" : "menu"}</span>
         </button>
-        <div className="text-lg font-bold text-primary">Mon Application</div>
+        <div className="text-lg font-bold text-primary">Planning des Employés</div>
       </div>
       
       {!isOnline && (

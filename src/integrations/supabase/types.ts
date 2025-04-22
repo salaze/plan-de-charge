@@ -53,42 +53,6 @@ export type Database = {
           },
         ]
       }
-      employe_schedule_duplicate: {
-        Row: {
-          created_at: string | null
-          date: string
-          employe_id: string | null
-          id: string
-          is_highlighted: boolean | null
-          note: string | null
-          period: string
-          project_code: string | null
-          statut_code: string
-        }
-        Insert: {
-          created_at?: string | null
-          date: string
-          employe_id?: string | null
-          id?: string
-          is_highlighted?: boolean | null
-          note?: string | null
-          period: string
-          project_code?: string | null
-          statut_code: string
-        }
-        Update: {
-          created_at?: string | null
-          date?: string
-          employe_id?: string | null
-          id?: string
-          is_highlighted?: boolean | null
-          note?: string | null
-          period?: string
-          project_code?: string | null
-          statut_code?: string
-        }
-        Relationships: []
-      }
       employes: {
         Row: {
           created_at: string | null
@@ -128,76 +92,7 @@ export type Database = {
         }
         Relationships: []
       }
-      employes_duplicate: {
-        Row: {
-          created_at: string | null
-          departement: string | null
-          fonction: string | null
-          id: string
-          identifiant: string | null
-          nom: string
-          prenom: string | null
-          role: string | null
-          uid: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          departement?: string | null
-          fonction?: string | null
-          id?: string
-          identifiant?: string | null
-          nom: string
-          prenom?: string | null
-          role?: string | null
-          uid?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          departement?: string | null
-          fonction?: string | null
-          id?: string
-          identifiant?: string | null
-          nom?: string
-          prenom?: string | null
-          role?: string | null
-          uid?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       statuts: {
-        Row: {
-          code: string
-          couleur: string
-          created_at: string | null
-          display_order: number | null
-          id: string
-          libelle: string
-          updated_at: string | null
-        }
-        Insert: {
-          code: string
-          couleur: string
-          created_at?: string | null
-          display_order?: number | null
-          id?: string
-          libelle: string
-          updated_at?: string | null
-        }
-        Update: {
-          code?: string
-          couleur?: string
-          created_at?: string | null
-          display_order?: number | null
-          id?: string
-          libelle?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      statuts_duplicate: {
         Row: {
           code: string
           couleur: string

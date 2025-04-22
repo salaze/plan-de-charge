@@ -1,10 +1,11 @@
 
 import React from 'react';
 import { ProjectManager } from '@/components/admin/ProjectManager';
+import { Project } from '../projects/types';
 
 interface ProjectsTabProps {
-  projects: any[];
-  onProjectsChange: (projects: any[]) => void;
+  projects: Project[];
+  onProjectsChange: (projects: Project[]) => void;
 }
 
 export function ProjectsTab({ projects, onProjectsChange }: ProjectsTabProps) {

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { SidebarMenu } from './SidebarMenu';
 import { SidebarProvider, Sidebar, SidebarContent, SidebarTrigger } from '@/components/ui/sidebar';
 import { Header } from './Header';
@@ -9,6 +9,8 @@ interface LayoutProps {
 }
 
 export function Layout({ children }: LayoutProps) {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
   return (
     <SidebarProvider defaultOpen={false}>
       <div className="flex min-h-screen bg-gray-50 w-full">
@@ -19,7 +21,10 @@ export function Layout({ children }: LayoutProps) {
         </Sidebar>
         
         <main className="flex-1">
-          <Header />
+          <Header 
+            isSidebarOpen={isSidebarOpen} 
+            setIsSidebarOpen={setIsSidebarOpen} 
+          />
           <div className="p-6">
             <SidebarTrigger />
             {children}
@@ -29,4 +34,3 @@ export function Layout({ children }: LayoutProps) {
     </SidebarProvider>
   );
 }
-

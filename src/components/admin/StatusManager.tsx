@@ -155,15 +155,22 @@ export function StatusManager({
           };
       
       if (isConnected) {
+        const supabaseData: any = {
+          id: newStatus.id,
+          code: newStatus.code,
+          libelle: newStatus.label,
+          couleur: newStatus.color,
+        };
+        
+        if (currentStatus && 'display_order' in currentStatus) {
+          supabaseData.display_order = currentStatus.display_order;
+        } else {
+          supabaseData.display_order = 0;
+        }
+        
         const { error } = await supabase
           .from('statuts')
-          .upsert({
-            id: newStatus.id,
-            code: newStatus.code,
-            libelle: newStatus.label,
-            couleur: newStatus.color,
-            display_order: currentStatus?.display_order || 0
-          });
+          .upsert(supabaseData);
             
         if (error) {
           console.error('Erreur Supabase:', error);

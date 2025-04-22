@@ -183,3 +183,4 @@ export function useStatusManager({ statuses, onStatusesChange, isConnected }: Us
     setDeleteDialogOpen,
   };
 }
+

@@ -9,12 +9,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-
-interface DeleteDialogProps {
-  open: boolean;
-  onClose: () => void;
-  onConfirm: () => void;
-}
+import { DeleteDialogProps } from './types';
 
 export function DeleteDialog({ open, onClose, onConfirm }: DeleteDialogProps) {
   return (
@@ -42,3 +37,4 @@ export function DeleteDialog({ open, onClose, onConfirm }: DeleteDialogProps) {
     </Dialog>
   );
 }
+

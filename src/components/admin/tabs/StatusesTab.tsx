@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { StatusManager } from '@/components/admin/StatusManager';
+import { StatusManager } from '@/components/admin/status/StatusManager';
 
 interface StatusesTabProps {
   statuses: any[];
@@ -24,3 +24,4 @@ export function StatusesTab({
     />
   );
 }
+

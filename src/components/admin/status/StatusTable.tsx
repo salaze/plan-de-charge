@@ -10,13 +10,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Edit, Trash } from 'lucide-react';
-import { Status } from './types';
-
-interface StatusTableProps {
-  statuses: Status[];
-  onEditStatus: (status: Status) => void;
-  onDeleteStatus: (statusId: string) => void;
-}
+import { StatusTableProps } from './types';
 
 export function StatusTable({ statuses, onEditStatus, onDeleteStatus }: StatusTableProps) {
   return (
@@ -75,3 +69,4 @@ export function StatusTable({ statuses, onEditStatus, onDeleteStatus }: StatusTa
     </Table>
   );
 }
+

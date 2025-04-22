@@ -4,18 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { DialogFooter } from '@/components/ui/dialog';
-import { StatusCode } from '@/types';
-
-interface StatusFormProps {
-  code: StatusCode;
-  label: string;
-  color: string;
-  onCodeChange: (value: StatusCode) => void;
-  onLabelChange: (value: string) => void;
-  onColorChange: (value: string) => void;
-  onSubmit: (e: React.FormEvent) => void;
-  onClose: () => void;
-}
+import { StatusFormProps } from './types';
 
 export function StatusForm({
   code,
@@ -92,3 +81,4 @@ export function StatusForm({
     </form>
   );
 }
+

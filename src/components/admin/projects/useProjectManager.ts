@@ -103,9 +103,14 @@ export function useProjectManager(
 
   return {
     formOpen,
-    setFormOpen,
+    currentProject,
     deleteDialogOpen,
+    projectToDelete,
     formData,
+    setFormOpen,
+    setCurrentProject,
+    setDeleteDialogOpen,
+    setProjectToDelete,
     handleAddProject,
     handleEditProject,
     handleDeleteProject,

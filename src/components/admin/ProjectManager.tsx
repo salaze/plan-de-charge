@@ -1,12 +1,11 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Project, ProjectFormData } from './projects/types';
 import { ProjectTable } from './projects/ProjectTable';
 import { ProjectForm } from './projects/ProjectForm';
 import { DeleteDialog } from './projects/DeleteDialog';
 import { useProjectManager } from './projects/useProjectManager';
-import { toast } from 'sonner';
 
 interface ProjectManagerProps {
   projects: Project[];
@@ -19,57 +18,18 @@ export function ProjectManager({ projects, onProjectsChange }: ProjectManagerPro
     currentProject,
     deleteDialogOpen,
     projectToDelete,
+    formData,
     setFormOpen,
     setCurrentProject,
     setDeleteDialogOpen,
     setProjectToDelete,
     handleAddProject,
     handleEditProject,
-    generateProjectId
-  } = useProjectManager();
-
-  const handleDeleteProject = (projectId: string) => {
-    setProjectToDelete(projectId);
-    setDeleteDialogOpen(true);
-  };
-
-  const confirmDeleteProject = () => {
-    if (!projectToDelete) return;
-
-    const updatedProjects = projects.filter(
-      (project: Project) => project.id !== projectToDelete
-    );
-    onProjectsChange(updatedProjects);
-
-    toast.success('Projet supprimé avec succès');
-    setDeleteDialogOpen(false);
-    setProjectToDelete('');
-  };
-
-  const handleSaveProject = (projectData: ProjectFormData) => {
-    let updatedProjects: Project[];
-
-    if (currentProject) {
-      // Update existing project
-      updatedProjects = projects.map((project: Project) =>
-        project.id === currentProject.id
-          ? { ...project, ...projectData }
-          : project
-      );
-      toast.success('Projet modifié avec succès');
-    } else {
-      // Create new project
-      const newProject = {
-        ...projectData,
-        id: generateProjectId()
-      };
-      updatedProjects = [...projects, newProject];
-      toast.success('Projet ajouté avec succès');
-    }
-
-    onProjectsChange(updatedProjects);
-    setFormOpen(false);
-  };
+    handleDeleteProject,
+    confirmDeleteProject,
+    handleFormChange,
+    handleSaveProject
+  } = useProjectManager(projects, onProjectsChange);
 
   return (
     <>
@@ -83,18 +43,25 @@ export function ProjectManager({ projects, onProjectsChange }: ProjectManagerPro
         <CardContent>
           <ProjectTable
             projects={projects}
-            onAddProject={handleAddProject}
             onEditProject={handleEditProject}
             onDeleteProject={handleDeleteProject}
           />
+          <div className="mt-4 flex justify-end">
+            <button
+              className="bg-primary text-white px-4 py-2 rounded"
+              onClick={handleAddProject}
+            >
+              Ajouter un projet
+            </button>
+          </div>
         </CardContent>
       </Card>
 
       <ProjectForm
-        open={formOpen}
+        formData={formData}
+        onSubmit={handleSaveProject}
         onClose={() => setFormOpen(false)}
-        onSave={handleSaveProject}
-        project={currentProject}
+        onChange={handleFormChange}
       />
 
       <DeleteDialog

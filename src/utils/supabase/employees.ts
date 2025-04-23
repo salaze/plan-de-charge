@@ -54,6 +54,12 @@ export const saveEmployee = async (employee: Employee) => {
   try {
     console.log("Sauvegarde de l'employé dans Supabase:", employee);
     
+    // Vérifions que l'ID est valide pour Supabase (UUID)
+    if (employee.id && !isValidUUID(employee.id)) {
+      console.error("ID non valide pour Supabase:", employee.id);
+      throw new Error("Format d'ID invalide");
+    }
+    
     // Structure de données adaptée au schéma de la table employes de Supabase
     const employeeData = {
       id: employee.id,
@@ -90,16 +96,30 @@ export const saveEmployee = async (employee: Employee) => {
       toast.error('Un employé avec cet identifiant existe déjà.');
     } else if (error.code === '23502') {
       toast.error('Données incomplètes: certains champs obligatoires sont manquants.');
+    } else if (error.message?.includes('invalid input syntax')) {
+      toast.error('Format de données invalide. Veuillez réessayer.');
     } else {
       toast.error(`Erreur lors de la sauvegarde de l'employé: ${error.message || 'erreur inconnue'}`);
     }
     
-    throw error;
+    return false;
   }
 };
 
+// Fonction pour vérifier si une chaîne est un UUID valide
+function isValidUUID(id: string) {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(id);
+}
+
 export const deleteEmployee = async (employeeId: string) => {
   try {
+    // Vérifions que l'ID est valide pour Supabase (UUID)
+    if (!isValidUUID(employeeId)) {
+      console.error("ID non valide pour Supabase:", employeeId);
+      throw new Error("Format d'ID invalide");
+    }
+    
     const { error } = await supabase
       .from('employes')
       .delete()
@@ -121,6 +141,6 @@ export const deleteEmployee = async (employeeId: string) => {
       toast.error('Erreur lors de la suppression de l\'employé');
     }
     
-    throw error;
+    return false;
   }
 };

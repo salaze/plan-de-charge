@@ -20,6 +20,8 @@ export function EmployeeTab({ employees, onEmployeesChange }: EmployeeTabProps) 
   const [currentEmployee, setCurrentEmployee] = useState<Employee | undefined>(undefined);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<string>("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   useRealtimeSync(true, () => {
     // Actualiser les données des employés après un changement
@@ -28,22 +30,28 @@ export function EmployeeTab({ employees, onEmployeesChange }: EmployeeTabProps) 
   });
 
   const handleAddEmployee = () => {
+    setError(null);
     setCurrentEmployee(undefined);
     setFormOpen(true);
   };
 
   const handleEditEmployee = (employee: Employee) => {
+    setError(null);
     setCurrentEmployee(employee);
     setFormOpen(true);
   };
 
   const handleDeleteEmployee = (employeeId: string) => {
+    setError(null);
     setEmployeeToDelete(employeeId);
     setDeleteDialogOpen(true);
   };
 
   const confirmDeleteEmployee = async () => {
     if (!employeeToDelete) return;
+    setLoading(true);
+    setError(null);
+    
     try {
       const success = await deleteEmployee(employeeToDelete);
       if (success) {
@@ -53,20 +61,26 @@ export function EmployeeTab({ employees, onEmployeesChange }: EmployeeTabProps) 
       }
     } catch (error) {
       console.error("Erreur lors de la suppression:", error);
-      toast.error("Une erreur est survenue lors de la suppression");
+      setError("Une erreur est survenue lors de la suppression");
     } finally {
       setDeleteDialogOpen(false);
       setEmployeeToDelete("");
+      setLoading(false);
     }
   };
 
   const handleSaveEmployee = async (employee: Employee) => {
+    setLoading(true);
+    setError(null);
+    
     try {
       let updatedEmployees: Employee[];
       let newEmployee = employee;
 
+      // Vérifier si l'ID est déjà défini
       if (!employee.id) {
         const employeeId = generateId();
+        console.log("Nouvel ID généré:", employeeId);
         newEmployee = {
           ...employee,
           id: employeeId,
@@ -89,9 +103,11 @@ export function EmployeeTab({ employees, onEmployeesChange }: EmployeeTabProps) 
         onEmployeesChange(updatedEmployees);
         setFormOpen(false);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erreur lors de la sauvegarde:", error);
-      // Le toast d'erreur est déjà affiché dans la fonction saveEmployee
+      setError(`Erreur lors de la sauvegarde: ${error.message || "Erreur inconnue"}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -108,6 +124,8 @@ export function EmployeeTab({ employees, onEmployeesChange }: EmployeeTabProps) 
             onAddEmployee={handleAddEmployee}
             onEditEmployee={handleEditEmployee}
             onDeleteEmployee={handleDeleteEmployee}
+            error={error}
+            loading={loading}
           />
         </CardContent>
       </Card>

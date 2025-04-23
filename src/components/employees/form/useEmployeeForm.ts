@@ -78,11 +78,11 @@ export function useEmployeeForm({ employee, open }: UseEmployeeFormProps) {
       return null;
     }
     
-    // Créer un nouvel ID si c'est un nouvel employé
-    const id = isNewEmployee ? generateId() : employee?.id;
+    // Utiliser l'ID existant ou en générer un nouveau (format UUID)
+    const id = employee?.id || generateId();
     
     const updatedEmployee: Employee = {
-      id: id || '',
+      id,
       name: name.trim(),
       uid: uid.trim(),
       email: email.trim() || undefined,

@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Employee } from '@/types';
+import { generateId } from '@/utils';
 
 interface UseEmployeeFormProps {
   employee?: Employee;
@@ -77,21 +78,19 @@ export function useEmployeeForm({ employee, open }: UseEmployeeFormProps) {
       return null;
     }
     
+    // Créer un nouvel ID si c'est un nouvel employé
+    const id = isNewEmployee ? generateId() : employee?.id;
+    
     const updatedEmployee: Employee = {
-      id: employee?.id || '',
+      id: id || '',
       name: name.trim(),
       uid: uid.trim(),
       email: email.trim() || undefined,
       position: position.trim() || undefined,
       department: department.trim() || undefined,
-      password: password || employee?.password,
+      role: employee?.role || 'employee',
       schedule: employee?.schedule || []
     };
-    
-    // Si c'est un nouvel employé sans mot de passe spécifié, utiliser un mot de passe par défaut
-    if (isNewEmployee && !updatedEmployee.password) {
-      updatedEmployee.password = 'employee123';
-    }
     
     return updatedEmployee;
   };

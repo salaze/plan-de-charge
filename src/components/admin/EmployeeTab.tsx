@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,9 +14,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle
 } from '@/components/ui/alert-dialog';
-import { createEmptyEmployee, generateId } from '@/utils';
+import { generateId } from '@/utils';
 import { useRealtimeSync } from '@/hooks/useRealtimeSync'; 
-import { supabase } from '@/integrations/supabase/client';
+import { saveEmployee, deleteEmployee } from '@/utils/supabase/employees';
 
 interface EmployeeTabProps {
   employees: Employee[];
@@ -57,22 +56,15 @@ export function EmployeeTab({ employees, onEmployeesChange }: EmployeeTabProps) 
     
     try {
       // Supprimer l'employé de la base de données Supabase
-      const { error } = await supabase
-        .from('employes')
-        .delete()
-        .eq('id', employeeToDelete);
+      const success = await deleteEmployee(employeeToDelete);
       
-      if (error) {
-        console.error('Erreur lors de la suppression de l\'employé:', error);
-        toast.error('Erreur lors de la suppression de l\'employé');
-        return;
+      if (success) {
+        // Mettre à jour l'état local
+        const updatedEmployees = employees.filter((emp: Employee) => emp.id !== employeeToDelete);
+        onEmployeesChange(updatedEmployees);
+        
+        toast.success('Employé supprimé avec succès');
       }
-      
-      // Mettre à jour l'état local
-      const updatedEmployees = employees.filter((emp: Employee) => emp.id !== employeeToDelete);
-      onEmployeesChange(updatedEmployees);
-      
-      toast.success('Employé supprimé avec succès');
     } catch (error) {
       console.error('Erreur lors de la suppression:', error);
       toast.error('Une erreur est survenue lors de la suppression');
@@ -87,30 +79,7 @@ export function EmployeeTab({ employees, onEmployeesChange }: EmployeeTabProps) 
       let updatedEmployees: Employee[];
       let newEmployee = employee;
       
-      if (employee.id) {
-        // Mise à jour d'un employé existant
-        const { error } = await supabase
-          .from('employes')
-          .update({
-            nom: employee.name,
-            identifiant: employee.email || '',
-            fonction: employee.position || '',
-            departement: employee.department || '',
-            uid: employee.uid || ''
-          })
-          .eq('id', employee.id);
-        
-        if (error) {
-          console.error('Erreur lors de la mise à jour de l\'employé:', error);
-          toast.error('Erreur lors de la mise à jour de l\'employé');
-          return;
-        }
-        
-        updatedEmployees = employees.map((emp: Employee) => 
-          emp.id === employee.id ? employee : emp
-        );
-        toast.success('Employé modifié avec succès');
-      } else {
+      if (!employee.id) {
         // Création d'un nouvel employé
         const employeeId = generateId();
         newEmployee = {
@@ -118,33 +87,30 @@ export function EmployeeTab({ employees, onEmployeesChange }: EmployeeTabProps) 
           id: employeeId,
           schedule: []
         };
-        
-        const { error } = await supabase
-          .from('employes')
-          .insert({
-            id: employeeId,
-            nom: newEmployee.name,
-            identifiant: newEmployee.email || '',
-            fonction: newEmployee.position || '',
-            departement: newEmployee.department || '',
-            uid: newEmployee.uid || ''
-          });
-        
-        if (error) {
-          console.error('Erreur lors de la création de l\'employé:', error);
-          toast.error('Erreur lors de la création de l\'employé');
-          return;
-        }
-        
-        updatedEmployees = [...employees, newEmployee];
-        toast.success('Employé ajouté avec succès');
       }
       
-      onEmployeesChange(updatedEmployees);
-      setFormOpen(false);
+      // Utilisation de la fonction saveEmployee pour la sauvegarde
+      const success = await saveEmployee(newEmployee);
+      
+      if (success) {
+        if (employee.id) {
+          // Mise à jour d'un employé existant
+          updatedEmployees = employees.map((emp: Employee) => 
+            emp.id === employee.id ? newEmployee : emp
+          );
+          toast.success('Employé modifié avec succès');
+        } else {
+          // Ajout d'un nouvel employé
+          updatedEmployees = [...employees, newEmployee];
+          toast.success('Employé ajouté avec succès');
+        }
+        
+        onEmployeesChange(updatedEmployees);
+        setFormOpen(false);
+      }
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
-      toast.error('Une erreur est survenue lors de la sauvegarde');
+      // Le toast d'erreur est déjà affiché dans la fonction saveEmployee
     }
   };
 

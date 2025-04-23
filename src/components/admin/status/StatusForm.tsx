@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { DialogFooter } from '@/components/ui/dialog';
 import { StatusFormProps } from './types';
+import { StatusCode } from '@/types';
 
 export function StatusForm({
   code,
@@ -81,4 +82,3 @@ export function StatusForm({
     </form>
   );
 }
-

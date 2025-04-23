@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -30,6 +30,14 @@ export function StatusChangeDialog({
   projects
 }: StatusChangeDialogProps) {
   const [selectedPeriod, setSelectedPeriod] = useState<'AM' | 'PM'>('AM');
+  
+  // Sélection automatique de la période en fonction de l'heure actuelle
+  useEffect(() => {
+    if (isOpen) {
+      const currentHour = new Date().getHours();
+      setSelectedPeriod(currentHour < 12 ? 'AM' : 'PM');
+    }
+  }, [isOpen]);
   
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

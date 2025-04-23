@@ -74,32 +74,25 @@ export function EmployeeTab({ employees, onEmployeesChange }: EmployeeTabProps) 
     setError(null);
     
     try {
-      let updatedEmployees: Employee[];
-      let newEmployee = employee;
-
-      // Vérifier si l'ID est déjà défini
-      if (!employee.id) {
-        const employeeId = generateId();
-        console.log("Nouvel ID généré:", employeeId);
-        newEmployee = {
-          ...employee,
-          id: employeeId,
-          schedule: [],
-        };
-      }
-
-      const success = await saveEmployee(newEmployee);
+      // Nous utilisons maintenant directement l'employé reçu sans générer un nouvel ID ici
+      // puisque la génération est déjà faite dans useEmployeeForm.ts avec un format UUID valide
+      const success = await saveEmployee(employee);
 
       if (success) {
-        if (employee.id) {
+        let updatedEmployees: Employee[];
+        
+        if (employee.id && employees.some(emp => emp.id === employee.id)) {
+          // Mise à jour d'un employé existant
           updatedEmployees = employees.map(emp =>
-            emp.id === employee.id ? newEmployee : emp
+            emp.id === employee.id ? employee : emp
           );
           toast.success("Employé modifié avec succès");
         } else {
-          updatedEmployees = [...employees, newEmployee];
+          // Ajout d'un nouvel employé
+          updatedEmployees = [...employees, employee];
           toast.success("Employé ajouté avec succès");
         }
+        
         onEmployeesChange(updatedEmployees);
         setFormOpen(false);
       }

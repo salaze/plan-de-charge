@@ -96,8 +96,8 @@ export const saveEmployee = async (employee: Employee) => {
       toast.error('Un employé avec cet identifiant existe déjà.');
     } else if (error.code === '23502') {
       toast.error('Données incomplètes: certains champs obligatoires sont manquants.');
-    } else if (error.message?.includes('invalid input syntax')) {
-      toast.error('Format de données invalide. Veuillez réessayer.');
+    } else if (error.message?.includes('invalid input syntax') || error.message?.includes("Format d'ID invalide")) {
+      toast.error('Format de données invalide. L\'ID doit être au format UUID valide.');
     } else {
       toast.error(`Erreur lors de la sauvegarde de l'employé: ${error.message || 'erreur inconnue'}`);
     }

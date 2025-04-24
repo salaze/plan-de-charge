@@ -45,6 +45,7 @@ export function PlanningGrid({
   // Extract grid functionality to a custom hook
   const {
     selectedCell,
+    selectedPeriod,
     handleCellClick,
     handleCloseDialog,
     getVisibleDays
@@ -140,6 +141,7 @@ export function PlanningGrid({
         isHighlighted={selectedCell?.isHighlighted}
         projectCode={selectedCell?.projectCode}
         projects={projects}
+        selectedPeriod={selectedPeriod}
       />
     </>
   );

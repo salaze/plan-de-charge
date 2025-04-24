@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { FilterOptions } from '@/types';
 import { filterData } from '@/utils/dataFilterUtils';
 import { usePlanningSync } from './planning/usePlanningSync';
@@ -47,11 +47,11 @@ export const usePlanningState = () => {
   };
 
   // Fonction pour forcer le rechargement des données
-  const refreshData = async () => {
+  const refreshData = useCallback(async () => {
     toast.info("Actualisation des données...");
     await reloadData();
     toast.success("Données actualisées");
-  };
+  }, [reloadData]);
 
   return {
     data: filteredData,

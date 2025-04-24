@@ -77,6 +77,10 @@ export function useStatusManager({ statuses, onStatusesChange, isConnected }: Us
       onStatusesChange(updatedStatuses);
       
       toast.success('Statut supprimé avec succès');
+
+      // Mise à jour du registre global des statuts
+      const event = new CustomEvent('statusesUpdated');
+      window.dispatchEvent(event);
     } catch (error) {
       console.error('Erreur lors de la suppression du statut:', error);
       toast.error('Erreur lors de la suppression du statut');
@@ -154,6 +158,11 @@ export function useStatusManager({ statuses, onStatusesChange, isConnected }: Us
         toast.success('Statut ajouté avec succès');
       }
       
+      // Ensure STATUS_LABELS and STATUS_COLORS are updated
+      STATUS_LABELS[code] = label;
+      STATUS_COLORS[code] = color;
+      
+      // Trigger a global event to notify other components about status changes
       const event = new CustomEvent('statusesUpdated');
       window.dispatchEvent(event);
       
@@ -183,4 +192,3 @@ export function useStatusManager({ statuses, onStatusesChange, isConnected }: Us
     setDeleteDialogOpen,
   };
 }
-

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { PlanningGrid } from '@/components/calendar/PlanningGrid';
 import { LegendModal } from '@/components/calendar/LegendModal';
@@ -29,6 +29,20 @@ const Index = () => {
     handleFiltersChange,
     refreshData
   } = usePlanningState();
+  
+  // Écouter les événements de mise à jour des statuts
+  useEffect(() => {
+    const handleStatusesUpdated = () => {
+      console.log("Index: Événement statusesUpdated reçu, actualisation des données...");
+      refreshData();
+    };
+    
+    window.addEventListener('statusesUpdated', handleStatusesUpdated);
+    
+    return () => {
+      window.removeEventListener('statusesUpdated', handleStatusesUpdated);
+    };
+  }, [refreshData]);
   
   const handleReconnect = () => {
     window.location.reload();

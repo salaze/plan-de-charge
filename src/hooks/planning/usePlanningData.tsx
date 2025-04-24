@@ -6,6 +6,7 @@ import { fetchEmployees } from '@/utils/supabase/employees';
 import { fetchSchedule } from '@/utils/supabase/schedule';
 import { checkSupabaseConnection } from '@/utils/supabase/connection';
 import { getExistingProjects } from '@/utils/export/projectUtils';
+import { syncStatusesWithDatabase } from '@/utils/supabase/sync';
 
 export const usePlanningData = (currentYear?: number, currentMonth?: number) => {
   const year = currentYear || new Date().getFullYear();
@@ -40,6 +41,9 @@ export const usePlanningData = (currentYear?: number, currentMonth?: number) => 
         setLoading(false);
         return;
       }
+      
+      // Synchroniser d'abord les statuts
+      await syncStatusesWithDatabase();
       
       const employees = await fetchEmployees();
       console.log(`${employees.length} employés récupérés de Supabase`);

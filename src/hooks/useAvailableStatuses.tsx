@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { StatusCode } from '@/types';
+import { StatusCode, STATUS_LABELS, STATUS_COLORS } from '@/types';
 import { toast } from 'sonner';
 
 export const useAvailableStatuses = () => {
@@ -16,7 +16,7 @@ export const useAvailableStatuses = () => {
       try {
         const { data, error } = await supabase
           .from('statuts')
-          .select('code')
+          .select('code, libelle, couleur')
           .order('display_order', { ascending: true });
           
         if (error) throw error;
@@ -27,8 +27,20 @@ export const useAvailableStatuses = () => {
             .map(item => item.code as StatusCode)
             .filter(Boolean);
             
+          // Mise à jour dynamique des labels et couleurs
+          data.forEach(status => {
+            if (status.code) {
+              STATUS_LABELS[status.code as StatusCode] = status.libelle || status.code;
+              STATUS_COLORS[status.code as StatusCode] = status.couleur || 'bg-gray-500 text-white';
+            }
+          });
+            
           console.log(`${statusCodes.length} statuts chargés depuis Supabase`);
           setStatuses(statusCodes);
+          
+          // Déclencher un événement pour informer l'application que les statuts ont été mis à jour
+          const event = new CustomEvent('statusesUpdated');
+          window.dispatchEvent(event);
         } else {
           console.log('Aucun statut trouvé dans Supabase');
           toast.error('Aucun statut trouvé dans la base de données');
@@ -51,6 +63,23 @@ export const useAvailableStatuses = () => {
     };
     
     fetchStatuses();
+    
+    // Écouter les mises à jour en temps réel des statuts
+    const channel = supabase
+      .channel('statuts-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'statuts' },
+        () => {
+          console.log('Changements détectés dans la table statuts, actualisation...');
+          fetchStatuses();
+        }
+      )
+      .subscribe();
+      
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
   
   return { statuses, isLoading, error };

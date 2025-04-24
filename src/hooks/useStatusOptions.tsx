@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { StatusCode } from '@/types';
+import { StatusCode, STATUS_LABELS } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -25,7 +25,7 @@ export function useStatusOptions() {
         
         const { data: statusData, error } = await supabase
           .from('statuts')
-          .select('code, libelle')
+          .select('code, libelle, couleur')
           .order('display_order', { ascending: true })
           .abortSignal(controller.signal);
           
@@ -39,6 +39,13 @@ export function useStatusOptions() {
         console.log("Options de statut récupérées:", statusData);
         
         if (Array.isArray(statusData) && statusData.length > 0) {
+          // Mise à jour dynamique des STATUS_LABELS et STATUS_COLORS
+          statusData.forEach(status => {
+            if (status.code && STATUS_LABELS) {
+              STATUS_LABELS[status.code as StatusCode] = status.libelle || status.code;
+            }
+          });
+          
           const supabaseStatuses = statusData
             .filter((status) => status && status.code && status.code.trim() !== '') // Filtrer les codes vides
             .map((status) => ({
@@ -51,6 +58,10 @@ export function useStatusOptions() {
             { value: 'none', label: 'Aucun' },
             ...supabaseStatuses
           ]);
+          
+          // Déclencher un événement pour informer l'application que les statuts ont été mis à jour
+          const event = new CustomEvent('statusesUpdated');
+          window.dispatchEvent(event);
         } else {
           toast.error("Aucun statut trouvé dans la base de données");
           setAvailableStatuses([
@@ -71,7 +82,7 @@ export function useStatusOptions() {
     // Charger les statuts immédiatement
     loadStatusesFromSupabase();
     
-    // S'abonner aux changements en temps réel des statuts avec une meilleure gestion
+    // S'abonner aux changements en temps réel des statuts
     const channel = supabase
       .channel('status-options-realtime')
       .on(
@@ -89,7 +100,16 @@ export function useStatusOptions() {
       )
       .subscribe();
     
+    // Écouter également les événements de window pour la cohérence des statuts
+    const handleStatusesUpdated = () => {
+      console.log("Événement statusesUpdated reçu, actualisation des statuts...");
+      loadStatusesFromSupabase();
+    };
+    
+    window.addEventListener('statusesUpdated', handleStatusesUpdated);
+    
     return () => {
+      window.removeEventListener('statusesUpdated', handleStatusesUpdated);
       supabase.removeChannel(channel);
     };
   }, []);

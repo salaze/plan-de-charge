@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { StatusCode, STATUS_LABELS } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -12,24 +12,48 @@ interface StatusOption {
 export function useStatusOptions() {
   const [availableStatuses, setAvailableStatuses] = useState<StatusOption[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const loadingTimeoutRef = useRef<number | null>(null);
+  const retryCountRef = useRef(0);
   
   useEffect(() => {
     // Fonction pour charger les statuts depuis Supabase
     const loadStatusesFromSupabase = async () => {
       setIsLoading(true);
+      
+      // Définir un timeout pour éviter les attentes trop longues
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+      
+      loadingTimeoutRef.current = window.setTimeout(() => {
+        console.log("Timeout lors du chargement des statuts");
+        setIsLoading(false);
+        // Utiliser les statuts par défaut en cas de timeout
+        const defaultStatuses: StatusOption[] = [
+          { value: 'none', label: 'Aucun' },
+          { value: 'assistance', label: 'Assistance' },
+          { value: 'vigi', label: 'Vigi' },
+          { value: 'formation', label: 'Formation' },
+          { value: 'projet', label: 'Projet' },
+          { value: 'conges', label: 'Congés' },
+          { value: 'parc', label: 'Gestion de Parc' }
+        ];
+        setAvailableStatuses(defaultStatuses);
+      }, 5000) as unknown as number;
+      
       try {
         console.log("Chargement des options de statut depuis Supabase...");
-        // Timeout plus court pour échouer plus rapidement en cas d'absence de connexion
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 secondes de timeout
         
         const { data: statusData, error } = await supabase
           .from('statuts')
           .select('code, libelle, couleur')
-          .order('display_order', { ascending: true })
-          .abortSignal(controller.signal);
-          
-        clearTimeout(timeoutId);
+          .order('display_order', { ascending: true });
+        
+        // Nettoyer le timeout car nous avons une réponse
+        if (loadingTimeoutRef.current) {
+          clearTimeout(loadingTimeoutRef.current);
+          loadingTimeoutRef.current = null;
+        }
         
         if (error) {
           console.error("Erreur lors du chargement des options de statut:", error);
@@ -37,6 +61,7 @@ export function useStatusOptions() {
         }
         
         console.log("Options de statut récupérées:", statusData);
+        retryCountRef.current = 0; // Réinitialiser le compteur de tentatives
         
         if (Array.isArray(statusData) && statusData.length > 0) {
           // Mise à jour dynamique des STATUS_LABELS et STATUS_COLORS
@@ -59,22 +84,54 @@ export function useStatusOptions() {
             ...supabaseStatuses
           ]);
           
-          // Déclencher un événement pour informer l'application que les statuts ont été mis à jour
-          const event = new CustomEvent('statusesUpdated');
-          window.dispatchEvent(event);
+          // Vérifier que le statut "parc" est présent
+          const isParcStatusPresent = supabaseStatuses.some(s => s.value === 'parc');
+          if (!isParcStatusPresent) {
+            console.log("Statut 'parc' manquant, il sera automatiquement ajouté au prochain démarrage");
+          }
         } else {
-          toast.error("Aucun statut trouvé dans la base de données");
-          setAvailableStatuses([
-            { value: 'none', label: 'Aucun' }
-          ]);
+          console.warn("Aucun statut trouvé dans la base de données");
+          
+          // Utiliser les statuts par défaut
+          const defaultStatuses: StatusOption[] = [
+            { value: 'none', label: 'Aucun' },
+            { value: 'assistance', label: 'Assistance' },
+            { value: 'vigi', label: 'Vigi' },
+            { value: 'formation', label: 'Formation' },
+            { value: 'projet', label: 'Projet' },
+            { value: 'conges', label: 'Congés' },
+            { value: 'parc', label: 'Gestion de Parc' }
+          ];
+          setAvailableStatuses(defaultStatuses);
         }
       } catch (error) {
         console.error('Error loading status options from Supabase:', error);
-        toast.error("Erreur lors du chargement des options de statut");
-        setAvailableStatuses([
-          { value: 'none', label: 'Aucun' }
-        ]);
+        
+        // Réessayer jusqu'à 3 fois en cas d'erreur
+        if (retryCountRef.current < 3) {
+          retryCountRef.current++;
+          console.log(`Tentative ${retryCountRef.current}/3 de rechargement des statuts`);
+          setTimeout(loadStatusesFromSupabase, 2000);
+          return;
+        }
+        
+        // Utiliser les statuts par défaut en cas d'échec
+        const defaultStatuses: StatusOption[] = [
+          { value: 'none', label: 'Aucun' },
+          { value: 'assistance', label: 'Assistance' },
+          { value: 'vigi', label: 'Vigi' },
+          { value: 'formation', label: 'Formation' },
+          { value: 'projet', label: 'Projet' },
+          { value: 'conges', label: 'Congés' },
+          { value: 'parc', label: 'Gestion de Parc' }
+        ];
+        setAvailableStatuses(defaultStatuses);
       } finally {
+        // Nettoyer le timeout
+        if (loadingTimeoutRef.current) {
+          clearTimeout(loadingTimeoutRef.current);
+          loadingTimeoutRef.current = null;
+        }
         setIsLoading(false);
       }
     };
@@ -94,22 +151,32 @@ export function useStatusOptions() {
         },
         (payload) => {
           console.log('Changement de statut détecté, actualisation des options:', payload);
-          toast.info('Nouvelles options de statut disponibles, actualisation en cours...');
-          loadStatusesFromSupabase();
+          
+          // Ne pas recharger immédiatement, mais informer l'utilisateur
+          toast.info('Nouvelles options de statut disponibles');
         }
       )
       .subscribe();
     
-    // Écouter également les événements de window pour la cohérence des statuts
-    const handleStatusesUpdated = () => {
-      console.log("Événement statusesUpdated reçu, actualisation des statuts...");
-      loadStatusesFromSupabase();
+    // Écouter les événements spécifiques qui déclenchent une actualisation des statuts
+    const handleStatusesUpdated = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const noRefresh = customEvent.detail?.noRefresh === true;
+      
+      // Ne pas recharger si l'événement demande de ne pas actualiser
+      if (!noRefresh) {
+        console.log("Rechargement des options de statut suite à un événement");
+        loadStatusesFromSupabase();
+      }
     };
     
     window.addEventListener('statusesUpdated', handleStatusesUpdated);
     
     return () => {
       window.removeEventListener('statusesUpdated', handleStatusesUpdated);
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
       supabase.removeChannel(channel);
     };
   }, []);

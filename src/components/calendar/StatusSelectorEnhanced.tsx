@@ -65,6 +65,9 @@ export function StatusSelectorEnhanced({
       return;
     }
     
+    // Signaler que nous sommes toujours en mode édition pour éviter les actualisations automatiques
+    window.dispatchEvent(new CustomEvent('statusEditStart'));
+    
     const projectToUse = selectedStatus === 'projet' ? selectedProject : undefined;
     onChange(selectedStatus, highlightedStatus, projectToUse);
     

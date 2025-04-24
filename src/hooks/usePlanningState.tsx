@@ -29,6 +29,30 @@ export const usePlanningState = () => {
     setFilteredData(filtered);
   }, [data, filters]);
 
+  // Écouter les événements d'édition pour suivre l'état
+  useEffect(() => {
+    const handleStatusEditStart = () => {
+      console.log("usePlanningState: Début d'édition de statut détecté");
+      isEditingStatus.current = true;
+    };
+    
+    const handleStatusEditEnd = () => {
+      console.log("usePlanningState: Fin d'édition de statut détectée");
+      // Utiliser un délai pour éviter les actualisations immédiates
+      setTimeout(() => {
+        isEditingStatus.current = false;
+      }, 750);
+    };
+    
+    window.addEventListener('statusEditStart', handleStatusEditStart);
+    window.addEventListener('statusEditEnd', handleStatusEditEnd);
+    
+    return () => {
+      window.removeEventListener('statusEditStart', handleStatusEditStart);
+      window.removeEventListener('statusEditEnd', handleStatusEditEnd);
+    };
+  }, []);
+
   const handleMonthChange = (year: number, month: number) => {
     setCurrentYear(year);
     setCurrentMonth(month);
@@ -51,14 +75,21 @@ export const usePlanningState = () => {
   
   // Wrapper pour handleStatusChange qui définit isEditingStatus
   const handleStatusChange = useCallback(async (...args: Parameters<typeof originalHandleStatusChange>) => {
-    isEditingStatus.current = true;
+    console.log("Début modification statut");
+    // Informer l'application du début de l'édition
+    const startEvent = new CustomEvent('statusEditStart');
+    window.dispatchEvent(startEvent);
+    
     try {
+      // Appeler la fonction originale
       await originalHandleStatusChange(...args);
     } finally {
-      // Remettre à false avec un petit délai pour éviter les actualisations immédiates
+      // Informer l'application de la fin de l'édition avec un délai
       setTimeout(() => {
-        isEditingStatus.current = false;
-      }, 500); 
+        console.log("Fin modification statut");
+        const endEvent = new CustomEvent('statusEditEnd');
+        window.dispatchEvent(endEvent);
+      }, 1000);
     }
   }, [originalHandleStatusChange]);
 

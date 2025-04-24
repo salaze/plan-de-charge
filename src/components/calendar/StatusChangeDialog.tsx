@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -33,6 +33,19 @@ export function StatusChangeDialog({
 }: StatusChangeDialogProps) {
   // Convert FULL to AM for display purposes
   const displayPeriod = selectedPeriod === 'FULL' ? 'AM' : selectedPeriod;
+  
+  // Emit events when the dialog opens or closes
+  useEffect(() => {
+    if (isOpen) {
+      console.log("Dialogue de statut ouvert, émission d'événement statusEditStart");
+      const event = new CustomEvent('statusEditStart');
+      window.dispatchEvent(event);
+    } else {
+      console.log("Dialogue de statut fermé, émission d'événement statusEditEnd");
+      const event = new CustomEvent('statusEditEnd');
+      window.dispatchEvent(event);
+    }
+  }, [isOpen]);
   
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

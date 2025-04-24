@@ -32,25 +32,60 @@ const Index = () => {
   
   // État pour savoir si un dialogue de statut est actuellement ouvert
   const isStatusDialogOpenRef = useRef(false);
+  const forceRefreshPendingRef = useRef(false);
   
   // Écouter les événements de mise à jour des statuts
   useEffect(() => {
-    const handleStatusesUpdated = () => {
-      console.log("Index: Événement statusesUpdated reçu, vérification si on doit actualiser...");
+    const handleStatusesUpdated = (event: Event) => {
+      console.log("Index: Événement statusesUpdated reçu");
       
-      // Ne pas actualiser si un dialogue de statut est ouvert
-      if (!isStatusDialogOpenRef.current) {
-        console.log("Actualisation des données car aucun dialogue n'est ouvert");
-        refreshData();
-      } else {
+      // Vérifier si on doit éviter le rafraîchissement automatique
+      const customEvent = event as CustomEvent;
+      const noRefresh = customEvent.detail?.noRefresh === true;
+      
+      // Si un dialogue est ouvert, on reporte l'actualisation
+      if (isStatusDialogOpenRef.current) {
         console.log("Dialogue de statut ouvert, actualisation reportée");
+        // On marque qu'une actualisation sera nécessaire à la fermeture
+        forceRefreshPendingRef.current = true;
+        return;
+      }
+      
+      // Si l'événement ne demande pas d'éviter le rafraîchissement, on actualise
+      if (!noRefresh) {
+        console.log("Actualisation des données");
+        refreshData();
+      }
+    };
+    
+    // Gérer les événements d'ouverture et fermeture du dialogue
+    const handleStatusEditStart = () => {
+      console.log("Index: Dialogue de statut ouvert - désactivation des actualisations automatiques");
+      isStatusDialogOpenRef.current = true;
+    };
+    
+    const handleStatusEditEnd = () => {
+      console.log("Index: Dialogue de statut fermé - réactivation des actualisations automatiques");
+      isStatusDialogOpenRef.current = false;
+      
+      // Si une actualisation était en attente, on l'exécute maintenant
+      if (forceRefreshPendingRef.current) {
+        console.log("Exécution de l'actualisation reportée");
+        setTimeout(() => {
+          refreshData();
+          forceRefreshPendingRef.current = false;
+        }, 500);
       }
     };
     
     window.addEventListener('statusesUpdated', handleStatusesUpdated);
+    window.addEventListener('statusEditStart', handleStatusEditStart);
+    window.addEventListener('statusEditEnd', handleStatusEditEnd);
     
     return () => {
       window.removeEventListener('statusesUpdated', handleStatusesUpdated);
+      window.removeEventListener('statusEditStart', handleStatusEditStart);
+      window.removeEventListener('statusEditEnd', handleStatusEditEnd);
     };
   }, [refreshData]);
   
@@ -79,7 +114,7 @@ const Index = () => {
             size="sm"
             onClick={refreshData}
             className="flex items-center gap-1"
-            disabled={loading}
+            disabled={loading || isStatusDialogOpenRef.current}
           >
             <RefreshCw className="h-4 w-4" />
             <span>Actualiser</span>

@@ -17,7 +17,7 @@ interface StatusSelectorEnhancedProps {
   projects: { id: string; code: string; name: string; color: string }[];
   isHighlighted?: boolean;
   projectCode?: string;
-  selectedPeriod?: DayPeriod;
+  selectedPeriod: 'AM' | 'PM';
 }
 
 export function StatusSelectorEnhanced({ 

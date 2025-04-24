@@ -15,6 +15,7 @@ export function usePlanningGrid(isAdmin: boolean) {
     projectCode?: string;
   } | null>(null);
   
+  // Initialize selectedPeriod with 'AM' as the default
   const [selectedPeriod, setSelectedPeriod] = useState<DayPeriod>('AM');
   
   const handleCellClick = (employeeId: string, date: string, period: DayPeriod) => {

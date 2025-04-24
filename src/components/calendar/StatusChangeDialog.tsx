@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { StatusSelectorEnhanced } from './StatusSelectorEnhanced';
-import { StatusCode } from '@/types';
+import { StatusCode, DayPeriod } from '@/types';
 
 interface StatusChangeDialogProps {
   isOpen: boolean;
@@ -18,7 +18,7 @@ interface StatusChangeDialogProps {
   isHighlighted?: boolean;
   projectCode?: string;
   projects: { id: string; code: string; name: string; color: string }[];
-  selectedPeriod: 'AM' | 'PM';
+  selectedPeriod: DayPeriod;
 }
 
 export function StatusChangeDialog({
@@ -31,26 +31,29 @@ export function StatusChangeDialog({
   projects,
   selectedPeriod
 }: StatusChangeDialogProps) {
+  // Convert FULL to AM for display purposes
+  const displayPeriod = selectedPeriod === 'FULL' ? 'AM' : selectedPeriod;
+  
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px] max-w-[90vw]">
         <DialogHeader>
           <DialogTitle>
-            Modifier le statut {selectedPeriod === 'AM' ? '(Matin)' : '(Après-midi)'}
+            Modifier le statut {displayPeriod === 'AM' ? '(Matin)' : '(Après-midi)'}
           </DialogTitle>
         </DialogHeader>
         
         <div className="grid gap-4 py-4">
           <div className="flex space-x-2">
             <Button 
-              variant={selectedPeriod === 'AM' ? "default" : "outline"} 
+              variant={displayPeriod === 'AM' ? "default" : "outline"} 
               disabled
               className="flex-1"
             >
               Matin
             </Button>
             <Button 
-              variant={selectedPeriod === 'PM' ? "default" : "outline"} 
+              variant={displayPeriod === 'PM' ? "default" : "outline"} 
               disabled
               className="flex-1"
             >
@@ -64,7 +67,7 @@ export function StatusChangeDialog({
             projects={projects}
             isHighlighted={isHighlighted}
             projectCode={projectCode}
-            selectedPeriod={selectedPeriod}
+            selectedPeriod={displayPeriod}
           />
         </div>
       </DialogContent>

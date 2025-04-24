@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { FilterOptions } from '@/types';
 import { filterData } from '@/utils/dataFilterUtils';
 import { usePlanningSync } from './planning/usePlanningSync';
@@ -12,10 +12,13 @@ export const usePlanningState = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [filters, setFilters] = useState<FilterOptions>({});
   const [isLegendOpen, setIsLegendOpen] = useState(false);
+  
+  // Référence pour suivre si on est en train de modifier un statut
+  const isEditingStatus = useRef(false);
 
   const { data, setData, loading, isOnline, connectionError, reloadData } = usePlanningData(currentYear, currentMonth);
   const { handleSync } = usePlanningSync(data);
-  const { handleStatusChange } = useStatusUpdater(data, setData, isOnline);
+  const { handleStatusChange: originalHandleStatusChange } = useStatusUpdater(data, setData, isOnline);
 
   // Filtered data based on applied filters
   const [filteredData, setFilteredData] = useState(data);
@@ -45,9 +48,28 @@ export const usePlanningState = () => {
       toast.info("Filtres réinitialisés");
     }
   };
+  
+  // Wrapper pour handleStatusChange qui définit isEditingStatus
+  const handleStatusChange = useCallback(async (...args: Parameters<typeof originalHandleStatusChange>) => {
+    isEditingStatus.current = true;
+    try {
+      await originalHandleStatusChange(...args);
+    } finally {
+      // Remettre à false avec un petit délai pour éviter les actualisations immédiates
+      setTimeout(() => {
+        isEditingStatus.current = false;
+      }, 500); 
+    }
+  }, [originalHandleStatusChange]);
 
   // Fonction pour forcer le rechargement des données
   const refreshData = useCallback(async () => {
+    // Ne pas actualiser si on est en train d'éditer un statut
+    if (isEditingStatus.current) {
+      console.log("Actualisation ignorée car édition de statut en cours");
+      return;
+    }
+    
     toast.info("Actualisation des données...");
     await reloadData();
     toast.success("Données actualisées");

@@ -18,13 +18,18 @@ export const useRealtimeSync = (isConnected: boolean, onDataChange: () => void) 
         },
         (payload) => {
           console.log('Changement de statut détecté:', payload);
-          toast.info('Données de statut mises à jour sur le serveur, actualisation...');
           
-          // Déclencher un événement personnalisé pour informer d'autres composants
-          const event = new CustomEvent('statusesUpdated');
-          window.dispatchEvent(event);
-          
-          onDataChange();
+          // Ne pas rafraîchir automatiquement si l'événement est INSERT ou UPDATE
+          // pour éviter d'interrompre l'interaction utilisateur
+          if (payload.eventType === 'DELETE') {
+            toast.info('Données de statut mises à jour sur le serveur, actualisation...');
+            
+            // Déclencher un événement personnalisé pour informer d'autres composants
+            const event = new CustomEvent('statusesUpdated');
+            window.dispatchEvent(event);
+            
+            onDataChange();
+          }
         }
       )
       .subscribe();

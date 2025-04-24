@@ -32,6 +32,7 @@ interface PlanningGridProps {
     projectCode?: string
   ) => void;
   isAdmin: boolean;
+  onStatusDialogChange?: (isOpen: boolean) => void;
 }
 
 export function PlanningGrid({ 
@@ -40,7 +41,8 @@ export function PlanningGrid({
   employees = [], 
   projects = [],
   onStatusChange,
-  isAdmin
+  isAdmin,
+  onStatusDialogChange
 }: PlanningGridProps) {
   // Extract grid functionality to a custom hook
   const {
@@ -51,6 +53,13 @@ export function PlanningGrid({
     getVisibleDays
   } = usePlanningGrid(isAdmin);
   
+  // Notifier le parent quand le dialogue s'ouvre ou se ferme
+  React.useEffect(() => {
+    if (onStatusDialogChange) {
+      onStatusDialogChange(!!selectedCell);
+    }
+  }, [selectedCell, onStatusDialogChange]);
+
   // Ensure year and month are valid
   const safeYear = Number.isFinite(year) ? year : new Date().getFullYear();
   const safeMonth = Number.isFinite(month) ? month : new Date().getMonth();

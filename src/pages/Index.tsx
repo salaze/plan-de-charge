@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { PlanningGrid } from '@/components/calendar/PlanningGrid';
 import { LegendModal } from '@/components/calendar/LegendModal';
@@ -30,11 +30,21 @@ const Index = () => {
     refreshData
   } = usePlanningState();
   
+  // État pour savoir si un dialogue de statut est actuellement ouvert
+  const isStatusDialogOpenRef = useRef(false);
+  
   // Écouter les événements de mise à jour des statuts
   useEffect(() => {
     const handleStatusesUpdated = () => {
-      console.log("Index: Événement statusesUpdated reçu, actualisation des données...");
-      refreshData();
+      console.log("Index: Événement statusesUpdated reçu, vérification si on doit actualiser...");
+      
+      // Ne pas actualiser si un dialogue de statut est ouvert
+      if (!isStatusDialogOpenRef.current) {
+        console.log("Actualisation des données car aucun dialogue n'est ouvert");
+        refreshData();
+      } else {
+        console.log("Dialogue de statut ouvert, actualisation reportée");
+      }
     };
     
     window.addEventListener('statusesUpdated', handleStatusesUpdated);
@@ -103,6 +113,9 @@ const Index = () => {
                 projects={data.projects || []}
                 onStatusChange={handleStatusChange}
                 isAdmin={isAdmin}
+                onStatusDialogChange={(isOpen) => {
+                  isStatusDialogOpenRef.current = isOpen;
+                }}
               />
             )}
           </div>

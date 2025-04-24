@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   Dialog,
   DialogContent,
@@ -18,6 +18,7 @@ interface StatusChangeDialogProps {
   isHighlighted?: boolean;
   projectCode?: string;
   projects: { id: string; code: string; name: string; color: string }[];
+  selectedPeriod: 'AM' | 'PM';
 }
 
 export function StatusChangeDialog({
@@ -27,18 +28,9 @@ export function StatusChangeDialog({
   currentStatus,
   isHighlighted,
   projectCode,
-  projects
+  projects,
+  selectedPeriod
 }: StatusChangeDialogProps) {
-  const [selectedPeriod, setSelectedPeriod] = useState<'AM' | 'PM'>('AM');
-  
-  // Sélection automatique de la période en fonction de l'heure actuelle
-  useEffect(() => {
-    if (isOpen) {
-      const currentHour = new Date().getHours();
-      setSelectedPeriod(currentHour < 12 ? 'AM' : 'PM');
-    }
-  }, [isOpen]);
-  
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px] max-w-[90vw]">
@@ -52,14 +44,14 @@ export function StatusChangeDialog({
           <div className="flex space-x-2">
             <Button 
               variant={selectedPeriod === 'AM' ? "default" : "outline"} 
-              onClick={() => setSelectedPeriod('AM')}
+              disabled
               className="flex-1"
             >
               Matin
             </Button>
             <Button 
               variant={selectedPeriod === 'PM' ? "default" : "outline"} 
-              onClick={() => setSelectedPeriod('PM')}
+              disabled
               className="flex-1"
             >
               Après-midi

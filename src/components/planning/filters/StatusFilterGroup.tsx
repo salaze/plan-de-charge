@@ -14,7 +14,7 @@ export function StatusFilterGroup({ selectedStatuses, onStatusToggle }: StatusFi
   const availableStatuses: StatusCode[] = [
     'assistance', 'vigi', 'formation', 'projet', 'conges', 
     'management', 'tp', 'coordinateur', 'absence', 
-    'regisseur', 'demenagement', 'permanence'
+    'regisseur', 'demenagement', 'permanence', 'parc'  // Ajout de 'parc'
   ];
 
   return (

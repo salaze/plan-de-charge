@@ -12,6 +12,7 @@ export type StatusCode =
   | 'regisseur'
   | 'demenagement'
   | 'permanence'
+  | 'parc'       // Ajout du statut "Gestion de Parc"
   | 'none'
   | '';
 
@@ -94,6 +95,7 @@ export const STATUS_LABELS: Record<StatusCode, string> = {
   regisseur: 'Régisseur',
   demenagement: 'Déménagements',
   permanence: 'Permanences',
+  parc: 'Gestion de Parc',  // Ajout du label pour "Gestion de Parc"
   none: 'Aucun',
   '': '-'
 };
@@ -111,6 +113,7 @@ export const STATUS_COLORS: Record<StatusCode, string> = {
   regisseur: 'bg-blue-300 text-blue-800',
   demenagement: 'bg-indigo-500 text-white',
   permanence: 'bg-pink-600 text-white',
+  parc: 'bg-teal-500 text-white',  // Ajout d'une couleur pour "Gestion de Parc"
   none: 'bg-transparent text-foreground',
   '': 'bg-transparent text-foreground'
 };

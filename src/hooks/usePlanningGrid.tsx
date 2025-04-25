@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
 import { StatusCode, DayPeriod } from '@/types';
@@ -18,9 +18,40 @@ export function usePlanningGrid(isAdmin: boolean) {
   // Initialize selectedPeriod with 'AM' as the default
   const [selectedPeriod, setSelectedPeriod] = useState<DayPeriod>('AM');
   
+  // État pour suivre si un dialogue est en cours d'édition
+  const [isEditing, setIsEditing] = useState(false);
+  
+  // Écouter les événements d'édition pour mettre à jour l'état local
+  useEffect(() => {
+    const handleEditStart = () => {
+      setIsEditing(true);
+    };
+    
+    const handleEditEnd = () => {
+      // Utiliser un délai pour éviter les problèmes de timing
+      setTimeout(() => {
+        setIsEditing(false);
+      }, 500);
+    };
+    
+    window.addEventListener('statusEditStart', handleEditStart);
+    window.addEventListener('statusEditEnd', handleEditEnd);
+    
+    return () => {
+      window.removeEventListener('statusEditStart', handleEditStart);
+      window.removeEventListener('statusEditEnd', handleEditEnd);
+    };
+  }, []);
+  
   const handleCellClick = (employeeId: string, date: string, period: DayPeriod) => {
     if (!isAdmin) {
       toast.info("Mode lecture seule. Connexion administrateur requise pour modifier.");
+      return;
+    }
+    
+    // Ne pas permettre l'ouverture d'un nouveau dialogue si l'édition est en cours
+    if (isEditing) {
+      console.log("Édition en cours, nouvelle sélection ignorée");
       return;
     }
     
@@ -50,11 +81,21 @@ export function usePlanningGrid(isAdmin: boolean) {
     });
     
     setSelectedPeriod(period);
+    
+    // Signaler le début de l'édition
+    const event = new CustomEvent('statusEditStart');
+    window.dispatchEvent(event);
   };
   
   const handleCloseDialog = () => {
     setSelectedCell(null);
     setSelectedPeriod('AM');
+    
+    // Signaler la fin de l'édition après un court délai
+    setTimeout(() => {
+      const event = new CustomEvent('statusEditEnd');
+      window.dispatchEvent(event);
+    }, 300);
   };
   
   // Helper function to get visible days for mobile or desktop
@@ -80,6 +121,7 @@ export function usePlanningGrid(isAdmin: boolean) {
     setSelectedCell,
     selectedPeriod,
     setSelectedPeriod,
+    isEditing,
     handleCellClick,
     handleCloseDialog,
     getVisibleDays

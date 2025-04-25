@@ -9,6 +9,8 @@ export const useRealtimeSync = (isConnected: boolean, onDataChange: () => void) 
 
     // Variable pour suivre si l'on est en mode édition
     const isEditingRef = { current: false };
+    // Variable pour suivre si un refresh est en attente
+    const pendingRefreshRef = { current: false };
 
     // Écouter l'événement global qui indique que l'utilisateur a commencé à éditer
     const handleEditStart = () => {
@@ -22,7 +24,17 @@ export const useRealtimeSync = (isConnected: boolean, onDataChange: () => void) 
       setTimeout(() => {
         isEditingRef.current = false;
         console.log('Édition terminée, réactivation des actualisations automatiques');
-      }, 1000);
+        
+        // Si un refresh est en attente, l'exécuter maintenant
+        if (pendingRefreshRef.current) {
+          console.log('Exécution du refresh en attente après la fin de l\'édition');
+          pendingRefreshRef.current = false;
+          setTimeout(() => {
+            onDataChange();
+            toast.success('Données actualisées après modification');
+          }, 1000);
+        }
+      }, 1500);
     };
 
     window.addEventListener('statusEditStart', handleEditStart);
@@ -43,6 +55,8 @@ export const useRealtimeSync = (isConnected: boolean, onDataChange: () => void) 
           // Ne pas rafraîchir si l'on est en mode édition
           if (isEditingRef.current) {
             console.log('Actualisation ignorée car en mode édition');
+            // Marquer qu'un refresh sera nécessaire plus tard
+            pendingRefreshRef.current = true;
             return;
           }
           
@@ -83,6 +97,8 @@ export const useRealtimeSync = (isConnected: boolean, onDataChange: () => void) 
           // Ne pas rafraîchir si l'on est en mode édition
           if (isEditingRef.current) {
             console.log('Actualisation ignorée car en mode édition');
+            // Marquer qu'un refresh sera nécessaire plus tard
+            pendingRefreshRef.current = true;
             return;
           }
           
@@ -93,11 +109,44 @@ export const useRealtimeSync = (isConnected: boolean, onDataChange: () => void) 
       )
       .subscribe();
       
+    // Ajouter un canal pour suivre les changements de planning (employe_schedule)
+    const scheduleChannel = supabase
+      .channel('schedule-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'employe_schedule'
+        },
+        (payload) => {
+          // Ne pas rafraîchir si l'on est en mode édition
+          if (isEditingRef.current) {
+            console.log('Actualisation du planning ignorée car en mode édition');
+            // Marquer qu'un refresh sera nécessaire plus tard
+            pendingRefreshRef.current = true;
+            return;
+          }
+          
+          console.log('Changement dans le planning détecté:', payload);
+          
+          // Notifier mais sans actualiser immédiatement pour éviter de perturber l'utilisateur
+          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+            toast.info('Mise à jour du planning disponible');
+          } else if (payload.eventType === 'DELETE') {
+            toast.info('Entrée supprimée du planning, actualisation...');
+            onDataChange();
+          }
+        }
+      )
+      .subscribe();
+      
     return () => {
       window.removeEventListener('statusEditStart', handleEditStart);
       window.removeEventListener('statusEditEnd', handleEditEnd);
       supabase.removeChannel(statusChannel);
       supabase.removeChannel(employeesChannel);
+      supabase.removeChannel(scheduleChannel);
     };
   }, [isConnected, onDataChange]);
 };

@@ -38,17 +38,30 @@ export function StatusChangeDialog({
   useEffect(() => {
     if (isOpen) {
       console.log("Dialogue de statut ouvert, émission d'événement statusEditStart");
-      const event = new CustomEvent('statusEditStart');
-      window.dispatchEvent(event);
+      // Utiliser un délai pour s'assurer que l'événement est traité après le rendu
+      setTimeout(() => {
+        const event = new CustomEvent('statusEditStart');
+        window.dispatchEvent(event);
+      }, 100);
     } else {
       console.log("Dialogue de statut fermé, émission d'événement statusEditEnd");
-      const event = new CustomEvent('statusEditEnd');
-      window.dispatchEvent(event);
+      // Utiliser un délai pour s'assurer que l'événement est traité après le rendu
+      setTimeout(() => {
+        const event = new CustomEvent('statusEditEnd');
+        window.dispatchEvent(event);
+      }, 100);
     }
   }, [isOpen]);
   
+  // Gestionnaire de fermeture personnalisé pour s'assurer que l'événement est émis
+  const handleClose = () => {
+    // Émettre l'événement avant de fermer le dialogue
+    console.log("Fermeture du dialogue de statut, émission d'événement statusEditEnd");
+    onClose();
+  };
+  
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[425px] max-w-[90vw]">
         <DialogHeader>
           <DialogTitle>

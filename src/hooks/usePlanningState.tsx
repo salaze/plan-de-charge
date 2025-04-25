@@ -15,6 +15,8 @@ export const usePlanningState = () => {
   
   // Référence pour suivre si on est en train de modifier un statut
   const isEditingStatus = useRef(false);
+  // Référence pour suivre si un refresh est en attente
+  const refreshPendingRef = useRef(false);
 
   const { data, setData, loading, isOnline, connectionError, reloadData } = usePlanningData(currentYear, currentMonth);
   const { handleSync } = usePlanningSync(data);
@@ -38,10 +40,19 @@ export const usePlanningState = () => {
     
     const handleStatusEditEnd = () => {
       console.log("usePlanningState: Fin d'édition de statut détectée");
-      // Utiliser un délai pour éviter les actualisations immédiates
+      // Utiliser un délai plus long pour éviter les actualisations immédiates
       setTimeout(() => {
         isEditingStatus.current = false;
-      }, 750);
+        
+        // Si un refresh est en attente, l'exécuter maintenant
+        if (refreshPendingRef.current) {
+          console.log("usePlanningState: Exécution du refresh en attente");
+          refreshPendingRef.current = false;
+          setTimeout(() => {
+            reloadData();
+          }, 1000);
+        }
+      }, 1500);
     };
     
     window.addEventListener('statusEditStart', handleStatusEditStart);
@@ -51,7 +62,7 @@ export const usePlanningState = () => {
       window.removeEventListener('statusEditStart', handleStatusEditStart);
       window.removeEventListener('statusEditEnd', handleStatusEditEnd);
     };
-  }, []);
+  }, [reloadData]);
 
   const handleMonthChange = (year: number, month: number) => {
     setCurrentYear(year);
@@ -89,7 +100,7 @@ export const usePlanningState = () => {
         console.log("Fin modification statut");
         const endEvent = new CustomEvent('statusEditEnd');
         window.dispatchEvent(endEvent);
-      }, 1000);
+      }, 1500);
     }
   }, [originalHandleStatusChange]);
 
@@ -98,6 +109,8 @@ export const usePlanningState = () => {
     // Ne pas actualiser si on est en train d'éditer un statut
     if (isEditingStatus.current) {
       console.log("Actualisation ignorée car édition de statut en cours");
+      refreshPendingRef.current = true;
+      toast.info("Actualisation reportée jusqu'à la fin de l'édition en cours");
       return;
     }
     

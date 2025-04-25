@@ -66,12 +66,16 @@ export function StatusSelectorEnhanced({
     }
     
     // Signaler que nous sommes toujours en mode édition pour éviter les actualisations automatiques
+    console.log("Début de l'application du statut, mode édition maintenu");
     window.dispatchEvent(new CustomEvent('statusEditStart'));
     
     const projectToUse = selectedStatus === 'projet' ? selectedProject : undefined;
     onChange(selectedStatus, highlightedStatus, projectToUse);
     
-    toast.success(`Statut ${selectedPeriod === 'AM' ? 'matin' : 'après-midi'} enregistré avec succès`);
+    // Petit délai avant de notifier la fin de l'édition (sera géré par onClose du dialogue)
+    setTimeout(() => {
+      toast.success(`Statut ${selectedPeriod === 'AM' ? 'matin' : 'après-midi'} enregistré avec succès`);
+    }, 500);
   };
   
   if (isLoading) {

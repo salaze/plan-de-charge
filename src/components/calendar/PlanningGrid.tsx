@@ -48,6 +48,7 @@ export function PlanningGrid({
   const {
     selectedCell,
     selectedPeriod,
+    isEditing,
     handleCellClick,
     handleCloseDialog,
     getVisibleDays
@@ -73,6 +74,9 @@ export function PlanningGrid({
   // Handler for status changes
   const handleStatusChange = (status: StatusCode, isHighlighted?: boolean, projectCode?: string) => {
     if (!selectedCell) return;
+    
+    // Émettre un événement d'édition pour prévenir les actualisations automatiques
+    window.dispatchEvent(new CustomEvent('statusEditStart'));
     
     // Apply the change immediately
     onStatusChange(

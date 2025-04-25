@@ -14,10 +14,13 @@ export function useStatusOptions() {
   const [isLoading, setIsLoading] = useState(true);
   const loadingTimeoutRef = useRef<number | null>(null);
   const retryCountRef = useRef(0);
+  const isMounted = useRef(true);
   
   useEffect(() => {
     // Fonction pour charger les statuts depuis Supabase
     const loadStatusesFromSupabase = async () => {
+      if (!isMounted.current) return;
+      
       setIsLoading(true);
       
       // Définir un timeout pour éviter les attentes trop longues
@@ -26,6 +29,8 @@ export function useStatusOptions() {
       }
       
       loadingTimeoutRef.current = window.setTimeout(() => {
+        if (!isMounted.current) return;
+        
         console.log("Timeout lors du chargement des statuts");
         setIsLoading(false);
         // Utiliser les statuts par défaut en cas de timeout
@@ -60,6 +65,8 @@ export function useStatusOptions() {
           throw error;
         }
         
+        if (!isMounted.current) return;
+        
         console.log("Options de statut récupérées:", statusData);
         retryCountRef.current = 0; // Réinitialiser le compteur de tentatives
         
@@ -79,13 +86,16 @@ export function useStatusOptions() {
             }));
           
           console.log("Options de statut valides:", supabaseStatuses);
+          
+          // Vérifier si le statut "parc" est présent
+          const isParcStatusPresent = supabaseStatuses.some(s => s.value === 'parc');
+          
+          // S'assurer que "none" est toujours présent au début
           setAvailableStatuses([
             { value: 'none', label: 'Aucun' },
             ...supabaseStatuses
           ]);
           
-          // Vérifier que le statut "parc" est présent
-          const isParcStatusPresent = supabaseStatuses.some(s => s.value === 'parc');
           if (!isParcStatusPresent) {
             console.log("Statut 'parc' manquant, il sera automatiquement ajouté au prochain démarrage");
           }
@@ -93,19 +103,23 @@ export function useStatusOptions() {
           console.warn("Aucun statut trouvé dans la base de données");
           
           // Utiliser les statuts par défaut
-          const defaultStatuses: StatusOption[] = [
-            { value: 'none', label: 'Aucun' },
-            { value: 'assistance', label: 'Assistance' },
-            { value: 'vigi', label: 'Vigi' },
-            { value: 'formation', label: 'Formation' },
-            { value: 'projet', label: 'Projet' },
-            { value: 'conges', label: 'Congés' },
-            { value: 'parc', label: 'Gestion de Parc' }
-          ];
-          setAvailableStatuses(defaultStatuses);
+          if (isMounted.current) {
+            const defaultStatuses: StatusOption[] = [
+              { value: 'none', label: 'Aucun' },
+              { value: 'assistance', label: 'Assistance' },
+              { value: 'vigi', label: 'Vigi' },
+              { value: 'formation', label: 'Formation' },
+              { value: 'projet', label: 'Projet' },
+              { value: 'conges', label: 'Congés' },
+              { value: 'parc', label: 'Gestion de Parc' }
+            ];
+            setAvailableStatuses(defaultStatuses);
+          }
         }
       } catch (error) {
         console.error('Error loading status options from Supabase:', error);
+        
+        if (!isMounted.current) return;
         
         // Réessayer jusqu'à 3 fois en cas d'erreur
         if (retryCountRef.current < 3) {
@@ -132,7 +146,9 @@ export function useStatusOptions() {
           clearTimeout(loadingTimeoutRef.current);
           loadingTimeoutRef.current = null;
         }
-        setIsLoading(false);
+        if (isMounted.current) {
+          setIsLoading(false);
+        }
       }
     };
     
@@ -150,16 +166,24 @@ export function useStatusOptions() {
           table: 'statuts'
         },
         (payload) => {
+          if (!isMounted.current) return;
+          
           console.log('Changement de statut détecté, actualisation des options:', payload);
           
-          // Ne pas recharger immédiatement, mais informer l'utilisateur
-          toast.info('Nouvelles options de statut disponibles');
+          // Recharger après un court délai pour éviter les problèmes avec les événements d'édition
+          setTimeout(() => {
+            if (isMounted.current) {
+              loadStatusesFromSupabase();
+            }
+          }, 2000);
         }
       )
       .subscribe();
     
     // Écouter les événements spécifiques qui déclenchent une actualisation des statuts
     const handleStatusesUpdated = (event: Event) => {
+      if (!isMounted.current) return;
+      
       const customEvent = event as CustomEvent;
       const noRefresh = customEvent.detail?.noRefresh === true;
       
@@ -173,6 +197,7 @@ export function useStatusOptions() {
     window.addEventListener('statusesUpdated', handleStatusesUpdated);
     
     return () => {
+      isMounted.current = false;
       window.removeEventListener('statusesUpdated', handleStatusesUpdated);
       if (loadingTimeoutRef.current) {
         clearTimeout(loadingTimeoutRef.current);

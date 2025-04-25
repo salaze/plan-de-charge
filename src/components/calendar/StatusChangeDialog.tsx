@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { StatusSelectorEnhanced } from './StatusSelectorEnhanced';
 import { StatusCode, DayPeriod } from '@/types';
+import { Loader2 } from 'lucide-react';
 
 interface StatusChangeDialogProps {
   isOpen: boolean;
@@ -39,17 +40,25 @@ export function StatusChangeDialog({
     if (isOpen) {
       console.log("Dialogue de statut ouvert, émission d'événement statusEditStart");
       // Utiliser un délai pour s'assurer que l'événement est traité après le rendu
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         const event = new CustomEvent('statusEditStart');
         window.dispatchEvent(event);
       }, 100);
+      
+      return () => {
+        if (timeoutId) clearTimeout(timeoutId);
+      };
     } else {
       console.log("Dialogue de statut fermé, émission d'événement statusEditEnd");
       // Utiliser un délai pour s'assurer que l'événement est traité après le rendu
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         const event = new CustomEvent('statusEditEnd');
         window.dispatchEvent(event);
       }, 100);
+      
+      return () => {
+        if (timeoutId) clearTimeout(timeoutId);
+      };
     }
   }, [isOpen]);
   

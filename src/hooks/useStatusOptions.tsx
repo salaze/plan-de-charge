@@ -44,7 +44,7 @@ export function useStatusOptions() {
           { value: 'parc', label: 'Gestion de Parc' }
         ];
         setAvailableStatuses(defaultStatuses);
-      }, 5000) as unknown as number;
+      }, 3000) as unknown as number; // Réduire le timeout à 3 secondes pour plus de réactivité
       
       try {
         console.log("Chargement des options de statut depuis Supabase...");
@@ -125,7 +125,7 @@ export function useStatusOptions() {
         if (retryCountRef.current < 3) {
           retryCountRef.current++;
           console.log(`Tentative ${retryCountRef.current}/3 de rechargement des statuts`);
-          setTimeout(loadStatusesFromSupabase, 2000);
+          setTimeout(loadStatusesFromSupabase, 1000); // Réduire le délai entre les tentatives
           return;
         }
         
@@ -175,7 +175,7 @@ export function useStatusOptions() {
             if (isMounted.current) {
               loadStatusesFromSupabase();
             }
-          }, 2000);
+          }, 1000); // Réduire le délai de rechargement
         }
       )
       .subscribe();

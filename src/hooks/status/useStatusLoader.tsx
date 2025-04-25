@@ -98,5 +98,20 @@ export function useStatusLoader(): UseStatusLoaderResult {
     }
   };
 
+  // Ajout de l'effet pour charger les données au montage du composant
+  useEffect(() => {
+    // Initialisation du chargement des statuts
+    loadStatusesFromSupabase();
+    
+    // Nettoyage lors du démontage
+    return () => {
+      isMounted.current = false;
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+        loadingTimeoutRef.current = null;
+      }
+    };
+  }, []);
+
   return { availableStatuses, isLoading };
 }

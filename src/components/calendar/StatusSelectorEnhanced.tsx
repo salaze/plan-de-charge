@@ -35,7 +35,7 @@ export function StatusSelectorEnhanced({
   const [loadingError, setLoadingError] = useState<string | null>(null);
   
   // Use our custom hook to get available statuses
-  const { availableStatuses, isLoading } = useStatusOptions();
+  const { statuses, isLoading } = useStatusOptions();
   
   // Reset form when dialog reopens with new values
   useEffect(() => {
@@ -46,13 +46,13 @@ export function StatusSelectorEnhanced({
   
   // Vérifier si les statuts sont disponibles
   useEffect(() => {
-    if (!isLoading && (!availableStatuses || availableStatuses.length === 0)) {
+    if (!isLoading && (!statuses || statuses.length === 0)) {
       setLoadingError("Impossible de charger les statuts disponibles");
       console.error("Aucun statut disponible après chargement");
-    } else if (availableStatuses && availableStatuses.length > 0) {
+    } else if (statuses && statuses.length > 0) {
       setLoadingError(null);
     }
-  }, [availableStatuses, isLoading]);
+  }, [statuses, isLoading]);
   
   const handleStatusChange = (newStatus: StatusCode) => {
     setSelectedStatus(newStatus);
@@ -107,7 +107,7 @@ export function StatusSelectorEnhanced({
     );
   }
   
-  if (loadingError || !availableStatuses || availableStatuses.length === 0) {
+  if (loadingError || !statuses || statuses.length === 0) {
     const defaultStatuses = [
       { value: 'none' as StatusCode, label: 'Aucun' },
       { value: 'assistance' as StatusCode, label: 'Assistance' },
@@ -168,11 +168,11 @@ export function StatusSelectorEnhanced({
           onValueChange={(value) => handleStatusChange(value as StatusCode)}
           className="grid grid-cols-2 gap-2"
         >
-          {availableStatuses.map((status) => (
+          {statuses.map((status) => (
             <StatusOption 
-              key={status.value} 
-              value={status.value} 
-              label={status.label} 
+              key={status} 
+              value={status} 
+              label={status} 
             />
           ))}
         </RadioGroup>

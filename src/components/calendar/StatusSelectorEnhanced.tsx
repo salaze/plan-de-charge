@@ -37,6 +37,8 @@ export function StatusSelectorEnhanced({
   // Use our custom hook to get available statuses
   const { statuses, isLoading } = useStatusOptions();
   
+  console.log("StatusSelectorEnhanced: Rendu avec statuses =", statuses, "isLoading =", isLoading);
+  
   // Reset form when dialog reopens with new values
   useEffect(() => {
     setSelectedStatus(value || 'none');

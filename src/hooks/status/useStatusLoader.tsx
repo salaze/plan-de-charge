@@ -25,6 +25,7 @@ export function useStatusLoader(): UseStatusLoaderResult {
       clearTimeout(loadingTimeoutRef.current);
     }
     
+    // Définir un délai maximum pour le chargement
     loadingTimeoutRef.current = window.setTimeout(() => {
       if (!isMounted.current) return;
       
@@ -46,6 +47,7 @@ export function useStatusLoader(): UseStatusLoaderResult {
         .select('code, libelle, couleur')
         .order('display_order', { ascending: true });
       
+      // Arrêter le timeout une fois les données récupérées
       if (loadingTimeoutRef.current) {
         clearTimeout(loadingTimeoutRef.current);
         loadingTimeoutRef.current = null;
@@ -67,7 +69,15 @@ export function useStatusLoader(): UseStatusLoaderResult {
           .map((status) => status.code as StatusCode);
         
         console.log("Options de statut valides:", supabaseStatuses);
-        setAvailableStatuses([...supabaseStatuses]);
+        setAvailableStatuses(supabaseStatuses);
+      } else {
+        console.log("Aucun statut trouvé, utilisation des valeurs par défaut");
+        const defaultStatuses: StatusCode[] = [
+          'none', 'assistance', 'vigi', 'formation', 'projet', 
+          'conges', 'management', 'tp', 'coordinateur', 'absence',
+          'regisseur', 'demenagement', 'permanence', 'parc'
+        ];
+        setAvailableStatuses(defaultStatuses);
       }
     } catch (error) {
       console.error('Error loading status options from Supabase:', error);
@@ -88,6 +98,7 @@ export function useStatusLoader(): UseStatusLoaderResult {
       ];
       setAvailableStatuses(defaultStatuses);
     } finally {
+      // Toujours mettre fin à l'état de chargement
       if (loadingTimeoutRef.current) {
         clearTimeout(loadingTimeoutRef.current);
         loadingTimeoutRef.current = null;
@@ -98,13 +109,18 @@ export function useStatusLoader(): UseStatusLoaderResult {
     }
   };
 
-  // Ajout de l'effet pour charger les données au montage du composant
+  // Effet pour charger les données au montage du composant
   useEffect(() => {
+    console.log("useStatusLoader: Montage du composant et initialisation");
+    // Réinitialiser le state pour éviter les problèmes
+    isMounted.current = true;
+    
     // Initialisation du chargement des statuts
     loadStatusesFromSupabase();
     
     // Nettoyage lors du démontage
     return () => {
+      console.log("useStatusLoader: Démontage du composant");
       isMounted.current = false;
       if (loadingTimeoutRef.current) {
         clearTimeout(loadingTimeoutRef.current);

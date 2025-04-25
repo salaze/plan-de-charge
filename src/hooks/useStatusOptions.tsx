@@ -9,10 +9,14 @@ export function useStatusOptions() {
   const { availableStatuses, isLoading } = useStatusLoader();
   
   const handleStatusesUpdated = useCallback(() => {
+    console.log("useStatusOptions: Mise à jour des statuts détectée");
     setRefreshKey(prev => prev + 1);
   }, []);
 
   useStatusEvents(handleStatusesUpdated);
+
+  // Pour déboguer
+  console.log("useStatusOptions: Statuts disponibles =", availableStatuses, "isLoading =", isLoading);
 
   return {
     statuses: availableStatuses,

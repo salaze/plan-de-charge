@@ -34,6 +34,7 @@ export const calculateEmployeeStats = (
     regisseurDays: 0,
     demenagementDays: 0,
     permanenceDays: 0,
+    parcDays: 0,
     projectStats: {},
     employeeName: employee.name
   };
@@ -97,6 +98,10 @@ export const calculateEmployeeStats = (
         case 'permanence':
           stats.presentDays += dayMultiplier;
           stats.permanenceDays += dayMultiplier;
+          break;
+        case 'parc':
+          stats.presentDays += dayMultiplier;
+          stats.parcDays += dayMultiplier;
           break;
       }
     }

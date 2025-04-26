@@ -13,15 +13,15 @@ export const StatisticsChart = ({ chartData, statusCodes, isLoading }: Statistic
   if (isLoading) {
     return (
       <div className="h-full flex items-center justify-center text-muted-foreground">
-        Chargement des statuts...
+        Chargement des statistiques...
       </div>
     );
   }
 
-  if (chartData.length === 0) {
+  if (!chartData || chartData.length === 0) {
     return (
       <div className="h-full flex items-center justify-center text-muted-foreground">
-        Aucune donnée disponible
+        Aucune donnée disponible. Vérifiez que des employés et des statuts sont configurés dans le planning.
       </div>
     );
   }

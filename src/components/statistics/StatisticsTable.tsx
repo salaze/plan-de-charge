@@ -20,7 +20,15 @@ interface StatisticsTableProps {
 export const StatisticsTable = ({ chartData, statusCodes, isLoading }: StatisticsTableProps) => {
   if (isLoading) {
     return (
-      <div className="text-center p-4">Chargement des statuts...</div>
+      <div className="text-center p-4">Chargement des statistiques...</div>
+    );
+  }
+
+  if (!chartData || chartData.length === 0) {
+    return (
+      <div className="text-center p-4 text-muted-foreground">
+        Aucune donnée disponible. Vérifiez que des employés et des statuts sont configurés dans le planning.
+      </div>
     );
   }
 
@@ -40,26 +48,18 @@ export const StatisticsTable = ({ chartData, statusCodes, isLoading }: Statistic
         </TableRow>
       </TableHeader>
       <TableBody>
-        {chartData.length > 0 ? (
-          chartData.map((employee) => (
-            <TableRow key={employee.name}>
-              <TableCell className="font-medium">{employee.name}</TableCell>
-              {statusCodes.map(status => (
-                <TableCell key={status}>
-                  {typeof employee[status] === 'number'
-                    ? (employee[status] as number).toFixed(1)
-                    : '0.0'}
-                </TableCell>
-              ))}
-            </TableRow>
-          ))
-        ) : (
-          <TableRow>
-            <TableCell colSpan={statusCodes.length + 1} className="text-center text-muted-foreground">
-              Aucune donnée disponible
-            </TableCell>
+        {chartData.map((employee) => (
+          <TableRow key={employee.name}>
+            <TableCell className="font-medium">{employee.name}</TableCell>
+            {statusCodes.map(status => (
+              <TableCell key={status}>
+                {typeof employee[status] === 'number'
+                  ? (employee[status] as number).toFixed(1)
+                  : '0.0'}
+              </TableCell>
+            ))}
           </TableRow>
-        )}
+        ))}
       </TableBody>
     </Table>
   );

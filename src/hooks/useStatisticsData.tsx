@@ -11,33 +11,35 @@ interface EmployeeStatusData {
 export const useStatisticsData = (
   currentYear: number,
   currentMonth: number,
-  statusCodes: StatusCode[]
+  statusCodes: StatusCode[],
+  localData: MonthData | null
 ) => {
-  const [data, setData] = useState<MonthData>(() => {
-    const savedData = localStorage.getItem('planningData');
-    return savedData ? JSON.parse(savedData) : {
-      year: new Date().getFullYear(),
-      month: new Date().getMonth(),
-      employees: [],
-      projects: []
-    };
-  });
-
   const [employeeStats, setEmployeeStats] = useState<SummaryStats[]>([]);
   const [chartData, setChartData] = useState<EmployeeStatusData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const savedData = localStorage.getItem('planningData');
-    if (savedData) {
-      setData(JSON.parse(savedData));
+    setIsLoading(true);
+    
+    if (localData?.employees?.length > 0 && statusCodes.length > 0) {
+      console.log('Calculating statistics with:', {
+        employeeCount: localData.employees.length,
+        year: currentYear,
+        month: currentMonth,
+        statusCodes
+      });
+      calculateStats(localData.employees, currentYear, currentMonth, statusCodes);
+    } else {
+      console.log('Cannot calculate statistics, missing data:', {
+        hasEmployees: localData?.employees?.length > 0,
+        statusCodesCount: statusCodes.length
+      });
+      setChartData([]);
+      setEmployeeStats([]);
     }
-  }, []);
-
-  useEffect(() => {
-    if (data.employees.length > 0 && statusCodes.length > 0) {
-      calculateStats(data.employees, currentYear, currentMonth, statusCodes);
-    }
-  }, [data.employees, currentYear, currentMonth, statusCodes]);
+    
+    setIsLoading(false);
+  }, [localData, currentYear, currentMonth, statusCodes]);
 
   const calculateStats = (
     employees: Employee[],
@@ -68,7 +70,8 @@ export const useStatisticsData = (
                 employeeStats.coordinatorDays -
                 employeeStats.regisseurDays -
                 employeeStats.demenagementDays -
-                employeeStats.permanenceDays;
+                employeeStats.permanenceDays -
+                employeeStats.parcDays;
               break;
             case 'vigi':
               dataPoint[status] = employeeStats.vigiDays;
@@ -113,12 +116,18 @@ export const useStatisticsData = (
       chartData.push(dataPoint);
     });
 
+    console.log('Statistics calculated:', {
+      employeeStatsCount: stats.length,
+      chartDataCount: chartData.length
+    });
+    
     setEmployeeStats(stats);
     setChartData(chartData);
   };
 
   return {
     employeeStats,
-    chartData
+    chartData,
+    isLoading
   };
 };

@@ -1,7 +1,9 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { MonthData, Employee, StatusCode, SummaryStats } from '@/types';
 import { calculateEmployeeStats } from '@/utils/statsUtils';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface EmployeeStatusData {
   name: string;
@@ -18,30 +20,8 @@ export const useStatisticsData = (
   const [chartData, setChartData] = useState<EmployeeStatusData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    setIsLoading(true);
-    
-    if (localData?.employees?.length > 0 && statusCodes.length > 0) {
-      console.log('Calculating statistics with:', {
-        employeeCount: localData.employees.length,
-        year: currentYear,
-        month: currentMonth,
-        statusCodes
-      });
-      calculateStats(localData.employees, currentYear, currentMonth, statusCodes);
-    } else {
-      console.log('Cannot calculate statistics, missing data:', {
-        hasEmployees: localData?.employees?.length > 0,
-        statusCodesCount: statusCodes.length
-      });
-      setChartData([]);
-      setEmployeeStats([]);
-    }
-    
-    setIsLoading(false);
-  }, [localData, currentYear, currentMonth, statusCodes]);
-
-  const calculateStats = (
+  // Function to calculate statistics
+  const calculateStats = useCallback((
     employees: Employee[],
     year: number,
     month: number,
@@ -123,7 +103,109 @@ export const useStatisticsData = (
     
     setEmployeeStats(stats);
     setChartData(chartData);
-  };
+  }, []);
+
+  // Effet principal pour calculer les statistiques
+  useEffect(() => {
+    setIsLoading(true);
+    
+    if (localData?.employees?.length > 0 && statusCodes.length > 0) {
+      console.log('Calculating statistics with:', {
+        employeeCount: localData.employees.length,
+        year: currentYear,
+        month: currentMonth,
+        statusCodes
+      });
+      calculateStats(localData.employees, currentYear, currentMonth, statusCodes);
+    } else {
+      console.log('Cannot calculate statistics, missing data:', {
+        hasEmployees: localData?.employees?.length > 0,
+        statusCodesCount: statusCodes.length
+      });
+      setChartData([]);
+      setEmployeeStats([]);
+    }
+    
+    setIsLoading(false);
+  }, [localData, currentYear, currentMonth, statusCodes, calculateStats]);
+
+  // Configurer les abonnements en temps réel pour les mises à jour du planning et des employés
+  useEffect(() => {
+    // Suivi des changements dans le planning
+    const scheduleChannel = supabase
+      .channel('statistics-schedule-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'employe_schedule'
+        },
+        (payload) => {
+          console.log('Changement dans le planning détecté:', payload);
+          toast.info('Mise à jour du planning détectée', {
+            description: 'Les statistiques vont être actualisées'
+          });
+          
+          // Actualiser les données depuis localStorage car c'est la source de vérité actuelle
+          const savedData = localStorage.getItem('planningData');
+          if (savedData) {
+            try {
+              const parsedData = JSON.parse(savedData) as MonthData;
+              if (parsedData.employees?.length > 0 && statusCodes.length > 0) {
+                calculateStats(parsedData.employees, currentYear, currentMonth, statusCodes);
+              }
+            } catch (error) {
+              console.error('Error parsing localStorage data:', error);
+            }
+          }
+        }
+      )
+      .subscribe((status) => {
+        if (status !== 'SUBSCRIBED') {
+          console.error('Échec de l\'abonnement aux changements du planning:', status);
+        } else {
+          console.log('Abonnement aux changements du planning réussi');
+        }
+      });
+
+    // Suivi des changements d'employés
+    const employeeChannel = supabase
+      .channel('statistics-employees-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'employes'
+        },
+        (payload) => {
+          console.log('Changement d\'employé détecté:', payload);
+          toast.info('Mise à jour des employés détectée', {
+            description: 'Les statistiques vont être actualisées'
+          });
+          
+          // Actualiser les données depuis localStorage
+          const savedData = localStorage.getItem('planningData');
+          if (savedData) {
+            try {
+              const parsedData = JSON.parse(savedData) as MonthData;
+              if (parsedData.employees?.length > 0 && statusCodes.length > 0) {
+                calculateStats(parsedData.employees, currentYear, currentMonth, statusCodes);
+              }
+            } catch (error) {
+              console.error('Error parsing localStorage data:', error);
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(scheduleChannel);
+      supabase.removeChannel(employeeChannel);
+    };
+  }, [currentYear, currentMonth, statusCodes, calculateStats]);
 
   return {
     employeeStats,

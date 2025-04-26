@@ -1,4 +1,3 @@
-
 export type StatusCode = 
   | 'assistance' 
   | 'vigi'
@@ -78,6 +77,7 @@ export interface SummaryStats {
   regisseurDays: number;
   demenagementDays: number;
   permanenceDays: number;
+  parcDays: number;
   projectStats: Record<string, number>;
   employeeName?: string;
 }

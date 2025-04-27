@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { Employee, StatusCode, SummaryStats } from '@/types';
+import { Employee, StatusCode, SummaryStats, UserRole } from '@/types';
 import { calculateEmployeeStats } from '@/utils/statsUtils';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -141,7 +141,7 @@ export const useStatisticsData = (
         email: emp.identifiant,
         position: emp.fonction,
         department: emp.departement,
-        role: emp.role || 'employee',
+        role: (emp.role || 'employee') as UserRole, // Cast string to UserRole
         uid: emp.uid,
         schedule: []
       }));

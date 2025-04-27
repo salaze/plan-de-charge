@@ -33,7 +33,7 @@ export const fetchEmployees = async () => {
       department: emp.departement,
       role: emp.role || 'employee',
       uid: emp.uid,
-      password: emp.password, // Include password for login validation
+      password: emp.password || '', // Map password field from database
       schedule: []
     })) as Employee[];
   } catch (error: any) {

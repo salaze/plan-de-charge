@@ -18,7 +18,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isAdmin: boolean;
   updateUserRoles: (employeeId: string, newRole: UserRole) => void;
-  updatePassword: (employeeId: string, newPassword: string) => boolean;
+  updatePassword: (employeeId: string, newPassword: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -75,7 +75,7 @@ const AuthProviderImpl: React.FC<{
       if (employees && employees.length > 0) {
         const employee = employees[0];
         
-        // Check if the employee has a password
+        // Check if the employee has a password set in Supabase
         if (employee.password && password === employee.password) {
           // If employee has a role of 'admin' or 'administrateur', grant admin privileges
           const userRole = (employee.role === 'admin' || employee.role === 'administrateur') 

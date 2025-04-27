@@ -19,12 +19,17 @@ export function EmployeeRoleSelector({ employee, onRoleChange }: EmployeeRoleSel
   const handleRoleChange = (value: string) => {
     const newRole = value as UserRole;
     onRoleChange(employee.id, newRole);
-    toast.success(`Rôle de ${employee.name} modifié en ${newRole === 'admin' ? 'Administrateur' : 'Employé'}`);
+    
+    const roleName = newRole === 'admin' ? 'Administrateur' : 'Employé';
+    toast.success(`Rôle de ${employee.name} modifié en ${roleName}`);
   };
+
+  // Check if the current role is "administrateur" and map it to "admin" for display
+  const displayRole = employee.role === 'administrateur' ? 'admin' : employee.role || 'employee';
 
   return (
     <Select
-      value={employee.role || 'employee'}
+      value={displayRole}
       onValueChange={handleRoleChange}
     >
       <SelectTrigger className="w-[180px]">

@@ -69,6 +69,7 @@ export function RoleManagement({
             <TableRow>
               <TableHead>Nom</TableHead>
               <TableHead>UID</TableHead>
+              <TableHead>Email</TableHead>
               <TableHead>Poste</TableHead>
               <TableHead>Rôle</TableHead>
             </TableRow>
@@ -77,6 +78,7 @@ export function RoleManagement({
             {employees.map(employee => (
               <TableRow key={employee.id}>
                 <TableCell>{employee.name}</TableCell>
+                <TableCell>{employee.uid || '-'}</TableCell>
                 <TableCell>{employee.email || '-'}</TableCell>
                 <TableCell>{employee.position || '-'}</TableCell>
                 <TableCell>

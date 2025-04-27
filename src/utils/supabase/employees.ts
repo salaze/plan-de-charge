@@ -9,7 +9,7 @@ export const fetchEmployees = async () => {
     
     // Add a timeout to avoid waiting indefinitely
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 seconds timeout
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 seconds timeout
     
     const { data: employees, error } = await supabase
       .from('employes')
@@ -33,6 +33,7 @@ export const fetchEmployees = async () => {
       department: emp.departement,
       role: emp.role || 'employee',
       uid: emp.uid,
+      password: emp.password, // Include password for login validation
       schedule: []
     })) as Employee[];
   } catch (error: any) {
@@ -69,7 +70,8 @@ export const saveEmployee = async (employee: Employee) => {
       fonction: employee.position || '',
       departement: employee.department || '',
       role: employee.role || 'employee',
-      uid: employee.uid || ''
+      uid: employee.uid || '',
+      password: employee.password || '' // Make sure to save password
     };
     
     console.log("Données envoyées à Supabase:", employeeData);

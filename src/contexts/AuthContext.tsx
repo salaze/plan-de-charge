@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate, useLocation, NavigateFunction } from 'react-router-dom';
 import { UserRole, Employee } from '@/types';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 type User = {
   username: string;
@@ -12,7 +13,7 @@ type User = {
 
 interface AuthContextType {
   user: User;
-  login: (username: string, password: string) => boolean;
+  login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
   isAuthenticated: boolean;
   isAdmin: boolean;
@@ -44,12 +45,11 @@ const AuthProviderImpl: React.FC<{
     }
   }, []);
 
-  const login = (username: string, password: string): boolean => {
-    const planningData = localStorage.getItem('planningData');
-    if (planningData) {
-      const data = JSON.parse(planningData);
-      const employees: Employee[] = data.employees || [];
+  const login = async (username: string, password: string): Promise<boolean> => {
+    try {
+      console.log('Tentative de connexion pour:', username);
       
+      // Admin hardcoded login
       if (username === 'admin' && password === 'admin123') {
         const adminUser = { username, role: 'admin' as UserRole };
         setUser(adminUser);
@@ -58,18 +58,39 @@ const AuthProviderImpl: React.FC<{
         return true;
       }
       
-      const employee = employees.find(emp => emp.name === username);
-      if (employee) {
+      // Try to find the employee in Supabase by UID (username) or name
+      const { data: employees, error } = await supabase
+        .from('employes')
+        .select('*')
+        .or(`uid.eq.${username},nom.eq.${username},identifiant.eq.${username}`);
+      
+      if (error) {
+        console.error('Erreur lors de la recherche de l\'employé:', error);
+        toast.error('Erreur de connexion à la base de données');
+        return false;
+      }
+      
+      console.log('Employés trouvés:', employees);
+      
+      if (employees && employees.length > 0) {
+        const employee = employees[0];
+        
+        // Check if the employee has a password
         if (employee.password && password === employee.password) {
-          const userRole = employee.role || 'employee';
+          // If employee has a role of 'admin' or 'administrateur', grant admin privileges
+          const userRole = (employee.role === 'admin' || employee.role === 'administrateur') 
+            ? 'admin' as UserRole 
+            : 'employee' as UserRole;
+            
           const employeeUser = { 
-            username, 
-            role: userRole as UserRole,
+            username: employee.nom, 
+            role: userRole,
             employeeId: employee.id 
           };
+          
           setUser(employeeUser);
           localStorage.setItem('user', JSON.stringify(employeeUser));
-          toast.success(`Bienvenue, ${employee.name}`);
+          toast.success(`Bienvenue, ${employee.nom}`);
           return true;
         } else {
           toast.error('Mot de passe incorrect');
@@ -77,19 +98,13 @@ const AuthProviderImpl: React.FC<{
       } else {
         toast.error('Utilisateur non trouvé');
       }
-    } else {
-      if (username === 'admin' && password === 'admin123') {
-        const adminUser = { username, role: 'admin' as UserRole };
-        setUser(adminUser);
-        localStorage.setItem('user', JSON.stringify(adminUser));
-        toast.success('Connexion réussie en tant qu\'administrateur');
-        return true;
-      } else {
-        toast.error('Identifiants incorrects');
-      }
+      
+      return false;
+    } catch (error) {
+      console.error('Erreur durant le processus de connexion:', error);
+      toast.error('Erreur de connexion');
+      return false;
     }
-    
-    return false;
   };
 
   const logout = () => {
@@ -102,65 +117,55 @@ const AuthProviderImpl: React.FC<{
     navigate('/login');
   };
 
-  const updateUserRoles = (employeeId: string, newRole: UserRole) => {
-    const planningData = localStorage.getItem('planningData');
-    if (planningData) {
-      const data = JSON.parse(planningData);
-      const employees: Employee[] = data.employees || [];
+  const updateUserRoles = async (employeeId: string, newRole: UserRole) => {
+    try {
+      // Mettre à jour le rôle dans Supabase
+      const { error } = await supabase
+        .from('employes')
+        .update({ role: newRole })
+        .eq('id', employeeId);
+        
+      if (error) throw error;
       
-      const updatedEmployees = employees.map(emp => {
-        if (emp.id === employeeId) {
-          return { ...emp, role: newRole };
-        }
-        return emp;
-      });
-      
-      localStorage.setItem('planningData', JSON.stringify({
-        ...data,
-        employees: updatedEmployees
-      }));
-      
-      if (user && user.username) {
-        const updatedEmployee = updatedEmployees.find(emp => emp.name === user.username);
-        if (updatedEmployee && updatedEmployee.role !== user.role) {
-          const updatedUser = { ...user, role: updatedEmployee.role };
-          setUser(updatedUser);
-          localStorage.setItem('user', JSON.stringify(updatedUser));
-          
-          if (updatedUser.role !== 'admin') {
-            navigate('/');
-          }
+      // Mettre à jour localement si c'est l'utilisateur courant
+      if (user && user.employeeId === employeeId) {
+        const updatedUser = { ...user, role: newRole };
+        setUser(updatedUser);
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        
+        if (newRole !== 'admin') {
+          navigate('/');
         }
       }
+      
+      toast.success("Rôle mis à jour avec succès");
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour du rôle:", error);
+      toast.error("Erreur lors de la mise à jour du rôle");
     }
   };
 
-  const updatePassword = (employeeId: string, newPassword: string): boolean => {
+  const updatePassword = async (employeeId: string, newPassword: string): Promise<boolean> => {
     if (!newPassword || newPassword.length < 6) {
+      toast.error("Le mot de passe doit contenir au moins 6 caractères");
       return false;
     }
 
-    const planningData = localStorage.getItem('planningData');
-    if (planningData) {
-      const data = JSON.parse(planningData);
-      const employees: Employee[] = data.employees || [];
+    try {
+      const { error } = await supabase
+        .from('employes')
+        .update({ password: newPassword })
+        .eq('id', employeeId);
+        
+      if (error) throw error;
       
-      const updatedEmployees = employees.map(emp => {
-        if (emp.id === employeeId) {
-          return { ...emp, password: newPassword };
-        }
-        return emp;
-      });
-      
-      localStorage.setItem('planningData', JSON.stringify({
-        ...data,
-        employees: updatedEmployees
-      }));
-      
+      toast.success("Mot de passe mis à jour avec succès");
       return true;
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour du mot de passe:", error);
+      toast.error("Erreur lors de la mise à jour du mot de passe");
+      return false;
     }
-    
-    return false;
   };
 
   const value = {

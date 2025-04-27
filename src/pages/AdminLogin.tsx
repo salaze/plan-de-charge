@@ -13,22 +13,34 @@ const AdminLogin = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
     
     if (!username || !password) {
       setError('Veuillez saisir un nom d\'utilisateur et un mot de passe');
+      setIsLoading(false);
       return;
     }
     
-    const success = login(username, password);
-    
-    if (success) {
-      navigate('/admin');
+    try {
+      const success = await login(username, password);
+      
+      if (success) {
+        navigate('/admin');
+      } else {
+        setError('Identifiants incorrects');
+      }
+    } catch (err) {
+      console.error("Erreur de connexion:", err);
+      setError('Une erreur s\'est produite lors de la connexion');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -58,13 +70,14 @@ const AdminLogin = () => {
               <Info className="h-4 w-4" />
               <AlertDescription>
                 <ul className="text-xs list-disc list-inside">
-                  <li>Employés: utilisez votre nom et le mot de passe défini</li>
+                  <li>Employés: utilisez votre UID, email ou nom</li>
+                  <li>Admin: utilisez "admin" et "admin123"</li>
                 </ul>
               </AlertDescription>
             </Alert>
             
             <div className="space-y-2">
-              <Label htmlFor="username">Nom</Label>
+              <Label htmlFor="username">Identifiant</Label>
               <div className="relative">
                 <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -72,8 +85,9 @@ const AdminLogin = () => {
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Votre nom"
+                  placeholder="UID, Email ou Nom"
                   className="pl-10"
+                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -88,13 +102,18 @@ const AdminLogin = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   className="pl-10"
+                  disabled={isLoading}
                 />
               </div>
             </div>
           </CardContent>
           <CardFooter>
-            <Button type="submit" className="w-full">
-              Se connecter
+            <Button 
+              type="submit" 
+              className="w-full"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Connexion en cours...' : 'Se connecter'}
             </Button>
           </CardFooter>
         </form>

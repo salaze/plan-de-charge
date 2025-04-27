@@ -26,7 +26,7 @@ export interface DayStatus {
   isHighlighted?: boolean;
 }
 
-export type UserRole = 'admin' | 'employee';
+export type UserRole = 'admin' | 'administrateur' | 'employee';
 
 export interface Employee {
   id: string;

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { SummaryStats, STATUS_LABELS, StatusCode } from '@/types';
+import { StatusCode, STATUS_LABELS } from '@/types';
 import {
   Table,
   TableBody,
@@ -27,40 +27,43 @@ export const StatisticsTable = ({ chartData, statusCodes, isLoading }: Statistic
   if (!chartData || chartData.length === 0) {
     return (
       <div className="text-center p-4 text-muted-foreground">
-        Aucune donnée disponible. Vérifiez que des employés et des statuts sont configurés dans le planning.
+        <p className="mb-2">Aucune donnée disponible.</p>
+        <p className="text-sm">Vérifiez que des employés et des statuts sont configurés dans le planning.</p>
       </div>
     );
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Employé</TableHead>
-          {statusCodes.map(status => (
-            <TableHead key={status}>
-              <div className="flex items-center gap-2">
-                <StatusCell status={status} className="w-3 h-3 rounded-full" />
-                {STATUS_LABELS[status]}
-              </div>
-            </TableHead>
-          ))}
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {chartData.map((employee) => (
-          <TableRow key={employee.name}>
-            <TableCell className="font-medium">{employee.name}</TableCell>
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Employé</TableHead>
             {statusCodes.map(status => (
-              <TableCell key={status}>
-                {typeof employee[status] === 'number'
-                  ? (employee[status] as number).toFixed(1)
-                  : '0.0'}
-              </TableCell>
+              <TableHead key={status}>
+                <div className="flex items-center gap-2">
+                  <StatusCell status={status} className="w-3 h-3 rounded-full" />
+                  {STATUS_LABELS[status]}
+                </div>
+              </TableHead>
             ))}
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {chartData.map((employee) => (
+            <TableRow key={employee.name}>
+              <TableCell className="font-medium">{employee.name}</TableCell>
+              {statusCodes.map(status => (
+                <TableCell key={status}>
+                  {typeof employee[status] === 'number'
+                    ? (employee[status] as number).toFixed(1)
+                    : '0.0'}
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 };

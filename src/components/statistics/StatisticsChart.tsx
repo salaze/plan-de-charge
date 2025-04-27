@@ -20,8 +20,9 @@ export const StatisticsChart = ({ chartData, statusCodes, isLoading }: Statistic
 
   if (!chartData || chartData.length === 0) {
     return (
-      <div className="h-full flex items-center justify-center text-muted-foreground">
-        Aucune donnée disponible. Assurez-vous que des employés sont présents dans le planning et que leurs statuts sont configurés.
+      <div className="h-full flex flex-col items-center justify-center text-muted-foreground">
+        <p className="text-center mb-2">Aucune donnée disponible.</p>
+        <p className="text-center text-sm">Assurez-vous que des employés sont présents dans le planning et que leurs statuts sont configurés.</p>
       </div>
     );
   }

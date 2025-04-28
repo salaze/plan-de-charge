@@ -1,8 +1,8 @@
-
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Project, ProjectFormData } from './types';
 import { generateId } from '@/utils';
+import { saveProject, deleteProject } from '@/utils/supabase/projects';
 
 export function useProjectManager(
   projects: Project[],
@@ -44,13 +44,17 @@ export function useProjectManager(
     setDeleteDialogOpen(true);
   };
   
-  const confirmDeleteProject = () => {
+  const confirmDeleteProject = async () => {
     if (!projectToDelete) return;
     
-    const updatedProjects = projects.filter(project => project.id !== projectToDelete);
-    onProjectsChange(updatedProjects);
+    const success = await deleteProject(projectToDelete);
     
-    toast.success('Projet supprimé avec succès');
+    if (success) {
+      const updatedProjects = projects.filter(project => project.id !== projectToDelete);
+      onProjectsChange(updatedProjects);
+      toast.success('Projet supprimé avec succès');
+    }
+    
     setDeleteDialogOpen(false);
     setProjectToDelete('');
   };
@@ -62,7 +66,7 @@ export function useProjectManager(
     }));
   };
   
-  const handleSaveProject = (e: React.FormEvent) => {
+  const handleSaveProject = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.code || !formData.name) {
@@ -79,26 +83,21 @@ export function useProjectManager(
       return;
     }
     
-    let updatedProjects: Project[];
+    const projectToSave: Project = currentProject 
+      ? { ...currentProject, ...formData }
+      : { id: generateId(), ...formData };
     
-    if (currentProject) {
-      updatedProjects = projects.map(project => 
-        project.id === currentProject.id 
-          ? { ...project, ...formData } 
-          : project
-      );
-      toast.success('Projet modifié avec succès');
-    } else {
-      const newProject: Project = {
-        id: generateId(),
-        ...formData
-      };
-      updatedProjects = [...projects, newProject];
-      toast.success('Projet ajouté avec succès');
+    const success = await saveProject(projectToSave);
+    
+    if (success) {
+      const updatedProjects = currentProject
+        ? projects.map(p => p.id === currentProject.id ? projectToSave : p)
+        : [...projects, projectToSave];
+        
+      onProjectsChange(updatedProjects);
+      setFormOpen(false);
+      toast.success(currentProject ? 'Projet modifié avec succès' : 'Projet ajouté avec succès');
     }
-    
-    onProjectsChange(updatedProjects);
-    setFormOpen(false);
   };
 
   return {

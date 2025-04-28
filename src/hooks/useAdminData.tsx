@@ -1,8 +1,8 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { STATUS_LABELS, STATUS_COLORS } from '@/types';
+import { fetchProjects } from '@/utils/supabase/projects';
 
 export const useAdminData = (isConnected: boolean) => {
   const [data, setData] = useState({
@@ -13,29 +13,23 @@ export const useAdminData = (isConnected: boolean) => {
 
   const fetchAllData = async () => {
     try {
-      const { data: statusData, error: statusError } = await supabase
-        .from('statuts')
-        .select('*')
-        .order('display_order', { ascending: true });
+      const [statusData, employeeData, projectData] = await Promise.all([
+        supabase.from('statuts').select('*').order('display_order', { ascending: true }),
+        supabase.from('employes').select('*'),
+        fetchProjects()
+      ]);
 
-      if (statusError) throw statusError;
-
-      const { data: employeeData, error: employeeError } = await supabase
-        .from('employes')
-        .select('*');
-
-      if (employeeError) throw employeeError;
-
-      const projects = [];
+      if (statusData.error) throw statusData.error;
+      if (employeeData.error) throw employeeData.error;
       
       setData({
-        statuses: statusData?.map(status => ({
+        statuses: statusData.data?.map(status => ({
           id: status.id,
           code: status.code,
           label: status.libelle,
           color: status.couleur
         })) || [],
-        employees: employeeData?.map(emp => ({
+        employees: employeeData.data?.map(emp => ({
           id: emp.id,
           name: emp.nom,
           email: emp.identifiant,
@@ -45,11 +39,11 @@ export const useAdminData = (isConnected: boolean) => {
           uid: emp.uid,
           schedule: []
         })) || [],
-        projects: projects || []
+        projects: projectData || []
       });
 
-      if (statusData && statusData.length > 0) {
-        statusData.forEach(status => {
+      if (statusData.data && statusData.data.length > 0) {
+        statusData.data.forEach(status => {
           if (status.code) {
             STATUS_LABELS[status.code] = status.libelle;
             STATUS_COLORS[status.code] = status.couleur;
@@ -69,13 +63,11 @@ export const useAdminData = (isConnected: boolean) => {
     }
   };
 
-  const handleProjectsChange = async (projects: any[]) => {
+  const handleProjectsChange = async (projects: Project[]) => {
     setData(prevData => ({
       ...prevData,
       projects
     }));
-    
-    toast.success('Projets sauvegardés');
   };
 
   const handleStatusesChange = async (statuses: any[]) => {

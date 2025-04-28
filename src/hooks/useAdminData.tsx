@@ -1,8 +1,10 @@
+
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { STATUS_LABELS, STATUS_COLORS } from '@/types';
 import { fetchProjects } from '@/utils/supabase/projects';
+import { Project } from '@/components/admin/projects/types'; // Import du type Project
 
 export const useAdminData = (isConnected: boolean) => {
   const [data, setData] = useState({

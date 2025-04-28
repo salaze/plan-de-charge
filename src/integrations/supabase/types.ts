@@ -61,6 +61,7 @@ export type Database = {
           id: string
           identifiant: string | null
           nom: string
+          password: string | null
           prenom: string | null
           role: string | null
           uid: string | null
@@ -73,6 +74,7 @@ export type Database = {
           id?: string
           identifiant?: string | null
           nom: string
+          password?: string | null
           prenom?: string | null
           role?: string | null
           uid?: string | null
@@ -85,6 +87,7 @@ export type Database = {
           id?: string
           identifiant?: string | null
           nom?: string
+          password?: string | null
           prenom?: string | null
           role?: string | null
           uid?: string | null

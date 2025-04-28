@@ -75,8 +75,11 @@ const AuthProviderImpl: React.FC<{
       if (employees && employees.length > 0) {
         const employee = employees[0];
         
+        // Assurons-nous que la propriété password est bien présente
+        const storedPassword = employee.password as string | undefined;
+        
         // Check if the employee has a password set in Supabase
-        if (employee.password && password === employee.password) {
+        if (storedPassword && password === storedPassword) {
           // If employee has a role of 'admin' or 'administrateur', grant admin privileges
           const userRole = (employee.role === 'admin' || employee.role === 'administrateur') 
             ? 'admin' as UserRole 
@@ -152,9 +155,12 @@ const AuthProviderImpl: React.FC<{
     }
 
     try {
+      // Nous utilisons une mise à jour explicite pour inclure uniquement le champ password
+      const updateData: any = { password: newPassword };
+      
       const { error } = await supabase
         .from('employes')
-        .update({ password: newPassword })
+        .update(updateData)
         .eq('id', employeeId);
         
       if (error) throw error;

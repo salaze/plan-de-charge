@@ -33,7 +33,7 @@ export const fetchEmployees = async () => {
       department: emp.departement,
       role: emp.role || 'employee',
       uid: emp.uid,
-      password: emp.password || '', // Map password field from database
+      password: (emp as any).password || '', // Utilisez une assertion de type pour accéder à password
       schedule: []
     })) as Employee[];
   } catch (error: any) {
@@ -62,7 +62,7 @@ export const saveEmployee = async (employee: Employee) => {
     }
     
     // Structure de données adaptée au schéma de la table employes de Supabase
-    const employeeData = {
+    const employeeData: any = {
       id: employee.id,
       nom: employee.name,
       prenom: '', // Champ requis dans Supabase, mais pas utilisé dans notre application

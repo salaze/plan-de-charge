@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Project, ProjectFormData } from './types';
@@ -12,6 +13,7 @@ export function useProjectManager(
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [formData, setFormData] = useState<ProjectFormData>({
     code: '',
@@ -69,34 +71,46 @@ export function useProjectManager(
   const handleSaveProject = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.code || !formData.name) {
-      toast.error('Veuillez remplir tous les champs obligatoires');
-      return;
-    }
+    if (isSubmitting) return;
     
-    const codeExists = projects.some(p => 
-      p.code === formData.code && p.id !== (currentProject?.id || '')
-    );
-    
-    if (codeExists) {
-      toast.error('Ce code de projet existe déjà');
-      return;
-    }
-    
-    const projectToSave: Project = currentProject 
-      ? { ...currentProject, ...formData }
-      : { id: generateId(), ...formData };
-    
-    const success = await saveProject(projectToSave);
-    
-    if (success) {
-      const updatedProjects = currentProject
-        ? projects.map(p => p.id === currentProject.id ? projectToSave : p)
-        : [...projects, projectToSave];
-        
-      onProjectsChange(updatedProjects);
-      setFormOpen(false);
-      toast.success(currentProject ? 'Projet modifié avec succès' : 'Projet ajouté avec succès');
+    try {
+      setIsSubmitting(true);
+      
+      if (!formData.code || !formData.name) {
+        toast.error('Veuillez remplir tous les champs obligatoires');
+        return;
+      }
+      
+      // Vérification du code projet en cas de modification
+      const codeExists = projects.some(p => 
+        p.code === formData.code && p.id !== (currentProject?.id || '')
+      );
+      
+      if (codeExists) {
+        toast.error('Ce code de projet existe déjà');
+        return;
+      }
+      
+      const projectToSave: Project = currentProject 
+        ? { ...currentProject, ...formData }
+        : { id: generateId(), ...formData };
+      
+      const success = await saveProject(projectToSave);
+      
+      if (success) {
+        const updatedProjects = currentProject
+          ? projects.map(p => p.id === currentProject.id ? projectToSave : p)
+          : [...projects, projectToSave];
+          
+        onProjectsChange(updatedProjects);
+        setFormOpen(false);
+        toast.success(currentProject ? 'Projet modifié avec succès' : 'Projet ajouté avec succès');
+      }
+    } catch (error) {
+      console.error("Erreur lors de la sauvegarde:", error);
+      toast.error("Une erreur s'est produite lors de la sauvegarde");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -106,6 +120,7 @@ export function useProjectManager(
     deleteDialogOpen,
     projectToDelete,
     formData,
+    isSubmitting,
     setFormOpen,
     setCurrentProject,
     setDeleteDialogOpen,

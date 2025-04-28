@@ -19,6 +19,7 @@ export function ProjectManager({ projects, onProjectsChange }: ProjectManagerPro
     deleteDialogOpen,
     projectToDelete,
     formData,
+    isSubmitting,
     setFormOpen,
     setCurrentProject,
     setDeleteDialogOpen,
@@ -57,12 +58,15 @@ export function ProjectManager({ projects, onProjectsChange }: ProjectManagerPro
         </CardContent>
       </Card>
 
-      <ProjectForm
-        formData={formData}
-        onSubmit={handleSaveProject}
-        onClose={() => setFormOpen(false)}
-        onChange={handleFormChange}
-      />
+      {formOpen && (
+        <ProjectForm
+          formData={formData}
+          onSubmit={handleSaveProject}
+          onClose={() => setFormOpen(false)}
+          onChange={handleFormChange}
+          isSubmitting={isSubmitting}
+        />
+      )}
 
       <DeleteDialog
         open={deleteDialogOpen}

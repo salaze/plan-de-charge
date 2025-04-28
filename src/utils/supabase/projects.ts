@@ -17,6 +17,7 @@ export const fetchProjects = async (): Promise<Project[]> => {
       throw error;
     }
     
+    console.log("Projets récupérés:", projects);
     return projects.map(project => ({
       id: project.id,
       code: project.code,
@@ -32,45 +33,63 @@ export const fetchProjects = async (): Promise<Project[]> => {
 
 export const saveProject = async (project: Project): Promise<boolean> => {
   try {
+    console.log("Sauvegarde du projet:", project);
+    
+    // S'assurer que toutes les propriétés requises sont présentes
+    if (!project.code || !project.name) {
+      toast.error('Le code et le nom du projet sont requis');
+      return false;
+    }
+    
     const projectData = {
       id: project.id,
       code: project.code,
       name: project.name,
-      color: project.color
+      color: project.color || '#4CAF50'
     };
     
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('projets')
       .upsert(projectData)
       .select();
       
     if (error) {
-      console.error('Erreur Supabase:', error);
-      throw error;
+      console.error('Erreur Supabase lors de la sauvegarde:', error);
+      
+      // Gestion des erreurs spécifiques
+      if (error.code === '23505') {
+        toast.error('Un projet avec ce code existe déjà');
+      } else {
+        toast.error(`Erreur lors de la sauvegarde du projet: ${error.message}`);
+      }
+      
+      return false;
     }
     
+    console.log('Projet sauvegardé avec succès:', data);
     return true;
   } catch (error: any) {
-    console.error('Erreur lors de la sauvegarde du projet:', error);
-    
-    if (error.code === '23505') {
-      toast.error('Un projet avec ce code existe déjà');
-    } else {
-      toast.error('Erreur lors de la sauvegarde du projet');
-    }
-    
+    console.error('Exception lors de la sauvegarde du projet:', error);
+    toast.error('Erreur lors de la sauvegarde du projet');
     return false;
   }
 };
 
 export const deleteProject = async (projectId: string): Promise<boolean> => {
   try {
+    console.log("Suppression du projet:", projectId);
+    
     const { error } = await supabase
       .from('projets')
       .delete()
       .eq('id', projectId);
       
-    if (error) throw error;
+    if (error) {
+      console.error('Erreur lors de la suppression:', error);
+      throw error;
+    }
+    
+    console.log('Projet supprimé avec succès');
     return true;
   } catch (error) {
     console.error('Erreur lors de la suppression du projet:', error);

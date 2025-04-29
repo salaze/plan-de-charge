@@ -31,39 +31,6 @@ export const fetchProjects = async (): Promise<Project[]> => {
   }
 };
 
-export const fetchProjectByCode = async (projectCode: string): Promise<Project | null> => {
-  try {
-    console.log(`Récupération du projet avec le code ${projectCode} depuis Supabase...`);
-    
-    // Requête en direct à Supabase pour obtenir les informations les plus récentes
-    const { data: project, error } = await supabase
-      .from('projets')
-      .select('*')
-      .eq('code', projectCode)
-      .single();
-      
-    if (error) {
-      if (error.code === 'PGRST116') { // Code pour "No rows returned"
-        console.warn(`Aucun projet trouvé avec le code ${projectCode}`);
-        return null;
-      }
-      console.error("Erreur Supabase:", error);
-      throw error;
-    }
-    
-    console.log("Projet récupéré en temps réel:", project);
-    return {
-      id: project.id,
-      code: project.code,
-      name: project.name,
-      color: project.color
-    };
-  } catch (error: any) {
-    console.error(`Erreur lors de la récupération du projet avec code ${projectCode}:`, error);
-    return null;
-  }
-};
-
 export const saveProject = async (project: Project): Promise<boolean> => {
   try {
     console.log("Sauvegarde du projet:", project);

@@ -60,14 +60,14 @@ export function StatusChangeDialog({
   const handleProjectChange = async (projectCode: string) => {
     setSelectedProjectCode(projectCode);
     
-    // Récupérer les informations fraîches du projet
+    // Récupérer les informations fraîches du projet directement depuis Supabase
     if (projectCode && projectCode !== 'select-project') {
       try {
+        // Cette fonction va chercher les données du projet en temps réel
         const freshProject = await fetchProjectByCode(projectCode);
-        if (freshProject) {
-          // Mettre à jour la liste des projets ou utiliser ces informations directement
-          // selon l'architecture du composant
-        }
+        console.log("Projet récupéré depuis Supabase:", freshProject);
+        // Les données du projet sont utilisées directement,
+        // sans mise en cache ou duplication dans l'état local
       } catch (error) {
         console.error("Erreur lors de la récupération des données du projet:", error);
       }

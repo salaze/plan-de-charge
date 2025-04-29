@@ -35,6 +35,7 @@ export const fetchProjectByCode = async (projectCode: string): Promise<Project |
   try {
     console.log(`Récupération du projet avec le code ${projectCode} depuis Supabase...`);
     
+    // Requête en direct à Supabase pour obtenir les informations les plus récentes
     const { data: project, error } = await supabase
       .from('projets')
       .select('*')
@@ -50,7 +51,7 @@ export const fetchProjectByCode = async (projectCode: string): Promise<Project |
       throw error;
     }
     
-    console.log("Projet récupéré:", project);
+    console.log("Projet récupéré en temps réel:", project);
     return {
       id: project.id,
       code: project.code,

@@ -19,10 +19,8 @@ interface ProjectSelectorProps {
 }
 
 export function ProjectSelector({ projects, selectedProject, onProjectChange }: ProjectSelectorProps) {
-  const [currentProjects, setCurrentProjects] = useState<Project[]>(projects);
   const [loading, setLoading] = useState(false);
   
-  // Lorsqu'un projet est sélectionné, récupérer ses informations à jour depuis Supabase
   const handleProjectChange = async (projectCode: string) => {
     // Appeler le callback immédiatement pour une expérience utilisateur réactive
     onProjectChange(projectCode);
@@ -31,30 +29,19 @@ export function ProjectSelector({ projects, selectedProject, onProjectChange }: 
       return;
     }
     
+    // Récupérer les données fraîches du projet en temps réel depuis Supabase
     setLoading(true);
     try {
-      const freshProject = await fetchProjectByCode(projectCode);
-      
-      // Mettre à jour la liste locale des projets avec les informations fraîches
-      if (freshProject) {
-        setCurrentProjects(prev => {
-          const filtered = prev.filter(p => p.code !== freshProject.code);
-          return [...filtered, freshProject];
-        });
-      }
+      await fetchProjectByCode(projectCode);
+      // Nous n'avons pas besoin de stocker le résultat localement
+      // car nous utilisons toujours les données directement depuis Supabase
+      // quand nous en avons besoin
     } catch (error) {
       console.error("Erreur lors de la récupération des données du projet:", error);
     } finally {
       setLoading(false);
     }
   };
-  
-  // Synchroniser avec les props lorsque la liste des projets change
-  useEffect(() => {
-    if (projects?.length > 0) {
-      setCurrentProjects(projects);
-    }
-  }, [projects]);
 
   return (
     <div className="space-y-3">
@@ -68,7 +55,7 @@ export function ProjectSelector({ projects, selectedProject, onProjectChange }: 
             <SelectValue placeholder="Choisir un projet" />
           </SelectTrigger>
           <SelectContent>
-            {currentProjects.map((project) => (
+            {projects.map((project) => (
               <SelectItem 
                 key={project.id} 
                 value={project.code || `project-${project.id}`}

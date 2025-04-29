@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   AlertDialog,
@@ -195,7 +196,7 @@ export function StatusChangeDialog({
             <Checkbox
               id="highlight"
               checked={highlighted}
-              onCheckedChange={(checked) => setHighlighted(checked || false)}
+              onCheckedChange={(checked) => setHighlighted(checked === "indeterminate" ? false : checked)}
             />
             <Label htmlFor="highlight">Mettre en évidence</Label>
           </div>

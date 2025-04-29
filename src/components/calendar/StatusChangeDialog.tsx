@@ -10,16 +10,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Checkbox } from "@/components/ui/checkbox"
 import { DayPeriod, StatusCode } from '@/types';
 import { SelectPeriod } from './SelectPeriod';
 import ProjectSelector from './ProjectSelector';
-// Importer fetchProjectByCode de notre fichier projets.ts
 import { fetchProjectByCode } from '@/utils/supabase/projects';
+import { StatusButtonGrid } from './StatusButtonGrid';
+import { HighlightCheckbox } from './HighlightCheckbox';
+import { NoteInput } from './NoteInput';
 
 interface Project {
   id: string;
@@ -84,133 +81,17 @@ export function StatusChangeDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         
-        <div className="grid gap-4 py-4">
-          <div className="flex justify-between">
-            <Button 
-              variant="outline"
-              className={currentStatus === 'assistance' ? 'bg-yellow-300 text-yellow-800' : ''}
-              onClick={() => handleStatusClick('assistance')}
-            >
-              Assistance
-            </Button>
-            <Button
-              variant="outline"
-              className={currentStatus === 'vigi' ? 'bg-red-500 text-white' : ''}
-              onClick={() => handleStatusClick('vigi')}
-            >
-              Vigi
-            </Button>
-            <Button
-              variant="outline"
-              className={currentStatus === 'formation' ? 'bg-blue-500 text-white' : ''}
-              onClick={() => handleStatusClick('formation')}
-            >
-              Formation
-            </Button>
-            <Button
-              variant="outline"
-              className={currentStatus === 'projet' ? 'bg-green-500 text-white' : ''}
-              onClick={() => handleStatusClick('projet')}
-            >
-              Projet
-            </Button>
-            <Button
-              variant="outline"
-              className={currentStatus === 'conges' ? 'bg-amber-800 text-white' : ''}
-              onClick={() => handleStatusClick('conges')}
-            >
-              Congés
-            </Button>
-            <Button
-              variant="outline"
-              className={currentStatus === 'management' ? 'bg-purple-500 text-white' : ''}
-              onClick={() => handleStatusClick('management')}
-            >
-              Management
-            </Button>
-            <Button
-              variant="outline"
-              className={currentStatus === 'tp' ? 'bg-gray-400 text-gray-800' : ''}
-              onClick={() => handleStatusClick('tp')}
-            >
-              Temps Partiel
-            </Button>
-            <Button
-              variant="outline"
-              className={currentStatus === 'coordinateur' ? 'bg-green-600 text-white' : ''}
-              onClick={() => handleStatusClick('coordinateur')}
-            >
-              Coordinateur
-            </Button>
-            <Button
-              variant="outline"
-              className={currentStatus === 'absence' ? 'bg-pink-300 text-pink-800' : ''}
-              onClick={() => handleStatusClick('absence')}
-            >
-              Autre Absence
-            </Button>
-            <Button
-              variant="outline"
-              className={currentStatus === 'regisseur' ? 'bg-blue-300 text-blue-800' : ''}
-              onClick={() => handleStatusClick('regisseur')}
-            >
-              Régisseur
-            </Button>
-             <Button
-              variant="outline"
-              className={currentStatus === 'demenagement' ? 'bg-indigo-500 text-white' : ''}
-              onClick={() => handleStatusClick('demenagement')}
-            >
-              Déménagement
-            </Button>
-            <Button
-              variant="outline"
-              className={currentStatus === 'permanence' ? 'bg-pink-600 text-white' : ''}
-              onClick={() => handleStatusClick('permanence')}
-            >
-              Permanence
-            </Button>
-            <Button
-              variant="outline"
-              className={currentStatus === 'parc' ? 'bg-teal-500 text-white' : ''}
-              onClick={() => handleStatusClick('parc')}
-            >
-              Parc
-            </Button>
-            <Button
-              variant="outline"
-              className={currentStatus === 'none' ? 'bg-transparent text-foreground' : ''}
-              onClick={() => handleStatusClick('none')}
-            >
-              Aucun
-            </Button>
-          </div>
+        <StatusButtonGrid currentStatus={currentStatus} onStatusClick={handleStatusClick} />
 
-          <ProjectSelector
-            projects={projects}
-            selectedProject={selectedProjectCode}
-            onProjectChange={handleProjectChange}
-          />
+        <ProjectSelector
+          projects={projects}
+          selectedProject={selectedProjectCode}
+          onProjectChange={handleProjectChange}
+        />
 
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="highlight"
-              checked={highlighted}
-              onCheckedChange={(checked) => setHighlighted(checked === "indeterminate" ? false : checked)}
-            />
-            <Label htmlFor="highlight">Mettre en évidence</Label>
-          </div>
-          
-          <div className="grid gap-2">
-            <Label htmlFor="note">Note</Label>
-            <Textarea
-              id="note"
-              placeholder="Ajouter une note"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-            />
-          </div>
-        </div>
+        <HighlightCheckbox highlighted={highlighted} onChange={setHighlighted} />
+        
+        <NoteInput note={note} onChange={setNote} />
         
         <AlertDialogFooter>
           <AlertDialogCancel>Annuler</AlertDialogCancel>
@@ -218,5 +99,5 @@ export function StatusChangeDialog({
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  )
+  );
 }

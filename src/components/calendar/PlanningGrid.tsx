@@ -17,6 +17,7 @@ import { DepartmentHeader } from './DepartmentHeader';
 import { StatusChangeDialog } from './StatusChangeDialog';
 import { usePlanningGrid } from '@/hooks/usePlanningGrid';
 import { groupEmployeesByDepartment } from '@/utils/departmentUtils';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface PlanningGridProps {
   year: number;
@@ -112,37 +113,39 @@ export function PlanningGrid({
   
   return (
     <>
-      <div className="overflow-x-auto -mx-2 sm:mx-0">
-        <Table className="border rounded-lg bg-white dark:bg-gray-900 shadow-sm min-w-full">
-          <PlanningGridHeader days={visibleDays} />
-          
-          <TableBody>
-            {departmentGroups.map((group, groupIndex) => (
-              <React.Fragment key={`dept-${groupIndex}`}>
-                {/* Department header */}
-                <DepartmentHeader 
-                  name={group.name} 
-                  colSpan={visibleDays.length * 2 + 2} 
-                />
-                
-                {/* Employee rows */}
-                {group.employees.map((employee) => {
-                  const totalStats = getTotalStats(employee);
+      <div className="lg:overflow-hidden w-full">
+        <div className="overflow-x-auto lg:overflow-x-scroll lg:scrollbar-thin lg:scrollbar-thumb-gray-300 lg:scrollbar-track-transparent">
+          <Table className="border rounded-lg bg-white dark:bg-gray-900 shadow-sm min-w-full">
+            <PlanningGridHeader days={visibleDays} />
+            
+            <TableBody>
+              {departmentGroups.map((group, groupIndex) => (
+                <React.Fragment key={`dept-${groupIndex}`}>
+                  {/* Department header */}
+                  <DepartmentHeader 
+                    name={group.name} 
+                    colSpan={visibleDays.length * 2 + 2} 
+                  />
                   
-                  return (
-                    <EmployeeRow
-                      key={employee.id}
-                      employee={employee}
-                      visibleDays={visibleDays}
-                      totalStats={totalStats}
-                      onCellClick={handleCellClick}
-                    />
-                  );
-                })}
-              </React.Fragment>
-            ))}
-          </TableBody>
-        </Table>
+                  {/* Employee rows */}
+                  {group.employees.map((employee) => {
+                    const totalStats = getTotalStats(employee);
+                    
+                    return (
+                      <EmployeeRow
+                        key={employee.id}
+                        employee={employee}
+                        visibleDays={visibleDays}
+                        totalStats={totalStats}
+                        onCellClick={handleCellClick}
+                      />
+                    );
+                  })}
+                </React.Fragment>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </div>
       
       {/* Status change dialog */}

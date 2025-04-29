@@ -157,7 +157,7 @@ const Index = () => {
             </div>
           </div>
         ) : (
-          <div className="glass-panel p-1 md:p-4 animate-scale-in overflow-x-auto">
+          <div className="glass-panel p-1 md:p-4 animate-scale-in">
             {loading ? (
               <div className="space-y-4">
                 <Skeleton className="h-10 w-full" />
@@ -167,27 +167,29 @@ const Index = () => {
                 <Skeleton className="h-16 w-full" />
               </div>
             ) : (
-              <PlanningGrid 
-                year={currentYear} 
-                month={currentMonth} 
-                employees={data.employees || []}
-                projects={data.projects || []}
-                onStatusChange={handleStatusChange}
-                isAdmin={isAdmin}
-                onStatusDialogChange={(isOpen) => {
-                  isStatusDialogOpenRef.current = isOpen;
-                  
-                  // Émettre les événements appropriés
-                  if (isOpen) {
-                    window.dispatchEvent(new CustomEvent('statusEditStart'));
-                  } else {
-                    // Ajouter un délai pour s'assurer que toutes les opérations sont terminées
-                    setTimeout(() => {
-                      window.dispatchEvent(new CustomEvent('statusEditEnd'));
-                    }, 500);
-                  }
-                }}
-              />
+              <div className="lg:smooth-horizontal-scroll">
+                <PlanningGrid 
+                  year={currentYear} 
+                  month={currentMonth} 
+                  employees={data.employees || []}
+                  projects={data.projects || []}
+                  onStatusChange={handleStatusChange}
+                  isAdmin={isAdmin}
+                  onStatusDialogChange={(isOpen) => {
+                    isStatusDialogOpenRef.current = isOpen;
+                    
+                    // Émettre les événements appropriés
+                    if (isOpen) {
+                      window.dispatchEvent(new CustomEvent('statusEditStart'));
+                    } else {
+                      // Ajouter un délai pour s'assurer que toutes les opérations sont terminées
+                      setTimeout(() => {
+                        window.dispatchEvent(new CustomEvent('statusEditEnd'));
+                      }, 500);
+                    }
+                  }}
+                />
+              </div>
             )}
           </div>
         )}

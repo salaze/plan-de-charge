@@ -138,7 +138,13 @@ export default {
 				'blur-lg': 'blur(16px)',
 				'blur-xl': 'blur(24px)',
 			},
+			// Ajout des styles de défilement personnalisés
+			scrollbar: ['thin', 'thumb-gray-300', 'track-transparent'],
 		}
 	},
-	plugins: [require("tailwindcss-animate")],
+	plugins: [
+		require("tailwindcss-animate"),
+		// Vous pourriez ajouter un plugin pour les scrollbars personnalisées si nécessaire
+		// Par exemple: require('tailwind-scrollbar')
+	],
 } satisfies Config;

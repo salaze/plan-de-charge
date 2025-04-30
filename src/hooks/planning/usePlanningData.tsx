@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { MonthData } from '@/types';
 import { toast } from 'sonner';
 import { fetchEmployees } from '@/utils/supabase/employees';
@@ -22,13 +22,14 @@ export const usePlanningData = (currentYear?: number, currentMonth?: number) => 
   const [loading, setLoading] = useState(true);
   const [isOnline, setIsOnline] = useState(true);
   const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     setConnectionError(null);
     
     try {
-      console.log(`Chargement des données depuis Supabase...`);
+      console.log(`Chargement des données depuis Supabase... (${new Date().toISOString()})`);
       
       const isConnected = await checkSupabaseConnection();
       setIsOnline(isConnected);
@@ -52,6 +53,7 @@ export const usePlanningData = (currentYear?: number, currentMonth?: number) => 
         toast.warning("Aucun employé trouvé dans la base de données");
       }
       
+      // Charger le planning pour chaque employé
       for (let i = 0; i < employees.length; i++) {
         try {
           const schedule = await fetchSchedule(employees[i].id);
@@ -74,6 +76,8 @@ export const usePlanningData = (currentYear?: number, currentMonth?: number) => 
         projects
       });
       
+      setLastRefresh(new Date());
+      
     } catch (error) {
       console.error('Error loading data:', error);
       const errorMsg = "Erreur lors du chargement des données. Veuillez réessayer.";
@@ -83,16 +87,25 @@ export const usePlanningData = (currentYear?: number, currentMonth?: number) => 
     } finally {
       setLoading(false);
     }
-  };
+  }, [year, month]);
 
   useEffect(() => {
     loadData();
-  }, [year, month]);
+  }, [loadData]);
 
   // Ajout d'une fonction de rechargement manuel des données
-  const reloadData = async () => {
+  const reloadData = useCallback(async () => {
+    console.log("Rechargement manuel des données demandé");
     await loadData();
-  };
+  }, [loadData]);
 
-  return { data, setData, loading, isOnline, connectionError, reloadData };
+  return { 
+    data, 
+    setData, 
+    loading, 
+    isOnline, 
+    connectionError, 
+    reloadData, 
+    lastRefresh 
+  };
 };

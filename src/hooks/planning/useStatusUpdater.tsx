@@ -11,6 +11,7 @@ export const useStatusUpdater = (
   isOnline: boolean
 ) => {
   const { isAdmin } = useAuth();
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const handleStatusChange = async (
     employeeId: string,
@@ -31,6 +32,11 @@ export const useStatusUpdater = (
     }
     
     try {
+      setIsUpdating(true);
+      
+      // Émettre un événement d'édition pour prévenir les actualisations automatiques
+      window.dispatchEvent(new CustomEvent('statusEditStart'));
+      
       // Mise à jour de l'état local (UI)
       setData((prevData) => {
         const updatedEmployees = prevData.employees.map((employee) => {
@@ -83,6 +89,7 @@ export const useStatusUpdater = (
       // Synchronisation avec Supabase
       if (status === '') {
         await deleteScheduleEntry(employeeId, date, period);
+        console.log(`Statut supprimé pour ${employeeId} à la date ${date}, période ${period}`);
       } else {
         await saveScheduleEntry(employeeId, {
           date,
@@ -91,12 +98,38 @@ export const useStatusUpdater = (
           isHighlighted,
           projectCode: status === 'projet' ? projectCode : undefined
         });
+        console.log(`Statut ${status} enregistré pour ${employeeId} à la date ${date}, période ${period}`);
+        if (status === 'projet') {
+          console.log(`Projet associé: ${projectCode}`);
+        }
       }
+      
+      // Informer l'application qu'une mise à jour a eu lieu
+      const statusesUpdatedEvent = new CustomEvent('statusesUpdated', { 
+        detail: { 
+          employeeId,
+          date,
+          status,
+          period,
+          isHighlighted,
+          projectCode
+        } 
+      });
+      window.dispatchEvent(statusesUpdatedEvent);
+      
+      toast.success('Statut mis à jour avec succès');
     } catch (error) {
       console.error('Error updating status:', error);
       toast.error('Erreur lors de la mise à jour du statut dans Supabase');
+    } finally {
+      setIsUpdating(false);
+      
+      // Émettre l'événement de fin d'édition après un délai
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('statusEditEnd'));
+      }, 500);
     }
   };
 
-  return { handleStatusChange };
+  return { handleStatusChange, isUpdating };
 };

@@ -7,6 +7,7 @@ import { StatusCode } from '@/types';
 import { StatusOption } from '../StatusOption';
 import { ProjectSelector } from '../ProjectSelector';
 import { HighlightOption } from '../HighlightOption';
+import { Loader2 } from 'lucide-react';
 
 interface StatusOptionsListProps {
   statuses: StatusCode[];
@@ -18,6 +19,7 @@ interface StatusOptionsListProps {
   onProjectChange: (projectCode: string) => void;
   onHighlightChange: (checked: boolean) => void;
   onSubmit: () => void;
+  isValidating?: boolean;
 }
 
 export function StatusOptionsList({
@@ -29,8 +31,17 @@ export function StatusOptionsList({
   onStatusChange,
   onProjectChange,
   onHighlightChange,
-  onSubmit
+  onSubmit,
+  isValidating = false
 }: StatusOptionsListProps) {
+  // Vérifier si des projets sont disponibles
+  const hasProjects = projects && projects.length > 0;
+  
+  // Déterminer si le bouton doit être désactivé
+  const isSubmitDisabled = 
+    isValidating || 
+    (selectedStatus === 'projet' && (!selectedProject || selectedProject === 'no-project' || !hasProjects));
+
   return (
     <div className="space-y-6">
       <div className="space-y-3">
@@ -51,11 +62,19 @@ export function StatusOptionsList({
       </div>
       
       {selectedStatus === 'projet' && (
-        <ProjectSelector
-          projects={projects}
-          selectedProject={selectedProject || "select-project"}
-          onProjectChange={onProjectChange}
-        />
+        <div className="space-y-2">
+          <ProjectSelector
+            projects={projects}
+            selectedProject={selectedProject || "select-project"}
+            onProjectChange={onProjectChange}
+          />
+          
+          {!hasProjects && (
+            <div className="text-xs text-amber-500">
+              Aucun projet disponible. Veuillez en créer un dans l'administration.
+            </div>
+          )}
+        </div>
       )}
       
       <HighlightOption
@@ -63,8 +82,19 @@ export function StatusOptionsList({
         onHighlightChange={onHighlightChange}
       />
       
-      <Button onClick={onSubmit} className="w-full">
-        Appliquer
+      <Button 
+        onClick={onSubmit} 
+        className="w-full"
+        disabled={isSubmitDisabled}
+      >
+        {isValidating ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Validation...
+          </>
+        ) : (
+          'Appliquer'
+        )}
       </Button>
     </div>
   );

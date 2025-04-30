@@ -40,16 +40,30 @@ export const saveScheduleEntry = async (
   try {
     console.log(`Sauvegarde d'une entrée de planning pour l'employé ${employeeId}:`, entry);
     
-    const { error } = await supabase
+    // Vérifier que toutes les données nécessaires sont présentes
+    if (!entry.date || !entry.period || !entry.status) {
+      console.error("Données de planning incomplètes pour la sauvegarde:", entry);
+      return false;
+    }
+    
+    // Préparation des données à sauvegarder
+    const scheduleData = {
+      employe_id: employeeId,
+      date: entry.date,
+      statut_code: entry.status,
+      period: entry.period,
+      note: entry.note || null,
+      project_code: entry.projectCode || null,
+      is_highlighted: entry.isHighlighted || false
+    };
+    
+    console.log("Données préparées pour Supabase:", scheduleData);
+    
+    const { data, error } = await supabase
       .from('employe_schedule')
-      .upsert({
-        employe_id: employeeId,
-        date: entry.date,
-        statut_code: entry.status,
-        period: entry.period,
-        note: entry.note || null,
-        project_code: entry.projectCode || null,
-        is_highlighted: entry.isHighlighted || false
+      .upsert(scheduleData, { 
+        onConflict: 'employe_id, date, period',
+        returning: 'representation'
       });
       
     if (error) {
@@ -57,11 +71,11 @@ export const saveScheduleEntry = async (
       throw error;
     }
     
-    console.log(`Entrée de planning sauvegardée avec succès pour l'employé ${employeeId}`);
+    console.log(`Entrée de planning sauvegardée avec succès pour l'employé ${employeeId}:`, data);
     
     // Dispatch an event to notify that the schedule has been updated
     const event = new CustomEvent('scheduleEntryUpdated', { 
-      detail: { employeeId, entry } 
+      detail: { employeeId, entry, response: data } 
     });
     window.dispatchEvent(event);
     
@@ -112,21 +126,27 @@ export const deleteScheduleEntry = async (
 // Ajouter une fonction pour vérifier si un projet existe dans la base de données
 export const checkProjectExists = async (projectCode: string): Promise<boolean> => {
   try {
+    if (!projectCode) {
+      console.error("Code de projet vide");
+      return false;
+    }
+    
+    console.log(`Vérification de l'existence du projet avec le code: ${projectCode}`);
+    
     const { data, error } = await supabase
       .from('projets')
       .select('code')
       .eq('code', projectCode)
-      .single();
+      .limit(1);
       
     if (error) {
-      if (error.code === 'PGRST116') {
-        // Code d'erreur "No rows returned" de PostgREST
-        return false;
-      }
-      throw error;
+      console.error('Erreur lors de la vérification du projet:', error);
+      return false;
     }
     
-    return !!data;
+    const exists = data && data.length > 0;
+    console.log(`Projet ${projectCode} existe: ${exists}`);
+    return exists;
   } catch (error) {
     console.error('Erreur lors de la vérification de l\'existence du projet:', error);
     return false;

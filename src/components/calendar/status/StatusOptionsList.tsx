@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { RadioGroup } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { StatusOption } from '../StatusOption';
 import { ProjectSelector } from '../ProjectSelector';
 import { HighlightOption } from '../HighlightOption';
 import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface StatusOptionsListProps {
   statuses: StatusCode[];
@@ -41,6 +42,22 @@ export function StatusOptionsList({
   const isSubmitDisabled = 
     isValidating || 
     (selectedStatus === 'projet' && (!selectedProject || selectedProject === 'no-project' || !hasProjects));
+
+  // Vérifier la sélection du projet à chaque rendu ou changement de statut
+  useEffect(() => {
+    if (selectedStatus === 'projet') {
+      console.log('StatusOptionsList: Statut de projet sélectionné', { 
+        selectedProject, 
+        projectsAvailable: projects.length
+      });
+      
+      // Si aucun projet n'est sélectionné et qu'il y a des projets disponibles, sélectionner le premier projet
+      if ((!selectedProject || selectedProject === 'no-project' || selectedProject === 'select-project') && hasProjects) {
+        console.log('Aucun projet sélectionné mais des projets sont disponibles. Sélection du premier projet.');
+        onProjectChange(projects[0].code);
+      }
+    }
+  }, [selectedStatus, selectedProject, projects, hasProjects, onProjectChange]);
 
   return (
     <div className="space-y-6">
@@ -83,7 +100,14 @@ export function StatusOptionsList({
       />
       
       <Button 
-        onClick={onSubmit} 
+        onClick={() => {
+          // Validation supplémentaire avant l'appel à onSubmit
+          if (selectedStatus === 'projet' && (!selectedProject || selectedProject === 'no-project' || selectedProject === 'select-project')) {
+            toast.error("Veuillez sélectionner un projet");
+            return;
+          }
+          onSubmit();
+        }} 
         className="w-full"
         disabled={isSubmitDisabled}
       >

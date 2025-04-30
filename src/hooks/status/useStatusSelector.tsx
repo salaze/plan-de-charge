@@ -21,16 +21,20 @@ export function useStatusSelector({
   const [highlightedStatus, setHighlightedStatus] = useState(initialHighlighted);
   const [selectedProject, setSelectedProject] = useState(initialProjectCode || 'no-project');
   const [isValidating, setIsValidating] = useState(false);
+  const [projectValidated, setProjectValidated] = useState(false);
   
   // Reset form when new initial values are provided
   useEffect(() => {
     setSelectedStatus(initialStatus || 'none');
     setHighlightedStatus(initialHighlighted);
-    setSelectedProject(initialProjectCode || 'no-project');
     
-    // Log pour débogage
     if (initialProjectCode) {
       console.log(`useStatusSelector: initialProjectCode défini sur ${initialProjectCode}`);
+      setSelectedProject(initialProjectCode);
+      setProjectValidated(true); // Si un code de projet est fourni initialement, on suppose qu'il a déjà été validé
+    } else {
+      setSelectedProject('no-project');
+      setProjectValidated(false);
     }
   }, [initialStatus, initialHighlighted, initialProjectCode]);
   
@@ -40,14 +44,36 @@ export function useStatusSelector({
     // Reset project selection if the status is not "projet"
     if (newStatus !== 'projet') {
       setSelectedProject('no-project');
+      setProjectValidated(false);
     }
     
     console.log(`Statut sélectionné: ${newStatus}`);
   };
   
   const handleProjectChange = (projectCode: string) => {
+    if (!projectCode || projectCode === 'select-project') {
+      setSelectedProject('no-project');
+      setProjectValidated(false);
+      return;
+    }
+    
     setSelectedProject(projectCode);
     console.log(`Projet sélectionné: ${projectCode}`);
+    
+    // Vérifier immédiatement si le projet existe
+    if (selectedStatus === 'projet') {
+      checkProjectExists(projectCode)
+        .then(exists => {
+          setProjectValidated(exists);
+          if (!exists) {
+            toast.error(`Le projet avec le code ${projectCode} n'existe pas dans la base de données`);
+          }
+        })
+        .catch(err => {
+          console.error("Erreur lors de la vérification du projet:", err);
+          setProjectValidated(false);
+        });
+    }
   };
   
   const handleHighlightChange = (checked: boolean) => {
@@ -59,18 +85,19 @@ export function useStatusSelector({
     setIsValidating(true);
     
     try {
-      if (selectedStatus === 'projet' && (!selectedProject || selectedProject === 'no-project')) {
+      if (selectedStatus === 'projet' && (!selectedProject || selectedProject === 'no-project' || selectedProject === 'select-project')) {
         toast.error("Veuillez sélectionner un projet");
         return;
       }
       
       // Si le statut est "projet", vérifier que le projet existe dans la base de données
-      if (selectedStatus === 'projet' && selectedProject !== 'no-project') {
+      if (selectedStatus === 'projet' && !projectValidated) {
         const projectExists = await checkProjectExists(selectedProject);
         if (!projectExists) {
           toast.error(`Le projet avec le code ${selectedProject} n'existe pas dans la base de données`);
           return;
         }
+        setProjectValidated(true);
       }
       
       // Notify that we're still in edit mode to prevent automatic refreshes
@@ -96,6 +123,7 @@ export function useStatusSelector({
     highlightedStatus,
     selectedProject,
     isValidating,
+    projectValidated,
     handleStatusChange,
     handleProjectChange,
     handleHighlightChange,

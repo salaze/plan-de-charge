@@ -62,8 +62,7 @@ export const saveScheduleEntry = async (
     const { data, error } = await supabase
       .from('employe_schedule')
       .upsert(scheduleData, { 
-        onConflict: 'employe_id, date, period',
-        returning: 'representation'
+        onConflict: 'employe_id, date, period'
       });
       
     if (error) {

@@ -1,7 +1,10 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { fetchProjects } from '@/utils/supabase/projects';
+import { Skeleton } from '@/components/ui/skeleton';
+import { AlertCircle, Loader2 } from 'lucide-react';
 
 interface Project {
   id: string;
@@ -16,7 +19,92 @@ interface ProjectSelectorProps {
   onProjectChange: (projectCode: string) => void;
 }
 
-export function ProjectSelector({ projects, selectedProject, onProjectChange }: ProjectSelectorProps) {
+export function ProjectSelector({ projects: initialProjects, selectedProject, onProjectChange }: ProjectSelectorProps) {
+  const [projects, setProjects] = useState<Project[]>(initialProjects);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Récupérer les projets depuis Supabase à chaque montage du composant
+  useEffect(() => {
+    const loadProjects = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const fetchedProjects = await fetchProjects();
+        if (fetchedProjects && fetchedProjects.length > 0) {
+          setProjects(fetchedProjects);
+          console.log("Projets chargés depuis Supabase:", fetchedProjects);
+        } else {
+          // Utiliser les projets passés en prop si la requête échoue
+          console.log("Aucun projet trouvé dans Supabase, utilisation des projets fournis en props");
+        }
+      } catch (err) {
+        console.error("Erreur lors du chargement des projets:", err);
+        setError("Impossible de charger les projets");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadProjects();
+  }, []);
+  
+  // Si les props changent après le chargement initial, les utiliser comme fallback
+  useEffect(() => {
+    if (initialProjects.length > 0 && projects.length === 0) {
+      setProjects(initialProjects);
+    }
+  }, [initialProjects, projects.length]);
+  
+  if (isLoading) {
+    return (
+      <div className="space-y-3">
+        <Label>Sélectionner un projet</Label>
+        <div className="flex items-center gap-2">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          <span className="text-sm">Chargement des projets...</span>
+        </div>
+        <Skeleton className="h-10 w-full" />
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <div className="space-y-3">
+        <Label>Sélectionner un projet</Label>
+        <div className="flex items-center gap-2 text-destructive">
+          <AlertCircle className="h-4 w-4" />
+          <span className="text-sm">{error}</span>
+        </div>
+        <Select 
+          value={selectedProject || "select-project"} 
+          onValueChange={onProjectChange}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Choisir un projet" />
+          </SelectTrigger>
+          <SelectContent>
+            {initialProjects.map((project) => (
+              <SelectItem 
+                key={project.id} 
+                value={project.code || `project-${project.id}`}
+              >
+                <div className="flex items-center gap-2">
+                  <div 
+                    className="w-3 h-3 rounded-full" 
+                    style={{ backgroundColor: project.color }}
+                  />
+                  {project.code || project.id} - {project.name}
+                </div>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    );
+  }
+  
   return (
     <div className="space-y-3">
       <Label>Sélectionner un projet</Label>

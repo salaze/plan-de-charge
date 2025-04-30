@@ -4,8 +4,8 @@ import { MonthData } from '@/types';
 import { toast } from 'sonner';
 import { fetchEmployees } from '@/utils/supabase/employees';
 import { fetchSchedule } from '@/utils/supabase/schedule';
+import { fetchProjects } from '@/utils/supabase/projects';
 import { checkSupabaseConnection } from '@/utils/supabase/connection';
-import { getExistingProjects } from '@/utils/export/projectUtils';
 import { syncStatusesWithDatabase } from '@/utils/supabase/sync';
 
 export const usePlanningData = (currentYear?: number, currentMonth?: number) => {
@@ -64,7 +64,8 @@ export const usePlanningData = (currentYear?: number, currentMonth?: number) => 
       }
       
       // Récupérer les projets depuis Supabase
-      const projects = await getExistingProjects();
+      const projects = await fetchProjects();
+      console.log(`${projects.length} projets récupérés de Supabase`);
       
       setData({
         year: year,

@@ -10,7 +10,7 @@ export const fetchProjects = async (): Promise<Project[]> => {
     const { data: projects, error } = await supabase
       .from('projets')
       .select('*')
-      .order('created_at', { ascending: true });
+      .order('name', { ascending: true });
       
     if (error) {
       console.error("Erreur Supabase:", error);
@@ -18,11 +18,13 @@ export const fetchProjects = async (): Promise<Project[]> => {
     }
     
     console.log("Projets récupérés:", projects);
+    
+    // S'assurer que tous les champs nécessaires sont présents
     return projects.map(project => ({
       id: project.id,
-      code: project.code,
+      code: project.code || `projet-${project.id.substring(0,8)}`, // Assurer qu'un code est toujours présent
       name: project.name,
-      color: project.color
+      color: project.color || '#4CAF50' // Couleur par défaut si non définie
     }));
   } catch (error: any) {
     console.error('Erreur lors de la récupération des projets:', error);

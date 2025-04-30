@@ -87,11 +87,12 @@ export const useStatusUpdater = (
       });
 
       // Synchronisation avec Supabase
+      let success = false;
       if (status === '') {
-        await deleteScheduleEntry(employeeId, date, period);
+        success = await deleteScheduleEntry(employeeId, date, period);
         console.log(`Statut supprimé pour ${employeeId} à la date ${date}, période ${period}`);
       } else {
-        await saveScheduleEntry(employeeId, {
+        success = await saveScheduleEntry(employeeId, {
           date,
           status,
           period,
@@ -102,6 +103,11 @@ export const useStatusUpdater = (
         if (status === 'projet') {
           console.log(`Projet associé: ${projectCode}`);
         }
+      }
+      
+      if (!success) {
+        toast.error('Erreur lors de la mise à jour du statut dans Supabase');
+        return;
       }
       
       // Informer l'application qu'une mise à jour a eu lieu

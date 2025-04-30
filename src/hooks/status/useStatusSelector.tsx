@@ -62,16 +62,21 @@ export function useStatusSelector({
     
     // Vérifier immédiatement si le projet existe
     if (selectedStatus === 'projet') {
+      setIsValidating(true);
       checkProjectExists(projectCode)
         .then(exists => {
           setProjectValidated(exists);
+          setIsValidating(false);
           if (!exists) {
             toast.error(`Le projet avec le code ${projectCode} n'existe pas dans la base de données`);
+          } else {
+            console.log(`Projet ${projectCode} validé avec succès`);
           }
         })
         .catch(err => {
           console.error("Erreur lors de la vérification du projet:", err);
           setProjectValidated(false);
+          setIsValidating(false);
         });
     }
   };
@@ -87,17 +92,21 @@ export function useStatusSelector({
     try {
       if (selectedStatus === 'projet' && (!selectedProject || selectedProject === 'no-project' || selectedProject === 'select-project')) {
         toast.error("Veuillez sélectionner un projet");
+        setIsValidating(false);
         return;
       }
       
       // Si le statut est "projet", vérifier que le projet existe dans la base de données
       if (selectedStatus === 'projet' && !projectValidated) {
+        console.log("Vérification de l'existence du projet avant la sauvegarde...");
         const projectExists = await checkProjectExists(selectedProject);
         if (!projectExists) {
           toast.error(`Le projet avec le code ${selectedProject} n'existe pas dans la base de données`);
+          setIsValidating(false);
           return;
         }
         setProjectValidated(true);
+        console.log(`Projet ${selectedProject} validé avec succès`);
       }
       
       // Notify that we're still in edit mode to prevent automatic refreshes

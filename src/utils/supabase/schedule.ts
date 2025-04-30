@@ -59,22 +59,47 @@ export const saveScheduleEntry = async (
     
     console.log("Données préparées pour Supabase:", scheduleData);
     
-    const { data, error } = await supabase
+    // Vérifier si l'entrée existe déjà
+    const { data: existingData, error: checkError } = await supabase
       .from('employe_schedule')
-      .upsert(scheduleData, { 
-        onConflict: 'employe_id, date, period'
-      });
-      
-    if (error) {
-      console.error('Erreur Supabase lors de la sauvegarde:', error);
-      throw error;
+      .select('id')
+      .eq('employe_id', employeeId)
+      .eq('date', entry.date)
+      .eq('period', entry.period)
+      .maybeSingle();
+    
+    if (checkError) {
+      console.error('Erreur lors de la vérification de l\'existence de l\'entrée:', checkError);
+      throw checkError;
     }
     
-    console.log(`Entrée de planning sauvegardée avec succès pour l'employé ${employeeId}:`, data);
+    let result;
+    
+    if (existingData) {
+      // Mise à jour d'une entrée existante
+      console.log(`Mise à jour de l'entrée existante avec ID: ${existingData.id}`);
+      result = await supabase
+        .from('employe_schedule')
+        .update(scheduleData)
+        .eq('id', existingData.id);
+    } else {
+      // Insertion d'une nouvelle entrée
+      console.log('Création d\'une nouvelle entrée de planning');
+      result = await supabase
+        .from('employe_schedule')
+        .insert(scheduleData);
+    }
+    
+    if (result.error) {
+      console.error('Erreur Supabase lors de la sauvegarde:', result.error);
+      throw result.error;
+    }
+    
+    console.log(`Entrée de planning sauvegardée avec succès pour l'employé ${employeeId}`);
     
     // Dispatch an event to notify that the schedule has been updated
     const event = new CustomEvent('scheduleEntryUpdated', { 
-      detail: { employeeId, entry, response: data } 
+      detail: { employeeId, entry, response: result.data } 
     });
     window.dispatchEvent(event);
     

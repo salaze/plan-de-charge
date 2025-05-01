@@ -31,7 +31,23 @@ export function useStatusSelector({
     if (initialProjectCode) {
       console.log(`useStatusSelector: initialProjectCode défini sur ${initialProjectCode}`);
       setSelectedProject(initialProjectCode);
-      setProjectValidated(true); // Si un code de projet est fourni initialement, on suppose qu'il a déjà été validé
+      
+      // Valider immédiatement le projet s'il est fourni initialement
+      if (initialStatus === 'projet') {
+        checkProjectExists(initialProjectCode)
+          .then(exists => {
+            setProjectValidated(exists);
+            if (!exists) {
+              console.warn(`Le projet avec le code ${initialProjectCode} n'existe pas dans la base de données`);
+            }
+          })
+          .catch(err => {
+            console.error("Erreur lors de la validation initiale du projet:", err);
+            setProjectValidated(false);
+          });
+      } else {
+        setProjectValidated(true); // Si le statut n'est pas 'projet', pas besoin de valider
+      }
     } else {
       setSelectedProject('no-project');
       setProjectValidated(false);

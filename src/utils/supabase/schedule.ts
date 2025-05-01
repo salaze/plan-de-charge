@@ -46,6 +46,15 @@ export const saveScheduleEntry = async (
       return false;
     }
     
+    // Si c'est un statut de projet, vérifier que le projet existe
+    if (entry.status === 'projet' && entry.projectCode) {
+      const projectExists = await checkProjectExists(entry.projectCode);
+      if (!projectExists) {
+        console.error(`Le projet ${entry.projectCode} n'existe pas dans la base de données`);
+        return false;
+      }
+    }
+    
     // Préparation des données à sauvegarder
     const scheduleData = {
       employe_id: employeeId,

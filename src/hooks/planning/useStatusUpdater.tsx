@@ -86,27 +86,45 @@ export const useStatusUpdater = (
         };
       });
 
-      // Synchronisation avec Supabase
+      // Synchronisation avec Supabase avec triple tentative
       let success = false;
-      if (status === '') {
-        success = await deleteScheduleEntry(employeeId, date, period);
-        console.log(`Statut supprimé pour ${employeeId} à la date ${date}, période ${period}`);
-      } else {
-        success = await saveScheduleEntry(employeeId, {
-          date,
-          status,
-          period,
-          isHighlighted,
-          projectCode: status === 'projet' ? projectCode : undefined
-        });
-        console.log(`Statut ${status} enregistré pour ${employeeId} à la date ${date}, période ${period}`);
-        if (status === 'projet') {
-          console.log(`Projet associé: ${projectCode}`);
+      let attempts = 0;
+      const maxAttempts = 3;
+      
+      while (!success && attempts < maxAttempts) {
+        attempts++;
+        try {
+          if (status === '') {
+            success = await deleteScheduleEntry(employeeId, date, period);
+            console.log(`Statut supprimé pour ${employeeId} à la date ${date}, période ${period}`);
+          } else {
+            success = await saveScheduleEntry(employeeId, {
+              date,
+              status,
+              period,
+              isHighlighted,
+              projectCode: status === 'projet' ? projectCode : undefined
+            });
+            console.log(`Statut ${status} enregistré pour ${employeeId} à la date ${date}, période ${period}`);
+            if (status === 'projet') {
+              console.log(`Projet associé: ${projectCode}`);
+            }
+          }
+          
+          if (!success) {
+            console.log(`Tentative ${attempts}/${maxAttempts} échouée. Nouvelle tentative...`);
+            // Attendre un court délai avant de réessayer
+            await new Promise(resolve => setTimeout(resolve, 500));
+          }
+        } catch (error) {
+          console.error(`Erreur lors de la tentative ${attempts}/${maxAttempts}:`, error);
+          // Attendre un court délai avant de réessayer
+          await new Promise(resolve => setTimeout(resolve, 500));
         }
       }
       
       if (!success) {
-        toast.error('Erreur lors de la mise à jour du statut dans Supabase');
+        toast.error('Erreur lors de la mise à jour du statut dans Supabase après plusieurs tentatives');
         return;
       }
       

@@ -34,6 +34,16 @@ export function ProjectSelector({ projects: initialProjects, selectedProject, on
         if (fetchedProjects && fetchedProjects.length > 0) {
           setProjects(fetchedProjects);
           console.log("Projets chargés depuis Supabase:", fetchedProjects);
+          
+          // Si le projet sélectionné n'existe pas dans la liste des projets chargés,
+          // sélectionner automatiquement le premier projet
+          if (selectedProject !== 'select-project' && selectedProject !== 'no-project') {
+            const projectExists = fetchedProjects.some(p => p.code === selectedProject);
+            if (!projectExists && fetchedProjects.length > 0) {
+              console.log(`Le projet ${selectedProject} n'existe pas dans la liste. Sélection du premier projet.`);
+              onProjectChange(fetchedProjects[0].code);
+            }
+          }
         } else {
           // Utiliser les projets passés en prop si la requête échoue
           console.log("Aucun projet trouvé dans Supabase, utilisation des projets fournis en props");
@@ -47,7 +57,7 @@ export function ProjectSelector({ projects: initialProjects, selectedProject, on
     };
     
     loadProjects();
-  }, []);
+  }, [selectedProject, onProjectChange]);
   
   // Si les props changent après le chargement initial, les utiliser comme fallback
   useEffect(() => {

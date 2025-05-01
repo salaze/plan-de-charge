@@ -19,7 +19,7 @@ export function Header({
         <button className="md:hidden p-2" onClick={() => setIsSidebarOpen(!isSidebarOpen)} aria-label="Ouvrir/fermer le menu">
           <span className="material-icons">{isSidebarOpen ? "close" : "menu"}</span>
         </button>
-        <div className="text-lg font-bold text-primary">Planning
+        <div className="text-lg font-bold text-primary">Planning Activités
       </div>
       </div>
       

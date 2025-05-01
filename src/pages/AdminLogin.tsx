@@ -58,16 +58,7 @@ const AdminLogin = () => {
                 <AlertDescription>{error}</AlertDescription>
               </Alert>}
             
-            <Alert className="bg-muted/50">
-              <Info className="h-4 w-4" />
-              <AlertDescription>
-                <ul className="text-xs list-disc list-inside">
-                  <li>Employés: utilisez votre UID, email ou nom</li>
-                  <li>
-                </li>
-                </ul>
-              </AlertDescription>
-            </Alert>
+            
             
             <div className="space-y-2">
               <Label htmlFor="username">Identifiant</Label>

@@ -38,8 +38,8 @@ export function PlanningContent({
   }
 
   return (
-    <ScrollArea className="h-[calc(100vh-220px)] overflow-visible" type="always">
-      <div className="min-w-max pr-4 pb-4">
+    <div className="overflow-auto h-[calc(100vh-220px)]" style={{ overflowX: 'scroll', paddingBottom: '20px' }}>
+      <div className="min-w-max pr-4 pb-8">
         <PlanningGrid 
           year={year} 
           month={month} 
@@ -50,6 +50,6 @@ export function PlanningContent({
           onStatusDialogChange={onStatusDialogChange}
         />
       </div>
-    </ScrollArea>
+    </div>
   );
 }

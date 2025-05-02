@@ -11,8 +11,8 @@ interface ConnectionErrorProps {
 
 export function ConnectionError({ errorMessage, onRefresh }: ConnectionErrorProps) {
   return (
-    <ScrollArea className="h-[calc(100vh-220px)]">
-      <div className="glass-panel p-6 animate-scale-in">
+    <ScrollArea className="h-[calc(100vh-220px)]" type="always">
+      <div className="glass-panel p-6 animate-scale-in min-w-max pr-4 pb-4">
         <div className="flex flex-col items-center justify-center text-center p-6">
           <AlertCircle className="h-12 w-12 text-destructive mb-4" />
           <h3 className="text-xl font-bold mb-2">Erreur de connexion</h3>

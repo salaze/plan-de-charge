@@ -38,8 +38,8 @@ export function PlanningContent({
   }
 
   return (
-    <ScrollArea className="h-[calc(100vh-220px)]">
-      <div className="min-w-max">
+    <ScrollArea className="h-[calc(100vh-220px)] overflow-visible" type="always">
+      <div className="min-w-max pr-4 pb-4">
         <PlanningGrid 
           year={year} 
           month={month} 

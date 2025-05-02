@@ -84,35 +84,71 @@ export const saveScheduleEntry = async (
     
     let result;
     
-    if (existingData) {
-      // Mise à jour d'une entrée existante
-      console.log(`Mise à jour de l'entrée existante avec ID: ${existingData.id}`);
-      result = await supabase
-        .from('employe_schedule')
-        .update(scheduleData)
-        .eq('id', existingData.id);
-    } else {
-      // Insertion d'une nouvelle entrée
-      console.log('Création d\'une nouvelle entrée de planning');
-      result = await supabase
-        .from('employe_schedule')
-        .insert(scheduleData);
+    try {
+      if (existingData) {
+        // Mise à jour d'une entrée existante
+        console.log(`Mise à jour de l'entrée existante avec ID: ${existingData.id}`);
+        result = await supabase
+          .from('employe_schedule')
+          .update(scheduleData)
+          .eq('id', existingData.id)
+          .select();
+      } else {
+        // Insertion d'une nouvelle entrée
+        console.log('Création d\'une nouvelle entrée de planning');
+        result = await supabase
+          .from('employe_schedule')
+          .insert(scheduleData)
+          .select();
+      }
+      
+      if (result.error) {
+        console.error('Erreur Supabase lors de la sauvegarde:', result.error);
+        throw result.error;
+      }
+      
+      console.log(`Entrée de planning sauvegardée avec succès pour l'employé ${employeeId}`, result.data);
+      
+      // Dispatch an event to notify that the schedule has been updated
+      const event = new CustomEvent('scheduleEntryUpdated', { 
+        detail: { employeeId, entry, response: result.data } 
+      });
+      window.dispatchEvent(event);
+      
+      return true;
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
+      
+      // En cas d'erreur d'autorisation, on essaie de vérifier si les politiques RLS sont activées
+      if (error instanceof Error && error.message.includes('row-level security')) {
+        console.warn("Problème possible avec les politiques RLS. Tentative de mise à jour forcée...");
+        
+        // Tentative de réinitialisation de la connexion
+        await supabase.auth.refreshSession();
+        
+        // Nouvelle tentative après réinitialisation
+        if (existingData) {
+          result = await supabase
+            .from('employe_schedule')
+            .update(scheduleData)
+            .eq('id', existingData.id);
+        } else {
+          result = await supabase
+            .from('employe_schedule')
+            .insert(scheduleData);
+        }
+        
+        if (result.error) {
+          console.error('Erreur persistante après tentative de récupération:', result.error);
+          throw result.error;
+        }
+        
+        console.log("Récupération réussie après erreur RLS initiale");
+        return true;
+      }
+      
+      throw error;
     }
-    
-    if (result.error) {
-      console.error('Erreur Supabase lors de la sauvegarde:', result.error);
-      throw result.error;
-    }
-    
-    console.log(`Entrée de planning sauvegardée avec succès pour l'employé ${employeeId}`);
-    
-    // Dispatch an event to notify that the schedule has been updated
-    const event = new CustomEvent('scheduleEntryUpdated', { 
-      detail: { employeeId, entry, response: result.data } 
-    });
-    window.dispatchEvent(event);
-    
-    return true;
   } catch (error) {
     console.error('Error saving schedule entry:', error);
     throw error;
@@ -127,29 +163,61 @@ export const deleteScheduleEntry = async (
   try {
     console.log(`Suppression d'une entrée de planning pour l'employé ${employeeId} à la date ${date}, période ${period}`);
     
-    const { error } = await supabase
-      .from('employe_schedule')
-      .delete()
-      .match({
-        employe_id: employeeId,
-        date,
-        period
-      });
+    try {
+      const { error } = await supabase
+        .from('employe_schedule')
+        .delete()
+        .match({
+          employe_id: employeeId,
+          date,
+          period
+        });
+        
+      if (error) {
+        console.error('Erreur lors de la suppression:', error);
+        throw error;
+      }
       
-    if (error) {
+      console.log('Entrée de planning supprimée avec succès');
+      
+      // Dispatch an event to notify that a schedule entry has been deleted
+      const event = new CustomEvent('scheduleEntryDeleted', { 
+        detail: { employeeId, date, period } 
+      });
+      window.dispatchEvent(event);
+      
+      return true;
+    } catch (error) {
       console.error('Erreur lors de la suppression:', error);
+      
+      // En cas d'erreur d'autorisation, on essaie de vérifier si les politiques RLS sont activées
+      if (error instanceof Error && error.message.includes('row-level security')) {
+        console.warn("Problème possible avec les politiques RLS. Tentative de mise à jour forcée...");
+        
+        // Tentative de réinitialisation de la connexion
+        await supabase.auth.refreshSession();
+        
+        // Nouvelle tentative après réinitialisation
+        const { error: retryError } = await supabase
+          .from('employe_schedule')
+          .delete()
+          .match({
+            employe_id: employeeId,
+            date,
+            period
+          });
+          
+        if (retryError) {
+          console.error('Erreur persistante après tentative de récupération:', retryError);
+          throw retryError;
+        }
+        
+        console.log("Suppression réussie après erreur RLS initiale");
+        return true;
+      }
+      
       throw error;
     }
-    
-    console.log('Entrée de planning supprimée avec succès');
-    
-    // Dispatch an event to notify that a schedule entry has been deleted
-    const event = new CustomEvent('scheduleEntryDeleted', { 
-      detail: { employeeId, date, period } 
-    });
-    window.dispatchEvent(event);
-    
-    return true;
   } catch (error) {
     console.error('Erreur lors de la suppression de l\'entrée de planning:', error);
     throw error;
@@ -182,6 +250,30 @@ export const checkProjectExists = async (projectCode: string): Promise<boolean> 
     return exists;
   } catch (error) {
     console.error('Erreur lors de la vérification de l\'existence du projet:', error);
+    return false;
+  }
+};
+
+// Fonction pour tester la connexion RLS
+export const testRLSConnection = async (): Promise<boolean> => {
+  try {
+    console.log("Test de connexion RLS...");
+    
+    // Tester une simple opération de lecture pour vérifier les RLS
+    const { data, error } = await supabase
+      .from('employe_schedule')
+      .select('id')
+      .limit(1);
+      
+    if (error) {
+      console.error("Erreur de connexion RLS:", error);
+      return false;
+    }
+    
+    console.log("Connexion RLS OK");
+    return true;
+  } catch (error) {
+    console.error("Erreur lors du test de connexion RLS:", error);
     return false;
   }
 };

@@ -86,17 +86,19 @@ export const useStatusUpdater = (
         };
       });
 
-      // Synchronisation avec Supabase avec triple tentative
+      // Synchronisation avec Supabase avec triple tentative et délai exponentiel
       let success = false;
       let attempts = 0;
-      const maxAttempts = 3;
+      const maxAttempts = 5; // Augmentation du nombre de tentatives
       
       while (!success && attempts < maxAttempts) {
         attempts++;
         try {
+          const backoffDelay = Math.min(1000 * Math.pow(2, attempts - 1), 8000); // Délai exponentiel avec plafond
+          
           if (status === '') {
             success = await deleteScheduleEntry(employeeId, date, period);
-            console.log(`Statut supprimé pour ${employeeId} à la date ${date}, période ${period}`);
+            console.log(`Statut supprimé pour ${employeeId} à la date ${date}, période ${period} (tentative ${attempts}/${maxAttempts})`);
           } else {
             success = await saveScheduleEntry(employeeId, {
               date,
@@ -105,21 +107,22 @@ export const useStatusUpdater = (
               isHighlighted,
               projectCode: status === 'projet' ? projectCode : undefined
             });
-            console.log(`Statut ${status} enregistré pour ${employeeId} à la date ${date}, période ${period}`);
+            console.log(`Statut ${status} enregistré pour ${employeeId} à la date ${date}, période ${period} (tentative ${attempts}/${maxAttempts})`);
             if (status === 'projet') {
               console.log(`Projet associé: ${projectCode}`);
             }
           }
           
           if (!success) {
-            console.log(`Tentative ${attempts}/${maxAttempts} échouée. Nouvelle tentative...`);
-            // Attendre un court délai avant de réessayer
-            await new Promise(resolve => setTimeout(resolve, 500));
+            console.log(`Tentative ${attempts}/${maxAttempts} échouée. Nouvelle tentative dans ${backoffDelay}ms...`);
+            // Attendre avec un délai exponentiel avant de réessayer
+            await new Promise(resolve => setTimeout(resolve, backoffDelay));
           }
         } catch (error) {
           console.error(`Erreur lors de la tentative ${attempts}/${maxAttempts}:`, error);
-          // Attendre un court délai avant de réessayer
-          await new Promise(resolve => setTimeout(resolve, 500));
+          // Attendre avec un délai exponentiel avant de réessayer
+          const backoffDelay = Math.min(1000 * Math.pow(2, attempts - 1), 8000);
+          await new Promise(resolve => setTimeout(resolve, backoffDelay));
         }
       }
       

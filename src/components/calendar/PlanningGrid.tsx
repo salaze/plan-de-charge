@@ -69,7 +69,7 @@ export function PlanningGrid({
   const days = generateDaysInMonth(safeYear, safeMonth);
   
   // Get visible days based on screen size
-  const visibleDays = getVisibleDays(days, safeYear, safeMonth);
+  const visibleDays = days; // Afficher tous les jours pour permettre le défilement
   
   // Handler for status changes
   const handleStatusChange = (status: StatusCode, isHighlighted?: boolean, projectCode?: string) => {
@@ -112,8 +112,8 @@ export function PlanningGrid({
   
   return (
     <>
-      <div className="overflow-x-auto -mx-2 sm:mx-0">
-        <Table className="border rounded-lg bg-white dark:bg-gray-900 shadow-sm min-w-full">
+      <div className="w-full">
+        <Table className="border rounded-lg bg-white dark:bg-gray-900 shadow-sm w-full">
           <PlanningGridHeader days={visibleDays} />
           
           <TableBody>

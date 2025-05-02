@@ -2,6 +2,7 @@
 import React from 'react';
 import { PlanningGrid } from '@/components/calendar/PlanningGrid';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface PlanningContentProps {
   loading: boolean;
@@ -37,14 +38,18 @@ export function PlanningContent({
   }
 
   return (
-    <PlanningGrid 
-      year={year} 
-      month={month} 
-      employees={employees || []}
-      projects={projects || []}
-      onStatusChange={onStatusChange}
-      isAdmin={isAdmin}
-      onStatusDialogChange={onStatusDialogChange}
-    />
+    <ScrollArea className="h-[calc(100vh-220px)]">
+      <div className="min-w-max">
+        <PlanningGrid 
+          year={year} 
+          month={month} 
+          employees={employees || []}
+          projects={projects || []}
+          onStatusChange={onStatusChange}
+          isAdmin={isAdmin}
+          onStatusDialogChange={onStatusDialogChange}
+        />
+      </div>
+    </ScrollArea>
   );
 }

@@ -28,13 +28,13 @@ export function PlanningGridHeader({ days }: PlanningGridHeaderProps) {
           <TableHead 
             key={index}
             colSpan={2}
-            className={`text-center min-w-[120px] ${isWeekendDay(day) ? 'bg-gray-200 dark:bg-gray-700' : ''}`}
+            className={`text-center whitespace-nowrap min-w-[120px] ${isWeekendDay(day) ? 'bg-gray-200 dark:bg-gray-700' : ''}`}
           >
             <div className="calendar-day text-xs sm:text-sm">{getDayName(day, true)}</div>
             <div className="calendar-date text-xs sm:text-sm">{day.getDate()}</div>
           </TableHead>
         ))}
-        <TableHead className="text-center min-w-[60px] sm:min-w-[100px]">Total</TableHead>
+        <TableHead className="text-center min-w-[60px] sm:min-w-[100px] sticky right-0 bg-secondary z-20">Total</TableHead>
       </TableRow>
       <TableRow className="hover:bg-secondary">
         <TableHead className="sticky left-0 bg-secondary z-20"></TableHead>
@@ -52,7 +52,7 @@ export function PlanningGridHeader({ days }: PlanningGridHeaderProps) {
             </TableHead>
           </React.Fragment>
         ))}
-        <TableHead></TableHead>
+        <TableHead className="sticky right-0 bg-secondary z-20"></TableHead>
       </TableRow>
     </TableHeader>
   );

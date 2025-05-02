@@ -37,7 +37,7 @@ const Index = () => {
   
   return (
     <Layout>
-      <div className="space-y-6 animate-fade-in">
+      <div className="space-y-4 animate-fade-in h-[calc(100vh-80px)] flex flex-col">
         <PlanningHeader
           year={currentYear}
           month={currentMonth}
@@ -59,7 +59,7 @@ const Index = () => {
             onRefresh={handleReconnect}
           />
         ) : (
-          <div className="glass-panel p-1 md:p-4 animate-scale-in overflow-x-auto">
+          <div className="glass-panel p-1 md:p-4 animate-scale-in flex-1 overflow-hidden">
             <PlanningContent
               loading={loading}
               employees={data.employees || []}

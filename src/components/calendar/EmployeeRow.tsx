@@ -44,7 +44,7 @@ export function EmployeeRow({
   return (
     <TableRow key={employee.id} className="hover:bg-muted/30 group">
       {/* Employee name cell - always visible and sticky */}
-      <TableCell className="sticky left-0 bg-white dark:bg-gray-900 font-medium group-hover:bg-muted/30 truncate max-w-[200px]">
+      <TableCell className="sticky left-0 bg-white dark:bg-gray-900 font-medium group-hover:bg-muted/30 truncate max-w-[200px] z-10">
         {employee.name}
       </TableCell>
       
@@ -91,7 +91,7 @@ export function EmployeeRow({
       })}
       
       {/* Total stats for this employee */}
-      <TableCell className="text-right font-medium sticky right-0 bg-white dark:bg-gray-900">
+      <TableCell className="text-right font-medium sticky right-0 bg-white dark:bg-gray-900 z-10">
         {totalStats.toFixed(1)}
       </TableCell>
     </TableRow>

@@ -103,7 +103,7 @@ export const useSettings = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [settings, keyMapping]);
   
   // Update a single setting value
   const updateSetting = useCallback(async <K extends keyof SettingsState>(
@@ -136,6 +136,7 @@ export const useSettings = () => {
       }
       
       toast.success(`Setting "${key}" updated successfully`);
+      return true;
     } catch (err: any) {
       console.error(`Error updating ${key}:`, err);
       
@@ -145,7 +146,6 @@ export const useSettings = () => {
       toast.error(`Failed to update ${key}: ${err.message || 'Unknown error'}`);
       return false;
     }
-    return true;
   }, [reverseKeyMapping, loadSettings]);
   
   // Load settings on initial mount

@@ -103,7 +103,7 @@ export const useSettings = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [settings, keyMapping]);
+  }, [keyMapping]);
   
   // Update a single setting value
   const updateSetting = useCallback(async <K extends keyof SettingsState>(

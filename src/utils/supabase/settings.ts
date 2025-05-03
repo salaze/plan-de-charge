@@ -1,6 +1,10 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { Database } from '@/integrations/supabase/types';
+
+// Define the type for app_settings table
+type AppSetting = Database['public']['Tables']['app_settings']['Insert'];
 
 /**
  * Checks if the app_settings table exists and creates it if needed
@@ -42,7 +46,7 @@ export const ensureSettingsTableExists = async (): Promise<boolean> => {
  * Initializes default settings if they don't exist
  */
 const initializeDefaultSettings = async (): Promise<void> => {
-  const defaultSettings = [
+  const defaultSettings: AppSetting[] = [
     { key: 'theme', value: 'system', description: 'Default theme for the application' },
     { key: 'notifications_enabled', value: 'true', description: 'Enable system notifications' },
     { key: 'auto_backup', value: 'true', description: 'Automatically backup data daily' },

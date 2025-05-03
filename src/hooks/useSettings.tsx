@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { ensureSettingsTableExists } from '@/utils/supabase/settings';
 
 // Define the types for our settings
 export type AppSetting = {
@@ -23,8 +24,8 @@ export type SettingsState = {
 // Convert from string value to appropriate type for UI
 const parseSettingValue = (key: string, value: string): any => {
   switch (key) {
-    case 'notificationsEnabled':
-    case 'autoBackup':
+    case 'notifications_enabled':
+    case 'auto_backup':
     case 'maintenance_mode':
       return value === 'true';
     default:
@@ -75,6 +76,13 @@ export const useSettings = () => {
     try {
       setIsLoading(true);
       setError(null);
+      
+      // First ensure the settings table exists
+      const tableExists = await ensureSettingsTableExists();
+      if (!tableExists) {
+        setError("Could not ensure settings table exists");
+        return;
+      }
       
       const { data, error } = await supabase
         .from('app_settings')

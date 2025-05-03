@@ -20,7 +20,7 @@ export const ensureSettingsTableExists = async (): Promise<boolean> => {
     // If error, the table might not exist
     console.log('Settings table might not exist, attempting to create it...');
     
-    // Create the table
+    // Create the table - Fix: Removing the string argument as the RPC function doesn't accept arguments
     const { error: createError } = await supabase
       .rpc('create_settings_table_if_not_exists');
       

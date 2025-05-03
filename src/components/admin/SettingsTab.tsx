@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -8,14 +8,12 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Database, Server, Sliders } from 'lucide-react';
+import { Database, Server, Sliders, RefreshCw } from 'lucide-react';
+import { useSettings } from '@/hooks/useSettings';
+import { supabase } from '@/integrations/supabase/client';
 
 export function SettingsTab() {
-  const [maintenanceMode, setMaintenanceMode] = useState(false);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [autoBackup, setAutoBackup] = useState(true);
-  const [theme, setTheme] = useState('system');
-  const [maxEmployees, setMaxEmployees] = useState('50');
+  const { settings, isLoading, error, updateSetting, reloadSettings } = useSettings();
   
   const handleSaveGeneralSettings = () => {
     toast.success('Paramètres généraux enregistrés');
@@ -25,13 +23,13 @@ export function SettingsTab() {
     toast.success('Paramètres de performance enregistrés');
   };
   
-  const handleMaintenanceModeToggle = () => {
-    const newValue = !maintenanceMode;
-    setMaintenanceMode(newValue);
+  const handleMaintenanceModeToggle = async () => {
+    const newValue = !settings.maintenanceMode;
+    const success = await updateSetting('maintenanceMode', newValue);
     
-    if (newValue) {
+    if (success && newValue) {
       toast.warning('Mode maintenance activé - L\'application sera en lecture seule');
-    } else {
+    } else if (success) {
       toast.success('Mode maintenance désactivé');
     }
   };
@@ -42,6 +40,55 @@ export function SettingsTab() {
       toast.success('Sauvegarde effectuée avec succès');
     }, 2000);
   };
+
+  if (isLoading) {
+    return (
+      <div className="grid gap-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <div>
+              <CardTitle className="text-2xl">Chargement des paramètres...</CardTitle>
+              <CardDescription>
+                Récupération des paramètres depuis la base de données
+              </CardDescription>
+            </div>
+            <RefreshCw className="h-5 w-5 text-muted-foreground animate-spin" />
+          </CardHeader>
+          <CardContent className="h-48 flex items-center justify-center">
+            <p className="text-muted-foreground">Chargement en cours...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="grid gap-6">
+        <Card className="border-destructive/50">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <div>
+              <CardTitle className="text-2xl text-destructive">Erreur de chargement</CardTitle>
+              <CardDescription>
+                Impossible de récupérer les paramètres
+              </CardDescription>
+            </div>
+            <Server className="h-5 w-5 text-destructive" />
+          </CardHeader>
+          <CardContent>
+            <p className="text-destructive">{error}</p>
+            <Button 
+              onClick={reloadSettings} 
+              className="mt-4"
+              variant="outline"
+            >
+              Réessayer
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="grid gap-6">
@@ -65,8 +112,8 @@ export function SettingsTab() {
                 </p>
               </div>
               <Select 
-                value={theme}
-                onValueChange={setTheme}
+                value={settings.theme}
+                onValueChange={(value) => updateSetting('theme', value)}
               >
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Choisir..." />
@@ -90,8 +137,8 @@ export function SettingsTab() {
               </div>
               <Switch 
                 id="notifications" 
-                checked={notificationsEnabled}
-                onCheckedChange={setNotificationsEnabled}
+                checked={settings.notificationsEnabled}
+                onCheckedChange={(checked) => updateSetting('notificationsEnabled', checked)}
               />
             </div>
             
@@ -108,13 +155,17 @@ export function SettingsTab() {
                 id="max-employees"
                 className="w-[180px]" 
                 type="number"
-                value={maxEmployees}
-                onChange={(e) => setMaxEmployees(e.target.value)}
+                value={settings.maxEmployees}
+                onChange={(e) => updateSetting('maxEmployees', e.target.value)}
               />
             </div>
           </div>
         </CardContent>
         <CardFooter>
+          <Button onClick={reloadSettings} variant="outline" className="mr-2">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Actualiser
+          </Button>
           <Button onClick={handleSaveGeneralSettings}>Enregistrer les modifications</Button>
         </CardFooter>
       </Card>
@@ -139,8 +190,8 @@ export function SettingsTab() {
             </div>
             <Switch 
               id="auto-backup" 
-              checked={autoBackup}
-              onCheckedChange={setAutoBackup}
+              checked={settings.autoBackup}
+              onCheckedChange={(checked) => updateSetting('autoBackup', checked)}
             />
           </div>
           
@@ -172,7 +223,7 @@ export function SettingsTab() {
             </div>
             <Switch 
               id="maintenance-mode" 
-              checked={maintenanceMode}
+              checked={settings.maintenanceMode}
               onCheckedChange={handleMaintenanceModeToggle}
             />
           </div>

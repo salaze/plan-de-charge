@@ -109,7 +109,7 @@ export const useSettings = () => {
   const updateSetting = useCallback(async <K extends keyof SettingsState>(
     key: K, 
     value: SettingsState[K]
-  ) => {
+  ): Promise<boolean> => {
     try {
       // Validate the key exists in our mapping
       if (!reverseKeyMapping[key]) {

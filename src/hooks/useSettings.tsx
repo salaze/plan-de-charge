@@ -71,7 +71,7 @@ export const useSettings = () => {
   };
   
   // Load all settings from Supabase
-  const loadSettings = useCallback(async () => {
+  const loadSettings = useCallback(async (): Promise<void> => {
     try {
       setIsLoading(true);
       setError(null);

@@ -90,7 +90,7 @@ export const useSettings = () => {
         data.forEach((item: AppSetting) => {
           const stateKey = keyMapping[item.key];
           if (stateKey) {
-            newSettings[stateKey] = parseSettingValue(stateKey, item.value);
+            (newSettings[stateKey] as any) = parseSettingValue(stateKey, item.value);
           }
         });
         

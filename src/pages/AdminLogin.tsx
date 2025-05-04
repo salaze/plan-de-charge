@@ -47,10 +47,8 @@ const AdminLogin = () => {
               <Lock className="h-6 w-6 text-primary" />
             </div>
           </div>
-          <CardTitle className="text-center text-2xl">Connexion</CardTitle>
-          <CardDescription className="text-center">
-            Connectez-vous pour accéder à l'application
-          </CardDescription>
+          <CardTitle className="text-center text-2xl">Espace Administrateur</CardTitle>
+          <CardDescription className="text-center">Connectez-vous pour accéder à l'interface d'administration</CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">

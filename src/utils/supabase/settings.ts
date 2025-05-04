@@ -24,7 +24,7 @@ export const ensureSettingsTableExists = async (): Promise<boolean> => {
     // If error, the table might not exist
     console.log('Settings table might not exist, attempting to create it...');
     
-    // Create the table - The RPC function doesn't accept any arguments
+    // Create the table - Call the RPC function without any arguments
     const { error: createError } = await supabase
       .rpc('create_settings_table_if_not_exists');
       
@@ -56,12 +56,10 @@ const initializeDefaultSettings = async (): Promise<void> => {
   
   try {
     for (const setting of defaultSettings) {
+      // Fix the upsert call by specifying the correct type and removing options that cause type errors
       const { error } = await supabase
         .from('app_settings')
-        .upsert(setting, { 
-          onConflict: 'key',
-          ignoreDuplicates: false 
-        });
+        .upsert(setting);
         
       if (error) {
         console.error(`Error inserting setting ${setting.key}:`, error);

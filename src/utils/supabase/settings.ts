@@ -26,7 +26,7 @@ export const ensureSettingsTableExists = async (): Promise<boolean> => {
     
     // Appeler la fonction RPC pour créer la table sans paramètres
     const { error: createError } = await supabase
-      .rpc('create_settings_table_if_not_exists', {});
+      .rpc('create_settings_table_if_not_exists');
       
     if (createError) {
       console.error('Failed to create settings table:', createError);
@@ -58,7 +58,7 @@ const initializeDefaultSettings = async (): Promise<void> => {
     // Insérer tous les paramètres par défaut en une seule opération
     const { error } = await supabase
       .from('app_settings')
-      .insert(defaultSettings);
+      .upsert(defaultSettings, { onConflict: ['key'] });
       
     if (error) {
       console.error('Error inserting default settings:', error);

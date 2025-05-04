@@ -1,31 +1,20 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-import { ensureSettingsTableExists } from '@/utils/supabase/settings';
+import { getAllSettings, updateSetting as updateSettingApi } from '@/utils/supabase/settings';
 
-// Define the types for our settings
-export type AppSetting = {
-  id: string;
-  key: string;
-  value: string;
-  description: string | null;
-};
-
-// Define a type for the settings we're tracking in the UI
+// Type pour les paramètres dans le state
 export type SettingsState = {
   theme: string;
-  notificationsEnabled: boolean;
-  autoBackup: boolean;
-  maxEmployees: string;
+  showWeekends: boolean;
+  autoSave: boolean;
   maintenanceMode: boolean;
 };
 
-// Convert from string value to appropriate type for UI
-const parseSettingValue = (key: string, value: string): any => {
-  switch (key) {
-    case 'notifications_enabled':
-    case 'auto_backup':
+// Parse une valeur string en type approprié
+const parseSettingValue = (name: string, value: string): any => {
+  switch (name) {
+    case 'show_weekends':
+    case 'auto_save':
     case 'maintenance_mode':
       return value === 'true';
     default:
@@ -33,130 +22,96 @@ const parseSettingValue = (key: string, value: string): any => {
   }
 };
 
-// Convert from UI value to string for storage
-const stringifySettingValue = (value: any): string => {
-  if (typeof value === 'boolean') {
-    return value ? 'true' : 'false';
-  }
-  return String(value);
-};
-
 export const useSettings = () => {
+  // Valeurs par défaut
   const [settings, setSettings] = useState<SettingsState>({
     theme: 'system',
-    notificationsEnabled: true,
-    autoBackup: true,
-    maxEmployees: '50',
+    showWeekends: true,
+    autoSave: true,
     maintenanceMode: false,
   });
   
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   
-  // Map from database keys to state keys
-  const keyMapping: Record<string, keyof SettingsState> = {
+  // Mapping entre les noms de paramètres dans la BDD et dans le state
+  const settingNameMapping: Record<string, keyof SettingsState> = {
     'theme': 'theme',
-    'notifications_enabled': 'notificationsEnabled',
-    'auto_backup': 'autoBackup',
-    'max_employees': 'maxEmployees',
+    'show_weekends': 'showWeekends',
+    'auto_save': 'autoSave',
     'maintenance_mode': 'maintenanceMode',
   };
   
-  // Map from state keys to database keys (reverse mapping)
-  const reverseKeyMapping: Record<keyof SettingsState, string> = {
+  // Mapping inverse
+  const reverseNameMapping: Record<keyof SettingsState, string> = {
     'theme': 'theme',
-    'notificationsEnabled': 'notifications_enabled',
-    'autoBackup': 'auto_backup',
-    'maxEmployees': 'max_employees',
+    'showWeekends': 'show_weekends',
+    'autoSave': 'auto_save',
     'maintenanceMode': 'maintenance_mode',
   };
   
-  // Load all settings from Supabase
+  // Charger tous les paramètres
   const loadSettings = useCallback(async (): Promise<void> => {
     try {
       setIsLoading(true);
       setError(null);
       
-      // First ensure the settings table exists
-      const tableExists = await ensureSettingsTableExists();
-      if (!tableExists) {
-        setError("Could not ensure settings table exists");
-        return;
-      }
-      
-      const { data, error } = await supabase
-        .from('app_settings')
-        .select('*');
-        
-      if (error) {
-        throw error;
-      }
+      const data = await getAllSettings();
       
       if (data && data.length > 0) {
         const newSettings = { ...settings };
         
-        data.forEach((item: AppSetting) => {
-          const stateKey = keyMapping[item.key];
+        data.forEach((item) => {
+          const stateKey = settingNameMapping[item.name];
           if (stateKey) {
-            (newSettings[stateKey] as any) = parseSettingValue(item.key, item.value);
+            (newSettings[stateKey] as any) = parseSettingValue(item.name, item.value);
           }
         });
         
         setSettings(newSettings);
       }
     } catch (err: any) {
-      console.error('Error loading settings:', err);
-      setError(err.message || 'Error loading settings');
-      toast.error('Failed to load settings from database');
+      console.error('Erreur lors du chargement des paramètres:', err);
+      setError(err.message || 'Erreur lors du chargement des paramètres');
     } finally {
       setIsLoading(false);
     }
-  }, [keyMapping]);
+  }, []);
   
-  // Update a single setting value
+  // Mettre à jour un paramètre
   const updateSetting = useCallback(async <K extends keyof SettingsState>(
     key: K, 
     value: SettingsState[K]
   ): Promise<boolean> => {
     try {
-      // Validate the key exists in our mapping
-      if (!reverseKeyMapping[key]) {
-        throw new Error(`Invalid setting key: ${key}`);
+      // Valider que la clé existe dans notre mapping
+      if (!reverseNameMapping[key]) {
+        throw new Error(`Clé de paramètre invalide: ${key}`);
       }
       
-      // Update local state immediately for responsiveness
+      // Mettre à jour l'état local immédiatement pour la réactivité
       setSettings(prev => ({
         ...prev,
         [key]: value
       }));
       
-      // Convert the value to string for database storage
-      const stringValue = stringifySettingValue(value);
+      // Convertir la valeur en string pour le stockage
+      const stringValue = typeof value === 'boolean' ? String(value) : value;
       
-      // Update in database
-      const { error } = await supabase
-        .from('app_settings')
-        .update({ value: stringValue })
-        .eq('key', reverseKeyMapping[key]);
-        
-      if (error) {
-        throw error;
-      }
+      // Mettre à jour dans la BDD
+      const success = await updateSettingApi(reverseNameMapping[key], stringValue as string);
       
-      toast.success(`Setting "${key}" updated successfully`);
-      return true;
+      return success;
     } catch (err: any) {
-      console.error(`Error updating ${key}:`, err);
+      console.error(`Erreur lors de la mise à jour de ${key}:`, err);
       
-      // Revert local state on error
+      // Recharger les paramètres en cas d'erreur pour rétablir l'état correct
       loadSettings();
-      
-      toast.error(`Failed to update ${key}: ${err.message || 'Unknown error'}`);
       return false;
     }
-  }, [reverseKeyMapping, loadSettings]);
+  }, [reverseNameMapping, loadSettings]);
   
-  // Load settings on initial mount
+  // Charger les paramètres au montage du composant
   useEffect(() => {
     loadSettings();
   }, [loadSettings]);

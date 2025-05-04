@@ -14,7 +14,7 @@ export type Database = {
           created_at: string | null
           description: string | null
           id: string
-          key: string
+          name: string
           updated_at: string | null
           value: string
         }
@@ -22,7 +22,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: string
-          key: string
+          name: string
           updated_at?: string | null
           value: string
         }
@@ -30,7 +30,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: string
-          key?: string
+          name?: string
           updated_at?: string | null
           value?: string
         }

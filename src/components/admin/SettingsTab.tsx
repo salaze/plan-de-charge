@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -9,13 +8,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { RefreshCw, Settings as SettingsIcon } from 'lucide-react';
 import { useSettings } from '@/hooks/useSettings';
-
 export function SettingsTab() {
-  const { settings, isLoading, error, updateSetting, reloadSettings } = useSettings();
-  
+  const {
+    settings,
+    isLoading,
+    error,
+    updateSetting,
+    reloadSettings
+  } = useSettings();
   if (isLoading) {
-    return (
-      <div className="grid gap-6">
+    return <div className="grid gap-6">
         <Card>
           <CardHeader>
             <CardTitle>Chargement des paramètres...</CardTitle>
@@ -24,13 +26,10 @@ export function SettingsTab() {
             <RefreshCw className="h-5 w-5 animate-spin" />
           </CardContent>
         </Card>
-      </div>
-    );
+      </div>;
   }
-
   if (error) {
-    return (
-      <div className="grid gap-6">
+    return <div className="grid gap-6">
         <Card className="border-destructive/50">
           <CardHeader>
             <CardTitle className="text-destructive">Erreur</CardTitle>
@@ -45,12 +44,9 @@ export function SettingsTab() {
             </Button>
           </CardContent>
         </Card>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="grid gap-6">
+  return <div className="grid gap-6">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
           <div>
@@ -70,10 +66,7 @@ export function SettingsTab() {
                   Thème par défaut de l'application
                 </p>
               </div>
-              <Select 
-                value={settings.theme}
-                onValueChange={(value) => updateSetting('theme', value)}
-              >
+              <Select value={settings.theme} onValueChange={value => updateSetting('theme', value)}>
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Choisir..." />
                 </SelectTrigger>
@@ -87,19 +80,7 @@ export function SettingsTab() {
             
             <Separator />
             
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="showWeekends">Afficher les weekends</Label>
-                <p className="text-sm text-muted-foreground">
-                  Afficher les jours de weekend dans le planning
-                </p>
-              </div>
-              <Switch 
-                id="showWeekends" 
-                checked={settings.showWeekends}
-                onCheckedChange={(checked) => updateSetting('showWeekends', checked)}
-              />
-            </div>
+            
             
             <Separator />
             
@@ -110,11 +91,7 @@ export function SettingsTab() {
                   Activer la sauvegarde automatique des modifications
                 </p>
               </div>
-              <Switch 
-                id="autoSave" 
-                checked={settings.autoSave}
-                onCheckedChange={(checked) => updateSetting('autoSave', checked)}
-              />
+              <Switch id="autoSave" checked={settings.autoSave} onCheckedChange={checked => updateSetting('autoSave', checked)} />
             </div>
             
             <Separator />
@@ -126,11 +103,7 @@ export function SettingsTab() {
                   Activer le mode maintenance (lecture seule)
                 </p>
               </div>
-              <Switch 
-                id="maintenanceMode" 
-                checked={settings.maintenanceMode}
-                onCheckedChange={(checked) => updateSetting('maintenanceMode', checked)}
-              />
+              <Switch id="maintenanceMode" checked={settings.maintenanceMode} onCheckedChange={checked => updateSetting('maintenanceMode', checked)} />
             </div>
           </div>
         </CardContent>
@@ -141,6 +114,5 @@ export function SettingsTab() {
           </Button>
         </CardFooter>
       </Card>
-    </div>
-  );
+    </div>;
 }

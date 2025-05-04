@@ -24,9 +24,10 @@ export const ensureSettingsTableExists = async (): Promise<boolean> => {
     // Si erreur, la table pourrait ne pas exister
     console.log('Settings table might not exist, attempting to create it...');
     
-    // Appeler la fonction RPC pour créer la table - Passing an empty object as params
+    // Appeler la fonction RPC pour créer la table sans paramètres
+    // En TypeScript, nous devons passer un objet vide comme second argument
     const { error: createError } = await supabase
-      .rpc('create_settings_table_if_not_exists', {});
+      .rpc('create_settings_table_if_not_exists');
       
     if (createError) {
       console.error('Failed to create settings table:', createError);

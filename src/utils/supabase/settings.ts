@@ -3,15 +3,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Database } from '@/integrations/supabase/types';
 
-// Define the type for app_settings table
+// Définir le type pour la table app_settings
 type AppSetting = Database['public']['Tables']['app_settings']['Insert'];
 
 /**
- * Checks if the app_settings table exists and creates it if needed
+ * Vérifie si la table app_settings existe et la crée si nécessaire
  */
 export const ensureSettingsTableExists = async (): Promise<boolean> => {
   try {
-    // Check if table exists by trying to read from it
+    // Vérifier si la table existe en essayant de lire depuis celle-ci
     const { error } = await supabase
       .from('app_settings')
       .select('count(*)', { count: 'exact', head: true });
@@ -21,19 +21,19 @@ export const ensureSettingsTableExists = async (): Promise<boolean> => {
       return true;
     }
       
-    // If error, the table might not exist
+    // Si erreur, la table pourrait ne pas exister
     console.log('Settings table might not exist, attempting to create it...');
     
-    // Create the table - Call the RPC function properly without arguments
+    // Appeler la fonction RPC pour créer la table
     const { error: createError } = await supabase
-      .rpc('create_settings_table_if_not_exists', {});
+      .rpc('create_settings_table_if_not_exists');
       
     if (createError) {
       console.error('Failed to create settings table:', createError);
       return false;
     }
     
-    // Add default settings
+    // Ajouter les paramètres par défaut
     await initializeDefaultSettings();
     return true;
   } catch (err) {
@@ -43,7 +43,7 @@ export const ensureSettingsTableExists = async (): Promise<boolean> => {
 };
 
 /**
- * Initializes default settings if they don't exist
+ * Initialise les paramètres par défaut s'ils n'existent pas
  */
 const initializeDefaultSettings = async (): Promise<void> => {
   const defaultSettings: AppSetting[] = [
@@ -55,17 +55,16 @@ const initializeDefaultSettings = async (): Promise<void> => {
   ];
   
   try {
-    for (const setting of defaultSettings) {
-      // Fix the upsert call by passing only the setting object
-      const { error } = await supabase
-        .from('app_settings')
-        .upsert(setting);
-        
-      if (error) {
-        console.error(`Error inserting setting ${setting.key}:`, error);
-      }
+    // Insérer tous les paramètres par défaut en une seule opération
+    const { error } = await supabase
+      .from('app_settings')
+      .insert(defaultSettings);
+      
+    if (error) {
+      console.error('Error inserting default settings:', error);
+    } else {
+      console.log('Default settings initialized');
     }
-    console.log('Default settings initialized');
   } catch (err) {
     console.error('Error initializing default settings:', err);
     toast.error('Failed to initialize default settings');

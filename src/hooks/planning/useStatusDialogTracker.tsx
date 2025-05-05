@@ -2,32 +2,32 @@
 import { useRef, useEffect } from 'react';
 
 export function useStatusDialogTracker(refreshData: () => void) {
-  // État pour savoir si un dialogue de statut est actuellement ouvert
+  // State to track if a status dialog is currently open
   const isStatusDialogOpenRef = useRef(false);
   const forceRefreshPendingRef = useRef(false);
   const timeoutRef = useRef<number | null>(null);
   
-  // Écouter les événements de mise à jour des statuts
+  // Listen for status update events
   useEffect(() => {
     const handleStatusesUpdated = (event: Event) => {
-      console.log("Index: Événement statusesUpdated reçu");
+      console.log("Index: statusesUpdated event received");
       
-      // Vérifier si on doit éviter le rafraîchissement automatique
+      // Check if we should avoid automatic refresh
       const customEvent = event as CustomEvent;
       const noRefresh = customEvent.detail?.noRefresh === true;
       
-      // Si un dialogue est ouvert, on reporte l'actualisation
+      // If a dialog is open, postpone the refresh
       if (isStatusDialogOpenRef.current) {
-        console.log("Dialogue de statut ouvert, actualisation reportée");
-        // On marque qu'une actualisation sera nécessaire à la fermeture
+        console.log("Status dialog open, refresh postponed");
+        // Mark that a refresh will be needed on closure
         forceRefreshPendingRef.current = true;
         return;
       }
       
-      // Si l'événement ne demande pas d'éviter le rafraîchissement, on actualise
+      // If the event does not request to avoid refresh, refresh
       if (!noRefresh) {
-        console.log("Actualisation des données");
-        // Utiliser un délai pour éviter les actualisations trop fréquentes
+        console.log("Refreshing data");
+        // Use a delay to avoid too frequent refreshes
         if (timeoutRef.current !== null) {
           window.clearTimeout(timeoutRef.current);
         }
@@ -39,12 +39,12 @@ export function useStatusDialogTracker(refreshData: () => void) {
       }
     };
     
-    // Gérer les événements d'ouverture et fermeture du dialogue
+    // Handle dialog open and close events
     const handleStatusEditStart = () => {
-      console.log("Index: Dialogue de statut ouvert - désactivation des actualisations automatiques");
+      console.log("Index: Status dialog open - disabling automatic refreshes");
       isStatusDialogOpenRef.current = true;
       
-      // Annuler tout timeout d'actualisation en cours
+      // Cancel any ongoing refresh timeout
       if (timeoutRef.current !== null) {
         window.clearTimeout(timeoutRef.current);
         timeoutRef.current = null;
@@ -52,18 +52,18 @@ export function useStatusDialogTracker(refreshData: () => void) {
     };
     
     const handleStatusEditEnd = () => {
-      console.log("Index: Dialogue de statut fermé - réactivation des actualisations automatiques");
+      console.log("Index: Status dialog closed - re-enabling automatic refreshes");
       
-      // Utiliser un délai pour s'assurer que tout est bien terminé
+      // Use a delay to ensure everything is properly completed
       setTimeout(() => {
         isStatusDialogOpenRef.current = false;
         
-        // Si une actualisation était en attente, on l'exécute maintenant
+        // If a refresh was pending, execute it now
         if (forceRefreshPendingRef.current) {
-          console.log("Exécution de l'actualisation reportée");
+          console.log("Executing postponed refresh");
           forceRefreshPendingRef.current = false;
           
-          // Attendre un peu plus pour s'assurer que les mises à jour sont bien terminées
+          // Wait a bit longer to ensure updates are properly completed
           setTimeout(() => {
             refreshData();
           }, 1500);
@@ -80,7 +80,7 @@ export function useStatusDialogTracker(refreshData: () => void) {
       window.removeEventListener('statusEditStart', handleStatusEditStart);
       window.removeEventListener('statusEditEnd', handleStatusEditEnd);
       
-      // Nettoyer tout timeout en cours
+      // Clean up any ongoing timeout
       if (timeoutRef.current !== null) {
         window.clearTimeout(timeoutRef.current);
       }
@@ -92,11 +92,11 @@ export function useStatusDialogTracker(refreshData: () => void) {
     handleStatusDialogChange: (isOpen: boolean) => {
       isStatusDialogOpenRef.current = isOpen;
       
-      // Émettre les événements appropriés
+      // Emit appropriate events
       if (isOpen) {
         window.dispatchEvent(new CustomEvent('statusEditStart'));
       } else {
-        // Ajouter un délai pour s'assurer que toutes les opérations sont terminées
+        // Add a delay to ensure all operations are completed
         setTimeout(() => {
           window.dispatchEvent(new CustomEvent('statusEditEnd'));
         }, 500);

@@ -18,17 +18,17 @@ export function usePlanningGrid(isAdmin: boolean) {
   // Initialize selectedPeriod with 'AM' as the default
   const [selectedPeriod, setSelectedPeriod] = useState<DayPeriod>('AM');
   
-  // État pour suivre si un dialogue est en cours d'édition
+  // State to track if a dialog is being edited
   const [isEditing, setIsEditing] = useState(false);
   
-  // Écouter les événements d'édition pour mettre à jour l'état local
+  // Listen for edit events to update the local state
   useEffect(() => {
     const handleEditStart = () => {
       setIsEditing(true);
     };
     
     const handleEditEnd = () => {
-      // Utiliser un délai pour éviter les problèmes de timing
+      // Use a delay to avoid timing issues
       setTimeout(() => {
         setIsEditing(false);
       }, 500);
@@ -50,9 +50,9 @@ export function usePlanningGrid(isAdmin: boolean) {
       return;
     }
     
-    // Ne pas permettre l'ouverture d'un nouveau dialogue si l'édition est en cours
+    // Do not allow opening a new dialog if editing is in progress
     if (isEditing) {
-      console.log("Édition en cours, nouvelle sélection ignorée");
+      console.log("Editing in progress, new selection ignored");
       return;
     }
     
@@ -67,7 +67,7 @@ export function usePlanningGrid(isAdmin: boolean) {
     
     setSelectedPeriod(period);
     
-    // Signaler le début de l'édition
+    // Signal the start of editing
     const event = new CustomEvent('statusEditStart');
     window.dispatchEvent(event);
   }, [isAdmin, isEditing]);
@@ -77,7 +77,7 @@ export function usePlanningGrid(isAdmin: boolean) {
     setSelectedCell(null);
     setSelectedPeriod('AM');
     
-    // Signaler la fin de l'édition après un court délai
+    // Signal the end of editing after a short delay
     setTimeout(() => {
       const event = new CustomEvent('statusEditEnd');
       window.dispatchEvent(event);

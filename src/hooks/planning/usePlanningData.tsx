@@ -51,6 +51,7 @@ export const usePlanningData = (currentYear?: number, currentMonth?: number) => 
       const projects = await fetchProjects();
       console.log(`${projects.length} projets récupérés de Supabase:`, projects);
       
+      // Augmenter le timeout pour la récupération des employés
       const employees = await fetchEmployees();
       console.log(`${employees.length} employés récupérés de Supabase`);
       
@@ -73,6 +74,7 @@ export const usePlanningData = (currentYear?: number, currentMonth?: number) => 
       }
       
       console.log(`Total des entrées de planning chargées: ${schedulesLoaded}`);
+      console.log(`Nombre total d'employés chargés: ${employees.length}`);
       
       setData({
         year: year,

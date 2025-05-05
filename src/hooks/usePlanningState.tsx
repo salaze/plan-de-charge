@@ -27,7 +27,9 @@ export const usePlanningState = () => {
 
   // Apply filters when they change
   useEffect(() => {
+    console.log(`Données originales avant filtrage: ${data.employees?.length || 0} employés`);
     const filtered = filterData(data, filters);
+    console.log(`Données après filtrage: ${filtered.employees?.length || 0} employés`);
     setFilteredData(filtered);
   }, [data, filters]);
 
@@ -70,6 +72,7 @@ export const usePlanningState = () => {
   };
   
   const handleFiltersChange = (newFilters: FilterOptions) => {
+    console.log("Application des filtres:", newFilters);
     setFilters(newFilters);
     
     if (Object.keys(newFilters).length > 0 && 

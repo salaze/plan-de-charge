@@ -50,8 +50,7 @@ export function PlanningGrid({
     selectedPeriod,
     isEditing,
     handleCellClick,
-    handleCloseDialog,
-    getVisibleDays
+    handleCloseDialog
   } = usePlanningGrid(isAdmin);
   
   // Notifier le parent quand le dialogue s'ouvre ou se ferme
@@ -67,9 +66,6 @@ export function PlanningGrid({
   
   // Generate all days in the month
   const days = generateDaysInMonth(safeYear, safeMonth);
-  
-  // Get visible days based on screen size
-  const visibleDays = days; // Afficher tous les jours pour permettre le défilement
   
   // Handler for status changes
   const handleStatusChange = (status: StatusCode, isHighlighted?: boolean, projectCode?: string) => {
@@ -98,6 +94,9 @@ export function PlanningGrid({
     return stats.presentDays;
   };
   
+  // Log pour vérifier le nombre d'employés reçus par le composant
+  console.log(`PlanningGrid a reçu ${employees.length} employés à afficher`);
+  
   // If no employees, show a message
   if (!employees || employees.length === 0) {
     return (
@@ -109,12 +108,13 @@ export function PlanningGrid({
   
   // Group employees by department
   const departmentGroups = groupEmployeesByDepartment(employees);
+  console.log(`Groupes de départements créés: ${departmentGroups.length}`);
   
   return (
     <>
       <div className="w-full">
         <Table className="border rounded-lg bg-white dark:bg-gray-900 shadow-sm w-full">
-          <PlanningGridHeader days={visibleDays} />
+          <PlanningGridHeader days={days} />
           
           <TableBody>
             {departmentGroups.map((group, groupIndex) => (
@@ -122,8 +122,11 @@ export function PlanningGrid({
                 {/* Department header */}
                 <DepartmentHeader 
                   name={group.name} 
-                  colSpan={visibleDays.length * 2 + 2} 
+                  colSpan={days.length * 2 + 2} 
                 />
+                
+                {/* Log pour vérifier le nombre d'employés par département */}
+                {console.log(`Département ${group.name}: ${group.employees.length} employés`)}
                 
                 {/* Employee rows */}
                 {group.employees.map((employee) => {
@@ -133,7 +136,7 @@ export function PlanningGrid({
                     <EmployeeRow
                       key={employee.id}
                       employee={employee}
-                      visibleDays={visibleDays}
+                      visibleDays={days}
                       totalStats={totalStats}
                       onCellClick={handleCellClick}
                     />

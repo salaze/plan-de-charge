@@ -2,7 +2,6 @@
 import React from 'react';
 import { PlanningGrid } from '@/components/calendar/PlanningGrid';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface PlanningContentProps {
   loading: boolean;
@@ -37,8 +36,11 @@ export function PlanningContent({
     );
   }
 
+  // Assurer qu'on affiche bien tous les employés
+  console.log(`Affichage de ${employees.length} employés dans le planning`);
+
   return (
-    <div className="overflow-auto h-[calc(100vh-220px)]" style={{ overflowX: 'scroll', paddingBottom: '20px' }}>
+    <div className="overflow-auto h-[calc(100vh-220px)]">
       <div className="min-w-max pr-4 pb-8">
         <PlanningGrid 
           year={year} 

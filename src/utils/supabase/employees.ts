@@ -7,13 +7,15 @@ export const fetchEmployees = async () => {
   try {
     console.log("Récupération des employés depuis Supabase...");
     
-    // Add a timeout to avoid waiting indefinitely
+    // Augmenter le timeout pour éviter les problèmes de connexion
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 seconds timeout
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 secondes timeout (augmenté de 10s à 30s)
     
+    // Récupérer TOUS les employés sans limitation
     const { data: employees, error } = await supabase
       .from('employes')
       .select('*')
+      .order('nom', { ascending: true })
       .abortSignal(controller.signal);
     
     clearTimeout(timeoutId);
@@ -25,7 +27,8 @@ export const fetchEmployees = async () => {
     
     console.log(`${employees ? employees.length : 0} employés récupérés avec succès`);
     
-    return employees.map(emp => ({
+    // Mapper les données pour correspondre à notre modèle Employee
+    const mappedEmployees = employees.map(emp => ({
       id: emp.id,
       name: emp.nom,
       email: emp.identifiant,
@@ -36,6 +39,10 @@ export const fetchEmployees = async () => {
       password: (emp as any).password || '', // Utilisez une assertion de type pour accéder à password
       schedule: []
     })) as Employee[];
+    
+    console.log(`Après mapping: ${mappedEmployees.length} employés disponibles`);
+    
+    return mappedEmployees;
   } catch (error: any) {
     console.error('Erreur lors de la récupération des employés:', error);
     

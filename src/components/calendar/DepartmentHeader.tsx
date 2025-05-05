@@ -28,12 +28,11 @@ export function DepartmentHeader({
         colSpan={colSpan} 
         className="sticky left-0 bg-muted/50 font-bold text-sm py-1 flex items-center justify-between"
       >
-        <span>Département: {name}</span>
-        
-        {onDepartmentSelect && allDepartments.length > 0 && (
+        {onDepartmentSelect && allDepartments.length > 0 ? (
           <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center gap-1 text-sm px-2 py-1 rounded hover:bg-accent">
-              Changer <ChevronDown className="h-4 w-4" />
+            <DropdownMenuTrigger className="flex items-center gap-1 text-sm hover:bg-accent/30 rounded px-2 py-1 cursor-pointer">
+              <span>Département: {name}</span>
+              <ChevronDown className="h-4 w-4" />
             </DropdownMenuTrigger>
             <DropdownMenuContent 
               className="z-50"
@@ -53,6 +52,8 @@ export function DepartmentHeader({
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
+        ) : (
+          <span>Département: {name}</span>
         )}
       </TableCell>
     </TableRow>

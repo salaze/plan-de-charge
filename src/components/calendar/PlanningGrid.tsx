@@ -101,15 +101,6 @@ export function PlanningGrid({
     };
   }, [safeYear, safeMonth]);
   
-  // If no employees, show a message
-  if (!employees || employees.length === 0) {
-    return (
-      <div className="text-center p-8 bg-muted/30 rounded-lg">
-        <p className="text-muted-foreground">Aucun employé disponible</p>
-      </div>
-    );
-  }
-  
   // Group employees by department - memoize this computation
   const departmentGroups = useMemo(() => {
     return groupEmployeesByDepartment(employees);
@@ -138,8 +129,20 @@ export function PlanningGrid({
     }
   };
   
-  return (
-    <>
+  // Create an empty array if no employees are available
+  const noContentMessage = useMemo(() => (
+    <div className="text-center p-8 bg-muted/30 rounded-lg">
+      <p className="text-muted-foreground">Aucun employé disponible</p>
+    </div>
+  ), []);
+  
+  // Ensure we always render the employee table or the empty message, not conditionally
+  const content = useMemo(() => {
+    if (!employees || employees.length === 0) {
+      return noContentMessage;
+    }
+    
+    return (
       <div className="w-full">
         <Table className="border rounded-lg bg-white dark:bg-gray-900 shadow-sm w-full">
           <PlanningGridHeader days={days} />
@@ -170,6 +173,12 @@ export function PlanningGrid({
           </TableBody>
         </Table>
       </div>
+    );
+  }, [employees, days, filteredGroups, allDepartments, handleDepartmentSelect, getTotalStats, handleCellClick, noContentMessage]);
+  
+  return (
+    <>
+      {content}
       
       {/* Status change dialog */}
       <StatusChangeDialog

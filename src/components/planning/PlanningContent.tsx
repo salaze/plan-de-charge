@@ -24,35 +24,37 @@ export function PlanningContent({
   onStatusChange,
   onStatusDialogChange
 }: PlanningContentProps) {
-  if (loading) {
+  // Always render loading skeleton or the content, never conditionally
+  const content = useMemo(() => {
+    if (loading) {
+      return (
+        <div className="space-y-4">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-16 w-full" />
+        </div>
+      );
+    }
+    
     return (
-      <div className="space-y-4">
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-16 w-full" />
-        <Skeleton className="h-16 w-full" />
-        <Skeleton className="h-16 w-full" />
-        <Skeleton className="h-16 w-full" />
-      </div>
+      <PlanningGrid 
+        year={year} 
+        month={month} 
+        employees={employees || []}
+        projects={projects || []}
+        onStatusChange={onStatusChange}
+        isAdmin={isAdmin}
+        onStatusDialogChange={onStatusDialogChange}
+      />
     );
-  }
-
-  // Memoize the planning grid to prevent unnecessary re-renders
-  const memoizedPlanningGrid = useMemo(() => (
-    <PlanningGrid 
-      year={year} 
-      month={month} 
-      employees={employees || []}
-      projects={projects || []}
-      onStatusChange={onStatusChange}
-      isAdmin={isAdmin}
-      onStatusDialogChange={onStatusDialogChange}
-    />
-  ), [year, month, employees, projects, onStatusChange, isAdmin, onStatusDialogChange]);
+  }, [loading, year, month, employees, projects, onStatusChange, isAdmin, onStatusDialogChange]);
 
   return (
     <div className="overflow-auto h-[calc(100vh-220px)]">
       <div className="min-w-max pr-4 pb-8">
-        {memoizedPlanningGrid}
+        {content}
       </div>
     </div>
   );

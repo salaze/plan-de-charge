@@ -125,8 +125,10 @@ export function PlanningGrid({
                   colSpan={days.length * 2 + 2} 
                 />
                 
-                {/* Log pour vérifier le nombre d'employés par département */}
-                {console.log(`Département ${group.name}: ${group.employees.length} employés`)}
+                {/* Log employees count outside of JSX */}
+                {(() => {
+                  console.log(`Département ${group.name}: ${group.employees.length} employés`);
+                })()}
                 
                 {/* Employee rows */}
                 {group.employees.map((employee) => {

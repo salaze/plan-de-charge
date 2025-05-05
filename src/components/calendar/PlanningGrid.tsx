@@ -125,9 +125,10 @@ export function PlanningGrid({
                   colSpan={days.length * 2 + 2} 
                 />
                 
-                {/* Log employees count outside of JSX */}
+                {/* Log employees count outside of JSX using a self-executing function */}
                 {(() => {
                   console.log(`Département ${group.name}: ${group.employees.length} employés`);
+                  return null; // Explicitly return null to satisfy React's requirement for a React node
                 })()}
                 
                 {/* Employee rows */}

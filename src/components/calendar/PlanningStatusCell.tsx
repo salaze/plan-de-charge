@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { memo } from 'react';
 import { TableCell } from '@/components/ui/table';
 import { StatusCell } from './StatusCell';
 import { StatusCode } from '@/types';
@@ -16,7 +16,8 @@ interface PlanningStatusCellProps {
   onCellClick: (employeeId: string, date: string, period: 'AM' | 'PM') => void;
 }
 
-export function PlanningStatusCell({
+// Memoize the component to prevent unnecessary re-renders
+export const PlanningStatusCell = memo(function PlanningStatusCell({
   day,
   date,
   employeeId,
@@ -47,4 +48,4 @@ export function PlanningStatusCell({
       </div>
     </TableCell>
   );
-}
+});

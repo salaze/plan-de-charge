@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { PlanningGrid } from '@/components/calendar/PlanningGrid';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -36,21 +36,23 @@ export function PlanningContent({
     );
   }
 
-  // Assurer qu'on affiche bien tous les employés
-  console.log(`Affichage de ${employees.length} employés dans le planning`);
+  // Memoize the planning grid to prevent unnecessary re-renders
+  const memoizedPlanningGrid = useMemo(() => (
+    <PlanningGrid 
+      year={year} 
+      month={month} 
+      employees={employees || []}
+      projects={projects || []}
+      onStatusChange={onStatusChange}
+      isAdmin={isAdmin}
+      onStatusDialogChange={onStatusDialogChange}
+    />
+  ), [year, month, employees, projects, onStatusChange, isAdmin, onStatusDialogChange]);
 
   return (
     <div className="overflow-auto h-[calc(100vh-220px)]">
       <div className="min-w-max pr-4 pb-8">
-        <PlanningGrid 
-          year={year} 
-          month={month} 
-          employees={employees || []}
-          projects={projects || []}
-          onStatusChange={onStatusChange}
-          isAdmin={isAdmin}
-          onStatusDialogChange={onStatusDialogChange}
-        />
+        {memoizedPlanningGrid}
       </div>
     </div>
   );

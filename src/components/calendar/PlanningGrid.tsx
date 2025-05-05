@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Table,
   TableBody
@@ -67,8 +67,10 @@ export function PlanningGrid({
   const safeYear = Number.isFinite(year) ? year : new Date().getFullYear();
   const safeMonth = Number.isFinite(month) ? month : new Date().getMonth();
   
-  // Generate all days in the month
-  const days = generateDaysInMonth(safeYear, safeMonth);
+  // Generate all days in the month - using useMemo for performance
+  const days = useMemo(() => {
+    return generateDaysInMonth(safeYear, safeMonth);
+  }, [safeYear, safeMonth]);
   
   // Handler for status changes
   const handleStatusChange = (status: StatusCode, isHighlighted?: boolean, projectCode?: string) => {
@@ -91,14 +93,13 @@ export function PlanningGrid({
     handleCloseDialog();
   };
   
-  // Calculate statistics for an employee
-  const getTotalStats = (employee: Employee) => {
-    const stats = calculateEmployeeStats(employee, safeYear, safeMonth);
-    return stats.presentDays;
-  };
-  
-  // Log pour vérifier le nombre d'employés reçus par le composant
-  console.log(`PlanningGrid a reçu ${employees.length} employés à afficher`);
+  // Calculate statistics for an employee - memoize this function
+  const getTotalStats = useMemo(() => {
+    return (employee: Employee) => {
+      const stats = calculateEmployeeStats(employee, safeYear, safeMonth);
+      return stats.presentDays;
+    };
+  }, [safeYear, safeMonth]);
   
   // If no employees, show a message
   if (!employees || employees.length === 0) {
@@ -109,16 +110,22 @@ export function PlanningGrid({
     );
   }
   
-  // Group employees by department
-  const departmentGroups = groupEmployeesByDepartment(employees);
+  // Group employees by department - memoize this computation
+  const departmentGroups = useMemo(() => {
+    return groupEmployeesByDepartment(employees);
+  }, [employees]);
   
-  // Filtrer les départements en fonction de la sélection
-  const filteredGroups = selectedDepartment 
-    ? departmentGroups.filter(group => group.name === selectedDepartment)
-    : departmentGroups;
+  // Filtrer les départements en fonction de la sélection - memoize this
+  const filteredGroups = useMemo(() => {
+    return selectedDepartment 
+      ? departmentGroups.filter(group => group.name === selectedDepartment)
+      : departmentGroups;
+  }, [departmentGroups, selectedDepartment]);
   
-  // Extraire la liste de tous les départements
-  const allDepartments = departmentGroups.map(group => group.name);
+  // Extraire la liste de tous les départements - memoize this
+  const allDepartments = useMemo(() => {
+    return departmentGroups.map(group => group.name);
+  }, [departmentGroups]);
   
   // Gérer la sélection d'un département
   const handleDepartmentSelect = (department: string) => {
@@ -149,19 +156,15 @@ export function PlanningGrid({
                 />
                 
                 {/* Employee rows */}
-                {group.employees.map((employee) => {
-                  const totalStats = getTotalStats(employee);
-                  
-                  return (
-                    <EmployeeRow
-                      key={employee.id}
-                      employee={employee}
-                      visibleDays={days}
-                      totalStats={totalStats}
-                      onCellClick={handleCellClick}
-                    />
-                  );
-                })}
+                {group.employees.map((employee) => (
+                  <EmployeeRow
+                    key={employee.id}
+                    employee={employee}
+                    visibleDays={days}
+                    totalStats={getTotalStats(employee)}
+                    onCellClick={handleCellClick}
+                  />
+                ))}
               </React.Fragment>
             ))}
           </TableBody>

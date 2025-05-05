@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
 import { StatusCode, DayPeriod } from '@/types';
@@ -43,7 +43,8 @@ export function usePlanningGrid(isAdmin: boolean) {
     };
   }, []);
   
-  const handleCellClick = (employeeId: string, date: string, period: DayPeriod) => {
+  // Memoize cell click handler to prevent unnecessary re-renders
+  const handleCellClick = useCallback((employeeId: string, date: string, period: DayPeriod) => {
     if (!isAdmin) {
       toast.info("Mode lecture seule. Connexion administrateur requise pour modifier.");
       return;
@@ -54,22 +55,6 @@ export function usePlanningGrid(isAdmin: boolean) {
       console.log("Édition en cours, nouvelle sélection ignorée");
       return;
     }
-    
-    // Find the current status for this cell from the schedule
-    const getCurrentStatus = (employeeId: string, date: string, period: DayPeriod, employees: any[]) => {
-      const employee = employees.find(emp => emp.id === employeeId);
-      if (!employee) return { status: '' as StatusCode };
-      
-      const dayEntry = employee.schedule.find(
-        (day: any) => day.date === date && day.period === period
-      );
-      
-      return {
-        status: dayEntry?.status || '' as StatusCode,
-        isHighlighted: dayEntry?.isHighlighted,
-        projectCode: dayEntry?.projectCode
-      };
-    };
     
     setSelectedCell({
       employeeId,
@@ -85,9 +70,10 @@ export function usePlanningGrid(isAdmin: boolean) {
     // Signaler le début de l'édition
     const event = new CustomEvent('statusEditStart');
     window.dispatchEvent(event);
-  };
+  }, [isAdmin, isEditing]);
   
-  const handleCloseDialog = () => {
+  // Memoize dialog close handler
+  const handleCloseDialog = useCallback(() => {
     setSelectedCell(null);
     setSelectedPeriod('AM');
     
@@ -96,10 +82,10 @@ export function usePlanningGrid(isAdmin: boolean) {
       const event = new CustomEvent('statusEditEnd');
       window.dispatchEvent(event);
     }, 300);
-  };
+  }, []);
   
   // Helper function to get visible days for mobile or desktop
-  const getVisibleDays = (days: Date[], year: number, month: number) => {
+  const getVisibleDays = useCallback((days: Date[], year: number, month: number) => {
     if (isMobile) {
       // On mobile, show fewer days
       const today = new Date();
@@ -114,7 +100,7 @@ export function usePlanningGrid(isAdmin: boolean) {
       return days.slice(0, Math.min(4, days.length));
     }
     return days;
-  };
+  }, [isMobile]);
   
   return {
     selectedCell,

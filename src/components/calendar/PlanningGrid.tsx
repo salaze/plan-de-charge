@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Table,
   TableBody
@@ -44,6 +44,9 @@ export function PlanningGrid({
   isAdmin,
   onStatusDialogChange
 }: PlanningGridProps) {
+  // État pour stocker le département sélectionné
+  const [selectedDepartment, setSelectedDepartment] = useState<string | null>(null);
+  
   // Extract grid functionality to a custom hook
   const {
     selectedCell,
@@ -110,6 +113,25 @@ export function PlanningGrid({
   const departmentGroups = groupEmployeesByDepartment(employees);
   console.log(`Groupes de départements créés: ${departmentGroups.length}`);
   
+  // Filtrer les départements en fonction de la sélection
+  const filteredGroups = selectedDepartment 
+    ? departmentGroups.filter(group => group.name === selectedDepartment)
+    : departmentGroups;
+  
+  // Extraire la liste de tous les départements
+  const allDepartments = departmentGroups.map(group => group.name);
+  
+  // Gérer la sélection d'un département
+  const handleDepartmentSelect = (department: string) => {
+    if (department === selectedDepartment) {
+      setSelectedDepartment(null); // Désélectionner si on clique sur le même département
+      toast.info("Affichage de tous les départements");
+    } else {
+      setSelectedDepartment(department);
+      toast.info(`Département ${department} sélectionné`);
+    }
+  };
+  
   return (
     <>
       <div className="w-full">
@@ -117,36 +139,37 @@ export function PlanningGrid({
           <PlanningGridHeader days={days} />
           
           <TableBody>
-            {departmentGroups.map((group, groupIndex) => (
-              <React.Fragment key={`dept-${groupIndex}`}>
-                {/* Department header */}
-                <DepartmentHeader 
-                  name={group.name} 
-                  colSpan={days.length * 2 + 2} 
-                />
-                
-                {/* Log employees count outside of JSX using a self-executing function */}
-                {(() => {
-                  console.log(`Département ${group.name}: ${group.employees.length} employés`);
-                  return null; // Explicitly return null to satisfy React's requirement for a React node
-                })()}
-                
-                {/* Employee rows */}
-                {group.employees.map((employee) => {
-                  const totalStats = getTotalStats(employee);
+            {filteredGroups.map((group, groupIndex) => {
+              // Log du nombre d'employés dans ce département
+              console.log(`Département ${group.name}: ${group.employees.length} employés`);
+              
+              return (
+                <React.Fragment key={`dept-${groupIndex}`}>
+                  {/* Department header with dropdown */}
+                  <DepartmentHeader 
+                    name={group.name} 
+                    colSpan={days.length * 2 + 2}
+                    allDepartments={allDepartments}
+                    onDepartmentSelect={handleDepartmentSelect}
+                  />
                   
-                  return (
-                    <EmployeeRow
-                      key={employee.id}
-                      employee={employee}
-                      visibleDays={days}
-                      totalStats={totalStats}
-                      onCellClick={handleCellClick}
-                    />
-                  );
-                })}
-              </React.Fragment>
-            ))}
+                  {/* Employee rows */}
+                  {group.employees.map((employee) => {
+                    const totalStats = getTotalStats(employee);
+                    
+                    return (
+                      <EmployeeRow
+                        key={employee.id}
+                        employee={employee}
+                        visibleDays={days}
+                        totalStats={totalStats}
+                        onCellClick={handleCellClick}
+                      />
+                    );
+                  })}
+                </React.Fragment>
+              );
+            })}
           </TableBody>
         </Table>
       </div>

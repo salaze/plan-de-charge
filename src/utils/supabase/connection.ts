@@ -8,19 +8,20 @@ export const checkSupabaseConnection = async () => {
     
     // Reduce timeout to fail faster if there's no connection
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000); // Réduit de 5s à 3s pour une détection plus rapide
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 seconds timeout
     
-    // Simple test to verify connection - utilisez une requête plus légère
-    const { count, error } = await supabase
-      .from('statuts')
-      .select('*', { count: 'exact', head: true })
+    // Simple test to verify connection
+    const { data, error } = await supabase
+      .from('statuts')  // Using 'statuts' instead of 'employes' with count
+      .select('*')
+      .limit(1)
       .abortSignal(controller.signal);
       
     clearTimeout(timeoutId);
     
     if (error) {
       console.error("Erreur de connexion Supabase:", error);
-      return false;
+      throw error;
     }
     
     console.log("Connexion à Supabase établie avec succès");
@@ -28,9 +29,11 @@ export const checkSupabaseConnection = async () => {
   } catch (error) {
     console.error('Erreur de vérification de connexion Supabase:', error);
     
-    // Ne pas afficher automatiquement le toast ici - laissez le composant gérer cela
+    // More descriptive error message for the user
     if (error instanceof DOMException && error.name === 'AbortError') {
-      console.warn('Délai de connexion à Supabase dépassé.');
+      toast.error('Délai de connexion à Supabase dépassé. Vérifiez votre connexion internet.');
+    } else {
+      toast.error('Erreur de connexion à la base de données. Application en mode dégradé.');
     }
     
     return false;

@@ -1,47 +1,60 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Employee, UserRole } from '@/types';
+import { Employee } from '@/types';
 import { toast } from 'sonner';
 
-export const fetchEmployees = async (departmentFilter?: string) => {
+export const fetchEmployees = async () => {
   try {
-    console.log(`Récupération des employés${departmentFilter ? ` du département: ${departmentFilter}` : ''}`);
+    console.log("Récupération des employés depuis Supabase...");
     
-    let query = supabase
+    // Augmenter le timeout pour éviter les problèmes de connexion
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 secondes timeout (augmenté de 10s à 30s)
+    
+    // Récupérer TOUS les employés sans limitation
+    const { data: employees, error } = await supabase
       .from('employes')
       .select('*')
-      .order('nom');
+      .order('nom', { ascending: true })
+      .abortSignal(controller.signal);
     
-    // Filtrer par département si spécifié
-    if (departmentFilter) {
-      query = query.eq('departement', departmentFilter);
-    }
-    
-    const { data, error } = await query;
-    
+    clearTimeout(timeoutId);
+      
     if (error) {
-      console.error('Erreur lors de la récupération des employés:', error);
+      console.error("Erreur Supabase:", error);
       throw error;
     }
     
-    // Transformer les données pour l'application
-    const employees = data.map(emp => ({
-      id: emp.id,
-      name: `${emp.nom} ${emp.prenom || ''}`.trim(),
-      firstName: emp.prenom || '',
-      lastName: emp.nom,
-      jobTitle: emp.fonction || '',
-      department: emp.departement || '',
-      role: (emp.role || 'employee') as UserRole, // Conversion explicite en UserRole
-      uid: emp.uid || '',
-      schedule: [] // Sera rempli séparément
-    }));
+    console.log(`${employees ? employees.length : 0} employés récupérés avec succès`);
     
-    console.log(`${employees.length} employés récupérés`);
-    return employees;
-  } catch (error) {
-    console.error('Erreur:', error);
-    throw error;
+    // Mapper les données pour correspondre à notre modèle Employee
+    const mappedEmployees = employees.map(emp => ({
+      id: emp.id,
+      name: emp.nom,
+      email: emp.identifiant,
+      position: emp.fonction,
+      department: emp.departement,
+      role: emp.role || 'employee',
+      uid: emp.uid,
+      password: (emp as any).password || '', // Utilisez une assertion de type pour accéder à password
+      schedule: []
+    })) as Employee[];
+    
+    console.log(`Après mapping: ${mappedEmployees.length} employés disponibles`);
+    
+    return mappedEmployees;
+  } catch (error: any) {
+    console.error('Erreur lors de la récupération des employés:', error);
+    
+    // Message d'erreur spécifique pour les problèmes de réseau
+    if (error.message?.includes('NetworkError') || error.name === 'AbortError') {
+      toast.error('Problème de connexion au serveur. Vérifiez votre réseau.');
+    } else {
+      toast.error('Erreur lors de la récupération des employés');
+    }
+    
+    // No fallback to localStorage, return empty array instead
+    return [];
   }
 };
 

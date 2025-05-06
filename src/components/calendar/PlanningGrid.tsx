@@ -4,6 +4,7 @@ import {
   Table,
   TableBody
 } from '@/components/ui/table';
+import { toast } from 'sonner';
 import { 
   generateDaysInMonth, 
   formatDate,
@@ -43,14 +44,16 @@ export function PlanningGrid({
   isAdmin,
   onStatusDialogChange
 }: PlanningGridProps) {
+  // État pour stocker le département sélectionné
+  const [selectedDepartment, setSelectedDepartment] = useState<string | null>(null);
+  
   // Extract grid functionality to a custom hook
   const {
     selectedCell,
     selectedPeriod,
     isEditing,
     handleCellClick,
-    handleCloseDialog,
-    getVisibleDays
+    handleCloseDialog
   } = usePlanningGrid(isAdmin);
   
   // Notifier le parent quand le dialogue s'ouvre ou se ferme
@@ -68,11 +71,6 @@ export function PlanningGrid({
   const days = useMemo(() => {
     return generateDaysInMonth(safeYear, safeMonth);
   }, [safeYear, safeMonth]);
-
-  // For mobile, we want to show fewer days
-  const visibleDays = useMemo(() => {
-    return getVisibleDays(days, safeYear, safeMonth);
-  }, [days, safeYear, safeMonth, getVisibleDays]);
   
   // Handler for status changes
   const handleStatusChange = (status: StatusCode, isHighlighted?: boolean, projectCode?: string) => {
@@ -108,6 +106,29 @@ export function PlanningGrid({
     return groupEmployeesByDepartment(employees);
   }, [employees]);
   
+  // Filtrer les départements en fonction de la sélection - memoize this
+  const filteredGroups = useMemo(() => {
+    return selectedDepartment 
+      ? departmentGroups.filter(group => group.name === selectedDepartment)
+      : departmentGroups;
+  }, [departmentGroups, selectedDepartment]);
+  
+  // Extraire la liste de tous les départements - memoize this
+  const allDepartments = useMemo(() => {
+    return departmentGroups.map(group => group.name);
+  }, [departmentGroups]);
+  
+  // Gérer la sélection d'un département
+  const handleDepartmentSelect = (department: string) => {
+    if (department === selectedDepartment) {
+      setSelectedDepartment(null); // Désélectionner si on clique sur le même département
+      toast.info("Affichage de tous les départements");
+    } else {
+      setSelectedDepartment(department);
+      toast.info(`Département ${department} sélectionné`);
+    }
+  };
+  
   // Create an empty array if no employees are available
   const noContentMessage = useMemo(() => (
     <div className="text-center p-8 bg-muted/30 rounded-lg">
@@ -124,15 +145,17 @@ export function PlanningGrid({
     return (
       <div className="w-full">
         <Table className="border rounded-lg bg-white dark:bg-gray-900 shadow-sm w-full">
-          <PlanningGridHeader days={visibleDays} />
+          <PlanningGridHeader days={days} />
           
           <TableBody>
-            {departmentGroups.map((group, groupIndex) => (
+            {filteredGroups.map((group, groupIndex) => (
               <React.Fragment key={`dept-${groupIndex}`}>
-                {/* Department header - simplified */}
+                {/* Department header with dropdown */}
                 <DepartmentHeader 
                   name={group.name} 
-                  colSpan={visibleDays.length * 2 + 2}
+                  colSpan={days.length * 2 + 2}
+                  allDepartments={allDepartments}
+                  onDepartmentSelect={handleDepartmentSelect}
                 />
                 
                 {/* Employee rows */}
@@ -140,7 +163,7 @@ export function PlanningGrid({
                   <EmployeeRow
                     key={employee.id}
                     employee={employee}
-                    visibleDays={visibleDays}
+                    visibleDays={days}
                     totalStats={getTotalStats(employee)}
                     onCellClick={handleCellClick}
                   />
@@ -151,7 +174,7 @@ export function PlanningGrid({
         </Table>
       </div>
     );
-  }, [employees, visibleDays, departmentGroups, getTotalStats, handleCellClick, noContentMessage]);
+  }, [employees, days, filteredGroups, allDepartments, handleDepartmentSelect, getTotalStats, handleCellClick, noContentMessage]);
   
   return (
     <>
@@ -171,6 +194,3 @@ export function PlanningGrid({
     </>
   );
 }
-
-// Exportation par défaut pour le lazy loading
-export default PlanningGrid;

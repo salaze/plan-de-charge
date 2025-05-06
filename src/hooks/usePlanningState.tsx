@@ -12,24 +12,13 @@ export const usePlanningState = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [filters, setFilters] = useState<FilterOptions>({});
   const [isLegendOpen, setIsLegendOpen] = useState(false);
-  const [selectedDepartment, setSelectedDepartment] = useState<string | null>(null);
   
   // Référence pour suivre si on est en train de modifier un statut
   const isEditingStatus = useRef(false);
   // Référence pour suivre si un refresh est en attente
   const refreshPendingRef = useRef(false);
 
-  const { 
-    data, 
-    setData, 
-    loading, 
-    loadingSchedules,
-    isOnline, 
-    connectionError, 
-    reloadData, 
-    allDepartments 
-  } = usePlanningData(currentYear, currentMonth, selectedDepartment);
-  
+  const { data, setData, loading, isOnline, connectionError, reloadData } = usePlanningData(currentYear, currentMonth);
   const { handleSync } = usePlanningSync(data);
   const { handleStatusChange: originalHandleStatusChange } = useStatusUpdater(data, setData, isOnline);
 
@@ -118,17 +107,6 @@ export const usePlanningState = () => {
     }
   }, [originalHandleStatusChange]);
 
-  // Gérer la sélection d'un département
-  const handleDepartmentChange = useCallback((department: string | null) => {
-    console.log(`Changement de département sélectionné: ${department || 'tous'}`);
-    setSelectedDepartment(department);
-    if (department) {
-      toast.info(`Département ${department} sélectionné`);
-    } else {
-      toast.info("Tous les départements seront affichés");
-    }
-  }, []);
-
   // Fonction pour forcer le rechargement des données
   const refreshData = useCallback(async () => {
     // Ne pas actualiser si on est en train d'éditer un statut
@@ -152,16 +130,12 @@ export const usePlanningState = () => {
     filters,
     isLegendOpen,
     loading,
-    loadingSchedules,
     isOnline,
     connectionError,
-    selectedDepartment,
-    allDepartments,
     setIsLegendOpen,
     handleMonthChange,
     handleStatusChange,
     handleFiltersChange,
-    handleDepartmentChange,
     refreshData
   };
 };

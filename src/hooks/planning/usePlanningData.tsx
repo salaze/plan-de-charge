@@ -8,7 +8,7 @@ import { fetchProjects } from '@/utils/supabase/projects';
 import { checkSupabaseConnection } from '@/utils/supabase/connection';
 import { syncStatusesWithDatabase } from '@/utils/supabase/sync';
 
-export const usePlanningData = (currentYear?: number, currentMonth?: number) => {
+export const usePlanningData = (currentYear?: number, currentMonth?: number, selectedDepartment?: string | null) => {
   const year = currentYear || new Date().getFullYear();
   const month = currentMonth || new Date().getMonth();
   
@@ -24,6 +24,7 @@ export const usePlanningData = (currentYear?: number, currentMonth?: number) => 
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
   const [retryCount, setRetryCount] = useState(0);
+  const [allDepartments, setAllDepartments] = useState<string[]>([]);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -51,12 +52,23 @@ export const usePlanningData = (currentYear?: number, currentMonth?: number) => 
       const projects = await fetchProjects();
       console.log(`${projects.length} projets récupérés de Supabase:`, projects);
       
-      // Augmenter le timeout pour la récupération des employés
-      const employees = await fetchEmployees();
+      // Si c'est le premier chargement, récupérer la liste de tous les départements
+      if (allDepartments.length === 0) {
+        const allEmployees = await fetchEmployees();
+        const departments = [...new Set(allEmployees.map(emp => emp.department || 'Sans département'))];
+        setAllDepartments(departments);
+        console.log("Départements disponibles:", departments);
+      }
+      
+      // Récupérer uniquement les employés du département sélectionné s'il y en a un
+      const employees = await fetchEmployees(selectedDepartment || undefined);
       console.log(`${employees.length} employés récupérés de Supabase`);
       
       if (employees.length === 0) {
-        toast.warning("Aucun employé trouvé dans la base de données");
+        toast.warning(selectedDepartment 
+          ? `Aucun employé trouvé dans le département ${selectedDepartment}`
+          : "Aucun employé trouvé dans la base de données"
+        );
       }
       
       // Charger le planning pour chaque employé
@@ -104,7 +116,7 @@ export const usePlanningData = (currentYear?: number, currentMonth?: number) => 
     } finally {
       setLoading(false);
     }
-  }, [year, month, retryCount]);
+  }, [year, month, retryCount, selectedDepartment, allDepartments]);
 
   useEffect(() => {
     loadData();
@@ -124,6 +136,7 @@ export const usePlanningData = (currentYear?: number, currentMonth?: number) => 
     isOnline, 
     connectionError, 
     reloadData, 
-    lastRefresh 
+    lastRefresh,
+    allDepartments
   };
 };

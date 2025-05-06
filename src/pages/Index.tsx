@@ -9,6 +9,7 @@ import { PlanningContent } from '@/components/planning/PlanningContent';
 import { ConnectionError } from '@/components/planning/ConnectionError';
 import { DisconnectionAlert } from '@/components/planning/DisconnectionAlert';
 import { useStatusDialogTracker } from '@/hooks/planning/useStatusDialogTracker';
+import { DepartmentSelector } from '@/components/planning/DepartmentSelector';
 
 const Index = () => {
   const { isAdmin } = useAuth();
@@ -22,10 +23,13 @@ const Index = () => {
     loading,
     isOnline,
     connectionError,
+    selectedDepartment,
+    allDepartments,
     setIsLegendOpen,
     handleMonthChange,
     handleStatusChange,
     handleFiltersChange,
+    handleDepartmentChange,
     refreshData
   } = usePlanningState();
   
@@ -52,6 +56,17 @@ const Index = () => {
           onFiltersChange={handleFiltersChange}
           onRefresh={refreshData}
         />
+        
+        <div className="flex items-center justify-between">
+          <DepartmentSelector 
+            departments={allDepartments}
+            selectedDepartment={selectedDepartment}
+            onDepartmentChange={handleDepartmentChange}
+            isLoading={loading}
+          />
+          
+          {loading && <div className="text-sm text-muted-foreground">Chargement des données...</div>}
+        </div>
         
         {connectionError ? (
           <ConnectionError

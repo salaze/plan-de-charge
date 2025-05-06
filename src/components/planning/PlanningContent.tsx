@@ -37,6 +37,19 @@ export function PlanningContent({
         </div>
       );
     }
+
+    if (employees.length === 0) {
+      return (
+        <div className="flex items-center justify-center h-full py-12">
+          <div className="text-center p-6 bg-muted/30 rounded-lg max-w-md">
+            <h3 className="text-lg font-medium mb-2">Aucun employé à afficher</h3>
+            <p className="text-muted-foreground">
+              Aucun employé n'a été trouvé pour les critères sélectionnés. Essayez de changer de département ou de réinitialiser les filtres.
+            </p>
+          </div>
+        </div>
+      );
+    }
     
     return (
       <PlanningGrid 
@@ -52,7 +65,7 @@ export function PlanningContent({
   }, [loading, year, month, employees, projects, onStatusChange, isAdmin, onStatusDialogChange]);
 
   return (
-    <div className="overflow-auto h-[calc(100vh-220px)]">
+    <div className="overflow-auto h-[calc(100vh-280px)]">
       <div className="min-w-max pr-4 pb-8">
         {content}
       </div>

@@ -4,7 +4,6 @@ import {
   Table,
   TableBody
 } from '@/components/ui/table';
-import { toast } from 'sonner';
 import { 
   generateDaysInMonth, 
   formatDate,
@@ -44,9 +43,6 @@ export function PlanningGrid({
   isAdmin,
   onStatusDialogChange
 }: PlanningGridProps) {
-  // État pour stocker le département sélectionné
-  const [selectedDepartment, setSelectedDepartment] = useState<string | null>(null);
-  
   // Extract grid functionality to a custom hook
   const {
     selectedCell,
@@ -106,29 +102,6 @@ export function PlanningGrid({
     return groupEmployeesByDepartment(employees);
   }, [employees]);
   
-  // Filtrer les départements en fonction de la sélection - memoize this
-  const filteredGroups = useMemo(() => {
-    return selectedDepartment 
-      ? departmentGroups.filter(group => group.name === selectedDepartment)
-      : departmentGroups;
-  }, [departmentGroups, selectedDepartment]);
-  
-  // Extraire la liste de tous les départements - memoize this
-  const allDepartments = useMemo(() => {
-    return departmentGroups.map(group => group.name);
-  }, [departmentGroups]);
-  
-  // Gérer la sélection d'un département
-  const handleDepartmentSelect = (department: string) => {
-    if (department === selectedDepartment) {
-      setSelectedDepartment(null); // Désélectionner si on clique sur le même département
-      toast.info("Affichage de tous les départements");
-    } else {
-      setSelectedDepartment(department);
-      toast.info(`Département ${department} sélectionné`);
-    }
-  };
-  
   // Create an empty array if no employees are available
   const noContentMessage = useMemo(() => (
     <div className="text-center p-8 bg-muted/30 rounded-lg">
@@ -148,14 +121,12 @@ export function PlanningGrid({
           <PlanningGridHeader days={days} />
           
           <TableBody>
-            {filteredGroups.map((group, groupIndex) => (
+            {departmentGroups.map((group, groupIndex) => (
               <React.Fragment key={`dept-${groupIndex}`}>
-                {/* Department header with dropdown */}
+                {/* Department header - simplified */}
                 <DepartmentHeader 
                   name={group.name} 
                   colSpan={days.length * 2 + 2}
-                  allDepartments={allDepartments}
-                  onDepartmentSelect={handleDepartmentSelect}
                 />
                 
                 {/* Employee rows */}
@@ -174,7 +145,7 @@ export function PlanningGrid({
         </Table>
       </div>
     );
-  }, [employees, days, filteredGroups, allDepartments, handleDepartmentSelect, getTotalStats, handleCellClick, noContentMessage]);
+  }, [employees, days, departmentGroups, getTotalStats, handleCellClick, noContentMessage]);
   
   return (
     <>

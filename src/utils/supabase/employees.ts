@@ -1,5 +1,6 @@
+
 import { supabase } from "@/integrations/supabase/client";
-import { Employee } from '@/types';
+import { Employee, UserRole } from '@/types';
 import { toast } from 'sonner';
 
 export const fetchEmployees = async (departmentFilter?: string) => {
@@ -31,7 +32,7 @@ export const fetchEmployees = async (departmentFilter?: string) => {
       lastName: emp.nom,
       jobTitle: emp.fonction || '',
       department: emp.departement || '',
-      role: emp.role || '',
+      role: (emp.role || 'employee') as UserRole, // Conversion explicite en UserRole
       uid: emp.uid || '',
       schedule: [] // Sera rempli séparément
     }));

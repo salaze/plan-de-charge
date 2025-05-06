@@ -171,3 +171,6 @@ export function PlanningGrid({
     </>
   );
 }
+
+// Exportation par défaut pour le lazy loading
+export default PlanningGrid;

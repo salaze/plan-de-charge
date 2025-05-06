@@ -1,8 +1,10 @@
 
-import React, { useMemo } from 'react';
-import { PlanningGrid } from '@/components/calendar/PlanningGrid';
+import React, { useMemo, Suspense, lazy } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Loader2 } from 'lucide-react';
+
+// Lazy load la grille pour améliorer les performances du premier affichage
+const PlanningGrid = lazy(() => import('@/components/calendar/PlanningGrid').then(module => ({ default: module.PlanningGrid })));
 
 interface PlanningContentProps {
   loading: boolean;
@@ -27,11 +29,11 @@ export function PlanningContent({
   onStatusChange,
   onStatusDialogChange
 }: PlanningContentProps) {
-  // Always render loading skeleton or the content, never conditionally
+  // Optimiser le rendu avec useMemo
   const content = useMemo(() => {
     if (loading) {
       return (
-        <div className="space-y-4">
+        <div className="space-y-4 animate-pulse">
           <Skeleton className="h-10 w-full" />
           <Skeleton className="h-16 w-full" />
           <Skeleton className="h-16 w-full" />
@@ -62,15 +64,22 @@ export function PlanningContent({
             <span>Chargement des plannings...</span>
           </div>
         )}
-        <PlanningGrid 
-          year={year} 
-          month={month} 
-          employees={employees || []}
-          projects={projects || []}
-          onStatusChange={onStatusChange}
-          isAdmin={isAdmin}
-          onStatusDialogChange={onStatusDialogChange}
-        />
+        <Suspense fallback={
+          <div className="flex items-center justify-center p-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <span className="ml-2">Préparation de la grille de planning...</span>
+          </div>
+        }>
+          <PlanningGrid 
+            year={year} 
+            month={month} 
+            employees={employees || []}
+            projects={projects || []}
+            onStatusChange={onStatusChange}
+            isAdmin={isAdmin}
+            onStatusDialogChange={onStatusDialogChange}
+          />
+        </Suspense>
       </div>
     );
   }, [loading, loadingSchedules, year, month, employees, projects, onStatusChange, isAdmin, onStatusDialogChange]);
@@ -83,3 +92,5 @@ export function PlanningContent({
     </div>
   );
 }
+
+export default PlanningContent;

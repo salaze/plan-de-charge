@@ -2,11 +2,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { RealtimeChannel } from '@supabase/supabase-js';
 
 export const useRealtimeSync = (isConnected: boolean, onDataChange: () => void) => {
   const [isListening, setIsListening] = useState(false);
   const reconnectTimerRef = useRef<number | null>(null);
-  const channelsRef = useRef<Array<{ unsubscribe: () => void }>>([]);
+  const channelsRef = useRef<RealtimeChannel[]>([]);
 
   useEffect(() => {
     // Variable pour suivre si l'on est en mode édition
@@ -183,7 +184,9 @@ export const useRealtimeSync = (isConnected: boolean, onDataChange: () => void) 
     const cleanupChannels = () => {
       channelsRef.current.forEach(channel => {
         try {
-          supabase.removeChannel(channel);
+          if (channel) {
+            supabase.removeChannel(channel);
+          }
         } catch (error) {
           console.error('Erreur lors du nettoyage du canal:', error);
         }

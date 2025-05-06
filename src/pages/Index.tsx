@@ -21,6 +21,7 @@ const Index = () => {
     filters,
     isLegendOpen,
     loading,
+    loadingSchedules,
     isOnline,
     connectionError,
     selectedDepartment,
@@ -77,6 +78,7 @@ const Index = () => {
           <div className="glass-panel p-1 md:p-4 animate-scale-in flex-1 overflow-hidden">
             <PlanningContent
               loading={loading}
+              loadingSchedules={loadingSchedules}
               employees={data.employees || []}
               projects={data.projects || []}
               year={currentYear}

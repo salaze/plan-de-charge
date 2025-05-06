@@ -25,7 +25,9 @@ export const usePlanningData = (currentYear?: number, currentMonth?: number, sel
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
   const [retryCount, setRetryCount] = useState(0);
   const [allDepartments, setAllDepartments] = useState<string[]>([]);
+  const [loadingSchedules, setLoadingSchedules] = useState(false);
 
+  // Load employee data with optimized approach
   const loadData = useCallback(async () => {
     setLoading(true);
     setConnectionError(null);
@@ -50,7 +52,7 @@ export const usePlanningData = (currentYear?: number, currentMonth?: number, sel
       
       // Récupérer les projets depuis Supabase (avant les employés pour garantir qu'ils sont disponibles)
       const projects = await fetchProjects();
-      console.log(`${projects.length} projets récupérés de Supabase:`, projects);
+      console.log(`${projects.length} projets récupérés de Supabase`);
       
       // Si c'est le premier chargement, récupérer la liste de tous les départements
       if (allDepartments.length === 0) {
@@ -64,30 +66,11 @@ export const usePlanningData = (currentYear?: number, currentMonth?: number, sel
       const employees = await fetchEmployees(selectedDepartment || undefined);
       console.log(`${employees.length} employés récupérés de Supabase`);
       
-      if (employees.length === 0) {
-        toast.warning(selectedDepartment 
-          ? `Aucun employé trouvé dans le département ${selectedDepartment}`
-          : "Aucun employé trouvé dans la base de données"
-        );
+      if (employees.length === 0 && selectedDepartment) {
+        toast.warning(`Aucun employé trouvé dans le département ${selectedDepartment}`);
       }
       
-      // Charger le planning pour chaque employé
-      let schedulesLoaded = 0;
-      for (let i = 0; i < employees.length; i++) {
-        try {
-          const schedule = await fetchSchedule(employees[i].id);
-          employees[i].schedule = schedule;
-          schedulesLoaded += schedule.length;
-          console.log(`Planning chargé pour l'employé ${employees[i].name}: ${schedule.length} entrées`);
-        } catch (scheduleError) {
-          console.error(`Erreur lors du chargement du planning pour ${employees[i].name}:`, scheduleError);
-          employees[i].schedule = [];
-        }
-      }
-      
-      console.log(`Total des entrées de planning chargées: ${schedulesLoaded}`);
-      console.log(`Nombre total d'employés chargés: ${employees.length}`);
-      
+      // Mettre à jour les données sans les plannings pour un affichage immédiat
       setData({
         year: year,
         month: month,
@@ -95,6 +78,45 @@ export const usePlanningData = (currentYear?: number, currentMonth?: number, sel
         projects
       });
       
+      // Réduire l'état de chargement principal pour afficher l'UI
+      setLoading(false);
+      
+      // Maintenant charger les plannings en arrière-plan
+      setLoadingSchedules(true);
+      
+      // Charger le planning pour chaque employé de façon optimisée
+      // Utiliser Promise.all pour paralléliser les requêtes
+      const schedulesPromises = employees.map(employee => 
+        fetchSchedule(employee.id)
+          .then(schedule => ({
+            employeeId: employee.id,
+            schedule
+          }))
+          .catch(error => {
+            console.error(`Erreur lors du chargement du planning pour ${employee.name}:`, error);
+            return { employeeId: employee.id, schedule: [] };
+          })
+      );
+      
+      const scheduleResults = await Promise.all(schedulesPromises);
+      
+      // Utiliser une approche immutable pour mettre à jour les employés
+      setData(prevData => {
+        const updatedEmployees = prevData.employees.map(employee => {
+          const employeeSchedule = scheduleResults.find(s => s.employeeId === employee.id);
+          return {
+            ...employee,
+            schedule: employeeSchedule ? employeeSchedule.schedule : []
+          };
+        });
+        
+        return {
+          ...prevData,
+          employees: updatedEmployees
+        };
+      });
+      
+      setLoadingSchedules(false);
       setLastRefresh(new Date());
       setRetryCount(0); // Réinitialiser le compteur de tentatives car le chargement a réussi
       
@@ -114,7 +136,7 @@ export const usePlanningData = (currentYear?: number, currentMonth?: number, sel
         }, 2000);
       }
     } finally {
-      setLoading(false);
+      if (loading) setLoading(false);
     }
   }, [year, month, retryCount, selectedDepartment, allDepartments]);
 
@@ -133,6 +155,7 @@ export const usePlanningData = (currentYear?: number, currentMonth?: number, sel
     data, 
     setData, 
     loading, 
+    loadingSchedules,
     isOnline, 
     connectionError, 
     reloadData, 

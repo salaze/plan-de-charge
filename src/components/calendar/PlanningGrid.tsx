@@ -49,7 +49,8 @@ export function PlanningGrid({
     selectedPeriod,
     isEditing,
     handleCellClick,
-    handleCloseDialog
+    handleCloseDialog,
+    getVisibleDays
   } = usePlanningGrid(isAdmin);
   
   // Notifier le parent quand le dialogue s'ouvre ou se ferme
@@ -67,6 +68,11 @@ export function PlanningGrid({
   const days = useMemo(() => {
     return generateDaysInMonth(safeYear, safeMonth);
   }, [safeYear, safeMonth]);
+
+  // For mobile, we want to show fewer days
+  const visibleDays = useMemo(() => {
+    return getVisibleDays(days, safeYear, safeMonth);
+  }, [days, safeYear, safeMonth, getVisibleDays]);
   
   // Handler for status changes
   const handleStatusChange = (status: StatusCode, isHighlighted?: boolean, projectCode?: string) => {
@@ -118,7 +124,7 @@ export function PlanningGrid({
     return (
       <div className="w-full">
         <Table className="border rounded-lg bg-white dark:bg-gray-900 shadow-sm w-full">
-          <PlanningGridHeader days={days} />
+          <PlanningGridHeader days={visibleDays} />
           
           <TableBody>
             {departmentGroups.map((group, groupIndex) => (
@@ -126,7 +132,7 @@ export function PlanningGrid({
                 {/* Department header - simplified */}
                 <DepartmentHeader 
                   name={group.name} 
-                  colSpan={days.length * 2 + 2}
+                  colSpan={visibleDays.length * 2 + 2}
                 />
                 
                 {/* Employee rows */}
@@ -134,7 +140,7 @@ export function PlanningGrid({
                   <EmployeeRow
                     key={employee.id}
                     employee={employee}
-                    visibleDays={days}
+                    visibleDays={visibleDays}
                     totalStats={getTotalStats(employee)}
                     onCellClick={handleCellClick}
                   />
@@ -145,7 +151,7 @@ export function PlanningGrid({
         </Table>
       </div>
     );
-  }, [employees, days, departmentGroups, getTotalStats, handleCellClick, noContentMessage]);
+  }, [employees, visibleDays, departmentGroups, getTotalStats, handleCellClick, noContentMessage]);
   
   return (
     <>

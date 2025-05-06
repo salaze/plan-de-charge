@@ -2,9 +2,11 @@
 import React, { useMemo } from 'react';
 import { PlanningGrid } from '@/components/calendar/PlanningGrid';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Loader2 } from 'lucide-react';
 
 interface PlanningContentProps {
   loading: boolean;
+  loadingSchedules?: boolean;
   employees: any[];
   projects: any[];
   year: number;
@@ -16,6 +18,7 @@ interface PlanningContentProps {
 
 export function PlanningContent({
   loading,
+  loadingSchedules,
   employees,
   projects,
   year,
@@ -52,17 +55,25 @@ export function PlanningContent({
     }
     
     return (
-      <PlanningGrid 
-        year={year} 
-        month={month} 
-        employees={employees || []}
-        projects={projects || []}
-        onStatusChange={onStatusChange}
-        isAdmin={isAdmin}
-        onStatusDialogChange={onStatusDialogChange}
-      />
+      <div className="relative">
+        {loadingSchedules && (
+          <div className="absolute top-2 right-2 bg-background/80 rounded-full px-3 py-1.5 flex items-center gap-2 z-10 shadow-sm border text-xs">
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            <span>Chargement des plannings...</span>
+          </div>
+        )}
+        <PlanningGrid 
+          year={year} 
+          month={month} 
+          employees={employees || []}
+          projects={projects || []}
+          onStatusChange={onStatusChange}
+          isAdmin={isAdmin}
+          onStatusDialogChange={onStatusDialogChange}
+        />
+      </div>
     );
-  }, [loading, year, month, employees, projects, onStatusChange, isAdmin, onStatusDialogChange]);
+  }, [loading, loadingSchedules, year, month, employees, projects, onStatusChange, isAdmin, onStatusDialogChange]);
 
   return (
     <div className="overflow-auto h-[calc(100vh-280px)]">

@@ -1,6 +1,6 @@
 
 import { MonthData } from '@/types';
-import { syncWithSupabase } from '@/utils/supabase/sync';
+import { syncWithSupabase } from '@/utils/supabase/data';
 import { toast } from 'sonner';
 import { useState } from 'react';
 

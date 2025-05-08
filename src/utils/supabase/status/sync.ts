@@ -1,8 +1,5 @@
 
-import { MonthData, StatusCode, STATUS_LABELS, STATUS_COLORS } from '@/types';
-import { toast } from 'sonner';
-import { saveEmployee } from './employees';
-import { saveScheduleEntry, deleteScheduleEntry } from './schedule';
+import { StatusCode, STATUS_LABELS, STATUS_COLORS } from '@/types';
 import { supabase } from "@/integrations/supabase/client";
 
 /**
@@ -82,33 +79,5 @@ export const syncStatusesWithDatabase = async () => {
   } catch (error) {
     console.error('Erreur lors de la synchronisation des statuts:', error);
     return false;
-  }
-};
-
-export const syncWithSupabase = async (data: MonthData) => {
-  try {
-    // Synchroniser les statuts d'abord
-    await syncStatusesWithDatabase();
-    
-    // First, synchronize employees
-    for (const employee of data.employees) {
-      await saveEmployee(employee);
-      
-      // Then sync their schedule
-      for (const scheduleItem of employee.schedule) {
-        if (scheduleItem.status === '') {
-          await deleteScheduleEntry(employee.id, scheduleItem.date, scheduleItem.period);
-        } else {
-          await saveScheduleEntry(employee.id, scheduleItem);
-        }
-      }
-    }
-    
-    toast.success('Données synchronisées avec Supabase');
-    return true;
-  } catch (error) {
-    console.error('Error synchronizing with Supabase:', error);
-    toast.error('Erreur lors de la synchronisation avec Supabase');
-    throw error;
   }
 };

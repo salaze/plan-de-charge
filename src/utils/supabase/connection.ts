@@ -24,6 +24,20 @@ export const checkSupabaseConnection = async () => {
       throw error;
     }
     
+    // Nouveau: vérifier également l'accès à employe_schedule après mise à jour RLS
+    const { data: scheduleData, error: scheduleError } = await supabase
+      .from('employe_schedule')
+      .select('id')
+      .limit(1);
+      
+    if (scheduleError) {
+      console.error("Erreur d'accès à employe_schedule:", scheduleError);
+      // Ne pas échouer ici, car la connexion principale est établie
+      toast.warning("Connexion établie mais des accès aux données peuvent être limités");
+    } else {
+      console.log("Accès à employe_schedule vérifié avec succès");
+    }
+    
     console.log("Connexion à Supabase établie avec succès");
     return true;
   } catch (error) {

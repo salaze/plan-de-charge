@@ -5,3 +5,4 @@ export * from './projects';
 export * from './schedule';
 export * from './sync';
 export * from './settings';
+export * from './connectionMonitor';

@@ -4,4 +4,4 @@ export * from './supabase';
 export * from './supabase/connection';
 export * from './supabase/employees';
 export * from './supabase/projects';
-export * from './supabase/schedule';
+export * from './supabase/schedule/index';

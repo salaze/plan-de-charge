@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StatusCode, DayPeriod } from '@/types';
 import { useStatusOptions } from '@/hooks/useStatusOptions';
 import { useStatusSelector } from '@/hooks/status/useStatusSelector';
@@ -24,8 +24,8 @@ export function StatusSelectorEnhanced({
   projectCode = '',
   selectedPeriod = 'AM'
 }: StatusSelectorEnhancedProps) {
-  // Use our custom hooks
-  const { statuses, isLoading } = useStatusOptions();
+  // Use our custom hooks with refreshStatuses
+  const { statuses, isLoading, refreshStatuses } = useStatusOptions();
   const { 
     selectedStatus,
     highlightedStatus,
@@ -40,6 +40,12 @@ export function StatusSelectorEnhanced({
     initialProjectCode: projectCode || '',
     onComplete: onChange
   });
+  
+  // Forcer un rafraîchissement des statuts à l'ouverture de la boîte de dialogue
+  useEffect(() => {
+    console.log("StatusSelectorEnhanced: Montage du composant, rafraîchissement des statuts");
+    refreshStatuses();
+  }, [refreshStatuses]);
   
   // Determine if there's a loading error
   const loadingError = !isLoading && (!statuses || statuses.length === 0);

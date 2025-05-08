@@ -6,12 +6,13 @@ import { useStatusEvents } from './status/useStatusEvents';
 
 export function useStatusOptions() {
   const [refreshKey, setRefreshKey] = useState(0);
-  const { availableStatuses, isLoading } = useStatusLoader();
+  const { availableStatuses, isLoading, refreshStatuses } = useStatusLoader();
   
   const handleStatusesUpdated = useCallback(() => {
     console.log("useStatusOptions: Mise à jour des statuts détectée");
     setRefreshKey(prev => prev + 1);
-  }, []);
+    refreshStatuses(); // Appel explicite au rafraîchissement
+  }, [refreshStatuses]);
 
   useStatusEvents(handleStatusesUpdated);
 
@@ -20,7 +21,8 @@ export function useStatusOptions() {
 
   return {
     statuses: availableStatuses,
-    isLoading
+    isLoading,
+    refreshStatuses
   };
 }
 

@@ -3,12 +3,13 @@ import React, { useEffect } from 'react';
 import { RadioGroup } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { StatusCode } from '@/types';
+import { StatusCode, STATUS_LABELS } from '@/types';
 import { StatusOption } from '../StatusOption';
 import { ProjectSelector } from '../ProjectSelector';
 import { HighlightOption } from '../HighlightOption';
-import { Loader2 } from 'lucide-react';
+import { Loader2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
+import { useStatusOptions } from '@/hooks/useStatusOptions';
 
 interface StatusOptionsListProps {
   statuses: StatusCode[];
@@ -35,6 +36,8 @@ export function StatusOptionsList({
   onSubmit,
   isValidating = false
 }: StatusOptionsListProps) {
+  const { refreshStatuses } = useStatusOptions();
+  
   // Vérifier si des projets sont disponibles
   const hasProjects = projects && projects.length > 0;
   
@@ -42,6 +45,12 @@ export function StatusOptionsList({
   const isSubmitDisabled = 
     isValidating || 
     (selectedStatus === 'projet' && (!selectedProject || selectedProject === 'no-project' || !hasProjects));
+
+  // Fonction pour rafraîchir les statuts
+  const handleRefreshStatuses = () => {
+    toast.info("Rafraîchissement des statuts en cours...");
+    refreshStatuses();
+  };
 
   // Vérifier la sélection du projet à chaque rendu ou changement de statut
   useEffect(() => {
@@ -62,7 +71,19 @@ export function StatusOptionsList({
   return (
     <div className="space-y-6">
       <div className="space-y-3">
-        <Label className="text-base">Sélectionner un statut</Label>
+        <div className="flex justify-between items-center">
+          <Label className="text-base">Sélectionner un statut</Label>
+          <Button 
+            type="button" 
+            variant="outline" 
+            size="icon" 
+            onClick={handleRefreshStatuses} 
+            title="Rafraîchir les statuts"
+          >
+            <RefreshCw className="h-4 w-4" />
+          </Button>
+        </div>
+        
         <RadioGroup 
           value={selectedStatus} 
           onValueChange={(value) => onStatusChange(value as StatusCode)}
@@ -72,7 +93,7 @@ export function StatusOptionsList({
             <StatusOption 
               key={status} 
               value={status} 
-              label={status} 
+              label={STATUS_LABELS[status] || status}
             />
           ))}
         </RadioGroup>

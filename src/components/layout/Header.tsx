@@ -40,10 +40,10 @@ export function Header({ isSidebarOpen, setIsSidebarOpen }: HeaderProps) {
         {user && (
           <div className="flex items-center gap-2">
             <Avatar className="h-8 w-8">
-              <AvatarFallback>{getInitials(user.name || "User")}</AvatarFallback>
+              <AvatarFallback>{getInitials(user.username || "User")}</AvatarFallback>
             </Avatar>
             <span className="hidden sm:inline-block font-medium text-sm">
-              {user.name || "User"}
+              {user.username || "User"}
             </span>
             <ChevronDown className="h-4 w-4 text-muted-foreground" />
           </div>

@@ -6,7 +6,7 @@ import { fetchEmployees } from '@/utils/supabase/employees';
 import { fetchSchedule } from '@/utils/supabase/schedule';
 import { fetchProjects } from '@/utils/supabase/projects';
 import { checkSupabaseConnection } from '@/utils/supabase/connection';
-import { syncStatusesWithDatabase } from '@/utils/supabase/sync';
+import { syncStatusesWithDatabase } from '@/utils/supabase/status/sync';
 
 export const usePlanningData = (currentYear?: number, currentMonth?: number) => {
   const year = currentYear || new Date().getFullYear();
@@ -127,3 +127,4 @@ export const usePlanningData = (currentYear?: number, currentMonth?: number) => 
     lastRefresh 
   };
 };
+

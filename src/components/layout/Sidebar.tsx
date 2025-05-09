@@ -15,8 +15,8 @@ export function Sidebar({ isSidebarOpen, setIsSidebarOpen }: SidebarProps) {
   return (
     <aside
       className={`fixed md:absolute h-screen z-30 ${
-        isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-      } md:translate-x-[-100%] bg-primary text-primary-foreground border-r min-w-[240px] p-4 
+        isSidebarOpen ? "translate-x-0" : "-translate-x-[calc(100%-1mm)]"
+      } md:translate-x-[calc(-100%+1mm)] bg-primary text-primary-foreground border-r min-w-[240px] p-4 
         transition-transform duration-300 ease-in-out hover:translate-x-0 
         hover:shadow-lg group`}
       onMouseEnter={() => setIsSidebarOpen(true)}

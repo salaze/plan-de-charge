@@ -11,7 +11,7 @@ export function StatusLoadingState() {
         <span>Chargement des statuts...</span>
       </div>
       <div className="grid grid-cols-2 gap-2">
-        {[...Array(6)].map((_, i) => (
+        {Array.from({ length: 6 }).map((_, i) => (
           <Skeleton key={i} className="h-10 w-full" />
         ))}
       </div>

@@ -1,9 +1,11 @@
+
 import * as React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { DayPicker } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
+import { isFrenchHoliday } from "@/utils";
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
@@ -13,10 +15,20 @@ function Calendar({
   showOutsideDays = true,
   ...props
 }: CalendarProps) {
+  // Fonction de style personnalisée pour marquer les jours fériés
+  const modifiersClassNames = {
+    holiday: "text-red-500 font-bold border border-red-300 bg-red-50",
+  };
+  
+  // Modifier pour les jours fériés
+  const modifiers = {
+    holiday: (date: Date) => isFrenchHoliday(date),
+  };
+
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
-      className={cn("p-3", className)}
+      className={cn("p-3 pointer-events-auto", className)}
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",
@@ -50,11 +62,13 @@ function Calendar({
           "aria-selected:bg-accent aria-selected:text-accent-foreground",
         day_hidden: "invisible",
         ...classNames,
+        ...modifiersClassNames,
       }}
       components={{
         IconLeft: ({ ..._props }) => <ChevronLeft className="h-4 w-4" />,
         IconRight: ({ ..._props }) => <ChevronRight className="h-4 w-4" />,
       }}
+      modifiers={modifiers}
       {...props}
     />
   );

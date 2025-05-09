@@ -1,6 +1,7 @@
 
 import { DayStatus } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
+import { isFrenchHoliday } from './dateUtils';
 
 /**
  * Checks if a date is a weekend day or holiday
@@ -10,6 +11,9 @@ import { supabase } from '@/integrations/supabase/client';
 export const isWeekendOrHoliday = async (date: Date): Promise<boolean> => {
   const isWeekend = date.getDay() === 0 || date.getDay() === 6;
   if (isWeekend) return true;
+  
+  // Vérifier si c'est un jour férié français
+  if (isFrenchHoliday(date)) return true;
   
   const dateString = date.toISOString().split('T')[0];
   return await isHoliday(dateString);
@@ -22,6 +26,14 @@ export const isWeekendOrHoliday = async (date: Date): Promise<boolean> => {
  */
 export const isHoliday = async (date: string): Promise<boolean> => {
   try {
+    // Convertir la date string en objet Date
+    const [year, month, day] = date.split('-').map(Number);
+    const dateObj = new Date(year, month - 1, day);
+    
+    // Vérifier si c'est un jour férié français
+    if (isFrenchHoliday(dateObj)) return true;
+    
+    // Si ce n'est pas un jour férié français, vérifier les jours fériés personnalisés
     // Fall back to hardcoded holidays since 'holidays' table doesn't exist yet
     // This is a simplified approach - in reality, we should calculate these dynamically
     const holidays2024 = [

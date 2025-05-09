@@ -24,7 +24,7 @@ export function Layout({ children }: LayoutProps) {
             isSidebarOpen={isSidebarOpen} 
             setIsSidebarOpen={setIsSidebarOpen} 
           />
-          <div className="flex-1 p-4">
+          <div className="flex-1 p-0 md:p-2">
             {children}
           </div>
         </main>

@@ -37,7 +37,7 @@ const Index = () => {
   
   return (
     <Layout>
-      <div className="space-y-4 animate-fade-in h-[calc(100vh-80px)] flex flex-col">
+      <div className="h-full flex flex-col animate-fade-in">
         <PlanningHeader
           year={currentYear}
           month={currentMonth}

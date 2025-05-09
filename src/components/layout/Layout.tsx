@@ -13,18 +13,18 @@ export function Layout({ children }: LayoutProps) {
 
   return (
     <SidebarProvider defaultOpen={false}>
-      <div className="flex min-h-screen bg-gray-50 w-full">
+      <div className="flex min-h-screen w-full">
         <Sidebar 
           isSidebarOpen={isSidebarOpen} 
           setIsSidebarOpen={setIsSidebarOpen}
         />
         
-        <main className="flex-1">
+        <main className="flex-1 flex flex-col w-full">
           <Header 
             isSidebarOpen={isSidebarOpen} 
             setIsSidebarOpen={setIsSidebarOpen} 
           />
-          <div className="p-6">
+          <div className="flex-1 p-4">
             {children}
           </div>
         </main>

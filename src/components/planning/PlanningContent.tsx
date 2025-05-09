@@ -52,7 +52,7 @@ export function PlanningContent({
   }, [loading, year, month, employees, projects, onStatusChange, isAdmin, onStatusDialogChange]);
 
   return (
-    <div className="overflow-auto h-[calc(100vh-220px)]">
+    <div className="overflow-auto h-[calc(100vh-180px)]">
       <div className="min-w-max pr-4 pb-8">
         {content}
       </div>

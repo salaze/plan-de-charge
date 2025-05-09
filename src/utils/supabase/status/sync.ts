@@ -67,9 +67,10 @@ export const syncStatusesWithDatabase = async () => {
       if (hasUpdates) {
         console.log("Mise à jour des statuts détectée, notification de l'application");
         
-        // Déclencher un événement pour informer l'application
+        // Modification: Ajouter un flag pour indiquer que cette notification vient
+        // directement de la synchronisation pour éviter les boucles de rechargement
         const event = new CustomEvent('statusesUpdated', { 
-          detail: { noRefresh: false } 
+          detail: { fromSync: true } 
         });
         window.dispatchEvent(event);
       }

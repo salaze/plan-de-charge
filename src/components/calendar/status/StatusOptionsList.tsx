@@ -37,6 +37,8 @@ export function StatusOptionsList({
   isValidating = false
 }: StatusOptionsListProps) {
   const { refreshStatuses } = useStatusOptions();
+  // Ajout d'un état local pour suivre l'état du rafraîchissement
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
   
   // Vérifier si des projets sont disponibles
   const hasProjects = projects && projects.length > 0;
@@ -48,8 +50,17 @@ export function StatusOptionsList({
 
   // Fonction pour rafraîchir les statuts
   const handleRefreshStatuses = () => {
+    if (isRefreshing) return;
+    
+    setIsRefreshing(true);
     toast.info("Rafraîchissement des statuts en cours...");
+    
     refreshStatuses();
+    
+    // Réactiver le bouton après un délai
+    setTimeout(() => {
+      setIsRefreshing(false);
+    }, 1500);
   };
 
   // Vérifier la sélection du projet à chaque rendu ou changement de statut
@@ -79,8 +90,13 @@ export function StatusOptionsList({
             size="icon" 
             onClick={handleRefreshStatuses} 
             title="Rafraîchir les statuts"
+            disabled={isRefreshing}
           >
-            <RefreshCw className="h-4 w-4" />
+            {isRefreshing ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
           </Button>
         </div>
         

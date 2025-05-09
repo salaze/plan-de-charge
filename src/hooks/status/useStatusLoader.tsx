@@ -17,10 +17,13 @@ export function useStatusLoader(): UseStatusLoaderResult {
   const retryCountRef = useRef(0);
   const loadingTimeoutRef = useRef<number | null>(null);
   const isMounted = useRef(true);
+  // Ajout d'un flag pour éviter les doubles chargements
+  const isRefreshingRef = useRef(false);
 
   const loadStatusesFromSupabase = async () => {
-    if (!isMounted.current) return;
+    if (!isMounted.current || isRefreshingRef.current) return;
     
+    isRefreshingRef.current = true;
     setIsLoading(true);
     
     if (loadingTimeoutRef.current) {
@@ -39,6 +42,7 @@ export function useStatusLoader(): UseStatusLoaderResult {
         'regisseur', 'demenagement', 'permanence', 'parc'
       ];
       setAvailableStatuses(defaultStatuses);
+      isRefreshingRef.current = false;
     }, 3000);
     
     try {
@@ -82,13 +86,6 @@ export function useStatusLoader(): UseStatusLoaderResult {
         
         console.log("Options de statut valides:", supabaseStatuses);
         setAvailableStatuses(supabaseStatuses);
-        
-        // Déclencher un événement pour informer les autres composants
-        const event = new CustomEvent('statusesUpdated', { 
-          detail: { statuses: supabaseStatuses, noRefresh: false } 
-        });
-        window.dispatchEvent(event);
-        
       } else {
         console.log("Aucun statut trouvé, utilisation des valeurs par défaut");
         const defaultStatuses: StatusCode[] = [
@@ -125,11 +122,16 @@ export function useStatusLoader(): UseStatusLoaderResult {
       if (isMounted.current) {
         setIsLoading(false);
       }
+      isRefreshingRef.current = false;
     }
   };
 
   // Fonction pour déclencher un rafraîchissement manuel des statuts
   const refreshStatuses = () => {
+    if (isRefreshingRef.current) {
+      console.log("Rafraîchissement des statuts déjà en cours, ignoré");
+      return;
+    }
     console.log("Rafraîchissement manuel des statuts...");
     loadStatusesFromSupabase();
   };
@@ -139,6 +141,7 @@ export function useStatusLoader(): UseStatusLoaderResult {
     console.log("useStatusLoader: Montage du composant et initialisation");
     // Réinitialiser le state pour éviter les problèmes
     isMounted.current = true;
+    isRefreshingRef.current = false;
     
     // Initialisation du chargement des statuts
     loadStatusesFromSupabase();
@@ -146,11 +149,15 @@ export function useStatusLoader(): UseStatusLoaderResult {
     // Écouter les événements de mise à jour des statuts
     const handleStatusesUpdated = (event: Event) => {
       const customEvent = event as CustomEvent;
-      const noRefresh = customEvent.detail?.noRefresh === true;
+      // Ignorer les événements provenant directement de la synchronisation
+      // pour éviter les boucles infinies
+      const fromSync = customEvent.detail?.fromSync === true;
       
-      if (!noRefresh) {
+      if (!fromSync && !isRefreshingRef.current) {
         console.log("Événement statusesUpdated reçu, rechargement des statuts");
         loadStatusesFromSupabase();
+      } else {
+        console.log("Événement statusesUpdated ignoré pour éviter une boucle");
       }
     };
     
@@ -163,6 +170,10 @@ export function useStatusLoader(): UseStatusLoaderResult {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'statuts' },
         (payload) => {
+          if (isRefreshingRef.current) {
+            console.log("Changement détecté dans la table statuts, mais ignoré car rechargement en cours");
+            return;
+          }
           console.log("Changement détecté dans la table statuts:", payload);
           loadStatusesFromSupabase();
         }

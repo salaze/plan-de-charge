@@ -14,7 +14,7 @@ export function Sidebar({ isSidebarOpen, setIsSidebarOpen }: SidebarProps) {
   
   return (
     <aside
-      className={`fixed md:static h-screen z-30 ${
+      className={`fixed md:absolute h-screen z-30 ${
         isSidebarOpen ? "translate-x-0" : "-translate-x-[85%]"
       } md:translate-x-[-80%] bg-primary text-primary-foreground border-r min-w-[240px] p-4 
         transition-transform duration-300 ease-in-out hover:translate-x-0 

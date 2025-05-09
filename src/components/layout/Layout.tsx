@@ -19,7 +19,7 @@ export function Layout({ children }: LayoutProps) {
           setIsSidebarOpen={setIsSidebarOpen}
         />
         
-        <main className="flex-1 flex flex-col w-full">
+        <main className={`flex-1 flex flex-col w-full transition-all duration-300 ${isSidebarOpen ? 'md:ml-[240px]' : ''}`}>
           <Header 
             isSidebarOpen={isSidebarOpen} 
             setIsSidebarOpen={setIsSidebarOpen} 

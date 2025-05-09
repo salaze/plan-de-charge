@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 export function useStatusEvents(onStatusesUpdated: () => void) {
   const lastUpdateTimestampRef = useRef<number>(0);
   const isProcessingRef = useRef<boolean>(false);
-  const debounceTimeRef = useRef<number>(1500); // 1.5 seconds debounce
+  const debounceTimeRef = useRef<number>(3000); // Augmenté à 3 secondes pour un debounce plus strict
 
   useEffect(() => {
     console.log("useStatusEvents: Setting up event listeners");
@@ -30,14 +30,15 @@ export function useStatusEvents(onStatusesUpdated: () => void) {
         console.log("Processing status update...");
         onStatusesUpdated();
         
-        // Reset processing flag after a cooldown period
+        // Reset processing flag after a longer cooldown period
         setTimeout(() => {
           isProcessingRef.current = false;
-        }, 1000);
-      }, 300);
+        }, 2000);
+      }, 500);
     };
     
-    // Listen for Supabase real-time events
+    // Listen for Supabase real-time events with debounce
+    let realtimeEventTimeout: number | null = null;
     const channel = supabase
       .channel('status-options-realtime')
       .on(
@@ -48,8 +49,18 @@ export function useStatusEvents(onStatusesUpdated: () => void) {
           table: 'statuts'
         },
         (payload) => {
-          console.log('Status change detected, updating options:', payload);
-          processStatusUpdate();
+          console.log('Status change detected from database:', payload);
+          
+          // Clear any pending timeout
+          if (realtimeEventTimeout) {
+            clearTimeout(realtimeEventTimeout);
+          }
+          
+          // Debounce the event processing
+          realtimeEventTimeout = window.setTimeout(() => {
+            processStatusUpdate();
+            realtimeEventTimeout = null;
+          }, 1000);
         }
       )
       .subscribe();
@@ -76,6 +87,10 @@ export function useStatusEvents(onStatusesUpdated: () => void) {
       console.log("useStatusEvents: Cleaning up event listeners");
       window.removeEventListener('statusesUpdated', handleStatusesUpdated);
       supabase.removeChannel(channel);
+      
+      if (realtimeEventTimeout) {
+        clearTimeout(realtimeEventTimeout);
+      }
     };
   }, [onStatusesUpdated]);
 }

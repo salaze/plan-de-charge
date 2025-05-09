@@ -6,8 +6,8 @@ import { Loader2 } from 'lucide-react';
 export function StatusLoadingState() {
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <Loader2 className="h-4 w-4 animate-spin" />
+      <div className="flex items-center justify-center py-2 text-primary">
+        <Loader2 className="h-5 w-5 animate-spin mr-2" />
         <span>Chargement des statuts...</span>
       </div>
       <div className="grid grid-cols-2 gap-2">

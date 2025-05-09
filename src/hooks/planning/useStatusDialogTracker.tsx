@@ -6,6 +6,7 @@ export function useStatusDialogTracker(refreshData: () => void) {
   const isStatusDialogOpenRef = useRef(false);
   const forceRefreshPendingRef = useRef(false);
   const timeoutRef = useRef<number | null>(null);
+  const lastInteractionTimeRef = useRef<number>(0);
   
   // Memoize handlers to prevent them from causing re-renders
   const handleStatusesUpdated = useCallback((event: Event) => {
@@ -14,11 +15,26 @@ export function useStatusDialogTracker(refreshData: () => void) {
     // Check if we should avoid automatic refresh
     const customEvent = event as CustomEvent;
     const noRefresh = customEvent.detail?.noRefresh === true;
+    const fromSync = customEvent.detail?.fromSync === true;
     
-    // If a dialog is open, postpone the refresh
+    // Si les deux flags sont présents, n'exécuter aucune action
+    if (noRefresh && fromSync) {
+      console.log("Both noRefresh and fromSync flags are present, no action needed");
+      return;
+    }
+    
+    // Si une boîte de dialogue est ouverte, reporter l'actualisation
     if (isStatusDialogOpenRef.current) {
       console.log("Status dialog open, refresh postponed");
-      // Mark that a refresh will be needed on closure
+      // Marquer qu'une actualisation sera nécessaire à la fermeture
+      forceRefreshPendingRef.current = true;
+      return;
+    }
+    
+    // Vérifier si une actualisation a été effectuée récemment (dans les 5 dernières secondes)
+    const now = Date.now();
+    if (now - lastInteractionTimeRef.current < 5000) {
+      console.log("Recent interaction detected, postponing refresh");
       forceRefreshPendingRef.current = true;
       return;
     }
@@ -32,15 +48,17 @@ export function useStatusDialogTracker(refreshData: () => void) {
       }
       
       timeoutRef.current = window.setTimeout(() => {
+        lastInteractionTimeRef.current = Date.now();
         refreshData();
         timeoutRef.current = null;
-      }, 1500) as unknown as number;
+      }, 2000) as unknown as number;
     }
   }, [refreshData]);
   
   const handleStatusEditStart = useCallback(() => {
     console.log("Index: Status dialog open - disabling automatic refreshes");
     isStatusDialogOpenRef.current = true;
+    lastInteractionTimeRef.current = Date.now();
     
     // Cancel any ongoing refresh timeout
     if (timeoutRef.current !== null) {
@@ -51,6 +69,7 @@ export function useStatusDialogTracker(refreshData: () => void) {
   
   const handleStatusEditEnd = useCallback(() => {
     console.log("Index: Status dialog closed - re-enabling automatic refreshes");
+    lastInteractionTimeRef.current = Date.now();
     
     // Use a delay to ensure everything is properly completed
     setTimeout(() => {
@@ -64,9 +83,9 @@ export function useStatusDialogTracker(refreshData: () => void) {
         // Wait a bit longer to ensure updates are properly completed
         setTimeout(() => {
           refreshData();
-        }, 1500);
+        }, 2000);
       }
-    }, 1000);
+    }, 1500);
   }, [refreshData]);
   
   // Listen for status update events
@@ -91,6 +110,7 @@ export function useStatusDialogTracker(refreshData: () => void) {
     isStatusDialogOpenRef,
     handleStatusDialogChange: useCallback((isOpen: boolean) => {
       isStatusDialogOpenRef.current = isOpen;
+      lastInteractionTimeRef.current = Date.now();
       
       // Emit appropriate events
       if (isOpen) {

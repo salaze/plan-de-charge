@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -35,37 +35,44 @@ export function StatusChangeDialog({
   // Convert FULL to AM for display purposes
   const displayPeriod = selectedPeriod === 'FULL' ? 'AM' : selectedPeriod;
   
-  // Emit events when the dialog opens or closes
+  // Garder une trace des événements émis pour éviter les duplications
+  const hasEmittedStartEvent = useRef(false);
+  const hasEmittedEndEvent = useRef(false);
+  
+  // Émettre des événements quand le dialogue s'ouvre ou se ferme
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !hasEmittedStartEvent.current) {
       console.log("Dialogue de statut ouvert, émission d'événement statusEditStart");
-      // Utiliser un délai pour s'assurer que l'événement est traité après le rendu
-      const timeoutId = setTimeout(() => {
-        const event = new CustomEvent('statusEditStart');
-        window.dispatchEvent(event);
-      }, 100);
+      hasEmittedStartEvent.current = true;
+      hasEmittedEndEvent.current = false;
       
-      return () => {
-        if (timeoutId) clearTimeout(timeoutId);
-      };
-    } else {
+      const event = new CustomEvent('statusEditStart');
+      window.dispatchEvent(event);
+    } else if (!isOpen && !hasEmittedEndEvent.current && hasEmittedStartEvent.current) {
       console.log("Dialogue de statut fermé, émission d'événement statusEditEnd");
-      // Utiliser un délai pour s'assurer que l'événement est traité après le rendu
-      const timeoutId = setTimeout(() => {
-        const event = new CustomEvent('statusEditEnd');
-        window.dispatchEvent(event);
-      }, 100);
+      hasEmittedEndEvent.current = true;
+      hasEmittedStartEvent.current = false;
       
-      return () => {
-        if (timeoutId) clearTimeout(timeoutId);
-      };
+      const event = new CustomEvent('statusEditEnd');
+      window.dispatchEvent(event);
     }
   }, [isOpen]);
   
+  // Nettoyage à la destruction du composant
+  useEffect(() => {
+    return () => {
+      // S'assurer d'émettre statusEditEnd si le composant est démonté alors que le dialogue est ouvert
+      if (hasEmittedStartEvent.current && !hasEmittedEndEvent.current) {
+        console.log("Nettoyage du dialogue, émission d'événement statusEditEnd");
+        const event = new CustomEvent('statusEditEnd');
+        window.dispatchEvent(event);
+      }
+    };
+  }, []);
+  
   // Gestionnaire de fermeture personnalisé pour s'assurer que l'événement est émis
   const handleClose = () => {
-    // Émettre l'événement avant de fermer le dialogue
-    console.log("Fermeture du dialogue de statut, émission d'événement statusEditEnd");
+    // Le flag sera mis à jour par l'effet
     onClose();
   };
   

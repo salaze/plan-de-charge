@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StatusCode, DayPeriod } from '@/types';
 import { useStatusOptions } from '@/hooks/useStatusOptions';
 import { useStatusSelector } from '@/hooks/status/useStatusSelector';
@@ -24,6 +24,9 @@ export function StatusSelectorEnhanced({
   projectCode = '',
   selectedPeriod = 'AM'
 }: StatusSelectorEnhancedProps) {
+  // Utilisez un state local pour contrôler si nous avons déjà demandé un rafraîchissement
+  const [hasRequestedRefresh, setHasRequestedRefresh] = useState(false);
+  
   // Use our custom hooks with refreshStatuses
   const { statuses, isLoading, refreshStatuses } = useStatusOptions();
   const { 
@@ -41,11 +44,19 @@ export function StatusSelectorEnhanced({
     onComplete: onChange
   });
   
-  // Forcer un rafraîchissement des statuts à l'ouverture de la boîte de dialogue
+  // Effectuer un seul rafraîchissement des statuts à l'ouverture de la boîte de dialogue
   useEffect(() => {
-    console.log("StatusSelectorEnhanced: Montage du composant, rafraîchissement des statuts");
-    refreshStatuses();
-  }, [refreshStatuses]);
+    if (!hasRequestedRefresh && !isLoading) {
+      console.log("StatusSelectorEnhanced: Premier montage, une seule demande de rafraîchissement");
+      setHasRequestedRefresh(true);
+      // Ajouter un léger délai pour éviter les problèmes de timing
+      const timeoutId = setTimeout(() => {
+        refreshStatuses();
+      }, 300);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [refreshStatuses, hasRequestedRefresh, isLoading]);
   
   // Determine if there's a loading error
   const loadingError = !isLoading && (!statuses || statuses.length === 0);

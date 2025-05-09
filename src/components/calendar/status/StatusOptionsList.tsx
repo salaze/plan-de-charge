@@ -39,6 +39,7 @@ export function StatusOptionsList({
   const { refreshStatuses } = useStatusOptions();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshTimeoutId, setRefreshTimeoutId] = useState<number | null>(null);
+  const [refreshCount, setRefreshCount] = useState(0);
   
   // Check if projects are available
   const hasProjects = projects && projects.length > 0;
@@ -57,12 +58,19 @@ export function StatusOptionsList({
     };
   }, [refreshTimeoutId]);
 
-  // Function to refresh statuses
+  // Function to refresh statuses with rate limiting
   const handleRefreshStatuses = () => {
     if (isRefreshing) return;
     
+    // Limiter le nombre de rafraîchissements manuels à 3 par session pour éviter les abus
+    if (refreshCount >= 3) {
+      toast.info("Limite de rafraîchissement atteinte, veuillez réessayer plus tard");
+      return;
+    }
+    
     setIsRefreshing(true);
-    toast.info("Refreshing statuses...");
+    setRefreshCount(prev => prev + 1);
+    toast.info("Actualisation des statuts...");
     
     // Call refresh function
     refreshStatuses();
@@ -70,7 +78,7 @@ export function StatusOptionsList({
     // Enable button after delay
     const timeoutId = window.setTimeout(() => {
       setIsRefreshing(false);
-    }, 2000);
+    }, 3000); // Longer delay to prevent spam
     
     setRefreshTimeoutId(timeoutId);
   };
@@ -95,13 +103,13 @@ export function StatusOptionsList({
     <div className="space-y-6">
       <div className="space-y-3">
         <div className="flex justify-between items-center">
-          <Label className="text-base">Select a status</Label>
+          <Label className="text-base">Sélectionner un statut</Label>
           <Button 
             type="button" 
             variant="outline" 
             size="icon" 
             onClick={handleRefreshStatuses} 
-            title="Refresh statuses"
+            title="Rafraîchir les statuts"
             disabled={isRefreshing}
           >
             {isRefreshing ? (
@@ -137,7 +145,7 @@ export function StatusOptionsList({
           
           {!hasProjects && (
             <div className="text-xs text-amber-500">
-              No projects available. Please create one in administration.
+              Aucun projet disponible. Veuillez en créer un dans l'administration.
             </div>
           )}
         </div>
@@ -152,7 +160,7 @@ export function StatusOptionsList({
         onClick={() => {
           // Additional validation before calling onSubmit
           if (selectedStatus === 'projet' && (!selectedProject || selectedProject === 'no-project' || selectedProject === 'select-project')) {
-            toast.error("Please select a project");
+            toast.error("Veuillez sélectionner un projet");
             return;
           }
           onSubmit();
@@ -163,10 +171,10 @@ export function StatusOptionsList({
         {isValidating ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Validating...
+            Validation...
           </>
         ) : (
-          'Apply'
+          'Appliquer'
         )}
       </Button>
     </div>

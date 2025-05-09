@@ -65,21 +65,20 @@ export const syncStatusesWithDatabase = async () => {
       }
       
       if (hasUpdates) {
-        console.log("Status updates detected, notifying application");
+        console.log("Status updates detected, notifying application ONCE");
         
-        // Use setTimeout to prevent immediate cascading refreshes
+        // Ajouter un délai pour ne pas surcharger le système
         setTimeout(() => {
-          // Add fromSync flag to indicate this notification comes directly
-          // from synchronization to prevent refresh loops
+          // Ajouter les deux flags pour éviter les boucles infinies
           const event = new CustomEvent('statusesUpdated', { 
             detail: { 
               fromSync: true,
-              // Add noRefresh flag to prevent unnecessary refresh when just updating dictionaries
-              noRefresh: true
+              noRefresh: true,
+              timestamp: Date.now()
             } 
           });
           window.dispatchEvent(event);
-        }, 500);
+        }, 1000);
       }
     }
     

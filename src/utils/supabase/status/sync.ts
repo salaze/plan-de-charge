@@ -3,26 +3,26 @@ import { StatusCode, STATUS_LABELS, STATUS_COLORS } from '@/types';
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Vérifie et synchronise les statuts entre l'application et la base de données
+ * Checks and synchronizes statuses between the application and database
  */
 export const syncStatusesWithDatabase = async () => {
   try {
-    console.log("Synchronisation des statuts avec la base de données...");
+    console.log("Synchronizing statuses with database...");
     
-    // Récupérer les statuts depuis la base de données
+    // Get statuses from database
     const { data: dbStatuses, error } = await supabase
       .from('statuts')
       .select('code, libelle, couleur');
       
     if (error) throw error;
 
-    // Mise à jour des dictionnaires STATUS_LABELS et STATUS_COLORS
+    // Update STATUS_LABELS and STATUS_COLORS dictionaries
     if (dbStatuses && dbStatuses.length > 0) {
       let hasUpdates = false;
       
       dbStatuses.forEach(status => {
         if (status.code) {
-          // On met à jour les labels et couleurs des statuts existants
+          // Update labels and colors of existing statuses
           const statusCode = status.code as StatusCode;
           
           if (STATUS_LABELS[statusCode] !== status.libelle) {
@@ -37,11 +37,11 @@ export const syncStatusesWithDatabase = async () => {
         }
       });
       
-      // Vérifier si le statut "parc" existe dans la base de données
+      // Check if "parc" status exists in database
       const parcStatusExists = dbStatuses.some(status => status.code === 'parc');
       
       if (!parcStatusExists) {
-        console.log("Le statut 'parc' n'existe pas dans la base de données, ajout...");
+        console.log("'parc' status doesn't exist in database, adding...");
         
         try {
           const { error: insertError } = await supabase
@@ -50,35 +50,42 @@ export const syncStatusesWithDatabase = async () => {
               code: 'parc',
               libelle: 'Gestion de Parc',
               couleur: 'bg-teal-500 text-white',
-              display_order: 50  // Ajouter en bas de la liste
+              display_order: 50  // Add to bottom of list
             });
             
           if (insertError) {
-            console.error("Erreur lors de l'ajout du statut 'parc':", insertError);
+            console.error("Error adding 'parc' status:", insertError);
           } else {
-            console.log("Statut 'parc' ajouté avec succès");
+            console.log("'parc' status added successfully");
             hasUpdates = true;
           }
         } catch (insertError) {
-          console.error("Exception lors de l'ajout du statut 'parc':", insertError);
+          console.error("Exception when adding 'parc' status:", insertError);
         }
       }
       
       if (hasUpdates) {
-        console.log("Mise à jour des statuts détectée, notification de l'application");
+        console.log("Status updates detected, notifying application");
         
-        // Modification: Ajouter un flag pour indiquer que cette notification vient
-        // directement de la synchronisation pour éviter les boucles de rechargement
-        const event = new CustomEvent('statusesUpdated', { 
-          detail: { fromSync: true } 
-        });
-        window.dispatchEvent(event);
+        // Use setTimeout to prevent immediate cascading refreshes
+        setTimeout(() => {
+          // Add fromSync flag to indicate this notification comes directly
+          // from synchronization to prevent refresh loops
+          const event = new CustomEvent('statusesUpdated', { 
+            detail: { 
+              fromSync: true,
+              // Add noRefresh flag to prevent unnecessary refresh when just updating dictionaries
+              noRefresh: true
+            } 
+          });
+          window.dispatchEvent(event);
+        }, 500);
       }
     }
     
     return true;
   } catch (error) {
-    console.error('Erreur lors de la synchronisation des statuts:', error);
+    console.error('Error synchronizing statuses:', error);
     return false;
   }
 };

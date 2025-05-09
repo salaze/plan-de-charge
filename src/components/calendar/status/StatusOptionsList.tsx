@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { RadioGroup } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -37,43 +37,55 @@ export function StatusOptionsList({
   isValidating = false
 }: StatusOptionsListProps) {
   const { refreshStatuses } = useStatusOptions();
-  // Ajout d'un état local pour suivre l'état du rafraîchissement
-  const [isRefreshing, setIsRefreshing] = React.useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [refreshTimeoutId, setRefreshTimeoutId] = useState<number | null>(null);
   
-  // Vérifier si des projets sont disponibles
+  // Check if projects are available
   const hasProjects = projects && projects.length > 0;
   
-  // Déterminer si le bouton doit être désactivé
+  // Check if submit button should be disabled
   const isSubmitDisabled = 
     isValidating || 
     (selectedStatus === 'projet' && (!selectedProject || selectedProject === 'no-project' || !hasProjects));
 
-  // Fonction pour rafraîchir les statuts
+  // Clean up timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (refreshTimeoutId) {
+        clearTimeout(refreshTimeoutId);
+      }
+    };
+  }, [refreshTimeoutId]);
+
+  // Function to refresh statuses
   const handleRefreshStatuses = () => {
     if (isRefreshing) return;
     
     setIsRefreshing(true);
-    toast.info("Rafraîchissement des statuts en cours...");
+    toast.info("Refreshing statuses...");
     
+    // Call refresh function
     refreshStatuses();
     
-    // Réactiver le bouton après un délai
-    setTimeout(() => {
+    // Enable button after delay
+    const timeoutId = window.setTimeout(() => {
       setIsRefreshing(false);
-    }, 1500);
+    }, 2000);
+    
+    setRefreshTimeoutId(timeoutId);
   };
 
-  // Vérifier la sélection du projet à chaque rendu ou changement de statut
+  // Check project selection on render or status change
   useEffect(() => {
     if (selectedStatus === 'projet') {
-      console.log('StatusOptionsList: Statut de projet sélectionné', { 
+      console.log('StatusOptionsList: Project status selected', { 
         selectedProject, 
         projectsAvailable: projects.length
       });
       
-      // Si aucun projet n'est sélectionné et qu'il y a des projets disponibles, sélectionner le premier projet
+      // If no project is selected and projects are available, select the first project
       if ((!selectedProject || selectedProject === 'no-project' || selectedProject === 'select-project') && hasProjects) {
-        console.log('Aucun projet sélectionné mais des projets sont disponibles. Sélection du premier projet.');
+        console.log('No project selected but projects are available. Selecting first project.');
         onProjectChange(projects[0].code);
       }
     }
@@ -83,13 +95,13 @@ export function StatusOptionsList({
     <div className="space-y-6">
       <div className="space-y-3">
         <div className="flex justify-between items-center">
-          <Label className="text-base">Sélectionner un statut</Label>
+          <Label className="text-base">Select a status</Label>
           <Button 
             type="button" 
             variant="outline" 
             size="icon" 
             onClick={handleRefreshStatuses} 
-            title="Rafraîchir les statuts"
+            title="Refresh statuses"
             disabled={isRefreshing}
           >
             {isRefreshing ? (
@@ -125,7 +137,7 @@ export function StatusOptionsList({
           
           {!hasProjects && (
             <div className="text-xs text-amber-500">
-              Aucun projet disponible. Veuillez en créer un dans l'administration.
+              No projects available. Please create one in administration.
             </div>
           )}
         </div>
@@ -138,9 +150,9 @@ export function StatusOptionsList({
       
       <Button 
         onClick={() => {
-          // Validation supplémentaire avant l'appel à onSubmit
+          // Additional validation before calling onSubmit
           if (selectedStatus === 'projet' && (!selectedProject || selectedProject === 'no-project' || selectedProject === 'select-project')) {
-            toast.error("Veuillez sélectionner un projet");
+            toast.error("Please select a project");
             return;
           }
           onSubmit();
@@ -151,10 +163,10 @@ export function StatusOptionsList({
         {isValidating ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Validation...
+            Validating...
           </>
         ) : (
-          'Appliquer'
+          'Apply'
         )}
       </Button>
     </div>

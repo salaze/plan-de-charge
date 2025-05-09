@@ -1,13 +1,43 @@
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export function useStatusEvents(onStatusesUpdated: () => void) {
+  const lastUpdateTimestampRef = useRef<number>(0);
+  const isProcessingRef = useRef<boolean>(false);
+  const debounceTimeRef = useRef<number>(1500); // 1.5 seconds debounce
+
   useEffect(() => {
-    // Référence pour éviter les doubles appels rapprochés
-    let lastUpdateTimestamp = 0;
-    const debounceTime = 1000; // 1 seconde de délai
+    console.log("useStatusEvents: Setting up event listeners");
     
+    const processStatusUpdate = () => {
+      if (isProcessingRef.current) {
+        console.log("Status update already being processed, skipped");
+        return;
+      }
+      
+      const now = Date.now();
+      if (now - lastUpdateTimestampRef.current < debounceTimeRef.current) {
+        console.log("Update ignored (too rapid)");
+        return;
+      }
+      
+      lastUpdateTimestampRef.current = now;
+      isProcessingRef.current = true;
+      
+      // Add slight delay to allow UI to stabilize
+      setTimeout(() => {
+        console.log("Processing status update...");
+        onStatusesUpdated();
+        
+        // Reset processing flag after a cooldown period
+        setTimeout(() => {
+          isProcessingRef.current = false;
+        }, 1000);
+      }, 300);
+    };
+    
+    // Listen for Supabase real-time events
     const channel = supabase
       .channel('status-options-realtime')
       .on(
@@ -18,44 +48,32 @@ export function useStatusEvents(onStatusesUpdated: () => void) {
           table: 'statuts'
         },
         (payload) => {
-          console.log('Changement de statut détecté, actualisation des options:', payload);
-          const now = Date.now();
-          if (now - lastUpdateTimestamp > debounceTime) {
-            lastUpdateTimestamp = now;
-            setTimeout(() => {
-              onStatusesUpdated();
-            }, 1000);
-          } else {
-            console.log("Mise à jour ignorée (trop rapide)");
-          }
+          console.log('Status change detected, updating options:', payload);
+          processStatusUpdate();
         }
       )
       .subscribe();
 
+    // Listen for custom events
     const handleStatusesUpdated = (event: Event) => {
       const customEvent = event as CustomEvent;
       const fromSync = customEvent.detail?.fromSync === true;
       const noRefresh = customEvent.detail?.noRefresh === true;
       
-      // Ignorer les événements provenant directement de la synchronisation
+      // Ignore events from sync or with noRefresh flag
       if (noRefresh || fromSync) {
-        console.log("Événement ignoré pour éviter une boucle");
+        console.log("Event ignored to prevent loop");
         return;
       }
       
-      const now = Date.now();
-      if (now - lastUpdateTimestamp > debounceTime) {
-        lastUpdateTimestamp = now;
-        console.log("Rechargement des options de statut suite à un événement");
-        onStatusesUpdated();
-      } else {
-        console.log("Mise à jour ignorée (trop rapide)");
-      }
+      console.log("Status update event received");
+      processStatusUpdate();
     };
     
     window.addEventListener('statusesUpdated', handleStatusesUpdated);
     
     return () => {
+      console.log("useStatusEvents: Cleaning up event listeners");
       window.removeEventListener('statusesUpdated', handleStatusesUpdated);
       supabase.removeChannel(channel);
     };

@@ -30,13 +30,13 @@ export const usePlanningData = (currentYear?: number, currentMonth?: number) => 
     setConnectionError(null);
     
     try {
-      console.log(`Chargement des données depuis Supabase... (${new Date().toISOString()})`);
+      console.log(`Loading data from Supabase... (${new Date().toISOString()})`);
       
       const isConnected = await checkSupabaseConnection();
       setIsOnline(isConnected);
       
       if (!isConnected) {
-        const errorMsg = "Impossible de se connecter à Supabase. Veuillez vérifier votre connexion internet.";
+        const errorMsg = "Unable to connect to Supabase. Please check your internet connection.";
         console.error(errorMsg);
         setConnectionError(errorMsg);
         toast.error(errorMsg);
@@ -44,37 +44,42 @@ export const usePlanningData = (currentYear?: number, currentMonth?: number) => 
         return;
       }
       
-      // Synchroniser d'abord les statuts
-      await syncStatusesWithDatabase();
-      
-      // Récupérer les projets depuis Supabase (avant les employés pour garantir qu'ils sont disponibles)
-      const projects = await fetchProjects();
-      console.log(`${projects.length} projets récupérés de Supabase:`, projects);
-      
-      // Augmenter le timeout pour la récupération des employés
-      const employees = await fetchEmployees();
-      console.log(`${employees.length} employés récupérés de Supabase`);
-      
-      if (employees.length === 0) {
-        toast.warning("Aucun employé trouvé dans la base de données");
+      // First synchronize statuses with noRefresh flag to prevent UI flickering
+      try {
+        await syncStatusesWithDatabase();
+      } catch (syncError) {
+        console.error("Error synchronizing statuses:", syncError);
+        // Continue loading data even if status sync fails
       }
       
-      // Charger le planning pour chaque employé
+      // Get projects from Supabase (before employees to ensure they're available)
+      const projects = await fetchProjects();
+      console.log(`${projects.length} projects retrieved from Supabase:`, projects);
+      
+      // Increase timeout for employee retrieval
+      const employees = await fetchEmployees();
+      console.log(`${employees.length} employees retrieved from Supabase`);
+      
+      if (employees.length === 0) {
+        toast.warning("No employees found in database");
+      }
+      
+      // Load schedule for each employee
       let schedulesLoaded = 0;
       for (let i = 0; i < employees.length; i++) {
         try {
           const schedule = await fetchSchedule(employees[i].id);
           employees[i].schedule = schedule;
           schedulesLoaded += schedule.length;
-          console.log(`Planning chargé pour l'employé ${employees[i].name}: ${schedule.length} entrées`);
+          console.log(`Schedule loaded for employee ${employees[i].name}: ${schedule.length} entries`);
         } catch (scheduleError) {
-          console.error(`Erreur lors du chargement du planning pour ${employees[i].name}:`, scheduleError);
+          console.error(`Error loading schedule for ${employees[i].name}:`, scheduleError);
           employees[i].schedule = [];
         }
       }
       
-      console.log(`Total des entrées de planning chargées: ${schedulesLoaded}`);
-      console.log(`Nombre total d'employés chargés: ${employees.length}`);
+      console.log(`Total schedule entries loaded: ${schedulesLoaded}`);
+      console.log(`Total employees loaded: ${employees.length}`);
       
       setData({
         year: year,
@@ -84,19 +89,19 @@ export const usePlanningData = (currentYear?: number, currentMonth?: number) => 
       });
       
       setLastRefresh(new Date());
-      setRetryCount(0); // Réinitialiser le compteur de tentatives car le chargement a réussi
+      setRetryCount(0); // Reset retry counter on successful load
       
     } catch (error) {
       console.error('Error loading data:', error);
-      const errorMsg = "Erreur lors du chargement des données. Veuillez réessayer.";
+      const errorMsg = "Error loading data. Please try again.";
       setConnectionError(errorMsg);
       setIsOnline(false);
       toast.error(errorMsg);
       
-      // Incrémenter le compteur de tentatives et réessayer si nécessaire
+      // Increment retry counter and retry if needed
       setRetryCount(prev => prev + 1);
       if (retryCount < 3) {
-        console.log(`Nouvelle tentative de chargement (${retryCount + 1}/3)...`);
+        console.log(`Retry loading attempt (${retryCount + 1}/3)...`);
         setTimeout(() => {
           loadData();
         }, 2000);
@@ -110,10 +115,10 @@ export const usePlanningData = (currentYear?: number, currentMonth?: number) => 
     loadData();
   }, [loadData]);
 
-  // Ajout d'une fonction de rechargement manuel des données
+  // Function for manual data reload
   const reloadData = useCallback(async () => {
-    console.log("Rechargement manuel des données demandé");
-    setRetryCount(0); // Réinitialiser le compteur de tentatives
+    console.log("Manual data reload requested");
+    setRetryCount(0); // Reset retry counter
     await loadData();
   }, [loadData]);
 
@@ -127,4 +132,3 @@ export const usePlanningData = (currentYear?: number, currentMonth?: number) => 
     lastRefresh 
   };
 };
-

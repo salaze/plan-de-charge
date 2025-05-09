@@ -17,24 +17,34 @@ export function useStatusLoader(): UseStatusLoaderResult {
   const retryCountRef = useRef(0);
   const loadingTimeoutRef = useRef<number | null>(null);
   const isMounted = useRef(true);
-  // Ajout d'un flag pour éviter les doubles chargements
   const isRefreshingRef = useRef(false);
+  const lastRefreshTimeRef = useRef<number>(0);
 
   const loadStatusesFromSupabase = async () => {
+    // Don't refresh if unmounted or already refreshing
     if (!isMounted.current || isRefreshingRef.current) return;
     
+    // Debounce refreshes - don't allow more than one every 1.5 seconds
+    const now = Date.now();
+    if (now - lastRefreshTimeRef.current < 1500) {
+      console.log("Too many refresh attempts too quickly, throttled");
+      return;
+    }
+    
+    lastRefreshTimeRef.current = now;
     isRefreshingRef.current = true;
     setIsLoading(true);
     
+    // Clear any existing loading timeout
     if (loadingTimeoutRef.current) {
       clearTimeout(loadingTimeoutRef.current);
     }
     
-    // Définir un délai maximum pour le chargement
+    // Set a maximum timeout for loading
     loadingTimeoutRef.current = window.setTimeout(() => {
       if (!isMounted.current) return;
       
-      console.log("Timeout lors du chargement des statuts");
+      console.log("Timeout during status loading");
       setIsLoading(false);
       const defaultStatuses: StatusCode[] = [
         'none', 'assistance', 'vigi', 'formation', 'projet', 
@@ -43,34 +53,34 @@ export function useStatusLoader(): UseStatusLoaderResult {
       ];
       setAvailableStatuses(defaultStatuses);
       isRefreshingRef.current = false;
-    }, 3000);
+    }, 5000); // Extended timeout to 5 seconds to prevent premature fallback
     
     try {
-      console.log("Chargement des options de statut depuis Supabase...");
+      console.log("Loading status options from Supabase...");
       
       const { data: statusData, error } = await supabase
         .from('statuts')
         .select('code, libelle, couleur')
         .order('display_order', { ascending: true });
       
-      // Arrêter le timeout une fois les données récupérées
+      // Stop the timeout once data is retrieved
       if (loadingTimeoutRef.current) {
         clearTimeout(loadingTimeoutRef.current);
         loadingTimeoutRef.current = null;
       }
       
       if (error) {
-        console.error("Erreur lors du chargement des options de statut:", error);
+        console.error("Error loading status options:", error);
         throw error;
       }
       
       if (!isMounted.current) return;
       
-      console.log("Options de statut récupérées:", statusData);
+      console.log("Status options retrieved:", statusData);
       retryCountRef.current = 0;
       
       if (Array.isArray(statusData) && statusData.length > 0) {
-        // Important: mise à jour des dictionnaires STATUS_LABELS et STATUS_COLORS
+        // Update STATUS_LABELS and STATUS_COLORS dictionaries
         statusData.forEach(status => {
           if (status && status.code) {
             const statusCode = extendStatusCode(status.code);
@@ -79,15 +89,15 @@ export function useStatusLoader(): UseStatusLoaderResult {
           }
         });
         
-        // Conversion des codes en StatusCode
+        // Convert codes to StatusCode
         const supabaseStatuses = statusData
           .filter((status) => status && status.code && status.code.trim() !== '')
           .map((status) => extendStatusCode(status.code));
         
-        console.log("Options de statut valides:", supabaseStatuses);
+        console.log("Valid status options:", supabaseStatuses);
         setAvailableStatuses(supabaseStatuses);
       } else {
-        console.log("Aucun statut trouvé, utilisation des valeurs par défaut");
+        console.log("No statuses found, using defaults");
         const defaultStatuses: StatusCode[] = [
           'none', 'assistance', 'vigi', 'formation', 'projet', 
           'conges', 'management', 'tp', 'coordinateur', 'absence',
@@ -100,10 +110,10 @@ export function useStatusLoader(): UseStatusLoaderResult {
       
       if (!isMounted.current) return;
       
-      if (retryCountRef.current < 3) {
+      if (retryCountRef.current < 2) { // Reduced retry count
         retryCountRef.current++;
-        console.log(`Tentative ${retryCountRef.current}/3 de rechargement des statuts`);
-        setTimeout(loadStatusesFromSupabase, 1000);
+        console.log(`Retry ${retryCountRef.current}/2 loading statuses`);
+        setTimeout(loadStatusesFromSupabase, 2000);
         return;
       }
       
@@ -114,56 +124,65 @@ export function useStatusLoader(): UseStatusLoaderResult {
       ];
       setAvailableStatuses(defaultStatuses);
     } finally {
-      // Toujours mettre fin à l'état de chargement
+      // Always end the loading state
       if (loadingTimeoutRef.current) {
         clearTimeout(loadingTimeoutRef.current);
         loadingTimeoutRef.current = null;
       }
+      
       if (isMounted.current) {
         setIsLoading(false);
       }
-      isRefreshingRef.current = false;
+      
+      // Add delay before allowing another refresh
+      setTimeout(() => {
+        isRefreshingRef.current = false;
+      }, 1000);
     }
   };
 
-  // Fonction pour déclencher un rafraîchissement manuel des statuts
+  // Function to manually trigger a status refresh
   const refreshStatuses = () => {
     if (isRefreshingRef.current) {
-      console.log("Rafraîchissement des statuts déjà en cours, ignoré");
+      console.log("Status refresh already in progress, ignored");
       return;
     }
-    console.log("Rafraîchissement manuel des statuts...");
+    console.log("Manual status refresh requested...");
     loadStatusesFromSupabase();
   };
 
-  // Effet pour charger les données au montage du composant
+  // Effect for loading data when the component mounts
   useEffect(() => {
-    console.log("useStatusLoader: Montage du composant et initialisation");
-    // Réinitialiser le state pour éviter les problèmes
+    console.log("useStatusLoader: Initial component mount");
+    // Reset state to avoid issues
     isMounted.current = true;
     isRefreshingRef.current = false;
+    lastRefreshTimeRef.current = 0;
     
-    // Initialisation du chargement des statuts
+    // Initialize status loading
     loadStatusesFromSupabase();
     
-    // Écouter les événements de mise à jour des statuts
+    // Listen for status update events
     const handleStatusesUpdated = (event: Event) => {
       const customEvent = event as CustomEvent;
-      // Ignorer les événements provenant directement de la synchronisation
-      // pour éviter les boucles infinies
+      // Avoid infinite loops by ignoring events from sync
       const fromSync = customEvent.detail?.fromSync === true;
+      const noRefresh = customEvent.detail?.noRefresh === true;
       
-      if (!fromSync && !isRefreshingRef.current) {
-        console.log("Événement statusesUpdated reçu, rechargement des statuts");
-        loadStatusesFromSupabase();
+      if (!fromSync && !isRefreshingRef.current && !noRefresh) {
+        console.log("statusesUpdated event received, reloading statuses");
+        // Add slight delay to prevent UI jank
+        setTimeout(() => {
+          loadStatusesFromSupabase();
+        }, 300);
       } else {
-        console.log("Événement statusesUpdated ignoré pour éviter une boucle");
+        console.log("statusesUpdated event ignored to prevent loop");
       }
     };
     
     window.addEventListener('statusesUpdated', handleStatusesUpdated);
     
-    // Configurer l'écoute des changements Supabase en temps réel
+    // Set up Supabase real-time changes listener
     const channel = supabase
       .channel('statuts-changes')
       .on(
@@ -171,18 +190,21 @@ export function useStatusLoader(): UseStatusLoaderResult {
         { event: '*', schema: 'public', table: 'statuts' },
         (payload) => {
           if (isRefreshingRef.current) {
-            console.log("Changement détecté dans la table statuts, mais ignoré car rechargement en cours");
+            console.log("Status table change detected, but ignored because refresh in progress");
             return;
           }
-          console.log("Changement détecté dans la table statuts:", payload);
-          loadStatusesFromSupabase();
+          console.log("Status table change detected:", payload);
+          // Add slight delay to prevent UI jank
+          setTimeout(() => {
+            loadStatusesFromSupabase();
+          }, 500);
         }
       )
       .subscribe();
     
-    // Nettoyage lors du démontage
+    // Clean up on unmount
     return () => {
-      console.log("useStatusLoader: Démontage du composant");
+      console.log("useStatusLoader: Component unmount");
       isMounted.current = false;
       window.removeEventListener('statusesUpdated', handleStatusesUpdated);
       supabase.removeChannel(channel);

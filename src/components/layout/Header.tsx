@@ -1,36 +1,54 @@
-import React from "react";
-import { AlertCircle, WifiOff } from 'lucide-react';
-import { useOnlineStatus } from '@/hooks/useOnlineStatus';
+
+import React from 'react';
+import { Menu, ChevronDown } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+
 interface HeaderProps {
   isSidebarOpen: boolean;
   setIsSidebarOpen: (open: boolean) => void;
 }
-export function Header({
-  isSidebarOpen,
-  setIsSidebarOpen
-}: HeaderProps) {
-  const isOnline = useOnlineStatus();
-  const handleRefresh = () => {
-    window.location.reload();
+
+export function Header({ isSidebarOpen, setIsSidebarOpen }: HeaderProps) {
+  const { user } = useAuth();
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase();
   };
-  return <header className="flex items-center justify-between mb-4">
+
+  return (
+    <header className="bg-white dark:bg-gray-800 border-b px-4 py-3 flex items-center justify-between">
       <div className="flex items-center">
-        <button className="md:hidden p-2" onClick={() => setIsSidebarOpen(!isSidebarOpen)} aria-label="Ouvrir/fermer le menu">
-          <span className="material-icons">{isSidebarOpen ? "close" : "menu"}</span>
-        </button>
-        <div className="text-lg font-bold text-primary">Planning Activités
+        <Button
+          variant="ghost"
+          size="icon"
+          className="mr-2 md:hidden"
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        >
+          <Menu className="h-5 w-5" />
+          <span className="sr-only">Toggle Sidebar</span>
+        </Button>
+        <h1 className="text-lg font-semibold">Planning Application</h1>
       </div>
-      </div>
-      
-      {!isOnline && <div className="flex items-center">
-          <div className="flex items-center text-destructive mr-2">
-            <WifiOff className="h-5 w-5 mr-2" />
-            <span className="text-sm font-medium hidden sm:inline">Déconnecté du serveur</span>
+
+      <div className="flex items-center gap-4">
+        {user && (
+          <div className="flex items-center gap-2">
+            <Avatar className="h-8 w-8">
+              <AvatarFallback>{getInitials(user.name || "User")}</AvatarFallback>
+            </Avatar>
+            <span className="hidden sm:inline-block font-medium text-sm">
+              {user.name || "User"}
+            </span>
+            <ChevronDown className="h-4 w-4 text-muted-foreground" />
           </div>
-          <Button size="sm" variant="outline" onClick={handleRefresh}>
-            Reconnecter
-          </Button>
-        </div>}
-    </header>;
+        )}
+      </div>
+    </header>
+  );
 }

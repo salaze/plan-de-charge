@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
-import { SidebarMenu } from './SidebarMenu';
-import { SidebarProvider, Sidebar, SidebarContent, SidebarTrigger } from '@/components/ui/sidebar';
+import { SidebarProvider } from '@/components/ui/sidebar';
 import { Header } from './Header';
+import { Sidebar } from './Sidebar';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -14,11 +14,10 @@ export function Layout({ children }: LayoutProps) {
   return (
     <SidebarProvider defaultOpen={false}>
       <div className="flex min-h-screen bg-gray-50 w-full">
-        <Sidebar>
-          <SidebarContent>
-            <SidebarMenu />
-          </SidebarContent>
-        </Sidebar>
+        <Sidebar 
+          isSidebarOpen={isSidebarOpen} 
+          setIsSidebarOpen={setIsSidebarOpen}
+        />
         
         <main className="flex-1">
           <Header 
@@ -26,7 +25,6 @@ export function Layout({ children }: LayoutProps) {
             setIsSidebarOpen={setIsSidebarOpen} 
           />
           <div className="p-6">
-            <SidebarTrigger />
             {children}
           </div>
         </main>

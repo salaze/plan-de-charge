@@ -2,23 +2,36 @@
 import { Employee, SummaryStats, StatusCode } from '@/types';
 import { generateDaysInMonth, formatDate } from './dateUtils';
 
+// Cache for previously calculated days in month
+const daysInMonthCache = new Map<string, Date[]>();
+
+// Cache for daily status results to avoid recalculations
+const dailyStatusCache = new Map<string, { status: StatusCode, multiplier: number }>();
+
 /**
- * Calculates statistics for an employee in a specific month
+ * Optimized function to generate or retrieve cached days for a month
+ */
+export const getCachedDaysInMonth = (year: number, month: number): Date[] => {
+  const cacheKey = `${year}-${month}`;
+  if (!daysInMonthCache.has(cacheKey)) {
+    daysInMonthCache.set(cacheKey, generateDaysInMonth(year, month));
+  }
+  return daysInMonthCache.get(cacheKey)!;
+};
+
+/**
+ * Calculates statistics for an employee in a specific month with optimized performance
  */
 export const calculateEmployeeStats = (
   employee: Employee,
   year: number,
   month: number
 ): SummaryStats => {
-  const days = generateDaysInMonth(year, month);
+  const days = getCachedDaysInMonth(year, month);
   const startDate = formatDate(days[0]);
   const endDate = formatDate(days[days.length - 1]);
   
-  const relevantSchedule = employee.schedule.filter(
-    day => day.date >= startDate && day.date <= endDate
-  );
-  
-  // Initialiser les compteurs avec des valeurs par défaut
+  // Initialize stats object with zero values
   const stats: SummaryStats = {
     totalDays: days.length,
     presentDays: 0,
@@ -39,73 +52,128 @@ export const calculateEmployeeStats = (
     employeeName: employee.name
   };
   
-  // Compter chaque type de jour
+  // Filter relevant schedule entries first to reduce iteration
+  const relevantSchedule = employee.schedule.filter(
+    day => day.date >= startDate && day.date <= endDate
+  );
+  
+  // Process each schedule entry with optimized caching
   relevantSchedule.forEach(day => {
-    const dayMultiplier = day.period === 'FULL' ? 1 : 0.5;
+    const cacheKey = `${day.date}-${day.status}-${day.period}-${day.isHighlighted}`;
+    let statusResult = dailyStatusCache.get(cacheKey);
     
-    // Suivre les projets spécifiques
-    if (day.status === 'projet' && day.projectCode) {
-      stats.projectStats[day.projectCode] = (stats.projectStats[day.projectCode] || 0) + dayMultiplier;
+    if (!statusResult) {
+      const dayMultiplier = day.period === 'FULL' ? 1 : 0.5;
+      statusResult = { status: day.status, multiplier: dayMultiplier };
+      dailyStatusCache.set(cacheKey, statusResult);
     }
     
-    // Si c'est une permanence (mise en évidence / isHighlighted)
+    const { status, multiplier } = statusResult;
+    
+    // Track project statistics if applicable
+    if (status === 'projet' && day.projectCode) {
+      stats.projectStats[day.projectCode] = (stats.projectStats[day.projectCode] || 0) + multiplier;
+    }
+    
+    // Process highlighted days (permanence)
     if (day.isHighlighted) {
-      stats.permanenceDays += dayMultiplier;
-      stats.presentDays += dayMultiplier;
-    } else {
-      switch(day.status) {
-        case 'assistance':
-          stats.presentDays += dayMultiplier;
-          break;
-        case 'vigi':
-          stats.presentDays += dayMultiplier;
-          stats.vigiDays += dayMultiplier;
-          break;
-        case 'formation':
-          stats.presentDays += dayMultiplier;
-          stats.trainingDays += dayMultiplier;
-          break;
-        case 'projet':
-          stats.presentDays += dayMultiplier;
-          stats.projectDays += dayMultiplier;
-          break;
-        case 'conges':
-          stats.vacationDays += dayMultiplier;
-          break;
-        case 'management':
-          stats.presentDays += dayMultiplier;
-          stats.managementDays += dayMultiplier;
-          break;
-        case 'tp':
-          stats.tpDays += dayMultiplier;
-          break;
-        case 'coordinateur':
-          stats.presentDays += dayMultiplier;
-          stats.coordinatorDays += dayMultiplier;
-          break;
-        case 'absence':
-          stats.absentDays += dayMultiplier;
-          stats.otherAbsenceDays += dayMultiplier;
-          break;
-        case 'regisseur':
-          stats.presentDays += dayMultiplier;
-          stats.regisseurDays += dayMultiplier;
-          break;
-        case 'demenagement':
-          stats.presentDays += dayMultiplier;
-          stats.demenagementDays += dayMultiplier;
-          break;
-        case 'permanence':
-          stats.presentDays += dayMultiplier;
-          stats.permanenceDays += dayMultiplier;
-          break;
-        case 'parc':
-          stats.presentDays += dayMultiplier;
-          stats.parcDays += dayMultiplier;
-          break;
-      }
+      stats.permanenceDays += multiplier;
+      stats.presentDays += multiplier;
+      return; // Skip further processing for this day
+    }
+    
+    // Process by status using a switch statement for better performance
+    switch(status) {
+      case 'assistance':
+        stats.presentDays += multiplier;
+        break;
+      case 'vigi':
+        stats.presentDays += multiplier;
+        stats.vigiDays += multiplier;
+        break;
+      case 'formation':
+        stats.presentDays += multiplier;
+        stats.trainingDays += multiplier;
+        break;
+      case 'projet':
+        stats.presentDays += multiplier;
+        stats.projectDays += multiplier;
+        break;
+      case 'conges':
+        stats.vacationDays += multiplier;
+        break;
+      case 'management':
+        stats.presentDays += multiplier;
+        stats.managementDays += multiplier;
+        break;
+      case 'tp':
+        stats.tpDays += multiplier;
+        break;
+      case 'coordinateur':
+        stats.presentDays += multiplier;
+        stats.coordinatorDays += multiplier;
+        break;
+      case 'absence':
+        stats.absentDays += multiplier;
+        stats.otherAbsenceDays += multiplier;
+        break;
+      case 'regisseur':
+        stats.presentDays += multiplier;
+        stats.regisseurDays += multiplier;
+        break;
+      case 'demenagement':
+        stats.presentDays += multiplier;
+        stats.demenagementDays += multiplier;
+        break;
+      case 'permanence':
+        stats.presentDays += multiplier;
+        stats.permanenceDays += multiplier;
+        break;
+      case 'parc':
+        stats.presentDays += multiplier;
+        stats.parcDays += multiplier;
+        break;
     }
   });
   
   return stats;
+};
+
+// Function to clear caches when needed (e.g., after significant data changes)
+export const clearStatsCalculationCache = (): void => {
+  daysInMonthCache.clear();
+  dailyStatusCache.clear();
+};
+
+// Batch processing function for multiple employees
+export const calculateBatchEmployeeStats = (
+  employees: Employee[],
+  year: number,
+  month: number,
+  batchSize: number = 10
+): Promise<SummaryStats[]> => {
+  return new Promise((resolve) => {
+    const results: SummaryStats[] = [];
+    const totalEmployees = employees.length;
+    
+    // Use batch processing to prevent UI freezing with large datasets
+    const processBatch = (startIdx: number) => {
+      const endIdx = Math.min(startIdx + batchSize, totalEmployees);
+      
+      for (let i = startIdx; i < endIdx; i++) {
+        results.push(calculateEmployeeStats(employees[i], year, month));
+      }
+      
+      if (endIdx < totalEmployees) {
+        // Process next batch asynchronously
+        setTimeout(() => processBatch(endIdx), 0);
+      } else {
+        // All batches processed
+        resolve(results);
+      }
+    };
+    
+    // Start batch processing
+    processBatch(0);
+  });
 };

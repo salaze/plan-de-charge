@@ -8,8 +8,6 @@ import { StatisticsTablePanel } from '@/components/statistics/panels/StatisticsT
 import { StatisticsChartPanel } from '@/components/statistics/panels/StatisticsChartPanel';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
-import { toast } from 'sonner';
-import { Skeleton } from '@/components/ui/skeleton';
 
 const Statistics = () => {
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
@@ -28,7 +26,6 @@ const Statistics = () => {
   };
 
   const handleRefresh = () => {
-    toast.info("Actualisation des statistiques en cours...");
     refreshData();
   };
 
@@ -51,45 +48,23 @@ const Statistics = () => {
           size="sm"
           onClick={handleRefresh}
           className="flex items-center gap-1"
-          disabled={isLoading}
         >
-          <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-          <span>{isLoading ? 'Chargement...' : 'Actualiser'}</span>
+          <RefreshCw className="h-4 w-4" />
+          <span>Actualiser</span>
         </Button>
       </div>
       
-      {isLoading ? (
-        <div className="space-y-6">
-          <div className="glass-panel p-6 animate-scale-in">
-            <h2 className="text-xl font-semibold mb-4">Répartition des statuts par employé</h2>
-            <div className="space-y-4">
-              <Skeleton className="h-8 w-full" />
-              <Skeleton className="h-64 w-full" />
-            </div>
-          </div>
-          
-          <div className="glass-panel p-4 animate-scale-in">
-            <h2 className="text-xl font-semibold mb-4">Graphique par employé</h2>
-            <div className="h-80">
-              <Skeleton className="h-full w-full" />
-            </div>
-          </div>
-        </div>
-      ) : (
-        <>
-          <StatisticsTablePanel 
-            chartData={chartData}
-            statusCodes={filteredStatusCodes}
-            isLoading={false}
-          />
-          
-          <StatisticsChartPanel 
-            chartData={chartData}
-            statusCodes={filteredStatusCodes}
-            isLoading={false}
-          />
-        </>
-      )}
+      <StatisticsTablePanel 
+        chartData={chartData}
+        statusCodes={filteredStatusCodes}
+        isLoading={isLoading}
+      />
+      
+      <StatisticsChartPanel 
+        chartData={chartData}
+        statusCodes={filteredStatusCodes}
+        isLoading={isLoading}
+      />
     </StatisticsLayout>
   );
 };

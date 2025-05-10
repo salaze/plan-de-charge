@@ -1,8 +1,9 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { StatusCode, STATUS_LABELS, STATUS_COLORS } from '@/types';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface StatisticsChartProps {
   chartData: Array<{ name: string; [key: string]: number | string }>;
@@ -10,11 +11,11 @@ interface StatisticsChartProps {
   isLoading: boolean;
 }
 
-// Helper function to convert Tailwind CSS class to hex color
+// Helper function to convert Tailwind CSS class to hex color - optimized with memoization
 const getColorFromStatusCode = (statusCode: StatusCode): string => {
   const statusColor = STATUS_COLORS[statusCode] || '';
   
-  // Extraire la couleur de la classe Tailwind
+  // Extract color from Tailwind class
   if (statusColor.includes('bg-yellow-300')) return '#fde047';
   if (statusColor.includes('bg-red-500')) return '#ef4444';
   if (statusColor.includes('bg-blue-500')) return '#3b82f6';
@@ -29,15 +30,33 @@ const getColorFromStatusCode = (statusCode: StatusCode): string => {
   if (statusColor.includes('bg-pink-600')) return '#db2777';
   if (statusColor.includes('bg-teal-500')) return '#14b8a6';
   
-  // Couleur par défaut
+  // Default color
   return '#888888';
 };
 
 export const StatisticsChart = ({ chartData, statusCodes, isLoading }: StatisticsChartProps) => {
+  // Use memoization to avoid recalculating on every render
+  const chartConfig = useMemo(() => {
+    return statusCodes.reduce((config, status) => {
+      return {
+        ...config,
+        [status]: {
+          label: STATUS_LABELS[status],
+          color: getColorFromStatusCode(status)
+        }
+      };
+    }, {});
+  }, [statusCodes]);
+
   if (isLoading) {
     return (
-      <div className="h-full flex items-center justify-center text-muted-foreground">
-        Chargement des statistiques...
+      <div className="h-full flex flex-col items-center justify-center gap-4">
+        <p className="text-muted-foreground">Chargement du graphique...</p>
+        <div className="w-full space-y-2">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-4 w-3/4 mx-auto" />
+        </div>
       </div>
     );
   }
@@ -50,17 +69,6 @@ export const StatisticsChart = ({ chartData, statusCodes, isLoading }: Statistic
       </div>
     );
   }
-
-  // Créer la configuration des couleurs pour le graphique
-  const chartConfig = statusCodes.reduce((config, status) => {
-    return {
-      ...config,
-      [status]: {
-        label: STATUS_LABELS[status],
-        color: getColorFromStatusCode(status)
-      }
-    };
-  }, {});
 
   return (
     <ChartContainer config={chartConfig} className="w-full h-full">

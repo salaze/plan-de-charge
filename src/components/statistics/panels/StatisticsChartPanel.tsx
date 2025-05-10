@@ -1,3 +1,4 @@
+
 import React, { useRef } from 'react';
 import { StatisticsChart } from '../StatisticsChart';
 import { StatisticsPieChart } from '../StatisticsPieChart';
@@ -35,7 +36,8 @@ export const StatisticsChartPanel = ({
     onAfterPrint: () => {
       toast.success("Document prêt pour impression");
     },
-    content: () => printableRef.current,
+    // Fix: Replace 'content' with 'contentRef' which is the correct property name
+    contentRef: () => printableRef.current,
     removeAfterPrint: true,
   });
 

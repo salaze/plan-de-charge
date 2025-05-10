@@ -29,20 +29,14 @@ export const StatisticsChartPanel = ({
 
   const handlePrint = useReactToPrint({
     documentTitle: `Statistiques_${currentMonth + 1}_${currentYear}`,
-    onBeforeGetContent: () => {
+    onBeforePrint: () => {
       toast.info("Préparation de l'impression...");
-      return new Promise<void>((resolve) => {
-        setTimeout(() => {
-          resolve();
-        }, 500);
-      });
     },
     onAfterPrint: () => {
       toast.success("Document prêt pour impression");
     },
+    content: () => printableRef.current,
     removeAfterPrint: true,
-    // Les propriétés correctes pour react-to-print
-    printableElement: printableRef.current,
   });
 
   return (

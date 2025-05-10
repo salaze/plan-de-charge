@@ -1,6 +1,6 @@
 
 import { useState, useCallback } from 'react';
-import { Employee, StatusCode } from '@/types';
+import { Employee, StatusCode, UserRole } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 import { generateDaysInMonth, formatDate } from '@/utils/dateUtils';
 import { toast } from 'sonner';
@@ -35,7 +35,7 @@ export const useEmployeesFetcher = () => {
         email: emp.identifiant,
         position: emp.fonction,
         department: emp.departement,
-        role: (emp.role || 'employee'), // Cast string to UserRole
+        role: (emp.role || 'employee') as UserRole, // Cast to UserRole type
         uid: emp.uid,
         schedule: []
       }));

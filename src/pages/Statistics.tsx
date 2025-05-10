@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useStatusOptions } from '@/hooks/useStatusOptions';
-import { useStatisticsData } from '@/hooks/useStatisticsData';
+import { useStatisticsData } from '@/hooks/statistics';
 import { StatisticsLayout } from '@/components/statistics/StatisticsLayout';
 import { StatisticsHeader } from '@/components/statistics/StatisticsHeader';
 import { StatisticsTablePanel } from '@/components/statistics/panels/StatisticsTablePanel';

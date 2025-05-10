@@ -31,14 +31,13 @@ export const StatisticsChartPanel = ({
     documentTitle: `Statistiques_${currentMonth + 1}_${currentYear}`,
     onBeforePrint: () => {
       toast.info("Préparation de l'impression...");
-      return Promise.resolve(); // Return a resolved promise to fix the TypeScript error
+      return Promise.resolve();
     },
     onAfterPrint: () => {
       toast.success("Document prêt pour impression");
     },
-    // Fix: Pass the ref object directly instead of a function that returns the ref's current value
+    // Pass the ref object directly
     contentRef: printableRef,
-    removeAfterPrint: true,
   });
 
   return (

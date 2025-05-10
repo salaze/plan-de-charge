@@ -1,7 +1,6 @@
 import { useCallback, useState, useMemo, useRef } from 'react';
 import { Employee, StatusCode, SummaryStats } from '@/types';
 import { calculateEmployeeStats } from '@/utils/statsUtils';
-import { useRef } from 'react';
 
 interface EmployeeStatusData {
   name: string;
@@ -144,7 +143,6 @@ export const useStatsCalculator = () => {
           
           availableStatusCodes.forEach(status => {
             if (status !== 'none') {
-              // ... keep existing code (status calculations)
               switch(status) {
                 case 'assistance':
                   dataPoint[status] = employeeStats.presentDays -

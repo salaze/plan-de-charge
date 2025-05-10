@@ -8,13 +8,14 @@ import { StatisticsTablePanel } from '@/components/statistics/panels/StatisticsT
 import { StatisticsChartPanel } from '@/components/statistics/panels/StatisticsChartPanel';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
+import { toast } from 'sonner';
 
 const Statistics = () => {
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   
   const { statuses: availableStatusCodes, isLoading: statusesLoading } = useStatusOptions();
-  const { chartData, isLoading: statsLoading, refreshData } = useStatisticsData(
+  const { chartData, isLoading: statsLoading, refreshData, loadingDetails } = useStatisticsData(
     currentYear, 
     currentMonth, 
     availableStatusCodes
@@ -26,6 +27,12 @@ const Statistics = () => {
   };
 
   const handleRefresh = () => {
+    toast.info("Actualisation des statistiques en cours...");
+    console.log("Demande d'actualisation des statistiques");
+    
+    // Log des détails de chargement pour le débogage
+    console.log("État du chargement:", loadingDetails);
+    
     refreshData();
   };
 
@@ -47,10 +54,11 @@ const Statistics = () => {
           variant="outline"
           size="sm"
           onClick={handleRefresh}
+          disabled={isLoading}
           className="flex items-center gap-1"
         >
-          <RefreshCw className="h-4 w-4" />
-          <span>Actualiser</span>
+          <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+          <span>{isLoading ? 'Chargement...' : 'Actualiser'}</span>
         </Button>
       </div>
       

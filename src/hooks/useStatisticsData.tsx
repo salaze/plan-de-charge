@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Employee, StatusCode, SummaryStats, UserRole } from '@/types';
 import { calculateEmployeeStats } from '@/utils/statsUtils';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,6 +20,101 @@ export const useStatisticsData = (
   const [chartData, setChartData] = useState<EmployeeStatusData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [loadingState, setLoadingState] = useState<'idle' | 'loading-employees' | 'loading-schedules' | 'calculating'>('idle');
+
+  // Fonction pour récupérer les employés
+  const fetchEmployees = useCallback(async () => {
+    try {
+      setLoadingState('loading-employees');
+      console.log('Chargement des employés depuis Supabase...');
+      
+      const employeesResult = await supabase
+        .from('employes')
+        .select('*');
+
+      if (employeesResult.error) {
+        throw new Error(`Erreur lors du chargement des employés: ${employeesResult.error.message}`);
+      }
+
+      const loadedEmployees: Employee[] = employeesResult.data.map(emp => ({
+        id: emp.id,
+        name: emp.nom + (emp.prenom ? ` ${emp.prenom}` : ''),
+        email: emp.identifiant,
+        position: emp.fonction,
+        department: emp.departement,
+        role: (emp.role || 'employee') as UserRole,
+        uid: emp.uid,
+        schedule: []
+      }));
+
+      console.log(`${loadedEmployees.length} employés chargés`);
+      setEmployees(loadedEmployees);
+      return loadedEmployees;
+    } catch (error) {
+      console.error('Erreur lors du chargement des employés:', error);
+      toast.error('Erreur lors du chargement des données depuis Supabase');
+      return [];
+    }
+  }, []);
+
+  // Fonction pour récupérer les plannings des employés
+  const fetchSchedules = useCallback(async (
+    employees: Employee[],
+    startDate: string, 
+    endDate: string
+  ) => {
+    setLoadingState('loading-schedules');
+    if (employees.length === 0) return employees;
+
+    try {
+      // Optimisation: charger tous les plannings en une seule requête
+      console.log(`Chargement des plannings du ${startDate} au ${endDate}`);
+      
+      const scheduleResult = await supabase
+        .from('employe_schedule')
+        .select('*')
+        .gte('date', startDate)
+        .lte('date', endDate);
+
+      if (scheduleResult.error) {
+        console.error('Erreur lors du chargement des plannings:', scheduleResult.error);
+        toast.error('Erreur lors du chargement des plannings');
+        return employees;
+      }
+
+      // Grouper les plannings par ID d'employé pour une attribution plus rapide
+      const schedulesByEmployee = scheduleResult.data.reduce((acc, entry) => {
+        if (!acc[entry.employe_id]) {
+          acc[entry.employe_id] = [];
+        }
+        acc[entry.employe_id].push({
+          date: entry.date,
+          status: entry.statut_code as StatusCode,
+          period: entry.period as 'AM' | 'PM' | 'FULL',
+          note: entry.note || undefined,
+          projectCode: entry.project_code || undefined,
+          isHighlighted: entry.is_highlighted || false
+        });
+        return acc;
+      }, {} as Record<string, any[]>);
+
+      // Attribuer les plannings à chaque employé
+      const employeesWithSchedules = employees.map(employee => {
+        return {
+          ...employee,
+          schedule: schedulesByEmployee[employee.id] || []
+        };
+      });
+
+      console.log('Plannings chargés et attribués aux employés');
+      return employeesWithSchedules;
+    } catch (error) {
+      console.error('Erreur lors du chargement des plannings:', error);
+      toast.error('Erreur lors du chargement des plannings');
+      return employees;
+    }
+  }, []);
 
   // Fonction pour calculer les statistiques
   const calculateStats = useCallback((
@@ -28,16 +123,20 @@ export const useStatisticsData = (
     month: number,
     availableStatusCodes: StatusCode[]
   ) => {
-    console.log('Calcul des statistiques avec:', {
-      employeeCount: employees.length,
-      year,
-      month,
-      statusCodes: availableStatusCodes
-    });
+    setLoadingState('calculating');
+    console.log('Calcul des statistiques...');
+    
+    if (employees.length === 0 || availableStatusCodes.length === 0) {
+      console.warn('Pas assez de données pour calculer des statistiques');
+      setChartData([]);
+      setEmployeeStats([]);
+      return;
+    }
 
     const stats: SummaryStats[] = [];
     const chartData: EmployeeStatusData[] = [];
 
+    // Calcul optimisé des statistiques
     employees.forEach((employee) => {
       const employeeStats = calculateEmployeeStats(employee, year, month);
       stats.push({
@@ -103,102 +202,47 @@ export const useStatisticsData = (
 
       chartData.push(dataPoint);
     });
-
-    console.log('Statistiques calculées:', {
-      employeeStatsCount: stats.length,
-      chartDataCount: chartData.length
-    });
     
     setEmployeeStats(stats);
     setChartData(chartData);
+    console.log('Statistiques calculées avec succès');
   }, []);
 
-  // Fonction pour charger les données depuis Supabase
-  const fetchFromSupabase = useCallback(async () => {
-    setIsLoading(true);
-    console.log('Chargement des données depuis Supabase pour', currentYear, currentMonth);
-
-    try {
-      // Déterminer les jours du mois pour filtrer les données
-      const days = generateDaysInMonth(currentYear, currentMonth);
-      const startDate = formatDate(days[0]);
-      const endDate = formatDate(days[days.length - 1]);
-
-      console.log(`Période: ${startDate} à ${endDate}`);
-
-      // Récupérer les employés
-      const employeesResult = await supabase
-        .from('employes')
-        .select('*');
-
-      if (employeesResult.error) {
-        throw new Error(`Erreur lors du chargement des employés: ${employeesResult.error.message}`);
-      }
-
-      const employees: Employee[] = employeesResult.data.map(emp => ({
-        id: emp.id,
-        name: emp.nom + (emp.prenom ? ` ${emp.prenom}` : ''),
-        email: emp.identifiant,
-        position: emp.fonction,
-        department: emp.departement,
-        role: (emp.role || 'employee') as UserRole, // Cast string to UserRole
-        uid: emp.uid,
-        schedule: []
-      }));
-
-      console.log(`${employees.length} employés chargés`);
-
-      // Pour chaque employé, récupérer son planning
-      for (const employee of employees) {
-        const scheduleResult = await supabase
-          .from('employe_schedule')
-          .select('*')
-          .eq('employe_id', employee.id)
-          .gte('date', startDate)
-          .lte('date', endDate);
-
-        if (scheduleResult.error) {
-          console.error(`Erreur lors du chargement du planning pour ${employee.name}:`, scheduleResult.error);
-          continue;
-        }
-
-        employee.schedule = scheduleResult.data.map(entry => ({
-          date: entry.date,
-          status: entry.statut_code as StatusCode,
-          period: entry.period as 'AM' | 'PM' | 'FULL',
-          note: entry.note || undefined,
-          projectCode: entry.project_code || undefined,
-          isHighlighted: entry.is_highlighted || false
-        }));
-
-        console.log(`${employee.schedule.length} entrées de planning chargées pour ${employee.name}`);
-      }
-
-      // Calculer les statistiques
-      if (employees.length > 0 && statusCodes.length > 0) {
-        calculateStats(employees, currentYear, currentMonth, statusCodes);
-        console.log('Statistiques calculées avec succès');
-      } else {
-        console.warn('Pas assez de données pour calculer des statistiques');
-        setChartData([]);
-        setEmployeeStats([]);
-      }
-    } catch (error) {
-      console.error('Erreur lors du chargement des données:', error);
-      toast.error('Erreur lors du chargement des données depuis Supabase');
-      setChartData([]);
-      setEmployeeStats([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [currentYear, currentMonth, statusCodes, calculateStats]);
-
-  // Chargement initial des données
+  // Effet principal qui gère la séquence de chargement des données
   useEffect(() => {
-    fetchFromSupabase();
-  }, [currentYear, currentMonth, statusCodes, fetchFromSupabase, refreshKey]);
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        console.log('Chargement des données depuis Supabase pour', currentYear, currentMonth);
 
-  // Écouter les mises à jour en temps réel
+        // 1. Déterminer l'intervalle de dates pour le mois sélectionné
+        const days = generateDaysInMonth(currentYear, currentMonth);
+        const startDate = formatDate(days[0]);
+        const endDate = formatDate(days[days.length - 1]);
+        console.log(`Période: ${startDate} à ${endDate}`);
+
+        // 2. Charger les employés
+        const loadedEmployees = await fetchEmployees();
+        
+        // 3. Charger les plannings pour ces employés
+        const employeesWithSchedules = await fetchSchedules(loadedEmployees, startDate, endDate);
+        
+        // 4. Calculer les statistiques
+        calculateStats(employeesWithSchedules, currentYear, currentMonth, statusCodes);
+      } catch (error) {
+        console.error('Erreur lors du chargement des données:', error);
+        toast.error('Erreur lors du chargement des données depuis Supabase');
+      } finally {
+        setIsLoading(false);
+        setLoadingState('idle');
+      }
+    };
+
+    // Déclencher le chargement des données
+    loadData();
+  }, [currentYear, currentMonth, statusCodes, fetchEmployees, fetchSchedules, calculateStats, refreshKey]);
+
+  // Configurer les abonnements en temps réel
   useEffect(() => {
     // Configurer les abonnements en temps réel
     const scheduleChannel = supabase
@@ -260,6 +304,16 @@ export const useStatisticsData = (
     };
   }, []);
 
+  // Exposer l'état de chargement détaillé pour le débogage
+  const loadingDetails = useMemo(() => {
+    return {
+      state: loadingState,
+      employeesCount: employees.length,
+      statusCodesCount: statusCodes.length,
+      chartDataCount: chartData.length
+    };
+  }, [loadingState, employees.length, statusCodes.length, chartData.length]);
+
   // Fonction pour forcer le rechargement des données
   const refreshData = useCallback(() => {
     toast.info('Actualisation des statistiques...');
@@ -270,6 +324,7 @@ export const useStatisticsData = (
     employeeStats,
     chartData,
     isLoading,
+    loadingDetails, // Nouvelle propriété pour le débogage
     refreshData
   };
 };

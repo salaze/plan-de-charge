@@ -11,6 +11,8 @@ export const initPrintStyles = () => {
       body {
         background-color: white !important;
         color: black !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
       }
 
       /* Cache les éléments qui ne devraient pas être imprimés */
@@ -32,8 +34,22 @@ export const initPrintStyles = () => {
       }
 
       /* Styles spécifiques pour les graphiques */
-      .print-chart .recharts-wrapper {
-        margin: 0 auto;
+      .print-chart .recharts-wrapper,
+      .recharts-responsive-container,
+      .recharts-surface {
+        display: block !important;
+        visibility: visible !important;
+        width: 100% !important;
+        height: auto !important;
+        overflow: visible !important;
+        page-break-inside: avoid !important;
+      }
+      
+      /* Assurer que les SVG s'affichent bien */
+      svg {
+        display: block !important;
+        visibility: visible !important;
+        page-break-inside: avoid !important;
       }
     }
   `);

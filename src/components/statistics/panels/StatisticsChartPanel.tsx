@@ -31,10 +31,15 @@ export const StatisticsChartPanel = ({
     documentTitle: `Statistiques_${currentMonth + 1}_${currentYear}`,
     onBeforePrint: () => {
       toast.info("Préparation de l'impression...");
-      return Promise.resolve();
+      return new Promise<void>((resolve) => {
+        // Délai pour permettre le rendu complet des graphiques
+        setTimeout(() => {
+          resolve();
+        }, 1000);
+      });
     },
     onAfterPrint: () => {
-      toast.success("Document prêt pour impression");
+      toast.success("Document imprimé avec succès");
     },
     // Pass the ref object directly
     contentRef: printableRef,

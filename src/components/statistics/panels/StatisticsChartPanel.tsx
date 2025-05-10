@@ -36,8 +36,8 @@ export const StatisticsChartPanel = ({
     onAfterPrint: () => {
       toast.success("Document prêt pour impression");
     },
-    // Fix: Replace 'content' with 'contentRef' which is the correct property name
-    contentRef: () => printableRef.current,
+    // Fix: Pass the ref object directly instead of a function that returns the ref's current value
+    contentRef: printableRef,
     removeAfterPrint: true,
   });
 

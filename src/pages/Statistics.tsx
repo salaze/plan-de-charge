@@ -1,15 +1,23 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { useStatusOptions } from '@/hooks/useStatusOptions';
 import { useStatisticsData } from '@/hooks/statistics';
 import { StatisticsLayout } from '@/components/statistics/StatisticsLayout';
 import { StatisticsHeader } from '@/components/statistics/StatisticsHeader';
-import { StatisticsTablePanel } from '@/components/statistics/panels/StatisticsTablePanel';
-import { StatisticsChartPanel } from '@/components/statistics/panels/StatisticsChartPanel';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { initPrintStyles } from '@/utils/printUtils';
+
+// Chargement paresseux des composants lourds
+const StatisticsTablePanel = lazy(() => 
+  import('@/components/statistics/panels/StatisticsTablePanel')
+    .then(module => ({ default: module.StatisticsTablePanel }))
+);
+const StatisticsChartPanel = lazy(() => 
+  import('@/components/statistics/panels/StatisticsChartPanel')
+    .then(module => ({ default: module.StatisticsChartPanel }))
+);
 
 const Statistics = () => {
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
@@ -68,19 +76,23 @@ const Statistics = () => {
         </Button>
       </div>
       
-      <StatisticsTablePanel 
-        chartData={chartData}
-        statusCodes={filteredStatusCodes}
-        isLoading={isLoading}
-      />
+      <Suspense fallback={<div className="text-center p-6">Chargement du tableau...</div>}>
+        <StatisticsTablePanel 
+          chartData={chartData}
+          statusCodes={filteredStatusCodes}
+          isLoading={isLoading}
+        />
+      </Suspense>
       
-      <StatisticsChartPanel 
-        chartData={chartData}
-        statusCodes={filteredStatusCodes}
-        isLoading={isLoading}
-        currentYear={currentYear}
-        currentMonth={currentMonth}
-      />
+      <Suspense fallback={<div className="text-center p-6">Chargement des graphiques...</div>}>
+        <StatisticsChartPanel 
+          chartData={chartData}
+          statusCodes={filteredStatusCodes}
+          isLoading={isLoading}
+          currentYear={currentYear}
+          currentMonth={currentMonth}
+        />
+      </Suspense>
     </StatisticsLayout>
   );
 };

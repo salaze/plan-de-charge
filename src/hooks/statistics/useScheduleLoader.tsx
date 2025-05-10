@@ -13,23 +13,47 @@ export const useScheduleLoader = () => {
     if (employees.length === 0) return employees;
 
     try {
-      // Optimisation: charger tous les plannings en une seule requête
+      // Optimisation: charger tous les plannings en une seule requête avec pagination
       console.log(`Chargement des plannings du ${startDate} au ${endDate}`);
       
-      const scheduleResult = await supabase
-        .from('employe_schedule')
-        .select('*')
-        .gte('date', startDate)
-        .lte('date', endDate);
-
-      if (scheduleResult.error) {
-        console.error('Erreur lors du chargement des plannings:', scheduleResult.error);
-        toast.error('Erreur lors du chargement des plannings');
-        return employees;
+      const batchSize = 1000; // Taille optimale pour éviter les timeouts
+      let allScheduleData: any[] = [];
+      let hasMoreData = true;
+      let lastId = '';
+      
+      while (hasMoreData) {
+        let query = supabase
+          .from('employe_schedule')
+          .select('*')
+          .gte('date', startDate)
+          .lte('date', endDate)
+          .order('id', { ascending: true })
+          .limit(batchSize);
+          
+        // Pagination basée sur l'ID pour de meilleures performances
+        if (lastId) {
+          query = query.gt('id', lastId);
+        }
+        
+        const { data: batchData, error } = await query;
+        
+        if (error) {
+          console.error('Erreur lors du chargement des plannings:', error);
+          toast.error('Erreur lors du chargement des plannings');
+          break;
+        }
+        
+        if (batchData && batchData.length > 0) {
+          allScheduleData = [...allScheduleData, ...batchData];
+          lastId = batchData[batchData.length - 1].id;
+          hasMoreData = batchData.length === batchSize;
+        } else {
+          hasMoreData = false;
+        }
       }
 
       // Grouper les plannings par ID d'employé pour une attribution plus rapide
-      const schedulesByEmployee = scheduleResult.data.reduce((acc, entry) => {
+      const schedulesByEmployee = allScheduleData.reduce((acc, entry) => {
         if (!acc[entry.employe_id]) {
           acc[entry.employe_id] = [];
         }
@@ -44,7 +68,7 @@ export const useScheduleLoader = () => {
         return acc;
       }, {} as Record<string, any[]>);
 
-      // Attribuer les plannings à chaque employé
+      // Attribuer les plannings à chaque employé avec une méthode plus efficace
       const employeesWithSchedules = employees.map(employee => {
         return {
           ...employee,

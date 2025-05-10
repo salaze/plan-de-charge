@@ -1,14 +1,25 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { Employee, UserRole } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 export const useEmployeeLoader = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const employeeCache = useRef<Employee[]>([]);
+  const lastFetchTime = useRef<number>(0);
+  const CACHE_TTL = 60000; // 1 minute en millisecondes
 
   const fetchEmployees = useCallback(async () => {
     try {
+      // Vérifier si les données en cache sont encore valides
+      const now = Date.now();
+      if (employeeCache.current.length > 0 && now - lastFetchTime.current < CACHE_TTL) {
+        console.log('Utilisation du cache des employés');
+        setEmployees(employeeCache.current);
+        return employeeCache.current;
+      }
+      
       console.log('Chargement des employés depuis Supabase...');
       
       const employeesResult = await supabase
@@ -31,6 +42,11 @@ export const useEmployeeLoader = () => {
       }));
 
       console.log(`${loadedEmployees.length} employés chargés`);
+      
+      // Mise à jour du cache et de l'horodatage
+      employeeCache.current = loadedEmployees;
+      lastFetchTime.current = now;
+      
       setEmployees(loadedEmployees);
       return loadedEmployees;
     } catch (error) {

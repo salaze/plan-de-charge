@@ -7,7 +7,7 @@ import { StatusCode } from '@/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { useReactToPrint } from 'react-to-print';
-import { Print } from 'lucide-react';
+import { Printer } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface StatisticsChartPanelProps {
@@ -28,7 +28,6 @@ export const StatisticsChartPanel = ({
   const printableRef = useRef<HTMLDivElement>(null);
 
   const handlePrint = useReactToPrint({
-    content: () => printableRef.current,
     documentTitle: `Statistiques_${currentMonth + 1}_${currentYear}`,
     onBeforeGetContent: () => {
       toast.info("Préparation de l'impression...");
@@ -41,7 +40,9 @@ export const StatisticsChartPanel = ({
     onAfterPrint: () => {
       toast.success("Document prêt pour impression");
     },
-    removeAfterPrint: true
+    removeAfterPrint: true,
+    // Les propriétés correctes pour react-to-print
+    printableElement: printableRef.current,
   });
 
   return (
@@ -55,7 +56,7 @@ export const StatisticsChartPanel = ({
           disabled={isLoading || !chartData || chartData.length === 0}
           className="flex items-center gap-1"
         >
-          <Print className="h-4 w-4" />
+          <Printer className="h-4 w-4" />
           <span>Imprimer</span>
         </Button>
       </div>

@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { StatusCode, STATUS_LABELS } from '@/types';
-import { Print } from 'lucide-react';
+import { Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useReactToPrint } from 'react-to-print';
 

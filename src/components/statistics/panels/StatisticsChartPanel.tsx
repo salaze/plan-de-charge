@@ -1,4 +1,3 @@
-
 import React, { useRef } from 'react';
 import { StatisticsChart } from '../StatisticsChart';
 import { StatisticsPieChart } from '../StatisticsPieChart';
@@ -31,6 +30,7 @@ export const StatisticsChartPanel = ({
     documentTitle: `Statistiques_${currentMonth + 1}_${currentYear}`,
     onBeforePrint: () => {
       toast.info("Préparation de l'impression...");
+      return Promise.resolve(); // Return a resolved promise to fix the TypeScript error
     },
     onAfterPrint: () => {
       toast.success("Document prêt pour impression");

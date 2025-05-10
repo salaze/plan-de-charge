@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useStatusOptions } from '@/hooks/useStatusOptions';
 import { useStatisticsData } from '@/hooks/useStatisticsData';
 import { StatisticsLayout } from '@/components/statistics/StatisticsLayout';
@@ -9,6 +9,7 @@ import { StatisticsChartPanel } from '@/components/statistics/panels/StatisticsC
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
+import { initPrintStyles } from '@/utils/printUtils';
 
 const Statistics = () => {
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
@@ -20,6 +21,11 @@ const Statistics = () => {
     currentMonth, 
     availableStatusCodes
   );
+  
+  // Initialiser les styles d'impression au chargement
+  useEffect(() => {
+    initPrintStyles();
+  }, []);
   
   const handleMonthChange = (year: number, month: number) => {
     setCurrentYear(year);
@@ -72,6 +78,8 @@ const Statistics = () => {
         chartData={chartData}
         statusCodes={filteredStatusCodes}
         isLoading={isLoading}
+        currentYear={currentYear}
+        currentMonth={currentMonth}
       />
     </StatisticsLayout>
   );

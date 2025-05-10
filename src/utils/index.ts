@@ -1,4 +1,3 @@
-
 export * from './dateUtils';
 export * from './export';
 export * from './idUtils';
@@ -12,3 +11,4 @@ export * from './statsExportUtils';
 export * from './holidayUtils';
 export * from './supabase/connectionMonitor';
 export * from './tableExportUtils';
+export * from './printUtils';

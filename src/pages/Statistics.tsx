@@ -5,8 +5,9 @@ import { useStatisticsData } from '@/hooks/statistics';
 import { StatisticsLayout } from '@/components/statistics/StatisticsLayout';
 import { StatisticsHeader } from '@/components/statistics/StatisticsHeader';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, AlertTriangle } from 'lucide-react';
+import { RefreshCw, AlertTriangle, Filter } from 'lucide-react';
 import { toast } from 'sonner';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 // Chargement paresseux des composants lourds
 const StatisticsTablePanel = lazy(() => 
@@ -22,13 +23,25 @@ const Statistics = () => {
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [loadTimeout, setLoadTimeout] = useState(false);
+  const [selectedDepartment, setSelectedDepartment] = useState("all");
   
   const { statuses: availableStatusCodes, isLoading: statusesLoading } = useStatusOptions();
   const { chartData, isLoading: statsLoading, refreshData, loadingDetails } = useStatisticsData(
     currentYear, 
     currentMonth, 
-    availableStatusCodes
+    availableStatusCodes,
+    selectedDepartment
   );
+  
+  // Liste des départements disponibles
+  const departments = [
+    { value: "all", label: "Tous les départements" },
+    { value: "REC", label: "REC" },
+    { value: "78", label: "78" },
+    { value: "91", label: "91" },
+    { value: "92", label: "92" },
+    { value: "95", label: "95" },
+  ];
   
   // Ajouter un timeout global pour afficher un message si le chargement est trop long
   useEffect(() => {
@@ -61,6 +74,12 @@ const Statistics = () => {
     refreshData();
   };
 
+  const handleDepartmentChange = (dept: string) => {
+    setSelectedDepartment(dept);
+    toast.info(`Chargement des statistiques pour le département: ${dept === 'all' ? 'Tous' : dept}`);
+    refreshData();
+  };
+
   // Filter out the 'none' status
   const filteredStatusCodes = availableStatusCodes.filter(code => code !== 'none');
   
@@ -75,16 +94,37 @@ const Statistics = () => {
           onMonthChange={handleMonthChange}
         />
         
-        <Button 
-          variant="outline"
-          size="sm"
-          onClick={handleRefresh}
-          disabled={isLoading}
-          className="flex items-center gap-1"
-        >
-          <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-          <span>{isLoading ? 'Chargement...' : 'Actualiser'}</span>
-        </Button>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4" />
+            <Select
+              value={selectedDepartment}
+              onValueChange={handleDepartmentChange}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Département" />
+              </SelectTrigger>
+              <SelectContent>
+                {departments.map((dept) => (
+                  <SelectItem key={dept.value} value={dept.value}>
+                    {dept.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <Button 
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={isLoading}
+            className="flex items-center gap-1"
+          >
+            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            <span>{isLoading ? 'Chargement...' : 'Actualiser'}</span>
+          </Button>
+        </div>
       </div>
       
       {loadTimeout && (

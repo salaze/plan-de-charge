@@ -13,6 +13,7 @@ export const useStatisticsData = (
   currentYear: number,
   currentMonth: number,
   statusCodes: StatusCode[],
+  selectedDepartment: string = 'all'
 ) => {
   const { employees, fetchEmployees } = useEmployeeLoader();
   const { fetchSchedules } = useScheduleLoader();
@@ -20,7 +21,7 @@ export const useStatisticsData = (
   const { isLoading, setIsLoading, loadingState, setLoadingState, refreshKey, incrementRefreshKey } = useLoadingState();
   
   // Mise en cache des données pour éviter des chargements inutiles
-  const cacheKey = `${currentYear}-${currentMonth}-${statusCodes.join('-')}`;
+  const cacheKey = `${currentYear}-${currentMonth}-${statusCodes.join('-')}-${selectedDepartment}`;
   const previousCacheKey = useRef('');
   const cachedData = useRef<{
     employees: any[];
@@ -36,7 +37,7 @@ export const useStatisticsData = (
 
   // Effet principal qui gère la séquence de chargement des données avec optimisation
   useEffect(() => {
-    // Vérifier si les données sont déjà en cache pour cette période
+    // Vérifier si les données sont déjà en cache pour cette période et ce département
     if (cacheKey === previousCacheKey.current && cachedData.current) {
       console.log('Utilisation des données en cache pour', cacheKey);
       return;
@@ -45,7 +46,7 @@ export const useStatisticsData = (
     const loadData = async () => {
       try {
         setIsLoading(true);
-        console.log('Chargement des données depuis Supabase pour', currentYear, currentMonth);
+        console.log('Chargement des données depuis Supabase pour', currentYear, currentMonth, 'département:', selectedDepartment);
 
         // Configurer un timeout pour éviter un chargement infini
         if (timeoutRef.current) {
@@ -69,7 +70,7 @@ export const useStatisticsData = (
 
         // 2. Charger les employés de manière optimisée
         setLoadingState('loading-employees');
-        const loadedEmployees = await fetchEmployees();
+        const loadedEmployees = await fetchEmployees(selectedDepartment);
         
         // 3. Optimisation: Charger tous les plannings en une seule requête
         setLoadingState('loading-schedules');
@@ -107,7 +108,7 @@ export const useStatisticsData = (
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [currentYear, currentMonth, statusCodes, fetchEmployees, fetchSchedules, calculateStats, refreshKey, cacheKey, chartData, isLoading]);
+  }, [currentYear, currentMonth, statusCodes, selectedDepartment, fetchEmployees, fetchSchedules, calculateStats, refreshKey, cacheKey, chartData, isLoading]);
 
   // Exposer l'état de chargement détaillé pour le débogage
   const loadingDetails = useMemo(() => {
@@ -115,9 +116,10 @@ export const useStatisticsData = (
       state: loadingState,
       employeesCount: employees.length,
       statusCodesCount: statusCodes.length,
-      chartDataCount: chartData.length
+      chartDataCount: chartData.length,
+      selectedDepartment
     };
-  }, [loadingState, employees.length, statusCodes.length, chartData.length]);
+  }, [loadingState, employees.length, statusCodes.length, chartData.length, selectedDepartment]);
 
   return {
     employeeStats,

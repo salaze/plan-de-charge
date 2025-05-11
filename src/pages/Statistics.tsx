@@ -5,11 +5,13 @@ import { useStatisticsData } from '@/hooks/statistics';
 import { StatisticsLayout } from '@/components/statistics/StatisticsLayout';
 import { StatisticsHeader } from '@/components/statistics/StatisticsHeader';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, AlertTriangle, Filter } from 'lucide-react';
+import { RefreshCw, AlertTriangle, Filter, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
-// Chargement paresseux des composants lourds
+// Lazy loaded components
 const StatisticsTablePanel = lazy(() => 
   import('@/components/statistics/panels/StatisticsTablePanel')
     .then(module => ({ default: module.StatisticsTablePanel }))
@@ -22,20 +24,25 @@ const StatisticsChartPanel = lazy(() =>
 const Statistics = () => {
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
-  const [loadTimeout, setLoadTimeout] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState("all");
   
   const { statuses: availableStatusCodes, isLoading: statusesLoading } = useStatusOptions();
-  const { chartData, isLoading: statsLoading, refreshData, loadingDetails } = useStatisticsData(
+  const { 
+    chartData, 
+    isLoading: statsLoading, 
+    loadTimeout,
+    refreshData, 
+    loadingDetails 
+  } = useStatisticsData(
     currentYear, 
     currentMonth, 
     availableStatusCodes,
     selectedDepartment
   );
   
-  // Liste des départements disponibles
+  // List of available departments
   const departments = [
-    { value: "all", label: "Tous les départements" },
+    { value: "all", label: "All departments" },
     { value: "REC", label: "REC" },
     { value: "78", label: "78" },
     { value: "91", label: "91" },
@@ -43,41 +50,20 @@ const Statistics = () => {
     { value: "95", label: "95" },
   ];
   
-  // Ajouter un timeout global pour afficher un message si le chargement est trop long
-  useEffect(() => {
-    if (statsLoading) {
-      const timer = setTimeout(() => {
-        if (statsLoading) {
-          setLoadTimeout(true);
-        }
-      }, 20000); // 20 secondes
-      
-      return () => clearTimeout(timer);
-    } else {
-      setLoadTimeout(false);
-    }
-  }, [statsLoading]);
-  
   const handleMonthChange = (year: number, month: number) => {
     setCurrentYear(year);
     setCurrentMonth(month);
   };
 
   const handleRefresh = () => {
-    toast.info("Actualisation des statistiques en cours...");
-    console.log("Demande d'actualisation des statistiques");
-    setLoadTimeout(false);
-    
-    // Log des détails de chargement pour le débogage
-    console.log("État du chargement:", loadingDetails);
-    
+    toast.info("Refreshing statistics...");
+    console.log("Statistics refresh requested");
     refreshData();
   };
 
   const handleDepartmentChange = (dept: string) => {
     setSelectedDepartment(dept);
-    toast.info(`Chargement des statistiques pour le département: ${dept === 'all' ? 'Tous' : dept}`);
-    refreshData();
+    toast.info(`Loading statistics for department: ${dept === 'all' ? 'All' : dept}`);
   };
 
   // Filter out the 'none' status
@@ -87,7 +73,7 @@ const Statistics = () => {
   
   return (
     <StatisticsLayout>
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center mb-4">
         <StatisticsHeader 
           year={currentYear}
           month={currentMonth}
@@ -100,9 +86,10 @@ const Statistics = () => {
             <Select
               value={selectedDepartment}
               onValueChange={handleDepartmentChange}
+              disabled={isLoading}
             >
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Département" />
+                <SelectValue placeholder="Department" />
               </SelectTrigger>
               <SelectContent>
                 {departments.map((dept) => (
@@ -121,8 +108,17 @@ const Statistics = () => {
             disabled={isLoading}
             className="flex items-center gap-1"
           >
-            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-            <span>{isLoading ? 'Chargement...' : 'Actualiser'}</span>
+            {isLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Loading...</span>
+              </>
+            ) : (
+              <>
+                <RefreshCw className="h-4 w-4" />
+                <span>Refresh</span>
+              </>
+            )}
           </Button>
         </div>
       </div>
@@ -131,7 +127,7 @@ const Statistics = () => {
         <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4 rounded">
           <div className="flex items-center">
             <AlertTriangle className="h-5 w-5 mr-2" />
-            <p>Le chargement des données prend plus de temps que prévu. Vous pouvez continuer à attendre ou actualiser la page.</p>
+            <p>The data is taking longer than expected to load. You can continue waiting or try refreshing.</p>
           </div>
           <Button 
             variant="outline"
@@ -139,28 +135,86 @@ const Statistics = () => {
             onClick={handleRefresh}
             className="mt-2"
           >
-            Réessayer
+            Retry
           </Button>
         </div>
       )}
       
-      <Suspense fallback={<div className="text-center p-6">Chargement du tableau...</div>}>
-        <StatisticsTablePanel 
-          chartData={chartData}
-          statusCodes={filteredStatusCodes}
-          isLoading={isLoading}
-        />
-      </Suspense>
-      
-      <Suspense fallback={<div className="text-center p-6">Chargement des graphiques...</div>}>
-        <StatisticsChartPanel 
-          chartData={chartData}
-          statusCodes={filteredStatusCodes}
-          isLoading={isLoading}
-          currentYear={currentYear}
-          currentMonth={currentMonth}
-        />
-      </Suspense>
+      {isLoading ? (
+        <>
+          <Card className="mb-4">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4 mb-2">
+                <Skeleton className="h-6 w-36" />
+                <Skeleton className="h-6 w-24 ml-auto" />
+              </div>
+              <div className="w-full h-[400px] rounded-md bg-muted/20 flex items-center justify-center">
+                <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
+                <span className="ml-2 text-muted-foreground">Loading statistics...</span>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4 mb-4">
+                <Skeleton className="h-6 w-48" />
+                <Skeleton className="h-6 w-24 ml-auto" />
+              </div>
+              <div className="space-y-2">
+                <div className="flex space-x-3 items-center">
+                  <Skeleton className="h-6 w-36" />
+                  {[1, 2, 3, 4, 5].map(i => (
+                    <Skeleton key={i} className="h-6 w-16" />
+                  ))}
+                </div>
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i} className="flex space-x-3 items-center">
+                    <Skeleton className="h-6 w-36" />
+                    {[1, 2, 3, 4, 5].map(j => (
+                      <Skeleton key={j} className="h-6 w-16" />
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </>
+      ) : (
+        <>
+          <Suspense fallback={
+            <div className="w-full h-[200px] rounded-md bg-muted/20 flex items-center justify-center">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              <span className="ml-2 text-muted-foreground">Loading table...</span>
+            </div>
+          }>
+            <StatisticsTablePanel 
+              chartData={chartData}
+              statusCodes={filteredStatusCodes}
+              isLoading={isLoading}
+              selectedDepartment={selectedDepartment}
+              onDepartmentChange={setSelectedDepartment}
+            />
+          </Suspense>
+          
+          <Suspense fallback={
+            <div className="w-full h-[200px] rounded-md bg-muted/20 flex items-center justify-center">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              <span className="ml-2 text-muted-foreground">Loading charts...</span>
+            </div>
+          }>
+            <StatisticsChartPanel 
+              chartData={chartData}
+              statusCodes={filteredStatusCodes}
+              isLoading={isLoading}
+              currentYear={currentYear}
+              currentMonth={currentMonth}
+              selectedDepartment={selectedDepartment}
+              onDepartmentChange={setSelectedDepartment}
+            />
+          </Suspense>
+        </>
+      )}
     </StatisticsLayout>
   );
 };

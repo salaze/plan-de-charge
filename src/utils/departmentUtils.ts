@@ -6,7 +6,7 @@ export const groupEmployeesByDepartment = (employees: Employee[]) => {
   const departments: { [key: string]: Employee[] } = {};
   
   employees.forEach(employee => {
-    const department = employee.department || 'Sans département';
+    const department = employee.department || 'No department';
     if (!departments[department]) {
       departments[department] = [];
     }
@@ -45,4 +45,23 @@ export const getAvailableDepartments = (chartData: Array<{ name: string; [key: s
   });
   
   return Array.from(departments);
+};
+
+// Filter chart data by department
+export const filterChartDataByDepartment = (
+  chartData: Array<{ name: string; [key: string]: number | string }>, 
+  department: string
+): Array<{ name: string; [key: string]: number | string }> => {
+  if (department === "all") {
+    return chartData;
+  }
+  
+  return chartData.filter(employee => {
+    const nameParts = employee.name.toString().split('(');
+    if (nameParts.length > 1) {
+      const deptPart = nameParts[1].replace(')', '').trim();
+      return deptPart === department;
+    }
+    return false;
+  });
 };

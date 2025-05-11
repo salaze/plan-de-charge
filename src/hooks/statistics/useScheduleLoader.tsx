@@ -13,10 +13,13 @@ export const useScheduleLoader = () => {
     if (employees.length === 0) return employees;
 
     try {
-      // Optimisation: charger tous les plannings en une seule requête avec pagination
-      console.log(`Chargement des plannings du ${startDate} au ${endDate}`);
+      console.log(`Loading schedules from ${startDate} to ${endDate} for ${employees.length} employees`);
       
-      const batchSize = 2000; // Augmenter la taille du batch pour réduire les appels
+      // Create array of employee IDs for efficient filtering
+      const employeeIds = employees.map(emp => emp.id);
+      
+      // Optimized query with pagination using smaller batches for better performance
+      const batchSize = 1000; // Smaller batch size for faster response
       let allScheduleData: any[] = [];
       let hasMoreData = true;
       let lastId = '';
@@ -28,22 +31,32 @@ export const useScheduleLoader = () => {
           let query = supabase
             .from('employe_schedule')
             .select('*')
+            .in('employe_id', employeeIds) // Filter to only relevant employees
             .gte('date', startDate)
             .lte('date', endDate)
             .order('id', { ascending: true })
             .limit(batchSize);
             
-          // Pagination basée sur l'ID pour de meilleures performances
+          // Pagination based on ID
           if (lastId) {
             query = query.gt('id', lastId);
           }
           
-          const { data: batchData, error } = await query;
+          // Set a timeout to prevent hanging
+          const timeoutPromise = new Promise<{ data: any[], error: Error }>((_, reject) => {
+            setTimeout(() => reject(new Error('Supabase query timed out')), 6000);
+          });
+          
+          // Execute query with timeout
+          const { data: batchData, error } = await Promise.race([
+            query,
+            timeoutPromise
+          ]);
           
           if (error) {
-            console.error('Erreur lors du chargement des plannings:', error);
+            console.error('Error loading schedules:', error);
             attemptCount++;
-            await new Promise(resolve => setTimeout(resolve, 1000)); // Attendre 1s avant de réessayer
+            await new Promise(resolve => setTimeout(resolve, 500)); // Wait before retry
             continue;
           }
           
@@ -51,23 +64,26 @@ export const useScheduleLoader = () => {
             allScheduleData = [...allScheduleData, ...batchData];
             lastId = batchData[batchData.length - 1].id;
             hasMoreData = batchData.length === batchSize;
+            console.log(`Loaded batch of ${batchData.length} schedule entries`);
           } else {
             hasMoreData = false;
           }
         } catch (err) {
+          console.error('Error in schedule batch:', err);
           attemptCount++;
-          await new Promise(resolve => setTimeout(resolve, 1000)); // Attendre 1s avant de réessayer
+          await new Promise(resolve => setTimeout(resolve, 500)); 
         }
       }
 
       if (attemptCount >= maxAttempts) {
-        toast.error('Problème de chargement des plannings après plusieurs tentatives');
+        toast.error('Schedule loading issue - please try again');
       }
 
-      // Optimisation: Indexage des plannings par ID d'employé pour un accès plus rapide
+      console.log(`Total schedule entries loaded: ${allScheduleData.length}`);
+      
+      // Optimized indexing of schedules by employee ID
       const schedulesByEmployee: Record<string, any[]> = {};
       
-      // Utilisation d'une boucle for classique pour de meilleures performances
       for (let i = 0; i < allScheduleData.length; i++) {
         const entry = allScheduleData[i];
         if (!schedulesByEmployee[entry.employe_id]) {
@@ -83,18 +99,18 @@ export const useScheduleLoader = () => {
         });
       }
 
-      // Optimisation: map en une seule passe avec des objets préalloués
+      // Map employees to their schedules in a single pass
       const employeesWithSchedules = employees.map(employee => ({
         ...employee,
         schedule: schedulesByEmployee[employee.id] || []
       }));
 
-      console.log('Plannings chargés et attribués aux employés');
+      console.log('Schedules loaded and assigned to employees');
       return employeesWithSchedules;
     } catch (error) {
-      console.error('Erreur lors du chargement des plannings:', error);
-      toast.error('Erreur lors du chargement des plannings');
-      return employees;
+      console.error('Error loading schedules:', error);
+      toast.error('Error loading schedules');
+      return employees.map(emp => ({...emp, schedule: []})); // Return employees without schedules
     }
   }, []);
 

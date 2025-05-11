@@ -8,37 +8,47 @@ export const useEmployeeLoader = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const employeeCache = useRef<{[key: string]: Employee[]}>({});
   const lastFetchTime = useRef<{[key: string]: number}>({});
-  const CACHE_TTL = 60000; // 1 minute en millisecondes
+  const CACHE_TTL = 60000; // 1 minute cache lifetime
 
   const fetchEmployees = useCallback(async (department: string = 'all') => {
     try {
       const cacheKey = `employees-${department}`;
       
-      // Vérifier si les données en cache sont encore valides
+      // Check if cache is valid
       const now = Date.now();
       if (employeeCache.current[cacheKey]?.length > 0 && 
           lastFetchTime.current[cacheKey] && 
           now - lastFetchTime.current[cacheKey] < CACHE_TTL) {
-        console.log(`Utilisation du cache des employés pour le département: ${department}`);
+        console.log(`Using cached employees data for department: ${department}`);
         setEmployees(employeeCache.current[cacheKey]);
         return employeeCache.current[cacheKey];
       }
       
-      console.log(`Chargement des employés depuis Supabase pour le département: ${department}...`);
+      console.log(`Loading employees from Supabase for department: ${department}...`);
       
-      // Construire la requête de base
-      let query = supabase.from('employes').select('*');
+      // Build the base query
+      let query = supabase.from('employes')
+        .select('*')
+        .order('nom', { ascending: true });
       
-      // Ajouter un filtre par département si nécessaire
+      // Add department filter if needed (and not 'all')
       if (department !== 'all') {
         query = query.eq('departement', department);
       }
       
-      // Exécuter la requête
-      const employeesResult = await query;
+      // Set a timeout to prevent hanging
+      const timeoutPromise = new Promise<{ data: any[], error: Error }>((_, reject) => {
+        setTimeout(() => reject(new Error('Supabase query timed out')), 10000);
+      });
+      
+      // Execute the query with timeout
+      const employeesResult = await Promise.race([
+        query,
+        timeoutPromise
+      ]);
 
       if (employeesResult.error) {
-        throw new Error(`Erreur lors du chargement des employés: ${employeesResult.error.message}`);
+        throw new Error(`Error loading employees: ${employeesResult.error.message}`);
       }
 
       const loadedEmployees: Employee[] = employeesResult.data.map(emp => ({
@@ -52,17 +62,17 @@ export const useEmployeeLoader = () => {
         schedule: []
       }));
 
-      console.log(`${loadedEmployees.length} employés chargés pour le département: ${department}`);
+      console.log(`${loadedEmployees.length} employees loaded for department: ${department}`);
       
-      // Mise à jour du cache et de l'horodatage
+      // Update cache
       employeeCache.current[cacheKey] = loadedEmployees;
       lastFetchTime.current[cacheKey] = now;
       
       setEmployees(loadedEmployees);
       return loadedEmployees;
     } catch (error) {
-      console.error('Erreur lors du chargement des employés:', error);
-      toast.error('Erreur lors du chargement des données depuis Supabase');
+      console.error('Error loading employees:', error);
+      toast.error('Error loading data from Supabase');
       return [];
     }
   }, []);

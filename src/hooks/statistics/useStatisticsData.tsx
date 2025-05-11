@@ -165,6 +165,7 @@ export const useStatisticsData = (
     isLoading,
     loadTimeout,
     loadingDetails,
-    refreshData
+    refreshData,
+    loadingState // Export the loadingState variable to fix the error
   };
 };

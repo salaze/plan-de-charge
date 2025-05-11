@@ -32,7 +32,8 @@ const Statistics = () => {
     isLoading: statsLoading, 
     loadTimeout,
     refreshData, 
-    loadingDetails 
+    loadingDetails,
+    loadingState // Add this to fix the error
   } = useStatisticsData(
     currentYear, 
     currentMonth, 

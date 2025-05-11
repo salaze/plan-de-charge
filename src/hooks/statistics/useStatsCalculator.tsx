@@ -21,6 +21,9 @@ export const useStatsCalculator = () => {
       return { stats: [], chartData: [] };
     }
 
+    // Utiliser directement les statuts disponibles depuis la base de données
+    console.log(`Calculating stats with ${availableStatusCodes.length} available status codes`);
+
     // Use the optimized batch processing to prevent UI freezing
     const calculatedStats = calculateBatchEmployeeStats(employees, year, month, 10);
     
@@ -29,12 +32,12 @@ export const useStatsCalculator = () => {
       prepareChartDataPoint(employeeStat, availableStatusCodes)
     );
 
-    // Update state values
+    // Update state values and return them
     setStats(calculatedStats);
     setChartData(calculatedChartData);
     
     console.timeEnd('stats-calculation');
-    console.log(`Statistics calculated for ${employees.length} employees`);
+    console.log(`Statistics calculated for ${employees.length} employees with ${availableStatusCodes.length} status codes`);
     
     return { stats: calculatedStats, chartData: calculatedChartData };
   }, []);

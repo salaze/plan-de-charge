@@ -8,6 +8,7 @@ import { useStatsCalculator } from './useStatsCalculator';
 import { useRealtimeUpdates } from './useRealtimeUpdates';
 import { useLoadingState } from './useLoadingState';
 import { toast } from 'sonner';
+import { syncStatusesWithDatabase } from '@/utils/supabase/status';
 
 export const useStatisticsData = (
   currentYear: number,
@@ -30,8 +31,28 @@ export const useStatisticsData = (
   // Gestion des mises à jour en temps réel avec optimisation
   const { refreshData } = useRealtimeUpdates(incrementRefreshKey);
 
+  // Synchroniser les statuts au chargement pour éviter les désynchronisations
+  useEffect(() => {
+    const syncStatuses = async () => {
+      try {
+        await syncStatusesWithDatabase();
+        console.log("Statuts synchronisés avec la base de données");
+      } catch (error) {
+        console.error("Erreur lors de la synchronisation des statuts", error);
+      }
+    };
+    
+    syncStatuses();
+  }, []);
+
   // Effet principal qui gère la séquence de chargement des données avec optimisation
   useEffect(() => {
+    // Vérifier si les statuts sont vides et arrêter si c'est le cas
+    if (statusCodes.length === 0) {
+      console.log('Aucun statut disponible, calcul des statistiques reporté');
+      return;
+    }
+
     // Vérifier si les données sont déjà en cache pour cette période
     if (cacheKey === previousCacheKey.current && cachedData.current) {
       console.log('Utilisation des données en cache pour', cacheKey);
@@ -42,6 +63,7 @@ export const useStatisticsData = (
       try {
         setIsLoading(true);
         console.log('Chargement des données depuis Supabase pour', currentYear, currentMonth);
+        console.log('Statuts utilisés pour le calcul:', statusCodes);
 
         // 1. Déterminer l'intervalle de dates pour le mois sélectionné
         const days = generateDaysInMonth(currentYear, currentMonth);
@@ -79,6 +101,15 @@ export const useStatisticsData = (
     // Déclencher le chargement des données
     loadData();
   }, [currentYear, currentMonth, statusCodes, fetchEmployees, fetchSchedules, calculateStats, refreshKey, cacheKey]);
+
+  // Ajouter un nettoyage de cache lors des changements de statusCodes
+  useEffect(() => {
+    return () => {
+      // Nettoyer le cache lors des changements de statuts
+      previousCacheKey.current = '';
+      cachedData.current = null;
+    };
+  }, [statusCodes.length, refreshKey]);
 
   // Exposer l'état de chargement détaillé pour le débogage
   const loadingDetails = useMemo(() => {

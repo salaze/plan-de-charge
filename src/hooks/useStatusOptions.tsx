@@ -3,6 +3,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { StatusCode } from '@/types';
 import { useStatusLoader } from './status/useStatusLoader';
 import { useStatusEvents } from './status/useStatusEvents';
+import { syncStatusesWithDatabase } from '@/utils/supabase/status';
 
 export function useStatusOptions() {
   const [refreshKey, setRefreshKey] = useState(0);
@@ -21,8 +22,24 @@ export function useStatusOptions() {
     };
   }, []);
   
+  // Synchroniser les statuts au chargement
+  useEffect(() => {
+    const syncAndRefresh = async () => {
+      try {
+        // Synchroniser les statuts avec la base de données
+        await syncStatusesWithDatabase();
+        // Puis rafraîchir les statuts locaux
+        originalRefreshStatuses();
+      } catch (error) {
+        console.error("Erreur lors de la synchronisation des statuts", error);
+      }
+    };
+    
+    syncAndRefresh();
+  }, [originalRefreshStatuses]);
+  
   // Wrapper for refreshStatuses with debounce and protection
-  const refreshStatuses = useCallback(() => {
+  const refreshStatuses = useCallback(async () => {
     // Si une requête est déjà en cours, on la met en attente
     if (isRefreshingLocal) {
       console.log("useStatusOptions: Refresh already in progress, marking as pending");
@@ -37,9 +54,18 @@ export function useStatusOptions() {
       clearTimeout(refreshTimeoutRef.current);
     }
     
-    // Call the original refresh function
-    console.log("useStatusOptions: Executing refresh");
-    originalRefreshStatuses();
+    try {
+      // Synchroniser d'abord avec la base de données
+      await syncStatusesWithDatabase();
+      
+      // Puis appeler la fonction de rafraîchissement originale
+      console.log("useStatusOptions: Executing refresh");
+      originalRefreshStatuses();
+      
+      setRefreshKey(prev => prev + 1);
+    } catch (error) {
+      console.error("Erreur lors du rafraîchissement des statuts", error);
+    }
     
     // Set timeout to reset the refreshing state
     refreshTimeoutRef.current = window.setTimeout(() => {

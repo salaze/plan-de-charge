@@ -6,6 +6,7 @@ import { useEmployeeLoader } from './useEmployeeLoader';
 import { useScheduleLoader } from './useScheduleLoader';
 import { useStatsCalculator } from './useStatsCalculator';
 import { toast } from 'sonner';
+import { syncStatusesWithDatabase } from '@/utils/supabase/status';
 
 export const useOptimizedStatsLoader = (
   currentYear: number,
@@ -19,10 +20,38 @@ export const useOptimizedStatsLoader = (
   const { fetchSchedules } = useScheduleLoader();
   const { calculateStats } = useStatsCalculator();
   
-  // Cache key based on current selection
+  // Cache key based on current selection and status codes
   const cacheKey = useMemo(() => 
     `stats_${currentYear}_${currentMonth}_${statusCodes.join('_')}_${refreshCounter}`,
   [currentYear, currentMonth, statusCodes, refreshCounter]);
+  
+  // Synchroniser les statuts au chargement initial
+  useEffect(() => {
+    const syncStatuses = async () => {
+      try {
+        await syncStatusesWithDatabase();
+        console.log("Statuts synchronisés avec la base de données");
+      } catch (error) {
+        console.error("Erreur lors de la synchronisation des statuts", error);
+      }
+    };
+    
+    syncStatuses();
+  }, []);
+
+  // Écouter les mises à jour des statuts
+  useEffect(() => {
+    const handleStatusesUpdated = () => {
+      console.log("Statuts mis à jour, actualisation des statistiques");
+      setRefreshCounter(prev => prev + 1);
+    };
+    
+    window.addEventListener('statusesUpdated', handleStatusesUpdated);
+    
+    return () => {
+      window.removeEventListener('statusesUpdated', handleStatusesUpdated);
+    };
+  }, []);
   
   // Load data efficiently
   useEffect(() => {
@@ -33,7 +62,15 @@ export const useOptimizedStatsLoader = (
         if (!isMounted) return;
         setIsLoading(true);
         
+        // Vérifier si les statuts sont vides
+        if (statusCodes.length === 0) {
+          console.log('Aucun statut disponible, calcul des statistiques reporté');
+          setIsLoading(false);
+          return;
+        }
+        
         console.log('Loading optimized statistics for:', currentYear, currentMonth);
+        console.log('Using status codes:', statusCodes);
         
         // Step 1: Generate date range for the month
         const days = generateDaysInMonth(currentYear, currentMonth);
@@ -68,7 +105,7 @@ export const useOptimizedStatsLoader = (
     return () => {
       isMounted = false;
     };
-  }, [cacheKey, fetchEmployees, fetchSchedules, calculateStats]);
+  }, [cacheKey, fetchEmployees, fetchSchedules, calculateStats, statusCodes.length]);
   
   // Function to trigger a refresh
   const refreshData = useCallback(() => {

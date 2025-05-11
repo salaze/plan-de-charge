@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { initPrintStyles } from '@/utils/printUtils';
+import { syncStatusesWithDatabase } from '@/utils/supabase/status';
 
 // Lazy load heavy components
 const StatisticsTablePanel = lazy(() => 
@@ -23,12 +24,28 @@ const Statistics = () => {
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   
-  const { statuses: availableStatusCodes, isLoading: statusesLoading } = useStatusOptions();
+  const { statuses: availableStatusCodes, isLoading: statusesLoading, refreshStatuses } = useStatusOptions();
   const { chartData, isLoading: statsLoading, refreshData } = useOptimizedStatsLoader(
     currentYear, 
     currentMonth, 
     availableStatusCodes
   );
+  
+  // Synchroniser les statuts au chargement de la page
+  useEffect(() => {
+    const initializeData = async () => {
+      try {
+        // Synchroniser les statuts avec la base de données
+        await syncStatusesWithDatabase();
+        // Puis rafraîchir les statuts locaux
+        refreshStatuses();
+      } catch (error) {
+        console.error("Erreur lors de l'initialisation des données", error);
+      }
+    };
+    
+    initializeData();
+  }, [refreshStatuses]);
   
   // Initialize print styles on load
   useEffect(() => {
@@ -40,9 +57,15 @@ const Statistics = () => {
     setCurrentMonth(month);
   };
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     toast.info("Actualisation des statistiques en cours...");
-    console.log("Refreshing statistics data");
+    console.log("Refreshing statistics data and synchronizing statuses");
+    
+    // Synchroniser les statuts avant de rafraîchir les données
+    await syncStatusesWithDatabase();
+    // Rafraîchir les statuts locaux
+    refreshStatuses();
+    // Rafraîchir les données statistiques
     refreshData();
   };
 

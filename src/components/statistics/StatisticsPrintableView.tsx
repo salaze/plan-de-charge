@@ -18,17 +18,22 @@ export const StatisticsPrintableView = React.forwardRef<HTMLDivElement, Statisti
   year,
   month
 }, ref) => {
-  // Délai de rendu pour laisser le temps aux graphiques de se charger
+  // Délai de rendu plus court pour améliorer la réactivité
   const [isReady, setIsReady] = React.useState(false);
 
   React.useEffect(() => {
-    // Laisser un délai pour le rendu complet des graphiques
+    // Réduire le délai à 500ms pour accélérer le rendu
     const timer = setTimeout(() => {
       setIsReady(true);
-    }, 1000);
+    }, 500);
     
     return () => clearTimeout(timer);
   }, [chartData]);
+
+  // Optimisation: limiter le nombre d'employés pour l'impression
+  const optimizedData = chartData.length > 30 
+    ? chartData.slice(0, 30) 
+    : chartData;
 
   return (
     <div 
@@ -40,8 +45,8 @@ export const StatisticsPrintableView = React.forwardRef<HTMLDivElement, Statisti
       }}
     >
       <PrintableHeader year={year} month={month} />
-      <PrintableOverviewChart chartData={chartData} statusCodes={statusCodes} />
-      <PrintableEmployeeCharts chartData={chartData} statusCodes={statusCodes} />
+      <PrintableOverviewChart chartData={optimizedData} statusCodes={statusCodes} />
+      <PrintableEmployeeCharts chartData={optimizedData} statusCodes={statusCodes} />
     </div>
   );
 });

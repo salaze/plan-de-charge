@@ -29,7 +29,9 @@ export const useBatchProcessor = () => {
     const stats: SummaryStats[] = [];
     const chartData: EmployeeStatusData[] = [];
     
-    employees.forEach((employee) => {
+    // Traitement optimisé avec boucle for classique pour de meilleures performances
+    for (let i = 0; i < employees.length; i++) {
+      const employee = employees[i];
       const cacheKey = `${employee.id}-${year}-${month}`;
       let employeeStats: SummaryStats;
       let dataPoint: EmployeeStatusData;
@@ -50,7 +52,7 @@ export const useBatchProcessor = () => {
       
       stats.push(employeeStats);
       chartData.push(dataPoint);
-    });
+    }
     
     return { stats, chartData };
   };
@@ -60,25 +62,23 @@ export const useBatchProcessor = () => {
     year: number,
     month: number,
     availableStatusCodes: StatusCode[],
-    batchSize: number = 5
+    batchSize: number = 10 // Augmenter légèrement la taille du batch
   ): BatchProcessingResult => {
     const stats: SummaryStats[] = [];
     const chartData: EmployeeStatusData[] = [];
     
-    // Process in batches if there are many employees
-    if (shouldUseWorkers(employees.length)) {
-      for (let i = 0; i < employees.length; i += batchSize) {
-        const batch = employees.slice(i, i + batchSize);
-        const batchResult = processBatch(batch, year, month, availableStatusCodes);
-        
-        stats.push(...batchResult.stats);
-        chartData.push(...batchResult.chartData);
-      }
-    } else {
-      // Process all at once for smaller datasets
-      const result = processBatch(employees, year, month, availableStatusCodes);
-      stats.push(...result.stats);
-      chartData.push(...result.chartData);
+    // Traitement synchrone pour les petits ensembles
+    if (employees.length <= batchSize || !shouldUseWorkers(employees.length)) {
+      return processBatch(employees, year, month, availableStatusCodes);
+    }
+    
+    // Traitement par lots pour les grands ensembles
+    for (let i = 0; i < employees.length; i += batchSize) {
+      const batch = employees.slice(i, i + batchSize);
+      const batchResult = processBatch(batch, year, month, availableStatusCodes);
+      
+      stats.push(...batchResult.stats);
+      chartData.push(...batchResult.chartData);
     }
     
     return { stats, chartData };

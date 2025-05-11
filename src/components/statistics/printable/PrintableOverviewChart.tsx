@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { StatusCode, STATUS_LABELS } from '@/types';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 
 interface PrintableOverviewChartProps {
   chartData: Array<{ name: string; [key: string]: number | string }>;
@@ -26,6 +26,11 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export const PrintableOverviewChart = ({ chartData, statusCodes }: PrintableOverviewChartProps) => {
+  // Optimisation: limiter le nombre d'éléments si trop nombreux
+  const optimizedData = chartData.length > 20 
+    ? chartData.slice(0, 20) // Limiter à 20 employés pour l'impression
+    : chartData;
+
   return (
     <div className="mb-12">
       <h2 className="text-xl font-semibold mb-4">Vue d'ensemble par employé</h2>
@@ -33,7 +38,7 @@ export const PrintableOverviewChart = ({ chartData, statusCodes }: PrintableOver
         <BarChart
           width={800}
           height={400}
-          data={chartData}
+          data={optimizedData}
           margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
         >
           <CartesianGrid strokeDasharray="3 3" />
@@ -48,6 +53,7 @@ export const PrintableOverviewChart = ({ chartData, statusCodes }: PrintableOver
               name={STATUS_LABELS[status]}
               stackId="a"
               fill={STATUS_COLORS[status] || '#888'}
+              isAnimationActive={false} // Désactiver les animations pour améliorer les performances
             />
           ))}
         </BarChart>

@@ -36,13 +36,19 @@ export const PrintableEmployeeCharts = ({ chartData, statusCodes }: PrintableEmp
       }))
       .filter(item => item.value > 0);
   };
+  
+  // Limiter le nombre d'employés affichés pour améliorer les performances
+  const displayLimit = 12;
+  const limitedChartData = chartData.length > displayLimit 
+    ? chartData.slice(0, displayLimit) 
+    : chartData;
 
   return (
     <div className="page-break-before">
       <h2 className="text-xl font-semibold mb-4">Répartition détaillée par employé</h2>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {chartData.map((employee, index) => {
+        {limitedChartData.map((employee, index) => {
           const pieData = prepareChartData(employee);
           
           if (pieData.length === 0) return null;
@@ -61,6 +67,7 @@ export const PrintableEmployeeCharts = ({ chartData, statusCodes }: PrintableEmp
                     outerRadius={100}
                     fill="#8884d8"
                     dataKey="value"
+                    isAnimationActive={false} // Désactiver les animations pour l'impression
                   >
                     {pieData.map((entry, i) => (
                       <Cell 
@@ -76,6 +83,12 @@ export const PrintableEmployeeCharts = ({ chartData, statusCodes }: PrintableEmp
             </div>
           );
         })}
+        
+        {chartData.length > displayLimit && (
+          <div className="col-span-2 text-center mt-4 text-gray-500">
+            <p>Seuls les {displayLimit} premiers employés sont affichés pour optimiser les performances.</p>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -29,6 +29,10 @@ export const useStatisticsData = (
   
   // Gestion des mises à jour en temps réel avec optimisation
   const { refreshData } = useRealtimeUpdates(incrementRefreshKey);
+  
+  // Ajouter un timeout pour éviter un blocage infini
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const maxLoadingTime = 30000; // 30 secondes max
 
   // Effet principal qui gère la séquence de chargement des données avec optimisation
   useEffect(() => {
@@ -42,6 +46,20 @@ export const useStatisticsData = (
       try {
         setIsLoading(true);
         console.log('Chargement des données depuis Supabase pour', currentYear, currentMonth);
+
+        // Configurer un timeout pour éviter un chargement infini
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
+        
+        timeoutRef.current = setTimeout(() => {
+          if (isLoading) {
+            setIsLoading(false);
+            setLoadingState('idle');
+            toast.error('Le chargement des statistiques a pris trop de temps. Veuillez réessayer.');
+            console.error('Timeout de chargement des statistiques');
+          }
+        }, maxLoadingTime);
 
         // 1. Déterminer l'intervalle de dates pour le mois sélectionné
         const days = generateDaysInMonth(currentYear, currentMonth);
@@ -71,6 +89,10 @@ export const useStatisticsData = (
         console.error('Erreur lors du chargement des données:', error);
         toast.error('Erreur lors du chargement des statistiques');
       } finally {
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+          timeoutRef.current = null;
+        }
         setIsLoading(false);
         setLoadingState('idle');
       }
@@ -78,7 +100,14 @@ export const useStatisticsData = (
 
     // Déclencher le chargement des données
     loadData();
-  }, [currentYear, currentMonth, statusCodes, fetchEmployees, fetchSchedules, calculateStats, refreshKey, cacheKey, chartData]);
+    
+    return () => {
+      // Nettoyer le timeout en cas de démontage du composant
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [currentYear, currentMonth, statusCodes, fetchEmployees, fetchSchedules, calculateStats, refreshKey, cacheKey, chartData, isLoading]);
 
   // Exposer l'état de chargement détaillé pour le débogage
   const loadingDetails = useMemo(() => {

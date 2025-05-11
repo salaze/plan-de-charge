@@ -7,7 +7,7 @@ import { StatusCode } from '@/types';
 import { StatusOption } from '../StatusOption';
 import { ProjectSelector } from '../ProjectSelector';
 import { HighlightOption } from '../HighlightOption';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, RefreshCw } from 'lucide-react';
 
 interface StatusErrorStateProps {
   selectedStatus: StatusCode;
@@ -18,6 +18,7 @@ interface StatusErrorStateProps {
   onProjectChange: (projectCode: string) => void;
   onHighlightChange: (checked: boolean) => void;
   onSubmit: () => void;
+  onRefresh: () => void;
 }
 
 export function StatusErrorState({
@@ -28,7 +29,8 @@ export function StatusErrorState({
   onStatusChange,
   onProjectChange,
   onHighlightChange,
-  onSubmit
+  onSubmit,
+  onRefresh
 }: StatusErrorStateProps) {
   // Default statuses to use when we can't load from database
   const defaultStatuses = [
@@ -41,9 +43,19 @@ export function StatusErrorState({
   
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 text-amber-600 mb-4">
-        <AlertCircle className="h-4 w-4" />
-        <span className="text-sm">Utilisation des statuts par défaut (impossible de charger depuis la base)</span>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2 text-amber-600">
+          <AlertCircle className="h-4 w-4" />
+          <span className="text-sm">Utilisation des statuts par défaut (impossible de charger depuis la base)</span>
+        </div>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={onRefresh}
+          title="Réessayer de charger les statuts"
+        >
+          <RefreshCw className="h-4 w-4" />
+        </Button>
       </div>
       <div className="space-y-3">
         <Label className="text-base">Sélectionner un statut</Label>

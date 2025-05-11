@@ -21,7 +21,7 @@ export const useSupabaseSubscription = (
       .channel(`watch_${tableName}`)
       .on(
         'postgres_changes',
-        {
+        { 
           event: eventType,
           schema: 'public',
           table: tableName

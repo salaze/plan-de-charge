@@ -17,7 +17,12 @@ export const useStatisticsData = (
 ) => {
   const { employees, fetchEmployees } = useEmployeeLoader();
   const { fetchSchedules } = useScheduleLoader();
-  const { stats, chartData, calculateStats } = useStatsCalculator();
+  const { stats, chartData, isLoading: isCalculating } = useStatsCalculator(
+    employees, 
+    currentYear, 
+    currentMonth, 
+    statusCodes
+  );
   const { isLoading, setIsLoading, loadingState, setLoadingState, refreshKey, incrementRefreshKey } = useLoadingState();
   
   // Mise en cache des données pour éviter des chargements inutiles
@@ -79,14 +84,11 @@ export const useStatisticsData = (
         setLoadingState('loading-schedules');
         const employeesWithSchedules = await fetchSchedules(loadedEmployees, startDate, endDate);
         
-        // 4. Calculer les statistiques avec optimisation
+        // 4. Mettre les données dans le cache
         setLoadingState('calculating');
-        const result = calculateStats(employeesWithSchedules, currentYear, currentMonth, statusCodes);
-        
-        // Mettre en cache les résultats
         cachedData.current = {
           employees: employeesWithSchedules,
-          chartData: result.chartData
+          chartData: chartData
         };
         previousCacheKey.current = cacheKey;
       } catch (error) {
@@ -100,7 +102,7 @@ export const useStatisticsData = (
 
     // Déclencher le chargement des données
     loadData();
-  }, [currentYear, currentMonth, statusCodes, fetchEmployees, fetchSchedules, calculateStats, refreshKey, cacheKey]);
+  }, [currentYear, currentMonth, statusCodes, fetchEmployees, fetchSchedules, refreshKey, cacheKey, chartData]);
 
   // Ajouter un nettoyage de cache lors des changements de statusCodes
   useEffect(() => {

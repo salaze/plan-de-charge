@@ -62,6 +62,7 @@ const Statistics = () => {
   };
 
   const handleDepartmentChange = (dept: string) => {
+    console.log(`Department changed to: ${dept}`);
     setSelectedDepartment(dept);
     toast.info(`Loading statistics for department: ${dept === 'all' ? 'All' : dept}`);
   };
@@ -70,6 +71,9 @@ const Statistics = () => {
   const filteredStatusCodes = availableStatusCodes.filter(code => code !== 'none');
   
   const isLoading = statusesLoading || statsLoading;
+  
+  // Log component render for debugging
+  console.log(`Statistics page rendering. Loading: ${isLoading}, Department: ${selectedDepartment}, Data items: ${chartData?.length || 0}`);
   
   return (
     <StatisticsLayout>
@@ -150,7 +154,7 @@ const Statistics = () => {
               </div>
               <div className="w-full h-[400px] rounded-md bg-muted/20 flex items-center justify-center">
                 <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
-                <span className="ml-2 text-muted-foreground">Loading statistics...</span>
+                <span className="ml-2 text-muted-foreground">Loading statistics... {loadingState}</span>
               </div>
             </CardContent>
           </Card>

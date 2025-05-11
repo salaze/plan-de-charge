@@ -18,19 +18,20 @@ export const useScheduleLoader = () => {
       // Create array of employee IDs for efficient filtering
       const employeeIds = employees.map(emp => emp.id);
       
-      // Optimized query with pagination using smaller batches for better performance
-      const batchSize = 1000; // Smaller batch size for faster response
+      // Use a smaller batch size for better response times
+      const batchSize = 500;
       let allScheduleData: any[] = [];
       let hasMoreData = true;
       let lastId = '';
       let attemptCount = 0;
       const maxAttempts = 3;
       
+      // Load data in batches to prevent timeouts
       while (hasMoreData && attemptCount < maxAttempts) {
         try {
           let query = supabase
             .from('employe_schedule')
-            .select('*')
+            .select('employe_id, date, statut_code, period, note, project_code, is_highlighted')
             .in('employe_id', employeeIds) // Filter to only relevant employees
             .gte('date', startDate)
             .lte('date', endDate)
@@ -44,7 +45,7 @@ export const useScheduleLoader = () => {
           
           // Set a timeout to prevent hanging
           const timeoutPromise = new Promise<{ data: any[], error: Error }>((_, reject) => {
-            setTimeout(() => reject(new Error('Supabase query timed out')), 6000);
+            setTimeout(() => reject(new Error('Schedule query timed out')), 5000);
           });
           
           // Execute query with timeout
@@ -54,9 +55,9 @@ export const useScheduleLoader = () => {
           ]);
           
           if (error) {
-            console.error('Error loading schedules:', error);
+            console.error('Error loading schedules batch:', error);
             attemptCount++;
-            await new Promise(resolve => setTimeout(resolve, 500)); // Wait before retry
+            await new Promise(resolve => setTimeout(resolve, 300)); // Wait before retry
             continue;
           }
           
@@ -71,7 +72,7 @@ export const useScheduleLoader = () => {
         } catch (err) {
           console.error('Error in schedule batch:', err);
           attemptCount++;
-          await new Promise(resolve => setTimeout(resolve, 500)); 
+          await new Promise(resolve => setTimeout(resolve, 300)); 
         }
       }
 
@@ -81,7 +82,7 @@ export const useScheduleLoader = () => {
 
       console.log(`Total schedule entries loaded: ${allScheduleData.length}`);
       
-      // Optimized indexing of schedules by employee ID
+      // Use an object to index schedules by employee ID for better performance
       const schedulesByEmployee: Record<string, any[]> = {};
       
       for (let i = 0; i < allScheduleData.length; i++) {
@@ -99,7 +100,7 @@ export const useScheduleLoader = () => {
         });
       }
 
-      // Map employees to their schedules in a single pass
+      // Assign schedules to employees in a single efficient pass
       const employeesWithSchedules = employees.map(employee => ({
         ...employee,
         schedule: schedulesByEmployee[employee.id] || []

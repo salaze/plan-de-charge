@@ -7,6 +7,7 @@ import { useScheduleLoader } from './useScheduleLoader';
 import { useStatsCalculator } from './useStatsCalculator';
 import { useRealtimeUpdates } from './useRealtimeUpdates';
 import { useLoadingState } from './useLoadingState';
+import { filterChartDataByDepartment } from '@/utils/departmentUtils';
 import { toast } from 'sonner';
 
 export const useStatisticsData = (
@@ -17,9 +18,10 @@ export const useStatisticsData = (
 ) => {
   const { employees, fetchEmployees } = useEmployeeLoader();
   const { fetchSchedules } = useScheduleLoader();
-  const { employeeStats, chartData, calculateStats } = useStatsCalculator();
+  const { employeeStats, chartData: originalChartData, calculateStats } = useStatsCalculator();
   const { isLoading, setIsLoading, loadingState, setLoadingState, refreshKey, incrementRefreshKey } = useLoadingState();
   const [loadTimeout, setLoadTimeout] = useState(false);
+  const [chartData, setChartData] = useState<Array<{ name: string; [key: string]: number | string }>>([]);
   
   // Cache key for optimizing renders
   const cacheKey = `${currentYear}-${currentMonth}-${selectedDepartment}`;
@@ -39,7 +41,9 @@ export const useStatisticsData = (
   // Handle loading timeouts
   useEffect(() => {
     if (isLoading) {
+      console.log('Statistics loading started, setting up timeout detection');
       const timer = setTimeout(() => {
+        console.log('Loading timeout detected!');
         setLoadTimeout(true);
       }, 10000); // Show timeout message after 10 seconds
       
@@ -48,6 +52,17 @@ export const useStatisticsData = (
       setLoadTimeout(false);
     }
   }, [isLoading]);
+
+  // Filter chart data when selected department changes
+  useEffect(() => {
+    if (originalChartData.length > 0) {
+      const filtered = filterChartDataByDepartment(originalChartData, selectedDepartment);
+      console.log(`Filtered chart data for department ${selectedDepartment}: ${filtered.length} items`);
+      setChartData(filtered);
+    } else {
+      setChartData([]);
+    }
+  }, [originalChartData, selectedDepartment]);
 
   // Main data loading effect
   useEffect(() => {
@@ -60,7 +75,7 @@ export const useStatisticsData = (
     const loadData = async () => {
       try {
         setIsLoading(true);
-        console.log('Loading data from Supabase for', currentYear, currentMonth, 'department:', selectedDepartment);
+        console.log('Loading data for', currentYear, currentMonth, 'department:', selectedDepartment);
 
         // Set a timeout to prevent infinite loading states
         if (timeoutRef.current) {
@@ -69,10 +84,10 @@ export const useStatisticsData = (
         
         timeoutRef.current = setTimeout(() => {
           if (isLoading) {
+            console.error('Statistics loading timeout - forcing completion');
             setIsLoading(false);
             setLoadingState('idle');
             toast.error('Statistics loading timeout - please try again');
-            console.error('Statistics loading timeout');
           }
         }, maxLoadingTime);
 
@@ -82,12 +97,13 @@ export const useStatisticsData = (
         const endDate = formatDate(days[days.length - 1]);
         console.log(`Period: ${startDate} to ${endDate}`);
 
-        // 2. Load employees with optimization
+        // 2. Load employees - optimized to fetch only the department we need
         setLoadingState('loading-employees');
-        const loadedEmployees = await fetchEmployees(selectedDepartment);
+        // Always load all employees first, then filter later for consistency
+        const loadedEmployees = await fetchEmployees('all');
         
         if (loadedEmployees.length === 0) {
-          toast.warning('No employees found for the selected department');
+          toast.warning('No employees found');
           setIsLoading(false);
           setLoadingState('idle');
           return;
@@ -104,7 +120,7 @@ export const useStatisticsData = (
         // Cache results
         cachedData.current = {
           employees: employeesWithSchedules,
-          chartData
+          chartData: originalChartData
         };
         previousCacheKey.current = cacheKey;
       } catch (error) {
@@ -129,7 +145,7 @@ export const useStatisticsData = (
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [currentYear, currentMonth, statusCodes, selectedDepartment, fetchEmployees, fetchSchedules, calculateStats, refreshKey, cacheKey, chartData, isLoading]);
+  }, [currentYear, currentMonth, statusCodes, fetchEmployees, fetchSchedules, calculateStats, refreshKey, cacheKey, originalChartData, isLoading]);
 
   // Detailed loading state for debugging
   const loadingDetails = useMemo(() => {

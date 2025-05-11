@@ -12,6 +12,9 @@ export const useEmployeeLoader = () => {
 
   const fetchEmployees = useCallback(async (department: string = 'all') => {
     try {
+      // Log the fetch attempt for debugging
+      console.log(`Attempting to fetch employees for department: ${department}`);
+      
       const cacheKey = `employees-${department}`;
       
       // Check if cache is valid
@@ -26,9 +29,9 @@ export const useEmployeeLoader = () => {
       
       console.log(`Loading employees from Supabase for department: ${department}...`);
       
-      // Build the base query
+      // Build the base query with explicit column selection for better performance
       let query = supabase.from('employes')
-        .select('*')
+        .select('id, nom, prenom, departement, identifiant, fonction, role, uid')
         .order('nom', { ascending: true });
       
       // Add department filter if needed (and not 'all')
@@ -38,7 +41,7 @@ export const useEmployeeLoader = () => {
       
       // Set a timeout to prevent hanging
       const timeoutPromise = new Promise<{ data: any[], error: Error }>((_, reject) => {
-        setTimeout(() => reject(new Error('Supabase query timed out')), 10000);
+        setTimeout(() => reject(new Error('Supabase query timed out')), 8000);
       });
       
       // Execute the query with timeout
@@ -62,7 +65,7 @@ export const useEmployeeLoader = () => {
         schedule: []
       }));
 
-      console.log(`${loadedEmployees.length} employees loaded for department: ${department}`);
+      console.log(`Successfully loaded ${loadedEmployees.length} employees for department: ${department}`);
       
       // Update cache
       employeeCache.current[cacheKey] = loadedEmployees;

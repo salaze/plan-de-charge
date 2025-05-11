@@ -7,7 +7,6 @@ import { StatisticsHeader } from '@/components/statistics/StatisticsHeader';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
-import { initPrintStyles } from '@/utils/printUtils';
 
 // Chargement paresseux des composants lourds
 const StatisticsTablePanel = lazy(() => 
@@ -30,11 +29,6 @@ const Statistics = () => {
     currentMonth, 
     availableStatusCodes
   );
-  
-  // Initialiser les styles d'impression au chargement
-  useEffect(() => {
-    initPrintStyles();
-  }, []);
   
   // Ajouter un timeout global pour afficher un message si le chargement est trop long
   useEffect(() => {

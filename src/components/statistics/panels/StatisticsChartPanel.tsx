@@ -6,9 +6,9 @@ import { StatisticsPrintableView } from '../StatisticsPrintableView';
 import { StatusCode } from '@/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { useReactToPrint } from 'react-to-print';
-import { Printer } from 'lucide-react';
+import { FileDown } from 'lucide-react';
 import { toast } from 'sonner';
+import { printToPDF } from '@/utils/printUtils';
 
 interface StatisticsChartPanelProps {
   chartData: Array<{ name: string; [key: string]: number | string }>;
@@ -27,23 +27,22 @@ export const StatisticsChartPanel = ({
 }: StatisticsChartPanelProps) => {
   const printableRef = useRef<HTMLDivElement>(null);
 
-  const handlePrint = useReactToPrint({
-    documentTitle: `Statistiques_${currentMonth + 1}_${currentYear}`,
-    onBeforePrint: () => {
-      toast.info("Préparation de l'impression...");
-      return new Promise<void>((resolve) => {
-        // Délai pour permettre le rendu complet des graphiques
-        setTimeout(() => {
-          resolve();
-        }, 1000);
-      });
-    },
-    onAfterPrint: () => {
-      toast.success("Document imprimé avec succès");
-    },
-    // Pass the ref object directly
-    contentRef: printableRef,
-  });
+  const handleExportPDF = async () => {
+    if (!chartData || chartData.length === 0) {
+      toast.error("Aucune donnée disponible pour l'export PDF");
+      return;
+    }
+    
+    toast.info("Préparation du document PDF...");
+    
+    try {
+      await printToPDF(printableRef.current);
+      toast.success("Document PDF généré avec succès");
+    } catch (error) {
+      console.error("Erreur lors de la génération du PDF:", error);
+      toast.error("Erreur lors de la génération du PDF");
+    }
+  };
 
   return (
     <div className="glass-panel p-4 animate-scale-in">
@@ -52,12 +51,12 @@ export const StatisticsChartPanel = ({
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={handlePrint}
+          onClick={handleExportPDF}
           disabled={isLoading || !chartData || chartData.length === 0}
           className="flex items-center gap-1"
         >
-          <Printer className="h-4 w-4" />
-          <span>Imprimer</span>
+          <FileDown className="h-4 w-4" />
+          <span>Exporter en PDF</span>
         </Button>
       </div>
 

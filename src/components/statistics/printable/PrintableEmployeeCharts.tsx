@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { StatusCode, STATUS_LABELS } from '@/types';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 
 interface PrintableEmployeeChartsProps {
   chartData: Array<{ name: string; [key: string]: number | string }>;
@@ -48,31 +48,30 @@ export const PrintableEmployeeCharts = ({ chartData, statusCodes }: PrintableEmp
           if (pieData.length === 0) return null;
           
           return (
-            <div key={index} className="border p-4 rounded-lg bg-white mb-6">
-              <h3 className="text-lg font-medium mb-2">{employee.name as string}</h3>
-              <div className="h-64 print-chart">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={pieData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={true}
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {pieData.map((entry, i) => (
-                        <Cell 
-                          key={`cell-${i}`} 
-                          fill={STATUS_COLORS[entry.status] || `hsl(${i * 45}, 70%, 50%)`} 
-                        />
-                      ))}
-                    </Pie>
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
+            <div key={index} className="border p-4 rounded-lg bg-white mb-10 print-chart">
+              <h3 className="text-lg font-medium mb-4">{employee.name as string}</h3>
+              <div style={{ height: '300px', width: '100%' }}>
+                <PieChart width={400} height={300}>
+                  <Pie
+                    data={pieData}
+                    cx={200}
+                    cy={150}
+                    labelLine={true}
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    outerRadius={100}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {pieData.map((entry, i) => (
+                      <Cell 
+                        key={`cell-${i}`} 
+                        fill={STATUS_COLORS[entry.status] || `hsl(${i * 45}, 70%, 50%)`} 
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
               </div>
             </div>
           );

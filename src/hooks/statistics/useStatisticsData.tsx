@@ -1,6 +1,6 @@
 
 import { StatusCode } from '@/types';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useEmployeeLoader } from './useEmployeeLoader';
 import { useScheduleLoader } from './useScheduleLoader';
 import { useStatsCalculator } from './useStatsCalculator';
@@ -24,7 +24,7 @@ export const useStatisticsData = (
   const [loadTimeout, setLoadTimeout] = useState(false);
   
   // Reset timeout when loading changes
-  useState(() => {
+  useEffect(() => {
     let timer: NodeJS.Timeout | null = null;
     
     if (isLoading) {
@@ -39,7 +39,7 @@ export const useStatisticsData = (
     return () => {
       if (timer) clearTimeout(timer);
     };
-  });
+  }, [isLoading]);
 
   // Main data loading function
   const loadData = useCallback(async () => {
@@ -69,10 +69,10 @@ export const useStatisticsData = (
       
       // 4. Calculate statistics
       setLoadingState('calculating');
-      const result = calculateStats(employeesWithSchedules, currentYear, currentMonth, statusCodes);
+      calculateStats(employeesWithSchedules, currentYear, currentMonth, statusCodes);
       
       // 5. Filter chart data by department
-      const filtered = filterChartDataByDepartment(result.chartData, selectedDepartment);
+      const filtered = filterChartDataByDepartment(employeeStats.chartData || [], selectedDepartment);
       setChartData(filtered);
       
     } catch (error) {
@@ -82,10 +82,10 @@ export const useStatisticsData = (
       setIsLoading(false);
       setLoadingState('idle');
     }
-  }, [currentYear, currentMonth, statusCodes, selectedDepartment, fetchEmployees, fetchSchedules, calculateStats, setIsLoading, setLoadingState]);
+  }, [currentYear, currentMonth, statusCodes, selectedDepartment, fetchEmployees, fetchSchedules, calculateStats, setIsLoading, setLoadingState, employeeStats]);
 
   // Trigger data load when inputs change or refresh is requested
-  useState(() => {
+  useEffect(() => {
     loadData();
   }, [currentYear, currentMonth, statusCodes, selectedDepartment, refreshKey, loadData]);
 
@@ -96,7 +96,7 @@ export const useStatisticsData = (
   }, []);
   
   // Realtime updates setup
-  useState(() => {
+  useEffect(() => {
     const handleForceReload = () => {
       console.log('Force reload triggered');
       refreshData();

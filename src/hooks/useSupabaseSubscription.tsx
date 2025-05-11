@@ -17,10 +17,11 @@ export const useSupabaseSubscription = (
   useEffect(() => {
     console.log(`Setting up subscription for ${tableName}, events: ${eventType}`);
     
+    // Correction: use the correct type signature for channel.on method
+    // The correct usage is .on(eventType, filter, callback)
     const channel = supabase
       .channel(`watch_${tableName}`)
-      .on(
-        'postgres_changes',
+      .on('postgres_changes', 
         {
           event: eventType,
           schema: 'public',

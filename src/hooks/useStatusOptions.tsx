@@ -10,6 +10,7 @@ export function useStatusOptions() {
   const [isRefreshingLocal, setIsRefreshingLocal] = useState(false);
   const refreshTimeoutRef = useRef<number | null>(null);
   const refreshRequestPendingRef = useRef<boolean>(false);
+  const lastRefreshTimeRef = useRef<number>(0);
   const { availableStatuses, isLoading, refreshStatuses: originalRefreshStatuses } = useStatusLoader();
   
   // Clear any existing timeout on unmount
@@ -22,16 +23,16 @@ export function useStatusOptions() {
     };
   }, []);
   
-  // Synchroniser les statuts au chargement
+  // Synchronize statuses on load
   useEffect(() => {
     const syncAndRefresh = async () => {
       try {
-        // Synchroniser les statuts avec la base de données
+        // Sync statuses with database
         await syncStatusesWithDatabase();
-        // Puis rafraîchir les statuts locaux
+        // Then refresh local statuses
         originalRefreshStatuses();
       } catch (error) {
-        console.error("Erreur lors de la synchronisation des statuts", error);
+        console.error("Error synchronizing statuses", error);
       }
     };
     
@@ -40,7 +41,16 @@ export function useStatusOptions() {
   
   // Wrapper for refreshStatuses with debounce and protection
   const refreshStatuses = useCallback(async () => {
-    // Si une requête est déjà en cours, on la met en attente
+    // Debounce rapid refreshes
+    const now = Date.now();
+    if (now - lastRefreshTimeRef.current < 1000) {
+      console.log("Request too soon, debouncing");
+      return;
+    }
+    
+    lastRefreshTimeRef.current = now;
+    
+    // If a request is already in progress, queue it
     if (isRefreshingLocal) {
       console.log("useStatusOptions: Refresh already in progress, marking as pending");
       refreshRequestPendingRef.current = true;
@@ -55,16 +65,16 @@ export function useStatusOptions() {
     }
     
     try {
-      // Synchroniser d'abord avec la base de données
+      // First sync with database
       await syncStatusesWithDatabase();
       
-      // Puis appeler la fonction de rafraîchissement originale
+      // Then call the original refresh function
       console.log("useStatusOptions: Executing refresh");
       originalRefreshStatuses();
       
       setRefreshKey(prev => prev + 1);
     } catch (error) {
-      console.error("Erreur lors du rafraîchissement des statuts", error);
+      console.error("Error refreshing statuses", error);
     }
     
     // Set timeout to reset the refreshing state
@@ -72,22 +82,22 @@ export function useStatusOptions() {
       setIsRefreshingLocal(false);
       refreshTimeoutRef.current = null;
       
-      // Si une requête était en attente, la traiter maintenant
+      // If a request was pending, process it now
       if (refreshRequestPendingRef.current) {
         console.log("useStatusOptions: Processing pending refresh request");
         refreshRequestPendingRef.current = false;
-        // Ajouter un délai pour éviter les cascades
+        // Add delay to avoid cascades
         setTimeout(refreshStatuses, 500);
       }
-    }, 2000); // Increased timeout to prevent rapid successive refreshes
-  }, [originalRefreshStatuses]);
+    }, 1500); // Increased timeout to prevent rapid successive refreshes
+  }, [originalRefreshStatuses, isRefreshingLocal]);
   
-  // Gérer les mises à jour avec un debounce plus strict
+  // Handle updates with stricter debounce
   const handleStatusesUpdated = useCallback(() => {
     console.log("useStatusOptions: Status update detected");
     setRefreshKey(prev => prev + 1);
     
-    // Vérifier s'il y a un marqueur pour éviter la boucle
+    // Check if there's a marker to avoid loops
     const event = window.event as CustomEvent;
     const noRefresh = event?.detail?.noRefresh === true;
     const fromSync = event?.detail?.fromSync === true;
@@ -102,7 +112,7 @@ export function useStatusOptions() {
       // Add longer delay before refreshing to prevent UI jank
       window.setTimeout(() => {
         refreshStatuses();
-      }, 1000);
+      }, 800);
     } else {
       refreshRequestPendingRef.current = true;
     }

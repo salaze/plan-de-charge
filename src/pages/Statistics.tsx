@@ -25,22 +25,22 @@ const Statistics = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   
   const { statuses: availableStatusCodes, isLoading: statusesLoading, refreshStatuses } = useStatusOptions();
-  const { chartData, isLoading: statsLoading, refreshData } = useOptimizedStatsLoader(
+  const { chartData, stats, isLoading: statsLoading, refreshData } = useOptimizedStatsLoader(
     currentYear, 
     currentMonth, 
     availableStatusCodes
   );
   
-  // Synchroniser les statuts au chargement de la page
+  // Synchronize statuses when page loads
   useEffect(() => {
     const initializeData = async () => {
       try {
-        // Synchroniser les statuts avec la base de données
+        // Synchronize statuses with database
         await syncStatusesWithDatabase();
-        // Puis rafraîchir les statuts locaux
+        // Then refresh local statuses
         refreshStatuses();
       } catch (error) {
-        console.error("Erreur lors de l'initialisation des données", error);
+        console.error("Error initializing data", error);
       }
     };
     
@@ -58,14 +58,14 @@ const Statistics = () => {
   };
 
   const handleRefresh = async () => {
-    toast.info("Actualisation des statistiques en cours...");
+    toast.info("Refreshing statistics...");
     console.log("Refreshing statistics data and synchronizing statuses");
     
-    // Synchroniser les statuts avant de rafraîchir les données
+    // Synchronize statuses before refreshing data
     await syncStatusesWithDatabase();
-    // Rafraîchir les statuts locaux
+    // Refresh local statuses
     refreshStatuses();
-    // Rafraîchir les données statistiques
+    // Refresh statistics data
     refreshData();
   };
 
@@ -91,11 +91,11 @@ const Statistics = () => {
           className="flex items-center gap-1"
         >
           <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-          <span>{isLoading ? 'Chargement...' : 'Actualiser'}</span>
+          <span>{isLoading ? 'Loading...' : 'Refresh'}</span>
         </Button>
       </div>
       
-      <Suspense fallback={<div className="text-center p-6">Chargement du tableau...</div>}>
+      <Suspense fallback={<div className="text-center p-6">Loading table...</div>}>
         <StatisticsTablePanel 
           chartData={chartData}
           statusCodes={filteredStatusCodes}
@@ -103,7 +103,7 @@ const Statistics = () => {
         />
       </Suspense>
       
-      <Suspense fallback={<div className="text-center p-6">Chargement des graphiques...</div>}>
+      <Suspense fallback={<div className="text-center p-6">Loading charts...</div>}>
         <StatisticsChartPanel 
           chartData={chartData}
           statusCodes={filteredStatusCodes}

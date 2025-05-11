@@ -15,6 +15,7 @@ export const useOptimizedStatsLoader = (
 ) => {
   const [isLoading, setIsLoading] = useState(true);
   const [chartData, setChartData] = useState<Array<{ name: string; [key: string]: number | string }>>([]);
+  const [stats, setStats] = useState<any[]>([]);
   const [refreshCounter, setRefreshCounter] = useState(0);
   const { employees, fetchEmployees } = useEmployeeLoader();
   const { fetchSchedules } = useScheduleLoader();
@@ -25,24 +26,24 @@ export const useOptimizedStatsLoader = (
     `stats_${currentYear}_${currentMonth}_${statusCodes.join('_')}_${refreshCounter}`,
   [currentYear, currentMonth, statusCodes, refreshCounter]);
   
-  // Synchroniser les statuts au chargement initial
+  // Synchronize statuses when component mounts
   useEffect(() => {
     const syncStatuses = async () => {
       try {
         await syncStatusesWithDatabase();
-        console.log("Statuts synchronisés avec la base de données");
+        console.log("Statuses synchronized with database");
       } catch (error) {
-        console.error("Erreur lors de la synchronisation des statuts", error);
+        console.error("Error synchronizing statuses", error);
       }
     };
     
     syncStatuses();
   }, []);
 
-  // Écouter les mises à jour des statuts
+  // Listen for status updates
   useEffect(() => {
     const handleStatusesUpdated = () => {
-      console.log("Statuts mis à jour, actualisation des statistiques");
+      console.log("Statuses updated, refreshing statistics");
       setRefreshCounter(prev => prev + 1);
     };
     
@@ -62,9 +63,9 @@ export const useOptimizedStatsLoader = (
         if (!isMounted) return;
         setIsLoading(true);
         
-        // Vérifier si les statuts sont vides
+        // Check if statuses are empty
         if (statusCodes.length === 0) {
-          console.log('Aucun statut disponible, calcul des statistiques reporté');
+          console.log('No statuses available, calculation of statistics postponed');
           setIsLoading(false);
           return;
         }
@@ -86,15 +87,16 @@ export const useOptimizedStatsLoader = (
         if (!isMounted) return;
         
         // Step 4: Calculate stats
-        const { stats, chartData } = calculateStats(employeesWithSchedules, currentYear, currentMonth, statusCodes);
+        const { stats: calculatedStats, chartData: calculatedChartData } = calculateStats(employeesWithSchedules, currentYear, currentMonth, statusCodes);
         if (!isMounted) return;
         
-        setChartData(chartData);
+        setStats(calculatedStats);
+        setChartData(calculatedChartData);
         setIsLoading(false);
       } catch (error) {
         console.error('Error loading statistics:', error);
         if (isMounted) {
-          toast.error('Erreur lors du chargement des statistiques');
+          toast.error('Error loading statistics');
           setIsLoading(false);
         }
       }
@@ -105,7 +107,7 @@ export const useOptimizedStatsLoader = (
     return () => {
       isMounted = false;
     };
-  }, [cacheKey, fetchEmployees, fetchSchedules, calculateStats, statusCodes.length]);
+  }, [cacheKey, fetchEmployees, fetchSchedules, calculateStats, statusCodes.length, currentYear, currentMonth]);
   
   // Function to trigger a refresh
   const refreshData = useCallback(() => {
@@ -113,6 +115,7 @@ export const useOptimizedStatsLoader = (
   }, []);
   
   return {
+    stats,
     chartData,
     isLoading,
     refreshData

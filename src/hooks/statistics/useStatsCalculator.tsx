@@ -1,5 +1,5 @@
 
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { Employee, StatusCode, SummaryStats } from '@/types';
 import { calculateBatchEmployeeStats } from '@/utils/statsUtils';
 import { prepareChartDataPoint } from '@/utils/statsChartUtils';
@@ -7,6 +7,14 @@ import { prepareChartDataPoint } from '@/utils/statsChartUtils';
 export const useStatsCalculator = () => {
   const [stats, setStats] = useState<SummaryStats[]>([]);
   const [chartData, setChartData] = useState<Array<{ name: string; [key: string]: number | string }>>([]);
+
+  // Clear stats when component unmounts to prevent stale data
+  useEffect(() => {
+    return () => {
+      setStats([]);
+      setChartData([]);
+    };
+  }, []);
 
   const calculateStats = useCallback((
     employees: Employee[],
@@ -21,7 +29,6 @@ export const useStatsCalculator = () => {
       return { stats: [], chartData: [] };
     }
 
-    // Utiliser directement les statuts disponibles depuis la base de données
     console.log(`Calculating stats with ${availableStatusCodes.length} available status codes`);
 
     // Use the optimized batch processing to prevent UI freezing

@@ -17,34 +17,34 @@ export const useSupabaseSubscription = (
   useEffect(() => {
     console.log(`Setting up subscription for ${tableName}, events: ${eventType}`);
     
-    // Approche alternative: utiliser la méthode subscribe APRÈS avoir défini tous les gestionnaires
+    // Créer un canal pour la table
     const channel = supabase.channel(`watch_${tableName}`);
     
-    // Définir l'écouteur d'événements postgres_changes en utilisant une syntaxe différente
-    channel.on('postgres_changes', { 
-      event: eventType, 
-      schema: 'public', 
-      table: tableName 
-    }, (payload) => {
-      console.log(`Change detected in ${tableName}:`, payload);
-      
-      // Afficher une notification
-      if (showNotifications) {
-        const messages = {
-          INSERT: 'Nouvelle entrée ajoutée',
-          UPDATE: 'Données mises à jour',
-          DELETE: 'Entrée supprimée'
-        };
+    // Configurer l'écoute des événements Postgres
+    channel.on(
+      'postgres_changes', 
+      { event: eventType, schema: 'public', table: tableName }, 
+      (payload) => {
+        console.log(`Change detected in ${tableName}:`, payload);
         
-        toast.info(
-          `${messages[payload.eventType as keyof typeof messages]} dans ${tableName}`, 
-          { duration: 3000 }
-        );
+        // Afficher une notification
+        if (showNotifications) {
+          const messages = {
+            INSERT: 'Nouvelle entrée ajoutée',
+            UPDATE: 'Données mises à jour',
+            DELETE: 'Entrée supprimée'
+          };
+          
+          toast.info(
+            `${messages[payload.eventType as keyof typeof messages]} dans ${tableName}`, 
+            { duration: 3000 }
+          );
+        }
+        
+        // Invalider les requêtes pour forcer un rechargement
+        queryClient.invalidateQueries({ queryKey });
       }
-      
-      // Invalider les requêtes pour forcer un rechargement
-      queryClient.invalidateQueries({ queryKey });
-    });
+    );
     
     // S'abonner au canal après avoir défini tous les écouteurs
     channel.subscribe((status) => {

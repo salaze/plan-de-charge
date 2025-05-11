@@ -1,4 +1,3 @@
-
 import React, { useRef } from 'react';
 import { StatisticsChart } from '../StatisticsChart';
 import { StatisticsPieChart } from '../StatisticsPieChart';
@@ -48,16 +47,6 @@ export const StatisticsChartPanel = ({
     <div className="glass-panel p-4 animate-scale-in">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Graphique par employé</h2>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={handleExportPDF}
-          disabled={isLoading || !chartData || chartData.length === 0}
-          className="flex items-center gap-1"
-        >
-          <FileDown className="h-4 w-4" />
-          <span>Exporter en PDF</span>
-        </Button>
       </div>
 
       <Tabs defaultValue="bars" className="w-full">

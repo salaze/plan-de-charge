@@ -1,10 +1,13 @@
 
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { Employee, StatusCode, SummaryStats } from '@/types';
 import { calculateBatchEmployeeStats } from '@/utils/statsUtils';
 import { prepareChartDataPoint } from '@/utils/statsChartUtils';
 
 export const useStatsCalculator = () => {
+  const [stats, setStats] = useState<SummaryStats[]>([]);
+  const [chartData, setChartData] = useState<Array<{ name: string; [key: string]: number | string }>>([]);
+
   const calculateStats = useCallback((
     employees: Employee[],
     year: number,
@@ -19,18 +22,26 @@ export const useStatsCalculator = () => {
     }
 
     // Use the optimized batch processing to prevent UI freezing
-    const stats = calculateBatchEmployeeStats(employees, year, month, 10);
+    const calculatedStats = calculateBatchEmployeeStats(employees, year, month, 10);
     
     // Convert stats to chart data format in a single pass
-    const chartData = stats.map(employeeStat => 
+    const calculatedChartData = calculatedStats.map(employeeStat => 
       prepareChartDataPoint(employeeStat, availableStatusCodes)
     );
+
+    // Update state values
+    setStats(calculatedStats);
+    setChartData(calculatedChartData);
     
     console.timeEnd('stats-calculation');
     console.log(`Statistics calculated for ${employees.length} employees`);
     
-    return { stats, chartData };
+    return { stats: calculatedStats, chartData: calculatedChartData };
   }, []);
 
-  return { calculateStats };
+  return { 
+    stats,
+    chartData,
+    calculateStats 
+  };
 };

@@ -16,7 +16,7 @@ export const useStatisticsData = (
 ) => {
   const { employees, fetchEmployees } = useEmployeeLoader();
   const { fetchSchedules } = useScheduleLoader();
-  const { employeeStats, chartData, calculateStats } = useStatsCalculator();
+  const { stats, chartData, calculateStats } = useStatsCalculator();
   const { isLoading, setIsLoading, loadingState, setLoadingState, refreshKey, incrementRefreshKey } = useLoadingState();
   
   // Mise en cache des données pour éviter des chargements inutiles
@@ -59,12 +59,12 @@ export const useStatisticsData = (
         
         // 4. Calculer les statistiques avec optimisation
         setLoadingState('calculating');
-        calculateStats(employeesWithSchedules, currentYear, currentMonth, statusCodes);
+        const result = calculateStats(employeesWithSchedules, currentYear, currentMonth, statusCodes);
         
         // Mettre en cache les résultats
         cachedData.current = {
           employees: employeesWithSchedules,
-          chartData
+          chartData: result.chartData
         };
         previousCacheKey.current = cacheKey;
       } catch (error) {
@@ -78,7 +78,7 @@ export const useStatisticsData = (
 
     // Déclencher le chargement des données
     loadData();
-  }, [currentYear, currentMonth, statusCodes, fetchEmployees, fetchSchedules, calculateStats, refreshKey, cacheKey, chartData]);
+  }, [currentYear, currentMonth, statusCodes, fetchEmployees, fetchSchedules, calculateStats, refreshKey, cacheKey]);
 
   // Exposer l'état de chargement détaillé pour le débogage
   const loadingDetails = useMemo(() => {
@@ -91,7 +91,7 @@ export const useStatisticsData = (
   }, [loadingState, employees.length, statusCodes.length, chartData.length]);
 
   return {
-    employeeStats,
+    employeeStats: stats,
     chartData,
     isLoading,
     loadingDetails,

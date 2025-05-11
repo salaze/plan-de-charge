@@ -4,6 +4,7 @@ import { StatusCode } from '@/types';
 import { useStatusLoader } from './status/useStatusLoader';
 import { useStatusEvents } from './status/useStatusEvents';
 import { syncStatusesWithDatabase } from '@/utils/supabase/status';
+import { toast } from 'sonner';
 
 export function useStatusOptions() {
   const [refreshKey, setRefreshKey] = useState(0);
@@ -27,12 +28,14 @@ export function useStatusOptions() {
   useEffect(() => {
     const syncAndRefresh = async () => {
       try {
+        console.log("useStatusOptions: Initial synchronization with database");
         // Sync statuses with database
         await syncStatusesWithDatabase();
         // Then refresh local statuses
         originalRefreshStatuses();
       } catch (error) {
         console.error("Error synchronizing statuses", error);
+        toast.error("Erreur lors de la synchronisation des statuts. Vérifiez la connexion réseau.");
       }
     };
     
@@ -48,6 +51,7 @@ export function useStatusOptions() {
       return;
     }
     
+    console.log("useStatusOptions: Refreshing statuses");
     lastRefreshTimeRef.current = now;
     
     // If a request is already in progress, queue it
@@ -75,6 +79,7 @@ export function useStatusOptions() {
       setRefreshKey(prev => prev + 1);
     } catch (error) {
       console.error("Error refreshing statuses", error);
+      toast.error("Erreur lors de l'actualisation des statuts");
     }
     
     // Set timeout to reset the refreshing state

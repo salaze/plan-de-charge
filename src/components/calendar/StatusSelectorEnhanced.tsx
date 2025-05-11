@@ -6,6 +6,7 @@ import { useStatusSelector } from '@/hooks/status/useStatusSelector';
 import { StatusLoadingState } from './status/StatusLoadingState';
 import { StatusErrorState } from './status/StatusErrorState';
 import { StatusOptionsList } from './status/StatusOptionsList';
+import { toast } from 'sonner';
 
 interface StatusSelectorEnhancedProps {
   value: StatusCode;
@@ -44,24 +45,43 @@ export function StatusSelectorEnhanced({
     onComplete: onChange
   });
   
-  // Effectuer un seul rafraîchissement des statuts à l'ouverture de la boîte de dialogue
+  // Forcer un rafraîchissement immédiat au montage
   useEffect(() => {
-    if (!hasRequestedRefresh && !isLoading) {
-      console.log("StatusSelectorEnhanced: Premier montage, une seule demande de rafraîchissement");
+    console.log("StatusSelectorEnhanced: Premier montage");
+    
+    // Forcer un rafraîchissement immédiat
+    const timeoutId = setTimeout(() => {
+      console.log("StatusSelectorEnhanced: Rafraîchissement forcé des statuts");
+      refreshStatuses();
       setHasRequestedRefresh(true);
-      // Ajouter un léger délai pour éviter les problèmes de timing
+    }, 100);
+    
+    return () => clearTimeout(timeoutId);
+  }, []);
+  
+  // Log des statuts disponibles à chaque changement
+  useEffect(() => {
+    console.log("StatusSelectorEnhanced: Statuts disponibles:", statuses);
+    
+    // Si aucun statut n'est chargé après un certain temps et que le chargement est terminé
+    if (!isLoading && statuses.length === 0 && hasRequestedRefresh) {
+      console.log("StatusSelectorEnhanced: Aucun statut disponible après chargement");
+      toast.error("Impossible de charger les statuts. Veuillez réessayer.");
+      
+      // Tenter un nouveau rafraîchissement après un délai
       const timeoutId = setTimeout(() => {
+        console.log("StatusSelectorEnhanced: Nouvelle tentative de chargement");
         refreshStatuses();
-      }, 300);
+      }, 2000);
       
       return () => clearTimeout(timeoutId);
     }
-  }, [refreshStatuses, hasRequestedRefresh, isLoading]);
+  }, [statuses, isLoading, hasRequestedRefresh]);
   
   // Determine if there's a loading error
   const loadingError = !isLoading && (!statuses || statuses.length === 0);
   
-  console.log("StatusSelectorEnhanced: Rendu avec statuses =", statuses, "isLoading =", isLoading);
+  console.log("StatusSelectorEnhanced: Rendu avec statuses =", statuses.length, "isLoading =", isLoading);
   
   // Show appropriate component based on state
   if (isLoading) {
@@ -79,6 +99,7 @@ export function StatusSelectorEnhanced({
         onProjectChange={handleProjectChange}
         onHighlightChange={handleHighlightChange}
         onSubmit={handleSubmit}
+        onRefresh={refreshStatuses}
       />
     );
   }

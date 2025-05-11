@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { StatusCode, STATUS_LABELS, STATUS_COLORS } from '@/types';
 import { extendStatusCode } from '@/utils/export/statusUtils';
+import { toast } from 'sonner';
 
 interface UseStatusFetcherResult {
   statuses: StatusCode[];
@@ -52,6 +53,9 @@ export function useStatusFetcher(): UseStatusFetcherResult {
       ];
       setStatuses(defaultStatuses);
       isRefreshingRef.current = false;
+      
+      // Afficher un toast pour informer l'utilisateur
+      toast.error("Délai dépassé lors du chargement des statuts. Les statuts par défaut sont utilisés.");
     }, 5000);
     
     try {
@@ -103,6 +107,9 @@ export function useStatusFetcher(): UseStatusFetcherResult {
           'regisseur', 'demenagement', 'permanence', 'parc'
         ];
         setStatuses(defaultStatuses);
+        
+        // Afficher un toast pour informer l'utilisateur
+        toast.warning("Aucun statut trouvé dans la base de données. Les statuts par défaut sont utilisés.");
       }
     } catch (error) {
       console.error('Error loading status options from Supabase:', error);
@@ -122,6 +129,9 @@ export function useStatusFetcher(): UseStatusFetcherResult {
         'regisseur', 'demenagement', 'permanence', 'parc'
       ];
       setStatuses(defaultStatuses);
+      
+      // Afficher un toast pour informer l'utilisateur
+      toast.error("Erreur lors du chargement des statuts. Les statuts par défaut sont utilisés.");
     } finally {
       // Always end the loading state
       if (loadingTimeoutRef.current) {
@@ -151,6 +161,11 @@ export function useStatusFetcher(): UseStatusFetcherResult {
         loadingTimeoutRef.current = null;
       }
     };
+  }, []);
+  
+  // Fetch statuses on mount
+  useEffect(() => {
+    fetchStatuses();
   }, []);
 
   return { statuses, isLoading, fetchStatuses };

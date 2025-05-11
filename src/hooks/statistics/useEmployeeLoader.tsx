@@ -8,26 +8,25 @@ export const useEmployeeLoader = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const employeeCache = useRef<Employee[]>([]);
   const lastFetchTime = useRef<number>(0);
-  const CACHE_TTL = 60000; // 1 minute en millisecondes
-
+  const CACHE_TTL = 300000; // Increase cache time to 5 minutes
+  
   const fetchEmployees = useCallback(async () => {
     try {
-      // Vérifier si les données en cache sont encore valides
+      // Check cache first
       const now = Date.now();
       if (employeeCache.current.length > 0 && now - lastFetchTime.current < CACHE_TTL) {
-        console.log('Utilisation du cache des employés');
-        setEmployees(employeeCache.current);
+        console.log('Using employee cache, skipping DB call');
         return employeeCache.current;
       }
       
-      console.log('Chargement des employés depuis Supabase...');
+      console.log('Loading employees from Supabase...');
       
       const employeesResult = await supabase
         .from('employes')
         .select('*');
 
       if (employeesResult.error) {
-        throw new Error(`Erreur lors du chargement des employés: ${employeesResult.error.message}`);
+        throw new Error(`Error loading employees: ${employeesResult.error.message}`);
       }
 
       const loadedEmployees: Employee[] = employeesResult.data.map(emp => ({
@@ -41,18 +40,18 @@ export const useEmployeeLoader = () => {
         schedule: []
       }));
 
-      console.log(`${loadedEmployees.length} employés chargés`);
+      console.log(`${loadedEmployees.length} employees loaded successfully`);
       
-      // Mise à jour du cache et de l'horodatage
+      // Update cache and timestamp
       employeeCache.current = loadedEmployees;
       lastFetchTime.current = now;
       
       setEmployees(loadedEmployees);
       return loadedEmployees;
     } catch (error) {
-      console.error('Erreur lors du chargement des employés:', error);
-      toast.error('Erreur lors du chargement des données depuis Supabase');
-      return [];
+      console.error('Error loading employees:', error);
+      toast.error('Error loading data from Supabase');
+      return employeeCache.current.length > 0 ? employeeCache.current : []; // Try to use cache if available
     }
   }, []);
 

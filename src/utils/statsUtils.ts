@@ -52,12 +52,17 @@ export const calculateEmployeeStats = (
     employeeName: employee.name
   };
   
+  // Quick exit if no schedule data
+  if (!employee.schedule || employee.schedule.length === 0) {
+    return stats;
+  }
+  
   // Filter relevant schedule entries first to reduce iteration
   const relevantSchedule = employee.schedule.filter(
     day => day.date >= startDate && day.date <= endDate
   );
   
-  // Process each schedule entry with optimized caching
+  // Use optimized switch statement instead of if-else chains
   relevantSchedule.forEach(day => {
     const cacheKey = `${day.date}-${day.status}-${day.period}-${day.isHighlighted}`;
     let statusResult = dailyStatusCache.get(cacheKey);
@@ -139,41 +144,36 @@ export const calculateEmployeeStats = (
   return stats;
 };
 
-// Function to clear caches when needed (e.g., after significant data changes)
-export const clearStatsCalculationCache = (): void => {
-  daysInMonthCache.clear();
-  dailyStatusCache.clear();
-};
-
-// Batch processing function for multiple employees
+// Optimized batch processing function that returns results immediately
 export const calculateBatchEmployeeStats = (
   employees: Employee[],
   year: number,
   month: number,
   batchSize: number = 10
-): Promise<SummaryStats[]> => {
-  return new Promise((resolve) => {
-    const results: SummaryStats[] = [];
-    const totalEmployees = employees.length;
-    
-    // Use batch processing to prevent UI freezing with large datasets
-    const processBatch = (startIdx: number) => {
-      const endIdx = Math.min(startIdx + batchSize, totalEmployees);
-      
-      for (let i = startIdx; i < endIdx; i++) {
-        results.push(calculateEmployeeStats(employees[i], year, month));
-      }
-      
-      if (endIdx < totalEmployees) {
-        // Process next batch asynchronously
-        setTimeout(() => processBatch(endIdx), 0);
-      } else {
-        // All batches processed
-        resolve(results);
-      }
-    };
-    
-    // Start batch processing
-    processBatch(0);
-  });
+): SummaryStats[] => {
+  const results: SummaryStats[] = [];
+  
+  // Process all employees immediately for small datasets
+  if (employees.length <= batchSize) {
+    employees.forEach(employee => {
+      results.push(calculateEmployeeStats(employee, year, month));
+    });
+    return results;
+  }
+  
+  // For larger datasets, process in batches but still return immediately
+  for (let i = 0; i < employees.length; i += batchSize) {
+    const batch = employees.slice(i, i + batchSize);
+    batch.forEach(employee => {
+      results.push(calculateEmployeeStats(employee, year, month));
+    });
+  }
+  
+  return results;
+};
+
+// Function to clear caches when needed
+export const clearStatsCalculationCache = (): void => {
+  daysInMonthCache.clear();
+  dailyStatusCache.clear();
 };

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { useStatusOptions } from '@/hooks/useStatusOptions';
-import { useStatisticsData } from '@/hooks/statistics';
+import { useOptimizedStatsLoader } from '@/hooks/statistics';
 import { StatisticsLayout } from '@/components/statistics/StatisticsLayout';
 import { StatisticsHeader } from '@/components/statistics/StatisticsHeader';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,7 @@ import { RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { initPrintStyles } from '@/utils/printUtils';
 
-// Chargement paresseux des composants lourds
+// Lazy load heavy components
 const StatisticsTablePanel = lazy(() => 
   import('@/components/statistics/panels/StatisticsTablePanel')
     .then(module => ({ default: module.StatisticsTablePanel }))
@@ -24,13 +24,13 @@ const Statistics = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   
   const { statuses: availableStatusCodes, isLoading: statusesLoading } = useStatusOptions();
-  const { chartData, isLoading: statsLoading, refreshData, loadingDetails } = useStatisticsData(
+  const { chartData, isLoading: statsLoading, refreshData } = useOptimizedStatsLoader(
     currentYear, 
     currentMonth, 
     availableStatusCodes
   );
   
-  // Initialiser les styles d'impression au chargement
+  // Initialize print styles on load
   useEffect(() => {
     initPrintStyles();
   }, []);
@@ -42,11 +42,7 @@ const Statistics = () => {
 
   const handleRefresh = () => {
     toast.info("Actualisation des statistiques en cours...");
-    console.log("Demande d'actualisation des statistiques");
-    
-    // Log des détails de chargement pour le débogage
-    console.log("État du chargement:", loadingDetails);
-    
+    console.log("Refreshing statistics data");
     refreshData();
   };
 

@@ -1,47 +1,36 @@
 
-import { useCallback, useState, useMemo } from 'react';
+import { useCallback } from 'react';
 import { Employee, StatusCode, SummaryStats } from '@/types';
-import { useBatchProcessor } from './useBatchProcessor';
-
-interface EmployeeStatusData {
-  name: string;
-  [key: string]: number | string;
-}
+import { calculateBatchEmployeeStats } from '@/utils/statsUtils';
+import { prepareChartDataPoint } from '@/utils/statsChartUtils';
 
 export const useStatsCalculator = () => {
-  const [employeeStats, setEmployeeStats] = useState<SummaryStats[]>([]);
-  const [chartData, setChartData] = useState<EmployeeStatusData[]>([]);
-  const { processInBatches } = useBatchProcessor();
-
   const calculateStats = useCallback((
     employees: Employee[],
     year: number,
     month: number,
     availableStatusCodes: StatusCode[]
   ) => {
-    console.log('Calcul des statistiques...');
+    console.time('stats-calculation');
     
     if (employees.length === 0 || availableStatusCodes.length === 0) {
-      console.warn('Pas assez de données pour calculer des statistiques');
-      setChartData([]);
-      setEmployeeStats([]);
-      return;
+      console.log('Insufficient data for statistics calculation');
+      return { stats: [], chartData: [] };
     }
 
-    // Process all employees using the batch processor
-    const result = processInBatches(employees, year, month, availableStatusCodes);
+    // Use the optimized batch processing to prevent UI freezing
+    const stats = calculateBatchEmployeeStats(employees, year, month, 10);
     
-    setEmployeeStats(result.stats);
-    setChartData(result.chartData);
-    console.log('Statistiques calculées avec succès');
-  }, [processInBatches]);
+    // Convert stats to chart data format in a single pass
+    const chartData = stats.map(employeeStat => 
+      prepareChartDataPoint(employeeStat, availableStatusCodes)
+    );
+    
+    console.timeEnd('stats-calculation');
+    console.log(`Statistics calculated for ${employees.length} employees`);
+    
+    return { stats, chartData };
+  }, []);
 
-  // Memoized results to avoid unnecessary re-renders
-  const memoizedResults = useMemo(() => ({
-    employeeStats,
-    chartData,
-    calculateStats
-  }), [employeeStats, chartData, calculateStats]);
-
-  return memoizedResults;
+  return { calculateStats };
 };

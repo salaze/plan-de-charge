@@ -19,10 +19,9 @@ export const useSupabaseSubscription = (
     
     const channel = supabase
       .channel(`watch_${tableName}`)
-      .on(
-        'postgres_changes',
+      .on('postgres_changes', // This is the channel event type
         { 
-          event: eventType,
+          event: eventType, // This is the database event we want to listen for
           schema: 'public',
           table: tableName
         },

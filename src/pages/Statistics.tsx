@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect, Suspense, lazy } from 'react';
-import { useStatusOptions } from '@/hooks/useStatusOptions';
+import React, { useState, Suspense, lazy } from 'react';
+import { useStatusOptionsQuery } from '@/hooks/useStatusOptionsQuery';
 import { useOptimizedStatsLoader } from '@/hooks/statistics';
 import { StatisticsLayout } from '@/components/statistics/StatisticsLayout';
 import { StatisticsHeader } from '@/components/statistics/StatisticsHeader';
@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { initPrintStyles } from '@/utils/printUtils';
-import { syncStatusesWithDatabase } from '@/utils/supabase/status';
+import { useEffect } from 'react';
+import { queryClient } from '@/contexts/QueryContext';
 
 // Lazy load heavy components
 const StatisticsTablePanel = lazy(() => 
@@ -24,30 +25,18 @@ const Statistics = () => {
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   
-  const { statuses: availableStatusCodes, isLoading: statusesLoading, refreshStatuses } = useStatusOptions();
-  const { chartData, stats, isLoading: statsLoading, refreshData } = useOptimizedStatsLoader(
+  const { data: availableStatusCodes = [], isLoading: statusesLoading } = useStatusOptionsQuery();
+  
+  // Filtrer le statut 'none'
+  const filteredStatusCodes = availableStatusCodes.filter(code => code !== 'none');
+  
+  const { chartData, stats, isLoading: statsLoading } = useOptimizedStatsLoader(
     currentYear, 
     currentMonth, 
-    availableStatusCodes
+    filteredStatusCodes
   );
   
-  // Synchronize statuses when page loads
-  useEffect(() => {
-    const initializeData = async () => {
-      try {
-        // Synchronize statuses with database
-        await syncStatusesWithDatabase();
-        // Then refresh local statuses
-        refreshStatuses();
-      } catch (error) {
-        console.error("Error initializing data", error);
-      }
-    };
-    
-    initializeData();
-  }, [refreshStatuses]);
-  
-  // Initialize print styles on load
+  // Initialiser les styles d'impression au chargement
   useEffect(() => {
     initPrintStyles();
   }, []);
@@ -58,20 +47,15 @@ const Statistics = () => {
   };
 
   const handleRefresh = async () => {
-    toast.info("Refreshing statistics...");
-    console.log("Refreshing statistics data and synchronizing statuses");
+    toast.info("Actualisation des statistiques...");
     
-    // Synchronize statuses before refreshing data
-    await syncStatusesWithDatabase();
-    // Refresh local statuses
-    refreshStatuses();
-    // Refresh statistics data
-    refreshData();
+    // Invalider toutes les requêtes pertinentes
+    await queryClient.invalidateQueries({ queryKey: ['employees'] });
+    await queryClient.invalidateQueries({ queryKey: ['schedules'] });
+    await queryClient.invalidateQueries({ queryKey: ['statuses'] });
+    await queryClient.invalidateQueries({ queryKey: ['statistics'] });
   };
 
-  // Filter out the 'none' status
-  const filteredStatusCodes = availableStatusCodes.filter(code => code !== 'none');
-  
   const isLoading = statusesLoading || statsLoading;
   
   return (
@@ -91,11 +75,11 @@ const Statistics = () => {
           className="flex items-center gap-1"
         >
           <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-          <span>{isLoading ? 'Loading...' : 'Refresh'}</span>
+          <span>{isLoading ? 'Chargement...' : 'Actualiser'}</span>
         </Button>
       </div>
       
-      <Suspense fallback={<div className="text-center p-6">Loading table...</div>}>
+      <Suspense fallback={<div className="text-center p-6">Chargement du tableau...</div>}>
         <StatisticsTablePanel 
           chartData={chartData}
           statusCodes={filteredStatusCodes}
@@ -103,7 +87,7 @@ const Statistics = () => {
         />
       </Suspense>
       
-      <Suspense fallback={<div className="text-center p-6">Loading charts...</div>}>
+      <Suspense fallback={<div className="text-center p-6">Chargement des graphiques...</div>}>
         <StatisticsChartPanel 
           chartData={chartData}
           statusCodes={filteredStatusCodes}

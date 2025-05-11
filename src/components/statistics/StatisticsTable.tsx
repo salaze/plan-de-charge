@@ -20,15 +20,18 @@ interface StatisticsTableProps {
 export const StatisticsTable = ({ chartData, statusCodes, isLoading }: StatisticsTableProps) => {
   if (isLoading) {
     return (
-      <div className="text-center p-4">Loading statistics...</div>
+      <div className="text-center p-8">
+        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-safe:animate-spin"></div>
+        <p className="mt-2">Chargement des statistiques...</p>
+      </div>
     );
   }
 
   if (!chartData || chartData.length === 0) {
     return (
-      <div className="text-center p-4 text-muted-foreground">
-        <p className="mb-2">No data available.</p>
-        <p className="text-sm">Make sure employees and statuses are configured in the planning.</p>
+      <div className="text-center p-8 text-muted-foreground">
+        <p className="mb-2 font-medium">Aucune donnée disponible.</p>
+        <p className="text-sm">Assurez-vous que des employés et des statuts sont configurés dans le planning.</p>
       </div>
     );
   }
@@ -38,7 +41,7 @@ export const StatisticsTable = ({ chartData, statusCodes, isLoading }: Statistic
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Employee</TableHead>
+            <TableHead>Employé</TableHead>
             {statusCodes.map(status => (
               <TableHead key={status}>
                 <div className="flex items-center gap-2">

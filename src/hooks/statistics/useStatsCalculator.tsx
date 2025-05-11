@@ -1,57 +1,54 @@
 
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback } from 'react';
 import { Employee, StatusCode, SummaryStats } from '@/types';
 import { calculateBatchEmployeeStats } from '@/utils/statsUtils';
 import { prepareChartDataPoint } from '@/utils/statsChartUtils';
+import { useQuery } from '@tanstack/react-query';
 
-export const useStatsCalculator = () => {
-  const [stats, setStats] = useState<SummaryStats[]>([]);
-  const [chartData, setChartData] = useState<Array<{ name: string; [key: string]: number | string }>>([]);
-
-  // Clear stats when component unmounts to prevent stale data
-  useEffect(() => {
-    return () => {
-      setStats([]);
-      setChartData([]);
-    };
-  }, []);
-
-  const calculateStats = useCallback((
-    employees: Employee[],
-    year: number,
-    month: number,
-    availableStatusCodes: StatusCode[]
-  ) => {
+export const useStatsCalculator = (
+  employees: Employee[],
+  year: number,
+  month: number,
+  statusCodes: StatusCode[]
+) => {
+  // Fonction de calcul des statistiques
+  const calculateStats = useCallback(() => {
     console.time('stats-calculation');
     
-    if (employees.length === 0 || availableStatusCodes.length === 0) {
+    if (employees.length === 0 || statusCodes.length === 0) {
       console.log('Insufficient data for statistics calculation');
       return { stats: [], chartData: [] };
     }
 
-    console.log(`Calculating stats with ${availableStatusCodes.length} available status codes`);
+    console.log(`Calculating stats with ${statusCodes.length} available status codes`);
 
-    // Use the optimized batch processing to prevent UI freezing
+    // Utiliser le traitement par lots optimisé pour éviter le gel de l'interface
     const calculatedStats = calculateBatchEmployeeStats(employees, year, month, 10);
     
-    // Convert stats to chart data format in a single pass
+    // Convertir les statistiques en format de données pour les graphiques en une seule passe
     const calculatedChartData = calculatedStats.map(employeeStat => 
-      prepareChartDataPoint(employeeStat, availableStatusCodes)
+      prepareChartDataPoint(employeeStat, statusCodes)
     );
-
-    // Update state values and return them
-    setStats(calculatedStats);
-    setChartData(calculatedChartData);
     
     console.timeEnd('stats-calculation');
-    console.log(`Statistics calculated for ${employees.length} employees with ${availableStatusCodes.length} status codes`);
+    console.log(`Statistics calculated for ${employees.length} employees with ${statusCodes.length} status codes`);
     
     return { stats: calculatedStats, chartData: calculatedChartData };
-  }, []);
+  }, [employees, year, month, statusCodes]);
+
+  // Utiliser React Query pour mettre en cache les résultats
+  const queryKey = ['statistics', year, month, employees.length, statusCodes.join(',')];
+  
+  const { data = { stats: [], chartData: [] }, isLoading } = useQuery({
+    queryKey,
+    queryFn: calculateStats,
+    enabled: employees.length > 0 && statusCodes.length > 0,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 
   return { 
-    stats,
-    chartData,
-    calculateStats 
+    stats: data.stats,
+    chartData: data.chartData,
+    isLoading
   };
 };

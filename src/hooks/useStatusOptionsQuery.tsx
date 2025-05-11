@@ -1,0 +1,52 @@
+
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { StatusCode } from '@/types';
+import { toast } from 'sonner';
+import { useSupabaseSubscription } from './useSupabaseSubscription';
+
+export const useStatusOptionsQuery = () => {
+  // Définir la clé de requête
+  const queryKey = ['statuses'];
+  
+  // S'abonner aux changements de la table statuts
+  useSupabaseSubscription('statuts', queryKey);
+  
+  // Fonction pour charger les statuts depuis Supabase
+  const fetchStatuses = async (): Promise<StatusCode[]> => {
+    try {
+      console.log('Fetching statuses from Supabase...');
+      
+      const { data, error } = await supabase
+        .from('statuts')
+        .select('*')
+        .order('display_order', { ascending: true });
+        
+      if (error) {
+        console.error('Error loading statuses:', error);
+        toast.error('Erreur lors du chargement des statuts');
+        throw error;
+      }
+      
+      // Convertir les données en codes de statut
+      const statusCodes: StatusCode[] = data.map(status => status.code as StatusCode);
+      
+      // Ajouter le statut 'none' s'il n'est pas déjà présent
+      if (!statusCodes.includes('none')) {
+        statusCodes.push('none');
+      }
+      
+      console.log(`${statusCodes.length} statuses loaded`);
+      return statusCodes;
+    } catch (error) {
+      console.error('Error fetching statuses:', error);
+      return ['none'];
+    }
+  };
+  
+  return useQuery({
+    queryKey,
+    queryFn: fetchStatuses,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};

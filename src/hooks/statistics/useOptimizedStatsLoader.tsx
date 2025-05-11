@@ -1,123 +1,67 @@
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useMemo } from 'react';
 import { StatusCode } from '@/types';
 import { generateDaysInMonth, formatDate } from '@/utils/dateUtils';
-import { useEmployeeLoader } from './useEmployeeLoader';
-import { useScheduleLoader } from './useScheduleLoader';
+import { useEmployeesQuery } from './useEmployeesQuery';
+import { useSchedulesQuery } from './useSchedulesQuery';
 import { useStatsCalculator } from './useStatsCalculator';
-import { toast } from 'sonner';
-import { syncStatusesWithDatabase } from '@/utils/supabase/status';
+import { useStatusOptionsQuery } from '../useStatusOptionsQuery';
 
 export const useOptimizedStatsLoader = (
   currentYear: number,
   currentMonth: number,
   statusCodes: StatusCode[],
 ) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [chartData, setChartData] = useState<Array<{ name: string; [key: string]: number | string }>>([]);
-  const [stats, setStats] = useState<any[]>([]);
-  const [refreshCounter, setRefreshCounter] = useState(0);
-  const { employees, fetchEmployees } = useEmployeeLoader();
-  const { fetchSchedules } = useScheduleLoader();
-  const { calculateStats } = useStatsCalculator();
+  // Générer les dates du mois
+  const { startDate, endDate } = useMemo(() => {
+    const days = generateDaysInMonth(currentYear, currentMonth);
+    return {
+      startDate: formatDate(days[0]),
+      endDate: formatDate(days[days.length - 1])
+    };
+  }, [currentYear, currentMonth]);
   
-  // Cache key based on current selection and status codes
-  const cacheKey = useMemo(() => 
-    `stats_${currentYear}_${currentMonth}_${statusCodes.join('_')}_${refreshCounter}`,
-  [currentYear, currentMonth, statusCodes, refreshCounter]);
+  // Utiliser nos hooks React Query pour charger les données
+  const { 
+    data: employees = [], 
+    isLoading: isEmployeesLoading 
+  } = useEmployeesQuery();
   
-  // Synchronize statuses when component mounts
-  useEffect(() => {
-    const syncStatuses = async () => {
-      try {
-        await syncStatusesWithDatabase();
-        console.log("Statuses synchronized with database");
-      } catch (error) {
-        console.error("Error synchronizing statuses", error);
-      }
-    };
-    
-    syncStatuses();
-  }, []);
-
-  // Listen for status updates
-  useEffect(() => {
-    const handleStatusesUpdated = () => {
-      console.log("Statuses updated, refreshing statistics");
-      setRefreshCounter(prev => prev + 1);
-    };
-    
-    window.addEventListener('statusesUpdated', handleStatusesUpdated);
-    
-    return () => {
-      window.removeEventListener('statusesUpdated', handleStatusesUpdated);
-    };
-  }, []);
+  const { 
+    data: employeesWithSchedules = [], 
+    isLoading: isSchedulesLoading 
+  } = useSchedulesQuery(employees, startDate, endDate, !isEmployeesLoading);
   
-  // Load data efficiently
-  useEffect(() => {
-    let isMounted = true;
-    
-    const loadData = async () => {
-      try {
-        if (!isMounted) return;
-        setIsLoading(true);
-        
-        // Check if statuses are empty
-        if (statusCodes.length === 0) {
-          console.log('No statuses available, calculation of statistics postponed');
-          setIsLoading(false);
-          return;
-        }
-        
-        console.log('Loading optimized statistics for:', currentYear, currentMonth);
-        console.log('Using status codes:', statusCodes);
-        
-        // Step 1: Generate date range for the month
-        const days = generateDaysInMonth(currentYear, currentMonth);
-        const startDate = formatDate(days[0]);
-        const endDate = formatDate(days[days.length - 1]);
-        
-        // Step 2: Load employees (uses internal caching)
-        const loadedEmployees = await fetchEmployees();
-        if (!isMounted) return;
-        
-        // Step 3: Load schedules for the employees
-        const employeesWithSchedules = await fetchSchedules(loadedEmployees, startDate, endDate);
-        if (!isMounted) return;
-        
-        // Step 4: Calculate stats
-        const { stats: calculatedStats, chartData: calculatedChartData } = calculateStats(employeesWithSchedules, currentYear, currentMonth, statusCodes);
-        if (!isMounted) return;
-        
-        setStats(calculatedStats);
-        setChartData(calculatedChartData);
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Error loading statistics:', error);
-        if (isMounted) {
-          toast.error('Error loading statistics');
-          setIsLoading(false);
-        }
-      }
-    };
-    
-    loadData();
-    
-    return () => {
-      isMounted = false;
-    };
-  }, [cacheKey, fetchEmployees, fetchSchedules, calculateStats, statusCodes.length, currentYear, currentMonth]);
+  const { 
+    data: availableStatusCodes = [], 
+    isLoading: isStatusesLoading 
+  } = useStatusOptionsQuery();
   
-  // Function to trigger a refresh
-  const refreshData = useCallback(() => {
-    setRefreshCounter(prev => prev + 1);
-  }, []);
+  // Utiliser seulement les statuts disponibles si aucun n'est spécifié
+  const effectiveStatusCodes = statusCodes.length > 0 ? statusCodes : availableStatusCodes;
+  
+  // Calculer les statistiques
+  const { 
+    stats, 
+    chartData, 
+    isLoading: isCalculating 
+  } = useStatsCalculator(
+    employeesWithSchedules,
+    currentYear,
+    currentMonth,
+    effectiveStatusCodes
+  );
+  
+  // Déterminer si le chargement est en cours
+  const isLoading = isEmployeesLoading || isSchedulesLoading || isStatusesLoading || isCalculating;
   
   return {
     stats,
     chartData,
     isLoading,
-    refreshData
+    refreshData: () => {
+      // Les requêtes seront automatiquement invalidées par useSupabaseSubscription
+      console.log("Les données seront rechargées automatiquement si nécessaire");
+    }
   };
 };

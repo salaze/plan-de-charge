@@ -16,12 +16,13 @@ const Statistics = () => {
   const [selectedDepartment, setSelectedDepartment] = useState("all");
   
   const { statuses: availableStatusCodes, isLoading: statusesLoading } = useStatusOptions();
+  
+  // Use the refactored hook which now provides all needed functionality
   const { 
     chartData, 
     isLoading: statsLoading, 
     loadTimeout,
     refreshData, 
-    loadingDetails,
     loadingState
   } = useStatisticsData(
     currentYear, 

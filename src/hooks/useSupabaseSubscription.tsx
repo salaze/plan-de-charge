@@ -19,13 +19,12 @@ export const useSupabaseSubscription = (
     
     const channel = supabase
       .channel(`watch_${tableName}`)
-      .on(
-        'postgres_changes',
-        {
-          event: eventType,
-          schema: 'public',
-          table: tableName
-        },
+      .on('postgres_changes', 
+        { 
+          event: eventType, 
+          schema: 'public', 
+          table: tableName 
+        }, 
         (payload) => {
           console.log(`Change detected in ${tableName}:`, payload);
           

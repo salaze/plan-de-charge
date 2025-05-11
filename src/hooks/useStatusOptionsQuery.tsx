@@ -28,6 +28,12 @@ export const useStatusOptionsQuery = () => {
         throw error;
       }
       
+      if (!data || data.length === 0) {
+        console.warn('No statuses found in database');
+        // Retourner les statuts par défaut si aucun n'est trouvé
+        return ['none', 'assistance', 'vigi', 'formation', 'projet', 'conges'];
+      }
+      
       // Convertir les données en codes de statut
       const statusCodes: StatusCode[] = data.map(status => status.code as StatusCode);
       
@@ -36,11 +42,12 @@ export const useStatusOptionsQuery = () => {
         statusCodes.push('none');
       }
       
-      console.log(`${statusCodes.length} statuses loaded`);
+      console.log(`${statusCodes.length} statuses loaded:`, statusCodes);
       return statusCodes;
     } catch (error) {
       console.error('Error fetching statuses:', error);
-      return ['none'];
+      // En cas d'erreur, retourner au moins les statuts par défaut
+      return ['none', 'assistance', 'vigi', 'formation', 'projet', 'conges'];
     }
   };
   
@@ -48,5 +55,7 @@ export const useStatusOptionsQuery = () => {
     queryKey,
     queryFn: fetchStatuses,
     staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 2, // Réessayer 2 fois en cas d'erreur
+    refetchOnWindowFocus: false, // Ne pas actualiser automatiquement lorsque la fenêtre reprend le focus
   });
 };

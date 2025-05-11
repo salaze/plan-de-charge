@@ -8,16 +8,9 @@ interface EmployeeStatusData {
   [key: string]: number | string;
 }
 
-interface StatsResult {
-  stats: SummaryStats[];
-  chartData: EmployeeStatusData[];
-}
-
 export const useStatsCalculator = () => {
-  const [employeeStats, setEmployeeStats] = useState<{
-    stats: SummaryStats[];
-    chartData: EmployeeStatusData[];
-  }>({ stats: [], chartData: [] });
+  const [employeeStats, setEmployeeStats] = useState<SummaryStats[]>([]);
+  const [chartData, setChartData] = useState<EmployeeStatusData[]>([]);
   const { processInBatches } = useBatchProcessor();
 
   const calculateStats = useCallback((
@@ -30,22 +23,25 @@ export const useStatsCalculator = () => {
     
     if (employees.length === 0 || availableStatusCodes.length === 0) {
       console.warn('Pas assez de données pour calculer des statistiques');
-      setEmployeeStats({ stats: [], chartData: [] });
+      setChartData([]);
+      setEmployeeStats([]);
       return;
     }
 
     // Process all employees using the batch processor
     const result = processInBatches(employees, year, month, availableStatusCodes);
     
-    setEmployeeStats(result);
+    setEmployeeStats(result.stats);
+    setChartData(result.chartData);
     console.log('Statistiques calculées avec succès');
   }, [processInBatches]);
 
   // Memoized results to avoid unnecessary re-renders
   const memoizedResults = useMemo(() => ({
     employeeStats,
+    chartData,
     calculateStats
-  }), [employeeStats, calculateStats]);
+  }), [employeeStats, chartData, calculateStats]);
 
   return memoizedResults;
 };

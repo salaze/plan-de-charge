@@ -10,24 +10,17 @@ interface StatisticsTablePanelProps {
   chartData: Array<{ name: string; [key: string]: number | string }>;
   statusCodes: StatusCode[];
   isLoading: boolean;
-  selectedDepartment: string;
-  onDepartmentChange?: (department: string) => void;
 }
 
-export const StatisticsTablePanel = ({ 
-  chartData, 
-  statusCodes, 
-  isLoading, 
-  selectedDepartment 
-}: StatisticsTablePanelProps) => {
+export const StatisticsTablePanel = ({ chartData, statusCodes, isLoading }: StatisticsTablePanelProps) => {
   const handleExportTable = () => {
-    exportTableToExcel(chartData, statusCodes, `statistics_${selectedDepartment}`);
+    exportTableToExcel(chartData, statusCodes, 'statistiques_par_employe');
   };
 
   return (
-    <div className="glass-panel p-6 animate-scale-in mb-4">
+    <div className="glass-panel p-6 animate-scale-in">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">Status distribution by employee</h2>
+        <h2 className="text-xl font-semibold">Répartition des statuts par employé</h2>
         <Button 
           variant="outline" 
           size="sm" 
@@ -36,7 +29,7 @@ export const StatisticsTablePanel = ({
           className="flex items-center gap-1"
         >
           <FileSpreadsheet className="h-4 w-4" />
-          <span>Export</span>
+          <span>Exporter</span>
         </Button>
       </div>
       <StatisticsTable 

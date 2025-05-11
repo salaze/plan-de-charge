@@ -13,84 +13,51 @@ export const useScheduleLoader = () => {
     if (employees.length === 0) return employees;
 
     try {
-      console.log(`Loading schedules from ${startDate} to ${endDate} for ${employees.length} employees`);
+      // Optimisation: charger tous les plannings en une seule requête avec pagination
+      console.log(`Chargement des plannings du ${startDate} au ${endDate}`);
       
-      // Create array of employee IDs for efficient filtering
-      const employeeIds = employees.map(emp => emp.id);
-      
-      // Use a smaller batch size for better response times
-      const batchSize = 500;
+      const batchSize = 1000; // Taille optimale pour éviter les timeouts
       let allScheduleData: any[] = [];
       let hasMoreData = true;
       let lastId = '';
-      let attemptCount = 0;
-      const maxAttempts = 3;
       
-      // Load data in batches to prevent timeouts
-      while (hasMoreData && attemptCount < maxAttempts) {
-        try {
-          let query = supabase
-            .from('employe_schedule')
-            .select('employe_id, date, statut_code, period, note, project_code, is_highlighted')
-            .in('employe_id', employeeIds) // Filter to only relevant employees
-            .gte('date', startDate)
-            .lte('date', endDate)
-            .order('id', { ascending: true })
-            .limit(batchSize);
-            
-          // Pagination based on ID
-          if (lastId) {
-            query = query.gt('id', lastId);
-          }
+      while (hasMoreData) {
+        let query = supabase
+          .from('employe_schedule')
+          .select('*')
+          .gte('date', startDate)
+          .lte('date', endDate)
+          .order('id', { ascending: true })
+          .limit(batchSize);
           
-          // Set a timeout to prevent hanging
-          const timeoutPromise = new Promise<{ data: any[], error: Error }>((_, reject) => {
-            setTimeout(() => reject(new Error('Schedule query timed out')), 5000);
-          });
-          
-          // Execute query with timeout
-          const { data: batchData, error } = await Promise.race([
-            query,
-            timeoutPromise
-          ]);
-          
-          if (error) {
-            console.error('Error loading schedules batch:', error);
-            attemptCount++;
-            await new Promise(resolve => setTimeout(resolve, 300)); // Wait before retry
-            continue;
-          }
-          
-          if (batchData && batchData.length > 0) {
-            allScheduleData = [...allScheduleData, ...batchData];
-            lastId = batchData[batchData.length - 1].id;
-            hasMoreData = batchData.length === batchSize;
-            console.log(`Loaded batch of ${batchData.length} schedule entries`);
-          } else {
-            hasMoreData = false;
-          }
-        } catch (err) {
-          console.error('Error in schedule batch:', err);
-          attemptCount++;
-          await new Promise(resolve => setTimeout(resolve, 300)); 
+        // Pagination basée sur l'ID pour de meilleures performances
+        if (lastId) {
+          query = query.gt('id', lastId);
+        }
+        
+        const { data: batchData, error } = await query;
+        
+        if (error) {
+          console.error('Erreur lors du chargement des plannings:', error);
+          toast.error('Erreur lors du chargement des plannings');
+          break;
+        }
+        
+        if (batchData && batchData.length > 0) {
+          allScheduleData = [...allScheduleData, ...batchData];
+          lastId = batchData[batchData.length - 1].id;
+          hasMoreData = batchData.length === batchSize;
+        } else {
+          hasMoreData = false;
         }
       }
 
-      if (attemptCount >= maxAttempts) {
-        toast.error('Schedule loading issue - please try again');
-      }
-
-      console.log(`Total schedule entries loaded: ${allScheduleData.length}`);
-      
-      // Use an object to index schedules by employee ID for better performance
-      const schedulesByEmployee: Record<string, any[]> = {};
-      
-      for (let i = 0; i < allScheduleData.length; i++) {
-        const entry = allScheduleData[i];
-        if (!schedulesByEmployee[entry.employe_id]) {
-          schedulesByEmployee[entry.employe_id] = [];
+      // Grouper les plannings par ID d'employé pour une attribution plus rapide
+      const schedulesByEmployee = allScheduleData.reduce((acc, entry) => {
+        if (!acc[entry.employe_id]) {
+          acc[entry.employe_id] = [];
         }
-        schedulesByEmployee[entry.employe_id].push({
+        acc[entry.employe_id].push({
           date: entry.date,
           status: entry.statut_code as StatusCode,
           period: entry.period as 'AM' | 'PM' | 'FULL',
@@ -98,20 +65,23 @@ export const useScheduleLoader = () => {
           projectCode: entry.project_code || undefined,
           isHighlighted: entry.is_highlighted || false
         });
-      }
+        return acc;
+      }, {} as Record<string, any[]>);
 
-      // Assign schedules to employees in a single efficient pass
-      const employeesWithSchedules = employees.map(employee => ({
-        ...employee,
-        schedule: schedulesByEmployee[employee.id] || []
-      }));
+      // Attribuer les plannings à chaque employé avec une méthode plus efficace
+      const employeesWithSchedules = employees.map(employee => {
+        return {
+          ...employee,
+          schedule: schedulesByEmployee[employee.id] || []
+        };
+      });
 
-      console.log('Schedules loaded and assigned to employees');
+      console.log('Plannings chargés et attribués aux employés');
       return employeesWithSchedules;
     } catch (error) {
-      console.error('Error loading schedules:', error);
-      toast.error('Error loading schedules');
-      return employees.map(emp => ({...emp, schedule: []})); // Return employees without schedules
+      console.error('Erreur lors du chargement des plannings:', error);
+      toast.error('Erreur lors du chargement des plannings');
+      return employees;
     }
   }, []);
 

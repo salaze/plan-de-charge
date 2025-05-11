@@ -17,7 +17,7 @@ const Statistics = () => {
   
   const { statuses: availableStatusCodes, isLoading: statusesLoading } = useStatusOptions();
   
-  // Use the refactored hook which now provides all needed functionality
+  // Utiliser le hook simplifié
   const { 
     chartData, 
     isLoading: statsLoading, 
@@ -31,7 +31,7 @@ const Statistics = () => {
     selectedDepartment
   );
   
-  // List of available departments
+  // Liste des départements disponibles
   const departments = [
     { value: "all", label: "All departments" },
     { value: "REC", label: "REC" },
@@ -48,23 +48,18 @@ const Statistics = () => {
 
   const handleRefresh = () => {
     toast.info("Refreshing statistics...");
-    console.log("Statistics refresh requested");
     refreshData();
   };
 
   const handleDepartmentChange = (dept: string) => {
-    console.log(`Department changed to: ${dept}`);
     setSelectedDepartment(dept);
     toast.info(`Loading statistics for department: ${dept === 'all' ? 'All' : dept}`);
   };
 
-  // Filter out the 'none' status
+  // Filtrer le statut 'none'
   const filteredStatusCodes = availableStatusCodes.filter(code => code !== 'none');
   
   const isLoading = statusesLoading || statsLoading;
-  
-  // Log component render for debugging
-  console.log(`Statistics page rendering. Loading: ${isLoading}, Department: ${selectedDepartment}, Data items: ${chartData?.length || 0}`);
   
   return (
     <StatisticsLayout>

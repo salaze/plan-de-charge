@@ -62,7 +62,7 @@ const AdminLogin = () => {
               <Label htmlFor="username">Identifiant</Label>
               <div className="relative">
                 <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input id="username" type="text" value={username} onChange={e => setUsername(e.target.value)} placeholder="UID, Email ou Nom" className="pl-10" disabled={isLoading} />
+                <Input id="username" type="text" value={username} onChange={e => setUsername(e.target.value)} placeholder="" className="pl-10" disabled={isLoading} />
               </div>
             </div>
             <div className="space-y-2">

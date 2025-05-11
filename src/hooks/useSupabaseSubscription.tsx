@@ -17,38 +17,44 @@ export const useSupabaseSubscription = (
   useEffect(() => {
     console.log(`Setting up subscription for ${tableName}, events: ${eventType}`);
     
-    // Correction: use the correct type signature for channel.on method
-    // The correct usage is .on(eventType, filter, callback)
-    const channel = supabase
-      .channel(`watch_${tableName}`)
-      .on('postgres_changes', 
-        {
-          event: eventType,
-          schema: 'public',
-          table: tableName
-        },
-        (payload) => {
-          console.log(`Change detected in ${tableName}:`, payload);
-          
-          // Afficher une notification
-          if (showNotifications) {
-            const messages = {
-              INSERT: 'Nouvelle entrée ajoutée',
-              UPDATE: 'Données mises à jour',
-              DELETE: 'Entrée supprimée'
-            };
-            
-            toast.info(
-              `${messages[payload.eventType as keyof typeof messages]} dans ${tableName}`, 
-              { duration: 3000 }
-            );
-          }
-          
-          // Invalider les requêtes pour forcer un rechargement
-          queryClient.invalidateQueries({ queryKey });
-        }
-      )
-      .subscribe();
+    // Approche alternative: utiliser la méthode subscribe APRÈS avoir défini tous les gestionnaires
+    const channel = supabase.channel(`watch_${tableName}`);
+    
+    // Définir l'écouteur d'événements postgres_changes en utilisant une syntaxe différente
+    channel.on('postgres_changes', { 
+      event: eventType, 
+      schema: 'public', 
+      table: tableName 
+    }, (payload) => {
+      console.log(`Change detected in ${tableName}:`, payload);
+      
+      // Afficher une notification
+      if (showNotifications) {
+        const messages = {
+          INSERT: 'Nouvelle entrée ajoutée',
+          UPDATE: 'Données mises à jour',
+          DELETE: 'Entrée supprimée'
+        };
+        
+        toast.info(
+          `${messages[payload.eventType as keyof typeof messages]} dans ${tableName}`, 
+          { duration: 3000 }
+        );
+      }
+      
+      // Invalider les requêtes pour forcer un rechargement
+      queryClient.invalidateQueries({ queryKey });
+    });
+    
+    // S'abonner au canal après avoir défini tous les écouteurs
+    channel.subscribe((status) => {
+      console.log(`Subscription status for ${tableName}: ${status}`);
+      if (status === 'SUBSCRIBED') {
+        console.log(`Successfully subscribed to ${tableName} changes`);
+      } else if (status === 'TIMED_OUT' || status === 'CHANNEL_ERROR') {
+        console.error(`Error subscribing to ${tableName} changes: ${status}`);
+      }
+    });
       
     // Nettoyage lors du démontage
     return () => {

@@ -104,13 +104,13 @@ export const usePreciseRealtimeSubscription = (
     channelRef.current = channel;
     
     // Configurer l'écoute avec une gestion d'événements optimisée
-    const subscription = channel.on(
-      'postgres_changes', 
-      { 
-        event: eventType, 
-        schema: 'public', 
-        table: tableName 
-      }, 
+    channel.on(
+      {
+        event: 'postgres_changes',
+        schema: 'public',
+        table: tableName,
+        filter: `*=eq.${eventType}`
+      },
       (payload) => {
         console.log(`⚡ Realtime event on ${tableName}:`, payload);
         
@@ -138,7 +138,7 @@ export const usePreciseRealtimeSubscription = (
     );
     
     // Gérer les erreurs de connexion et les reconnexions
-    subscription.subscribe((status) => {
+    const subscription = channel.subscribe((status) => {
       if (status === 'SUBSCRIBED') {
         console.log(`✅ Precise subscription active for ${tableName}`);
       } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
@@ -147,7 +147,7 @@ export const usePreciseRealtimeSubscription = (
         setTimeout(() => {
           if (channelRef.current === channel) {
             console.log(`🔄 Attempting to reconnect subscription for ${tableName}...`);
-            subscription.subscribe();
+            subscription();
           }
         }, 5000);
       }

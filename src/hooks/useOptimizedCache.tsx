@@ -95,7 +95,7 @@ export const useOptimizedCache = ({
           );
         } else {
           // C'est un tableau de chaînes
-          return (keys as string[]).every(k => queryKey.includes(k));
+          return (keys as string[]).every(k => queryKey.includes(k as string));
         }
       }
       // Si c'est une expression régulière

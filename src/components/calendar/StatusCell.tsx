@@ -2,6 +2,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { StatusCode, STATUS_COLORS, STATUS_LABELS } from '@/types';
+import { StatusIcon } from './StatusIcon';
 
 interface StatusCellProps {
   status: StatusCode;
@@ -10,6 +11,7 @@ interface StatusCellProps {
   period?: 'AM' | 'PM' | 'FULL';
   isHighlighted?: boolean;
   projectCode?: string;
+  useIcons?: boolean;
 }
 
 export function StatusCell({ 
@@ -18,7 +20,8 @@ export function StatusCell({
   className, 
   period,
   isHighlighted = false,
-  projectCode
+  projectCode,
+  useIcons = true
 }: StatusCellProps) {
   if (!status) return <span className="text-muted-foreground">-</span>;
   
@@ -49,6 +52,9 @@ export function StatusCell({
           className
         )}
       >
+        {useIcons && (
+          <StatusIcon status={status} size="sm" className="mr-1" />
+        )}
         {displayText}
       </span>
     );
@@ -57,13 +63,16 @@ export function StatusCell({
   return (
     <span 
       className={cn(
-        "inline-block w-full text-center py-1 rounded",
+        "inline-block w-full text-center py-1 rounded flex items-center justify-center gap-1",
         STATUS_COLORS[status],
         highlightClass,
         className
       )}
     >
-      {displayText}
+      {useIcons && (
+        <StatusIcon status={status} size="sm" />
+      )}
+      <span>{displayText}</span>
     </span>
   );
 }

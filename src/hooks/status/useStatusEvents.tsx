@@ -1,6 +1,7 @@
 
 import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
 export function useStatusEvents(onStatusesUpdated: () => void) {
   const lastUpdateTimestampRef = useRef<number>(0);
@@ -41,25 +42,29 @@ export function useStatusEvents(onStatusesUpdated: () => void) {
     let realtimeEventTimeout: number | null = null;
     const channel = supabase
       .channel('status-options-realtime')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'statuts'
-      }, (payload) => {
-        console.log('Status change detected from database:', payload);
-        
-        // Clear any pending timeout
-        if (realtimeEventTimeout) {
-          clearTimeout(realtimeEventTimeout);
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'statuts'
+        },
+        (payload: RealtimePostgresChangesPayload<{[key: string]: any}>) => {
+          console.log('Status change detected from database:', payload);
+          
+          // Clear any pending timeout
+          if (realtimeEventTimeout) {
+            clearTimeout(realtimeEventTimeout);
+          }
+          
+          // Debounce the event processing
+          realtimeEventTimeout = window.setTimeout(() => {
+            processStatusUpdate();
+            realtimeEventTimeout = null;
+          }, 1000);
         }
-        
-        // Debounce the event processing
-        realtimeEventTimeout = window.setTimeout(() => {
-          processStatusUpdate();
-          realtimeEventTimeout = null;
-        }, 1000);
-      })
-      .subscribe((status: string) => {
+      )
+      .subscribe((status) => {
         if (status !== 'SUBSCRIBED') {
           console.log(`Status options realtime subscription status: ${status}`);
         }

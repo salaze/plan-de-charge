@@ -23,51 +23,50 @@ export const useSupabaseSubscription = (
     const channel = supabase.channel(channelId);
     
     // Configurer l'écoute des événements Postgres avec la syntaxe correcte
-    channel.on(
-      'postgres_changes',
-      {
-        event: eventType,
-        schema: 'public',
-        table: tableName
-      }, 
-      (payload) => {
-        console.log(`Change detected in ${tableName}:`, payload);
-        
-        // Afficher une notification
-        if (showNotifications) {
-          const messages = {
-            INSERT: 'Nouvelle entrée ajoutée',
-            UPDATE: 'Données mises à jour',
-            DELETE: 'Entrée supprimée'
-          };
+    channel
+      .on(
+        'postgres_changes',
+        {
+          event: eventType,
+          schema: 'public',
+          table: tableName
+        }, 
+        (payload) => {
+          console.log(`Change detected in ${tableName}:`, payload);
           
-          toast.info(
-            `${messages[payload.eventType as keyof typeof messages]} dans ${tableName}`, 
-            { duration: 3000 }
-          );
+          // Afficher une notification
+          if (showNotifications) {
+            const messages = {
+              INSERT: 'Nouvelle entrée ajoutée',
+              UPDATE: 'Données mises à jour',
+              DELETE: 'Entrée supprimée'
+            };
+            
+            toast.info(
+              `${messages[payload.eventType as keyof typeof messages]} dans ${tableName}`, 
+              { duration: 3000 }
+            );
+          }
+          
+          // Invalider les requêtes avec une légère pause pour éviter les surcharges
+          setTimeout(() => {
+            queryClient.invalidateQueries({ queryKey });
+          }, 100);
         }
-        
-        // Invalider les requêtes avec une légère pause pour éviter les surcharges
-        setTimeout(() => {
-          queryClient.invalidateQueries({ queryKey });
-        }, 100);
-      }
-    );
-    
-    // S'abonner au canal avec gestion améliorée des erreurs
-    const subscription = channel.subscribe((status) => {
-      console.log(`Subscription status for ${tableName}: ${status}`);
-      if (status === 'SUBSCRIBED') {
-        console.log(`Successfully subscribed to ${tableName} changes`);
-      } else if (status === 'TIMED_OUT' || status === 'CHANNEL_ERROR') {
-        console.error(`Error subscribing to ${tableName} changes: ${status}`);
-        
-        // Tentative de reconnexion automatique
-        setTimeout(() => {
-          channel.subscribe(); // Updated: call subscribe on the channel, not the subscription
-        }, 5000);
-      }
-    });
+      )
+      .subscribe((status) => {
+        console.log(`Subscription status for ${tableName}: ${status}`);
+        if (status === 'SUBSCRIBED') {
+          console.log(`Successfully subscribed to ${tableName} changes`);
+        } else if (status === 'TIMED_OUT' || status === 'CHANNEL_ERROR') {
+          console.error(`Error subscribing to ${tableName} changes: ${status}`);
+          
+          // Tentative de reconnexion automatique
+          setTimeout(() => {
+            channel.subscribe();
+          }, 5000);
+        }
+      });
       
     // Nettoyage lors du démontage avec timeout pour s'assurer que le canal est bien fermé
     return () => {

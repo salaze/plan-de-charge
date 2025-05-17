@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { 
   Table,
   TableBody
@@ -57,7 +57,7 @@ export function PlanningGrid({
   } = usePlanningGrid(isAdmin);
   
   // Notifier le parent quand le dialogue s'ouvre ou se ferme
-  React.useEffect(() => {
+  useEffect(() => {
     if (onStatusDialogChange) {
       onStatusDialogChange(!!selectedCell);
     }
@@ -72,8 +72,8 @@ export function PlanningGrid({
     return generateDaysInMonth(safeYear, safeMonth);
   }, [safeYear, safeMonth]);
   
-  // Handler for status changes
-  const handleStatusChange = (status: StatusCode, isHighlighted?: boolean, projectCode?: string) => {
+  // Handler for status changes - optimized with useCallback for better performance
+  const handleStatusChange = useCallback((status: StatusCode, isHighlighted?: boolean, projectCode?: string) => {
     if (!selectedCell) return;
     
     // Émettre un événement d'édition pour prévenir les actualisations automatiques
@@ -91,7 +91,7 @@ export function PlanningGrid({
     
     // Close dialog
     handleCloseDialog();
-  };
+  }, [selectedCell, onStatusChange, handleCloseDialog]);
   
   // Calculate statistics for an employee - memoize this function
   const getTotalStats = useMemo(() => {
@@ -119,7 +119,7 @@ export function PlanningGrid({
   }, [departmentGroups]);
   
   // Gérer la sélection d'un département
-  const handleDepartmentSelect = (department: string) => {
+  const handleDepartmentSelect = useCallback((department: string) => {
     if (department === selectedDepartment) {
       setSelectedDepartment(null); // Désélectionner si on clique sur le même département
       toast.info("Affichage de tous les départements");
@@ -127,7 +127,7 @@ export function PlanningGrid({
       setSelectedDepartment(department);
       toast.info(`Département ${department} sélectionné`);
     }
-  };
+  }, [selectedDepartment]);
   
   // Create an empty array if no employees are available
   const noContentMessage = useMemo(() => (

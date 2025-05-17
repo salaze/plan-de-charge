@@ -44,6 +44,7 @@ export const useEmployeesQuery = () => {
   return useQuery({
     queryKey,
     queryFn: fetchEmployees,
-    staleTime: 5 * 60 * 1000, // 5 minutes de cache
+    staleTime: 30 * 60 * 1000, // 30 minutes de cache (augmenté pour de meilleures performances)
+    cacheTime: 60 * 60 * 1000, // 60 minutes de temps dans le cache
   });
 };

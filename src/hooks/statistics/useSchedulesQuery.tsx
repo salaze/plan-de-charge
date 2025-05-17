@@ -36,7 +36,7 @@ export const useSchedulesQuery = (
         throw error;
       }
       
-      // Préparer les données de planning groupées par employé
+      // Préparer les données de planning groupées par employé (optimisation)
       const schedulesByEmployee: Record<string, any[]> = {};
       
       scheduleData.forEach(entry => {
@@ -73,6 +73,7 @@ export const useSchedulesQuery = (
     queryKey,
     queryFn: fetchSchedules,
     enabled: enabled && employees.length > 0,
-    staleTime: 5 * 60 * 1000, // 5 minutes de cache
+    staleTime: 10 * 60 * 1000, // 10 minutes de cache (augmenté pour de meilleures performances)
+    cacheTime: 15 * 60 * 1000, // 15 minutes de temps dans le cache
   });
 };

@@ -71,7 +71,8 @@ export const useOptimizedCache = ({
         .slice(0, queries.length - maxEntries);
       
       queriesToRemove.forEach(query => {
-        queryCache.remove(query.queryKey);
+        // Fix: Use the query's entire object to remove it, not just the queryKey
+        queryCache.remove(query);
       });
       
       console.log(`Removed ${queriesToRemove.length} oldest cache entries`);

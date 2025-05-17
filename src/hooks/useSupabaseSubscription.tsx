@@ -23,7 +23,7 @@ export const useSupabaseSubscription = (
     const channel = supabase.channel(channelId);
     
     // Configurer l'écoute des événements Postgres avec la syntaxe correcte
-    const subscription = channel.on(
+    channel.on(
       'postgres_changes',
       {
         event: eventType,
@@ -55,7 +55,7 @@ export const useSupabaseSubscription = (
     );
     
     // Subscribe to channel
-    subscription.subscribe((status) => {
+    channel.subscribe((status) => {
       console.log(`Subscription status for ${tableName}: ${status}`);
       if (status === 'SUBSCRIBED') {
         console.log(`Successfully subscribed to ${tableName} changes`);

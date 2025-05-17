@@ -104,7 +104,7 @@ export const usePreciseRealtimeSubscription = (
     channelRef.current = channel;
     
     // Configurer l'écoute avec une gestion d'événements optimisée
-    const subscription = channel.on(
+    channel.on(
       'postgres_changes', 
       {
         event: eventType,
@@ -138,7 +138,7 @@ export const usePreciseRealtimeSubscription = (
     );
     
     // Subscribe to the channel
-    subscription.subscribe((status) => {
+    channel.subscribe((status) => {
       if (status === 'SUBSCRIBED') {
         console.log(`✅ Precise subscription active for ${tableName}`);
       } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {

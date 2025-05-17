@@ -52,7 +52,7 @@ export async function uploadDefaultStatusIcons(statuses: StatusCode[] = []) {
     
     // Télécharger chaque icône
     for (const status of statusesToUpload) {
-      if (!status || status === 'none' || status === '') continue;
+      if (!status || status === '' as StatusCode) continue;
       
       const svg = generateColorSVG(status);
       const blob = await svgToBlob(svg);

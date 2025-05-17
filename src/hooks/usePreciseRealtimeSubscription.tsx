@@ -107,11 +107,11 @@ export const usePreciseRealtimeSubscription = (
     channel
       .on(
         'postgres_changes', 
-        {
+        { 
           event: eventType,
           schema: 'public',
           table: tableName
-        }, 
+        } as any, 
         (payload) => {
           console.log(`⚡ Realtime event on ${tableName}:`, payload);
           

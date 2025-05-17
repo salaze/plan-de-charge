@@ -30,7 +30,7 @@ export const useSupabaseSubscription = (
           event: eventType,
           schema: 'public',
           table: tableName
-        },
+        } as any,
         (payload) => {
           console.log(`Change detected in ${tableName}:`, payload);
           

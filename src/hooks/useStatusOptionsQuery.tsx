@@ -54,8 +54,8 @@ export const useStatusOptionsQuery = () => {
   return useQuery({
     queryKey,
     queryFn: fetchStatuses,
-    staleTime: 60 * 60 * 1000, // 60 minutes de cache (augmenté pour des performances optimales)
-    cacheTime: 120 * 60 * 1000, // 120 minutes de temps dans le cache
+    staleTime: 60 * 60 * 1000, // 60 minutes de cache
+    gcTime: 120 * 60 * 1000, // 120 minutes avant le nettoyage (remplacement de cacheTime)
     retry: 2, // Réessayer 2 fois en cas d'erreur
     refetchOnWindowFocus: false, // Ne pas actualiser automatiquement lorsque la fenêtre reprend le focus
   });

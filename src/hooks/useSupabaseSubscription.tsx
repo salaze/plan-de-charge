@@ -17,10 +17,11 @@ export const useSupabaseSubscription = (
   useEffect(() => {
     console.log(`Setting up subscription for ${tableName}, events: ${eventType}`);
     
-    // Créer un canal pour la table
-    const channel = supabase.channel(`watch_${tableName}`);
+    // Créer un canal pour la table avec un identifiant unique pour éviter les conflits
+    const channelId = `watch_${tableName}_${Date.now()}`;
+    const channel = supabase.channel(channelId);
     
-    // Configurer l'écoute des événements Postgres avec la syntaxe correcte pour la version actuelle du client Supabase
+    // Configurer l'écoute des événements Postgres avec la syntaxe correcte
     channel.on(
       'postgres_changes', 
       { 
@@ -45,25 +46,38 @@ export const useSupabaseSubscription = (
           );
         }
         
-        // Invalider les requêtes pour forcer un rechargement
-        queryClient.invalidateQueries({ queryKey });
+        // Invalider les requêtes avec une légère pause pour éviter les surcharges
+        setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey });
+        }, 100);
       }
     );
     
-    // S'abonner au canal
+    // S'abonner au canal avec gestion améliorée des erreurs
     channel.subscribe((status) => {
       console.log(`Subscription status for ${tableName}: ${status}`);
       if (status === 'SUBSCRIBED') {
         console.log(`Successfully subscribed to ${tableName} changes`);
       } else if (status === 'TIMED_OUT' || status === 'CHANNEL_ERROR') {
         console.error(`Error subscribing to ${tableName} changes: ${status}`);
+        
+        // Tentative de reconnexion automatique
+        setTimeout(() => {
+          channel.subscribe();
+        }, 5000);
       }
     });
       
-    // Nettoyage lors du démontage
+    // Nettoyage lors du démontage avec timeout pour s'assurer que le canal est bien fermé
     return () => {
       console.log(`Cleaning up subscription for ${tableName}`);
-      supabase.removeChannel(channel);
+      
+      // Assurer que le canal est bien nettoyé
+      try {
+        supabase.removeChannel(channel);
+      } catch (err) {
+        console.error(`Error removing channel for ${tableName}:`, err);
+      }
     };
   }, [tableName, queryKey.join(','), eventType, showNotifications]);
 };

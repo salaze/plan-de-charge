@@ -73,7 +73,7 @@ export const useSchedulesQuery = (
     queryKey,
     queryFn: fetchSchedules,
     enabled: enabled && employees.length > 0,
-    staleTime: 10 * 60 * 1000, // 10 minutes de cache (augmenté pour de meilleures performances)
-    cacheTime: 15 * 60 * 1000, // 15 minutes de temps dans le cache
+    staleTime: 10 * 60 * 1000, // 10 minutes de cache
+    gcTime: 15 * 60 * 1000, // 15 minutes avant le nettoyage (remplacement de cacheTime)
   });
 };

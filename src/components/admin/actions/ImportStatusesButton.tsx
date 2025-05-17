@@ -21,18 +21,30 @@ export function ImportStatusesButton({ onStatusesImported }: ImportStatusesButto
       
       const importedStatuses = await importStatusesFromBucket();
       
-      if (importedStatuses && Array.isArray(importedStatuses)) {
+      if (importedStatuses && Array.isArray(importedStatuses) && importedStatuses.length > 0) {
         onStatusesImported(importedStatuses);
         toast({
           title: "Succès",
           description: `${importedStatuses.length} statuts ont été importés avec succès.`,
+        });
+      } else if (importedStatuses && Array.isArray(importedStatuses) && importedStatuses.length === 0) {
+        toast({
+          title: "Attention",
+          description: "Aucun statut trouvé à importer.",
+          variant: "warning",
+        });
+      } else {
+        toast({
+          title: "Erreur",
+          description: "Impossible d'importer les statuts. Vérifiez que le bucket existe et contient des données.",
+          variant: "destructive",
         });
       }
     } catch (error) {
       console.error('Erreur lors de l\'importation des statuts:', error);
       toast({
         title: "Erreur",
-        description: "Impossible d'importer les statuts. Veuillez réessayer.",
+        description: "Une erreur inattendue s'est produite lors de l'importation des statuts.",
         variant: "destructive",
       });
     }

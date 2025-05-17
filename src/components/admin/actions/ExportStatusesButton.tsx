@@ -27,12 +27,18 @@ export function ExportStatusesButton({ statuses }: ExportStatusesButtonProps) {
           title: "Succès",
           description: "Les statuts ont été exportés avec succès dans le bucket.",
         });
+      } else {
+        toast({
+          title: "Erreur",
+          description: "Impossible d'exporter les statuts. Problème d'accès ou de permissions Supabase.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error('Erreur lors de l\'exportation des statuts:', error);
       toast({
         title: "Erreur",
-        description: "Impossible d'exporter les statuts. Veuillez réessayer.",
+        description: "Une erreur inattendue s'est produite lors de l'exportation des statuts.",
         variant: "destructive",
       });
     }

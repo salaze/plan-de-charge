@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Status } from '@/components/admin/status/types';
-import { toast } from 'sonner';
+import { useToast } from "@/components/ui/use-toast";
 
 /**
  * Exporte les statuts vers le bucket Supabase
@@ -11,21 +11,36 @@ export async function exportStatusesToBucket(statuses: Status[]) {
   try {
     console.log('Exportation des statuts vers le bucket...');
     
-    // Vérifier si le bucket existe, sinon le créer
-    const { data: buckets } = await supabase.storage.listBuckets();
+    // Vérifier si le bucket existe avant d'essayer de le créer
+    const { data: buckets, error: listError } = await supabase.storage.listBuckets();
+    
+    if (listError) {
+      console.error('Erreur lors de la vérification des buckets:', listError);
+      return false;
+    }
+    
     const bucketExists = buckets?.some(bucket => bucket.name === 'status-icons');
     
     if (!bucketExists) {
-      console.log('Création du bucket status-icons...');
-      const { error } = await supabase.storage.createBucket('status-icons', {
-        public: true,
-        fileSizeLimit: 1024 * 1024, // 1MB
-      });
-      
-      if (error) {
-        console.error('Erreur lors de la création du bucket:', error);
-        toast.error('Erreur lors de la création du bucket');
-        return false;
+      console.log('Le bucket status-icons n\'existe pas, tentative de création...');
+      try {
+        const { error } = await supabase.storage.createBucket('status-icons', {
+          public: true,
+          fileSizeLimit: 1024 * 1024, // 1MB
+        });
+        
+        if (error) {
+          console.error('Erreur lors de la création du bucket:', error);
+          return false;
+        }
+      } catch (bucketError) {
+        console.error('Exception lors de la création du bucket:', bucketError);
+        
+        // Si nous ne pouvons pas créer le bucket, on vérifie qu'il n'a pas été créé entre-temps
+        const { data: checkBuckets } = await supabase.storage.listBuckets();
+        if (!checkBuckets?.some(bucket => bucket.name === 'status-icons')) {
+          return false;
+        }
       }
     }
     
@@ -37,26 +52,28 @@ export async function exportStatusesToBucket(statuses: Status[]) {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const fileName = `statuses-${timestamp}.json`;
     
-    // Télécharger les données vers le bucket
-    const { data, error } = await supabase.storage
-      .from('status-icons')
-      .upload(fileName, blob, {
-        contentType: 'application/json',
-        upsert: true
-      });
+    try {
+      // Télécharger les données vers le bucket
+      const { data, error } = await supabase.storage
+        .from('status-icons')
+        .upload(fileName, blob, {
+          contentType: 'application/json',
+          upsert: true
+        });
+        
+      if (error) {
+        console.error('Erreur lors de l\'exportation des statuts:', error);
+        return false;
+      }
       
-    if (error) {
-      console.error('Erreur lors de l\'exportation des statuts:', error);
-      toast.error('Erreur lors de l\'exportation des statuts');
+      console.log('Statuts exportés avec succès:', data);
+      return true;
+    } catch (uploadError) {
+      console.error('Exception lors de l\'upload des statuts:', uploadError);
       return false;
     }
-    
-    console.log('Statuts exportés avec succès:', data);
-    toast.success('Statuts exportés avec succès');
-    return true;
   } catch (error) {
-    console.error('Erreur lors de l\'exportation des statuts:', error);
-    toast.error('Erreur lors de l\'exportation des statuts');
+    console.error('Erreur générale lors de l\'exportation des statuts:', error);
     return false;
   }
 }
@@ -77,7 +94,6 @@ export async function importStatusesFromBucket() {
       
     if (listError) {
       console.error('Erreur lors de la récupération des fichiers:', listError);
-      toast.error('Erreur lors de la récupération des fichiers');
       return null;
     }
     
@@ -86,7 +102,6 @@ export async function importStatusesFromBucket() {
     
     if (jsonFiles.length === 0) {
       console.log('Aucun fichier de statuts trouvé dans le bucket');
-      toast.warning('Aucun fichier de statuts trouvé');
       return null;
     }
     
@@ -98,7 +113,6 @@ export async function importStatusesFromBucket() {
       
     if (downloadError) {
       console.error('Erreur lors du téléchargement du fichier:', downloadError);
-      toast.error('Erreur lors du téléchargement du fichier');
       return null;
     }
     
@@ -107,11 +121,9 @@ export async function importStatusesFromBucket() {
     const statuses = JSON.parse(textContent) as Status[];
     
     console.log('Statuts importés avec succès:', statuses);
-    toast.success('Statuts importés avec succès');
     return statuses;
   } catch (error) {
     console.error('Erreur lors de l\'importation des statuts:', error);
-    toast.error('Erreur lors de l\'importation des statuts');
     return null;
   }
 }

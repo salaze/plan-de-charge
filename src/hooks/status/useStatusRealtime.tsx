@@ -10,17 +10,17 @@ export function useStatusRealtime(onStatusUpdate: () => void) {
     // Set up Supabase real-time changes listener
     const channel = supabase
       .channel('statuts-changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'statuts' },
-        (payload) => {
-          console.log("Status table change detected:", payload);
-          // Add slight delay to prevent UI jank
-          setTimeout(() => {
-            onStatusUpdate();
-          }, 500);
-        }
-      )
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'statuts'
+      }, (payload) => {
+        console.log("Status table change detected:", payload);
+        // Add slight delay to prevent UI jank
+        setTimeout(() => {
+          onStatusUpdate();
+        }, 500);
+      })
       .subscribe((status: string) => {
         if (status !== 'SUBSCRIBED') {
           console.log(`Status realtime subscription status: ${status}`);

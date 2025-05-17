@@ -42,46 +42,42 @@ export const useRealtimeSync = (isConnected: boolean, onDataChange: () => void) 
 
     const statusChannel = supabase
       .channel('statuses-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'statuts'
-        },
-        (payload) => {
-          console.log('Changement de statut détecté:', payload);
-          
-          // Ne pas rafraîchir si l'on est en mode édition
-          if (isEditingRef.current) {
-            console.log('Actualisation ignorée car en mode édition');
-            // Marquer qu'un refresh sera nécessaire plus tard
-            pendingRefreshRef.current = true;
-            return;
-          }
-          
-          // Pour les événements DELETE, toujours actualiser car cela peut affecter l'interface
-          if (payload.eventType === 'DELETE') {
-            toast.info('Statut supprimé sur le serveur, actualisation...');
-            
-            // Déclencher un événement personnalisé pour informer d'autres composants
-            const event = new CustomEvent('statusesUpdated');
-            window.dispatchEvent(event);
-            
-            onDataChange();
-          }
-          
-          // Pour INSERT ou UPDATE, attendre un peu pour ne pas interrompre l'interaction utilisateur
-          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
-            console.log('Nouveau statut ou mise à jour détectée, notification sans actualisation immédiate');
-            toast.info('Mise à jour des statuts disponible');
-            
-            // Déclencher un événement pour informer sans forcer une actualisation
-            const event = new CustomEvent('statusesUpdated', { detail: { noRefresh: true } });
-            window.dispatchEvent(event);
-          }
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'statuts'
+      }, (payload) => {
+        console.log('Changement de statut détecté:', payload);
+        
+        // Ne pas rafraîchir si l'on est en mode édition
+        if (isEditingRef.current) {
+          console.log('Actualisation ignorée car en mode édition');
+          // Marquer qu'un refresh sera nécessaire plus tard
+          pendingRefreshRef.current = true;
+          return;
         }
-      )
+        
+        // Pour les événements DELETE, toujours actualiser car cela peut affecter l'interface
+        if (payload.eventType === 'DELETE') {
+          toast.info('Statut supprimé sur le serveur, actualisation...');
+          
+          // Déclencher un événement personnalisé pour informer d'autres composants
+          const event = new CustomEvent('statusesUpdated');
+          window.dispatchEvent(event);
+          
+          onDataChange();
+        }
+        
+        // Pour INSERT ou UPDATE, attendre un peu pour ne pas interrompre l'interaction utilisateur
+        if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+          console.log('Nouveau statut ou mise à jour détectée, notification sans actualisation immédiate');
+          toast.info('Mise à jour des statuts disponible');
+          
+          // Déclencher un événement pour informer sans forcer une actualisation
+          const event = new CustomEvent('statusesUpdated', { detail: { noRefresh: true } });
+          window.dispatchEvent(event);
+        }
+      })
       .subscribe((status: string) => {
         if (status !== 'SUBSCRIBED') {
           console.log(`Status channel subscription status: ${status}`);
@@ -90,27 +86,23 @@ export const useRealtimeSync = (isConnected: boolean, onDataChange: () => void) 
       
     const employeesChannel = supabase
       .channel('employees-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'employes'
-        },
-        (payload) => {
-          // Ne pas rafraîchir si l'on est en mode édition
-          if (isEditingRef.current) {
-            console.log('Actualisation ignorée car en mode édition');
-            // Marquer qu'un refresh sera nécessaire plus tard
-            pendingRefreshRef.current = true;
-            return;
-          }
-          
-          console.log('Changement d\'employé détecté:', payload);
-          toast.info('Données d\'employé mises à jour sur le serveur, actualisation...');
-          onDataChange();
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public', 
+        table: 'employes'
+      }, (payload) => {
+        // Ne pas rafraîchir si l'on est en mode édition
+        if (isEditingRef.current) {
+          console.log('Actualisation ignorée car en mode édition');
+          // Marquer qu'un refresh sera nécessaire plus tard
+          pendingRefreshRef.current = true;
+          return;
         }
-      )
+        
+        console.log('Changement d\'employé détecté:', payload);
+        toast.info('Données d\'employé mises à jour sur le serveur, actualisation...');
+        onDataChange();
+      })
       .subscribe((status: string) => {
         if (status !== 'SUBSCRIBED') {
           console.log(`Employees channel subscription status: ${status}`);
@@ -120,33 +112,29 @@ export const useRealtimeSync = (isConnected: boolean, onDataChange: () => void) 
     // Ajouter un canal pour suivre les changements de planning (employe_schedule)
     const scheduleChannel = supabase
       .channel('schedule-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'employe_schedule'
-        },
-        (payload) => {
-          // Ne pas rafraîchir si l'on est en mode édition
-          if (isEditingRef.current) {
-            console.log('Actualisation du planning ignorée car en mode édition');
-            // Marquer qu'un refresh sera nécessaire plus tard
-            pendingRefreshRef.current = true;
-            return;
-          }
-          
-          console.log('Changement dans le planning détecté:', payload);
-          
-          // Notifier mais sans actualiser immédiatement pour éviter de perturber l'utilisateur
-          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
-            toast.info('Mise à jour du planning disponible');
-          } else if (payload.eventType === 'DELETE') {
-            toast.info('Entrée supprimée du planning, actualisation...');
-            onDataChange();
-          }
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'employe_schedule'
+      }, (payload) => {
+        // Ne pas rafraîchir si l'on est en mode édition
+        if (isEditingRef.current) {
+          console.log('Actualisation du planning ignorée car en mode édition');
+          // Marquer qu'un refresh sera nécessaire plus tard
+          pendingRefreshRef.current = true;
+          return;
         }
-      )
+        
+        console.log('Changement dans le planning détecté:', payload);
+        
+        // Notifier mais sans actualiser immédiatement pour éviter de perturber l'utilisateur
+        if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+          toast.info('Mise à jour du planning disponible');
+        } else if (payload.eventType === 'DELETE') {
+          toast.info('Entrée supprimée du planning, actualisation...');
+          onDataChange();
+        }
+      })
       .subscribe((status: string) => {
         if (status !== 'SUBSCRIBED') {
           console.log(`Schedule channel subscription status: ${status}`);

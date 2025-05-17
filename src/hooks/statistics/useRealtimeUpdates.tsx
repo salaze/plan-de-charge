@@ -51,35 +51,35 @@ export const useRealtimeUpdates = (onUpdate: () => void) => {
     // Configurer les abonnements en temps réel avec optimisation
     const scheduleChannel = supabase
       .channel('statistics-schedule-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'employe_schedule'
-        },
-        () => {
-          console.log('Changement dans le planning détecté');
-          debouncedUpdate();
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'employe_schedule'
+      }, () => {
+        console.log('Changement dans le planning détecté');
+        debouncedUpdate();
+      })
+      .subscribe((status: string) => {
+        if (status !== 'SUBSCRIBED') {
+          console.log(`Statistics schedule subscription status: ${status}`);
         }
-      )
-      .subscribe();
+      });
 
     const employeeChannel = supabase
       .channel('statistics-employees-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'employes'
-        },
-        () => {
-          console.log('Changement d\'employé détecté');
-          debouncedUpdate();
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'employes'
+      }, () => {
+        console.log('Changement d\'employé détecté');
+        debouncedUpdate();
+      })
+      .subscribe((status: string) => {
+        if (status !== 'SUBSCRIBED') {
+          console.log(`Statistics employees subscription status: ${status}`);
         }
-      )
-      .subscribe();
+      });
 
     // Écouteur d'événement personnalisé pour forcer l'actualisation
     const handleForceReload = () => {

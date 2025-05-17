@@ -22,38 +22,34 @@ export const useSupabaseSubscription = (
     const channelId = `watch_${tableName}_${Date.now()}`;
     const channel = supabase.channel(channelId);
     
-    // Configurer l'écoute des événements Postgres avec la syntaxe correcte
+    // Configurer l'écoute des événements Postgres avec la syntaxe correcte pour TypeScript
     channel
-      .on(
-        'postgres_changes',
-        { 
-          event: eventType, 
-          schema: 'public', 
-          table: tableName 
-        },
-        (payload) => {
-          console.log(`Change detected in ${tableName}:`, payload);
+      .on('postgres_changes', {
+        event: eventType,
+        schema: 'public',
+        table: tableName
+      }, (payload) => {
+        console.log(`Change detected in ${tableName}:`, payload);
+        
+        // Afficher une notification
+        if (showNotifications) {
+          const messages = {
+            INSERT: 'Nouvelle entrée ajoutée',
+            UPDATE: 'Données mises à jour',
+            DELETE: 'Entrée supprimée'
+          };
           
-          // Afficher une notification
-          if (showNotifications) {
-            const messages = {
-              INSERT: 'Nouvelle entrée ajoutée',
-              UPDATE: 'Données mises à jour',
-              DELETE: 'Entrée supprimée'
-            };
-            
-            toast.info(
-              `${messages[payload.eventType as keyof typeof messages]} dans ${tableName}`, 
-              { duration: 3000 }
-            );
-          }
-          
-          // Invalider les requêtes avec une légère pause pour éviter les surcharges
-          setTimeout(() => {
-            queryClient.invalidateQueries({ queryKey });
-          }, 100);
+          toast.info(
+            `${messages[payload.eventType as keyof typeof messages]} dans ${tableName}`, 
+            { duration: 3000 }
+          );
         }
-      )
+        
+        // Invalider les requêtes avec une légère pause pour éviter les surcharges
+        setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey });
+        }, 100);
+      })
       .subscribe((status: string) => {
         console.log(`Subscription status for ${tableName}: ${status}`);
         if (status === 'SUBSCRIBED') {

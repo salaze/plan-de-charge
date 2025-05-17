@@ -41,28 +41,24 @@ export function useStatusEvents(onStatusesUpdated: () => void) {
     let realtimeEventTimeout: number | null = null;
     const channel = supabase
       .channel('status-options-realtime')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'statuts'
-        },
-        (payload) => {
-          console.log('Status change detected from database:', payload);
-          
-          // Clear any pending timeout
-          if (realtimeEventTimeout) {
-            clearTimeout(realtimeEventTimeout);
-          }
-          
-          // Debounce the event processing
-          realtimeEventTimeout = window.setTimeout(() => {
-            processStatusUpdate();
-            realtimeEventTimeout = null;
-          }, 1000);
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'statuts'
+      }, (payload) => {
+        console.log('Status change detected from database:', payload);
+        
+        // Clear any pending timeout
+        if (realtimeEventTimeout) {
+          clearTimeout(realtimeEventTimeout);
         }
-      )
+        
+        // Debounce the event processing
+        realtimeEventTimeout = window.setTimeout(() => {
+          processStatusUpdate();
+          realtimeEventTimeout = null;
+        }, 1000);
+      })
       .subscribe((status: string) => {
         if (status !== 'SUBSCRIBED') {
           console.log(`Status options realtime subscription status: ${status}`);

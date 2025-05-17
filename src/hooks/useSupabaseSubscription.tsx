@@ -24,11 +24,11 @@ export const useSupabaseSubscription = (
     
     // Configurer l'écoute des événements Postgres avec la syntaxe correcte
     channel.on(
+      'postgres_changes',
       {
-        event: 'postgres_changes',
+        event: eventType,
         schema: 'public',
-        table: tableName,
-        filter: `*=eq.${eventType}`
+        table: tableName
       }, 
       (payload) => {
         console.log(`Change detected in ${tableName}:`, payload);
@@ -64,7 +64,7 @@ export const useSupabaseSubscription = (
         
         // Tentative de reconnexion automatique
         setTimeout(() => {
-          subscription();
+          channel.subscribe(); // Updated: call subscribe on the channel, not the subscription
         }, 5000);
       }
     });

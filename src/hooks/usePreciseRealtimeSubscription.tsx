@@ -104,7 +104,7 @@ export const usePreciseRealtimeSubscription = (
     channelRef.current = channel;
     
     // Configurer l'écoute avec une gestion d'événements optimisée
-    channel.on(
+    const subscription = channel.on(
       'postgres_changes', 
       { 
         event: eventType, 
@@ -126,7 +126,9 @@ export const usePreciseRealtimeSubscription = (
         } else {
           // Mode haute priorité : utiliser requestAnimationFrame pour la synchronisation visuelle
           if (timeoutRef.current === null) {
-            cancelAnimationFrame(timeoutRef.current as number);
+            if (timeoutRef.current !== null) {
+              cancelAnimationFrame(timeoutRef.current as number);
+            }
             timeoutRef.current = requestAnimationFrame(() => {
               setTimeout(processPendingEvents, settings.bufferTime);
             });
@@ -136,7 +138,7 @@ export const usePreciseRealtimeSubscription = (
     );
     
     // Gérer les erreurs de connexion et les reconnexions
-    channel.subscribe((status) => {
+    subscription.subscribe((status) => {
       if (status === 'SUBSCRIBED') {
         console.log(`✅ Precise subscription active for ${tableName}`);
       } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
@@ -145,7 +147,7 @@ export const usePreciseRealtimeSubscription = (
         setTimeout(() => {
           if (channelRef.current === channel) {
             console.log(`🔄 Attempting to reconnect subscription for ${tableName}...`);
-            channel.subscribe();
+            subscription.subscribe();
           }
         }, 5000);
       }

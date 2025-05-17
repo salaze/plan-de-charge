@@ -139,9 +139,10 @@ export const usePlanningPerformanceMonitor = (enabled: boolean = true) => {
     const interactionObserver = new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
         if (entry.entryType === 'first-input') {
+          const firstInputEntry = entry as PerformanceEventTiming;
           setMetrics(prev => ({
             ...prev,
-            interactionTime: entry.processingStart - entry.startTime
+            interactionTime: firstInputEntry.processingStart - firstInputEntry.startTime
           }));
           interactionObserver.disconnect();
         }

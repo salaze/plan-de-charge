@@ -1,6 +1,7 @@
 
 import { useEffect, useRef, useCallback } from 'react';
 import { queryClient } from '@/contexts/QueryContext';
+import { QueryKey } from '@tanstack/react-query';
 
 // Type de stratégie de cache
 type CacheStrategy = 'aggressive' | 'balanced' | 'conservative';
@@ -38,7 +39,7 @@ export const useOptimizedCache = ({
     balanced: {
       staleTimeMinutes: 15, // 15 minutes
       gcTimeMinutes: 30, // 30 minutes
-      refetchOnMount: 'always',
+      refetchOnMount: 'always' as const,
       refetchOnWindowFocus: true,
       refetchOnReconnect: true,
       retriesEnabled: true
@@ -47,9 +48,9 @@ export const useOptimizedCache = ({
     conservative: {
       staleTimeMinutes: 5, // 5 minutes
       gcTimeMinutes: 15, // 15 minutes
-      refetchOnMount: 'always',
-      refetchOnWindowFocus: 'always',
-      refetchOnReconnect: 'always',
+      refetchOnMount: 'always' as const,
+      refetchOnWindowFocus: 'always' as const,
+      refetchOnReconnect: 'always' as const,
       retriesEnabled: true
     }
   };
@@ -83,7 +84,7 @@ export const useOptimizedCache = ({
     const queries = queryCache.getAll();
     
     // Fonction pour vérifier si une requête correspond aux clés spécifiées
-    const matchesKey = (queryKey: any[]): boolean => {
+    const matchesKey = (queryKey: QueryKey): boolean => {
       // Si nous avons un tableau de chaînes ou de tableaux
       if (Array.isArray(keys)) {
         if (Array.isArray(keys[0])) {

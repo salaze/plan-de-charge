@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { queryClient } from '@/contexts/QueryContext';
 import { toast } from 'sonner';
+import { RealtimeChannel } from '@supabase/supabase-js';
 
 type TableName = 'employe_schedule' | 'statuts' | 'employes';
 type EventType = 'INSERT' | 'UPDATE' | 'DELETE' | '*';
@@ -22,7 +23,7 @@ export const useSupabaseSubscription = (
     const channel = supabase.channel(channelId);
     
     // Configurer l'écoute des événements Postgres avec la syntaxe correcte
-    channel.on(
+    const subscription = channel.on(
       'postgres_changes', 
       { 
         event: eventType, 
@@ -54,7 +55,7 @@ export const useSupabaseSubscription = (
     );
     
     // S'abonner au canal avec gestion améliorée des erreurs
-    channel.subscribe((status) => {
+    subscription.subscribe((status) => {
       console.log(`Subscription status for ${tableName}: ${status}`);
       if (status === 'SUBSCRIBED') {
         console.log(`Successfully subscribed to ${tableName} changes`);
@@ -63,7 +64,7 @@ export const useSupabaseSubscription = (
         
         // Tentative de reconnexion automatique
         setTimeout(() => {
-          channel.subscribe();
+          subscription.subscribe();
         }, 5000);
       }
     });

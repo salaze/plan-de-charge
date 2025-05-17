@@ -104,53 +104,54 @@ export const usePreciseRealtimeSubscription = (
     channelRef.current = channel;
     
     // Configurer l'écoute avec une gestion d'événements optimisée
-    channel
-      .on(
-        'postgres_changes',
-        { 
-          event: eventType,
-          schema: 'public',
-          table: tableName
-        }, 
-        (payload) => {
-          console.log(`⚡ Realtime event on ${tableName}:`, payload);
-          
-          // Ajouter l'événement à la file d'attente
-          pendingEvents.current.push(payload);
-          
-          // Utiliser requestAnimationFrame pour une meilleure synchronisation avec le navigateur
-          if (settings.backgroundSync) {
-            // Mode basse priorité : utiliser setTimeout
-            if (timeoutRef.current === null) {
-              timeoutRef.current = window.setTimeout(processPendingEvents, settings.bufferTime);
+    const subscription = channel.on(
+      'postgres_changes', 
+      {
+        event: eventType,
+        schema: 'public',
+        table: tableName
+      },
+      (payload) => {
+        console.log(`⚡ Realtime event on ${tableName}:`, payload);
+        
+        // Ajouter l'événement à la file d'attente
+        pendingEvents.current.push(payload);
+        
+        // Utiliser requestAnimationFrame pour une meilleure synchronisation avec le navigateur
+        if (settings.backgroundSync) {
+          // Mode basse priorité : utiliser setTimeout
+          if (timeoutRef.current === null) {
+            timeoutRef.current = window.setTimeout(processPendingEvents, settings.bufferTime);
+          }
+        } else {
+          // Mode haute priorité : utiliser requestAnimationFrame pour la synchronisation visuelle
+          if (timeoutRef.current === null) {
+            if (timeoutRef.current !== null) {
+              cancelAnimationFrame(timeoutRef.current as number);
             }
-          } else {
-            // Mode haute priorité : utiliser requestAnimationFrame pour la synchronisation visuelle
-            if (timeoutRef.current === null) {
-              if (timeoutRef.current !== null) {
-                cancelAnimationFrame(timeoutRef.current as number);
-              }
-              timeoutRef.current = requestAnimationFrame(() => {
-                setTimeout(processPendingEvents, settings.bufferTime);
-              });
-            }
+            timeoutRef.current = requestAnimationFrame(() => {
+              setTimeout(processPendingEvents, settings.bufferTime);
+            });
           }
         }
-      )
-      .subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          console.log(`✅ Precise subscription active for ${tableName}`);
-        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-          console.error(`❌ Error with precise subscription for ${tableName}: ${status}`);
-          // Tentative de reconnexion automatique après un délai
-          setTimeout(() => {
-            if (channelRef.current === channel) {
-              console.log(`🔄 Attempting to reconnect subscription for ${tableName}...`);
-              channel.subscribe();
-            }
-          }, 5000);
-        }
-      });
+      }
+    );
+    
+    // Subscribe to the channel
+    subscription.subscribe((status) => {
+      if (status === 'SUBSCRIBED') {
+        console.log(`✅ Precise subscription active for ${tableName}`);
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        console.error(`❌ Error with precise subscription for ${tableName}: ${status}`);
+        // Tentative de reconnexion automatique après un délai
+        setTimeout(() => {
+          if (channelRef.current === channel) {
+            console.log(`🔄 Attempting to reconnect subscription for ${tableName}...`);
+            channel.subscribe();
+          }
+        }, 5000);
+      }
+    });
     
     // Nettoyage lors du démontage
     return () => {

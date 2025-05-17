@@ -1,24 +1,13 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { toast } from 'sonner';
 import { useToast } from "@/components/ui/use-toast";
 import { StatusTable } from './StatusTable';
-import { ColorPicker } from './ColorPicker';
-import { StatusManagerProps, Status } from './types';
+import { Status } from './types';
 import { GenerateStatusIconsButton } from '../actions/GenerateStatusIconsButton';
-import { StatusCode } from '@/types';
+import { StatusAddDialog } from './StatusAddDialog';
+import { StatusEditDialog } from './StatusEditDialog';
+import { StatusManagerProps } from './types';
 
 export function StatusManager({
   statuses,
@@ -28,29 +17,11 @@ export function StatusManager({
 }: StatusManagerProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [newStatus, setNewStatus] = useState<Status>({
-    id: '',
-    code: '' as StatusCode,
-    label: '',
-    color: ''
-  });
   const [editStatus, setEditStatus] = useState<Status | null>(null);
   const { toast } = useToast();
 
-  const handleAddStatus = async () => {
-    if (!newStatus.code || !newStatus.label || !newStatus.color) {
-      toast({
-        title: "Erreur",
-        description: "Veuillez remplir tous les champs.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const newStatusWithId = { ...newStatus, id: newStatus.code };
-
-    onStatusesChange([...statuses, newStatusWithId]);
-    setNewStatus({ id: '', code: '' as StatusCode, label: '', color: '' });
+  const handleAddStatus = (newStatus: Status) => {
+    onStatusesChange([...statuses, newStatus]);
     setIsAddDialogOpen(false);
 
     toast({
@@ -59,21 +30,11 @@ export function StatusManager({
     });
   };
 
-  const handleEditStatus = async () => {
-    if (!editStatus?.code || !editStatus?.label || !editStatus?.color) {
-      toast({
-        title: "Erreur",
-        description: "Veuillez remplir tous les champs.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!editStatus) return;
-
+  const handleEditStatus = (editedStatus: Status) => {
     const updatedStatuses = statuses.map((status) =>
-      status.id === editStatus.id ? editStatus : status
+      status.id === editedStatus.id ? editedStatus : status
     );
+    
     onStatusesChange(updatedStatuses);
     setEditStatus(null);
     setIsEditDialogOpen(false);
@@ -84,7 +45,7 @@ export function StatusManager({
     });
   };
 
-  const handleDeleteStatus = async (id: string) => {
+  const handleDeleteStatus = (id: string) => {
     const updatedStatuses = statuses.filter((status) => status.id !== id);
     onStatusesChange(updatedStatuses);
 
@@ -121,103 +82,18 @@ export function StatusManager({
         onDeleteStatus={handleDeleteStatus}
       />
 
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Ajouter un statut</DialogTitle>
-            <DialogDescription>
-              Ajouter un nouveau statut à la liste.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="code" className="text-right">
-                Code
-              </Label>
-              <Input
-                id="code"
-                value={newStatus.code}
-                onChange={(e) => setNewStatus({ ...newStatus, code: e.target.value as StatusCode })}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="label" className="text-right">
-                Libellé
-              </Label>
-              <Input
-                id="label"
-                value={newStatus.label}
-                onChange={(e) => setNewStatus({ ...newStatus, label: e.target.value })}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="color" className="text-right">
-                Couleur
-              </Label>
-              <ColorPicker
-                color={newStatus.color}
-                onChange={(color) => setNewStatus({ ...newStatus, color })}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button type="button" onClick={handleAddStatus}>
-              Ajouter
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <StatusAddDialog
+        open={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+        onAddStatus={handleAddStatus}
+      />
 
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Modifier un statut</DialogTitle>
-            <DialogDescription>
-              Modifier un statut existant dans la liste.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="code" className="text-right">
-                Code
-              </Label>
-              <Input
-                id="code"
-                value={editStatus?.code || ''}
-                onChange={(e) => setEditStatus({ ...editStatus, code: e.target.value as StatusCode } as Status)}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="label" className="text-right">
-                Libellé
-              </Label>
-              <Input
-                id="label"
-                value={editStatus?.label || ''}
-                onChange={(e) => setEditStatus({ ...editStatus, label: e.target.value } as Status)}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="color" className="text-right">
-                Couleur
-              </Label>
-              <ColorPicker
-                color={editStatus?.color || ''}
-                onChange={(color) => setEditStatus({ ...editStatus, color } as Status)}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button type="button" onClick={handleEditStatus}>
-              Modifier
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <StatusEditDialog
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        status={editStatus}
+        onEditStatus={handleEditStatus}
+      />
     </div>
   );
 }

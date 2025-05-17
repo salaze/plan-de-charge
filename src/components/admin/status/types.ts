@@ -1,4 +1,3 @@
-
 import { StatusCode } from '@/types';
 
 export interface Status {
@@ -8,21 +7,21 @@ export interface Status {
   color: string;
 }
 
+export interface StatusTableProps {
+  statuses: Status[];
+  onEditStatus: (status: Status) => void;
+  onDeleteStatus: (id: string) => void;
+}
+
 export interface StatusFormProps {
   code: StatusCode;
   label: string;
   color: string;
-  onCodeChange: (value: StatusCode) => void;
-  onLabelChange: (value: string) => void;
-  onColorChange: (value: string) => void;
+  onCodeChange: (code: StatusCode) => void;
+  onLabelChange: (label: string) => void;
+  onColorChange: (color: string) => void;
   onSubmit: (e: React.FormEvent) => void;
   onClose: () => void;
-}
-
-export interface StatusTableProps {
-  statuses: Status[];
-  onEditStatus: (status: Status) => void;
-  onDeleteStatus: (statusId: string) => void;
 }
 
 export interface DeleteDialogProps {

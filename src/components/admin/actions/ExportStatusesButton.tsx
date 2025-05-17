@@ -20,17 +20,37 @@ export function ExportStatusesButton({ statuses }: ExportStatusesButtonProps) {
         description: "Exportation des statuts vers Supabase...",
       });
       
-      const success = await exportStatusesToBucket(statuses);
+      const result = await exportStatusesToBucket(statuses);
       
-      if (success) {
+      if (result.success) {
         toast({
           title: "Succès",
           description: "Les statuts ont été exportés avec succès dans le bucket.",
         });
       } else {
+        // Gérer les différents types d'erreurs
+        let errorMessage = "Impossible d'exporter les statuts.";
+        
+        switch(result.error) {
+          case 'PERMISSION_DENIED':
+            errorMessage = "Erreur de permissions Supabase. Vérifiez les politiques RLS du bucket.";
+            break;
+          case 'BUCKET_CREATE_ERROR':
+            errorMessage = "Impossible de créer le bucket de stockage. Vérifiez vos permissions Supabase.";
+            break;
+          case 'BUCKET_LIST_ERROR':
+            errorMessage = "Impossible de lister les buckets. Vérifiez vos permissions Supabase.";
+            break;
+          case 'UPLOAD_ERROR':
+            errorMessage = "Erreur lors de l'upload du fichier. Vérifiez les permissions du bucket.";
+            break;
+          default:
+            errorMessage = "Erreur inattendue lors de l'exportation des statuts.";
+        }
+        
         toast({
           title: "Erreur",
-          description: "Impossible d'exporter les statuts. Problème d'accès ou de permissions Supabase.",
+          description: errorMessage,
           variant: "destructive",
         });
       }

@@ -16,7 +16,11 @@ export async function exportStatusesToBucket(statuses: Status[]) {
     
     if (listError) {
       console.error('Erreur lors de la vérification des buckets:', listError);
-      return false;
+      if (listError.message?.includes('Permission denied')) {
+        console.error('Erreur de permissions:', listError);
+        return { success: false, error: 'PERMISSION_DENIED' };
+      }
+      return { success: false, error: 'BUCKET_LIST_ERROR' };
     }
     
     const bucketExists = buckets?.some(bucket => bucket.name === 'status-icons');
@@ -31,15 +35,21 @@ export async function exportStatusesToBucket(statuses: Status[]) {
         
         if (error) {
           console.error('Erreur lors de la création du bucket:', error);
-          return false;
+          if (error.message?.includes('Permission denied')) {
+            return { success: false, error: 'PERMISSION_DENIED' };
+          }
+          return { success: false, error: 'BUCKET_CREATE_ERROR' };
         }
-      } catch (bucketError) {
+      } catch (bucketError: any) {
         console.error('Exception lors de la création du bucket:', bucketError);
         
         // Si nous ne pouvons pas créer le bucket, on vérifie qu'il n'a pas été créé entre-temps
         const { data: checkBuckets } = await supabase.storage.listBuckets();
         if (!checkBuckets?.some(bucket => bucket.name === 'status-icons')) {
-          return false;
+          if (bucketError.message?.includes('Permission denied')) {
+            return { success: false, error: 'PERMISSION_DENIED' };
+          }
+          return { success: false, error: 'BUCKET_CREATE_ERROR' };
         }
       }
     }
@@ -63,18 +73,27 @@ export async function exportStatusesToBucket(statuses: Status[]) {
         
       if (error) {
         console.error('Erreur lors de l\'exportation des statuts:', error);
-        return false;
+        if (error.message?.includes('Permission denied')) {
+          return { success: false, error: 'PERMISSION_DENIED' };
+        }
+        return { success: false, error: 'UPLOAD_ERROR' };
       }
       
       console.log('Statuts exportés avec succès:', data);
-      return true;
-    } catch (uploadError) {
+      return { success: true };
+    } catch (uploadError: any) {
       console.error('Exception lors de l\'upload des statuts:', uploadError);
-      return false;
+      if (uploadError.message?.includes('Permission denied')) {
+        return { success: false, error: 'PERMISSION_DENIED' };
+      }
+      return { success: false, error: 'UPLOAD_ERROR' };
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Erreur générale lors de l\'exportation des statuts:', error);
-    return false;
+    if (error.message?.includes('Permission denied')) {
+      return { success: false, error: 'PERMISSION_DENIED' };
+    }
+    return { success: false, error: 'GENERAL_ERROR' };
   }
 }
 
@@ -94,6 +113,10 @@ export async function importStatusesFromBucket() {
       
     if (listError) {
       console.error('Erreur lors de la récupération des fichiers:', listError);
+      if (listError.message?.includes('Permission denied')) {
+        console.error('Erreur de permissions:', listError);
+        return { success: false, error: 'PERMISSION_DENIED' };
+      }
       return null;
     }
     
@@ -102,7 +125,7 @@ export async function importStatusesFromBucket() {
     
     if (jsonFiles.length === 0) {
       console.log('Aucun fichier de statuts trouvé dans le bucket');
-      return null;
+      return [];
     }
     
     // Récupérer le contenu du fichier le plus récent
@@ -113,6 +136,9 @@ export async function importStatusesFromBucket() {
       
     if (downloadError) {
       console.error('Erreur lors du téléchargement du fichier:', downloadError);
+      if (downloadError.message?.includes('Permission denied')) {
+        return { success: false, error: 'PERMISSION_DENIED' };
+      }
       return null;
     }
     
@@ -121,9 +147,12 @@ export async function importStatusesFromBucket() {
     const statuses = JSON.parse(textContent) as Status[];
     
     console.log('Statuts importés avec succès:', statuses);
-    return statuses;
-  } catch (error) {
+    return { success: true, data: statuses };
+  } catch (error: any) {
     console.error('Erreur lors de l\'importation des statuts:', error);
-    return null;
+    if (error.message?.includes('Permission denied')) {
+      return { success: false, error: 'PERMISSION_DENIED' };
+    }
+    return { success: false, error: 'GENERAL_ERROR' };
   }
 }

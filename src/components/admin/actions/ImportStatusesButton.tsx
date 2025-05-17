@@ -19,20 +19,47 @@ export function ImportStatusesButton({ onStatusesImported }: ImportStatusesButto
         description: "Récupération des statuts depuis Supabase...",
       });
       
-      const importedStatuses = await importStatusesFromBucket();
+      const result = await importStatusesFromBucket();
       
-      if (importedStatuses && Array.isArray(importedStatuses) && importedStatuses.length > 0) {
-        onStatusesImported(importedStatuses);
-        toast({
-          title: "Succès",
-          description: `${importedStatuses.length} statuts ont été importés avec succès.`,
-        });
-      } else if (importedStatuses && Array.isArray(importedStatuses) && importedStatuses.length === 0) {
-        toast({
-          title: "Attention",
-          description: "Aucun statut trouvé à importer.",
-          variant: "default", // Changed from "warning" to "default"
-        });
+      if (result && 'success' in result) {
+        if (result.success && result.data) {
+          onStatusesImported(result.data);
+          toast({
+            title: "Succès",
+            description: `${result.data.length} statuts ont été importés avec succès.`,
+          });
+        } else {
+          // Gérer les différents types d'erreurs
+          let errorMessage = "Impossible d'importer les statuts.";
+          
+          switch(result.error) {
+            case 'PERMISSION_DENIED':
+              errorMessage = "Erreur de permissions Supabase. Vérifiez les politiques RLS du bucket.";
+              break;
+            default:
+              errorMessage = "Erreur inattendue lors de l'importation des statuts.";
+          }
+          
+          toast({
+            title: "Erreur",
+            description: errorMessage,
+            variant: "destructive",
+          });
+        }
+      } else if (Array.isArray(result)) {
+        if (result.length === 0) {
+          toast({
+            title: "Attention",
+            description: "Aucun statut trouvé à importer.",
+            variant: "default", // Changed from "warning" to "default"
+          });
+        } else {
+          onStatusesImported(result);
+          toast({
+            title: "Succès",
+            description: `${result.length} statuts ont été importés avec succès.`,
+          });
+        }
       } else {
         toast({
           title: "Erreur",

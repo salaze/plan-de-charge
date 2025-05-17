@@ -20,10 +20,14 @@ export const useSupabaseSubscription = (
     // Créer un canal pour la table
     const channel = supabase.channel(`watch_${tableName}`);
     
-    // Configurer l'écoute des événements Postgres
-    channel.on(
+    // Configurer l'écoute des événements Postgres avec la syntaxe correcte
+    const subscription = channel.on(
       'postgres_changes', 
-      { event: eventType, schema: 'public', table: tableName }, 
+      { 
+        event: eventType, 
+        schema: 'public', 
+        table: tableName 
+      }, 
       (payload) => {
         console.log(`Change detected in ${tableName}:`, payload);
         
@@ -47,7 +51,7 @@ export const useSupabaseSubscription = (
     );
     
     // S'abonner au canal après avoir défini tous les écouteurs
-    channel.subscribe((status) => {
+    subscription.subscribe((status) => {
       console.log(`Subscription status for ${tableName}: ${status}`);
       if (status === 'SUBSCRIBED') {
         console.log(`Successfully subscribed to ${tableName} changes`);

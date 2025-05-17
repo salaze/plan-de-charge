@@ -31,7 +31,7 @@ export function ImportStatusesButton({ onStatusesImported }: ImportStatusesButto
         toast({
           title: "Attention",
           description: "Aucun statut trouvé à importer.",
-          variant: "warning",
+          variant: "default", // Changed from "warning" to "default"
         });
       } else {
         toast({

@@ -34,10 +34,17 @@ export function ImportStatusesButton({ onStatusesImported }: ImportStatusesButto
           
           switch(result.error) {
             case 'PERMISSION_DENIED':
-              errorMessage = "Erreur de permissions Supabase. Vérifiez les politiques RLS du bucket.";
+              errorMessage = result.message || "Problème d'accès ou de permission Supabase. Vérifiez les politiques du bucket.";
+              break;
+            case 'BUCKET_NOT_FOUND':
+              errorMessage = result.message || "Le bucket de stockage n'existe pas. Exportez d'abord vos statuts.";
+              break;
+            case 'LIST_ERROR':
+            case 'DOWNLOAD_ERROR':
+              errorMessage = result.message || "Erreur lors de la récupération des fichiers. Vérifiez vos permissions.";
               break;
             default:
-              errorMessage = "Erreur inattendue lors de l'importation des statuts.";
+              errorMessage = result.message || "Erreur inattendue lors de l'importation des statuts.";
           }
           
           toast({
@@ -51,7 +58,7 @@ export function ImportStatusesButton({ onStatusesImported }: ImportStatusesButto
           toast({
             title: "Attention",
             description: "Aucun statut trouvé à importer.",
-            variant: "default", // Changed from "warning" to "default"
+            variant: "default", // Changed from "warning" to "default" which is a valid variant
           });
         } else {
           onStatusesImported(result);

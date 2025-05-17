@@ -28,17 +28,26 @@ export async function exportStatusesToBucket(statuses: Status[]) {
     if (!bucketExists) {
       console.log('Le bucket status-icons n\'existe pas, tentative de création...');
       try {
-        const { error } = await supabase.storage.createBucket('status-icons', {
+        const { error: createError } = await supabase.storage.createBucket('status-icons', {
           public: true,
           fileSizeLimit: 1024 * 1024, // 1MB
         });
         
-        if (error) {
-          console.error('Erreur lors de la création du bucket:', error);
-          if (error.message?.includes('Permission denied')) {
-            return { success: false, error: 'PERMISSION_DENIED' };
+        if (createError) {
+          console.error('Erreur lors de la création du bucket:', createError);
+          if (createError.message?.includes('Permission denied') || createError.message?.includes('not allowed')) {
+            console.error('Erreur de permissions pour la création du bucket:', createError);
+            return { 
+              success: false, 
+              error: 'PERMISSION_DENIED', 
+              message: 'Vous n\'avez pas les permissions nécessaires pour créer un bucket. Contactez l\'administrateur Supabase.'
+            };
           }
-          return { success: false, error: 'BUCKET_CREATE_ERROR' };
+          return { 
+            success: false, 
+            error: 'BUCKET_CREATE_ERROR', 
+            message: 'Impossible de créer le bucket. Vérifiez les logs pour plus de détails.'
+          };
         }
       } catch (bucketError: any) {
         console.error('Exception lors de la création du bucket:', bucketError);
@@ -46,10 +55,18 @@ export async function exportStatusesToBucket(statuses: Status[]) {
         // Si nous ne pouvons pas créer le bucket, on vérifie qu'il n'a pas été créé entre-temps
         const { data: checkBuckets } = await supabase.storage.listBuckets();
         if (!checkBuckets?.some(bucket => bucket.name === 'status-icons')) {
-          if (bucketError.message?.includes('Permission denied')) {
-            return { success: false, error: 'PERMISSION_DENIED' };
+          if (bucketError.message?.includes('Permission denied') || bucketError.message?.includes('not allowed')) {
+            return { 
+              success: false, 
+              error: 'PERMISSION_DENIED', 
+              message: 'Vous n\'avez pas les permissions nécessaires pour créer un bucket. Contactez l\'administrateur Supabase.'
+            };
           }
-          return { success: false, error: 'BUCKET_CREATE_ERROR' };
+          return { 
+            success: false, 
+            error: 'BUCKET_CREATE_ERROR', 
+            message: 'Impossible de créer le bucket. Vérifiez les logs pour plus de détails.'
+          };
         }
       }
     }
@@ -73,27 +90,58 @@ export async function exportStatusesToBucket(statuses: Status[]) {
         
       if (error) {
         console.error('Erreur lors de l\'exportation des statuts:', error);
-        if (error.message?.includes('Permission denied')) {
-          return { success: false, error: 'PERMISSION_DENIED' };
+        if (error.message?.includes('Permission denied') || error.message?.includes('not allowed')) {
+          return { 
+            success: false, 
+            error: 'PERMISSION_DENIED', 
+            message: 'Vous n\'avez pas les permissions nécessaires pour uploader des fichiers. Contactez l\'administrateur Supabase.' 
+          };
         }
-        return { success: false, error: 'UPLOAD_ERROR' };
+        if (error.message?.includes('does not exist')) {
+          return { 
+            success: false, 
+            error: 'BUCKET_NOT_FOUND',
+            message: 'Le bucket "status-icons" n\'existe pas. Contactez l\'administrateur Supabase.' 
+          };
+        }
+        return { 
+          success: false, 
+          error: 'UPLOAD_ERROR',
+          message: 'Erreur lors du téléchargement du fichier. ' + error.message 
+        };
       }
       
       console.log('Statuts exportés avec succès:', data);
       return { success: true };
     } catch (uploadError: any) {
       console.error('Exception lors de l\'upload des statuts:', uploadError);
-      if (uploadError.message?.includes('Permission denied')) {
-        return { success: false, error: 'PERMISSION_DENIED' };
+      if (uploadError.message?.includes('Permission denied') || uploadError.message?.includes('not allowed')) {
+        return { 
+          success: false, 
+          error: 'PERMISSION_DENIED',
+          message: 'Vous n\'avez pas les permissions nécessaires pour uploader des fichiers.' 
+        };
       }
-      return { success: false, error: 'UPLOAD_ERROR' };
+      return { 
+        success: false, 
+        error: 'UPLOAD_ERROR',
+        message: 'Erreur lors du téléchargement du fichier. ' + uploadError.message 
+      };
     }
   } catch (error: any) {
     console.error('Erreur générale lors de l\'exportation des statuts:', error);
-    if (error.message?.includes('Permission denied')) {
-      return { success: false, error: 'PERMISSION_DENIED' };
+    if (error.message?.includes('Permission denied') || error.message?.includes('not allowed')) {
+      return { 
+        success: false, 
+        error: 'PERMISSION_DENIED',
+        message: 'Erreur d\'accès: ' + error.message 
+      };
     }
-    return { success: false, error: 'GENERAL_ERROR' };
+    return { 
+      success: false, 
+      error: 'GENERAL_ERROR',
+      message: 'Erreur inattendue: ' + error.message 
+    };
   }
 }
 
@@ -113,11 +161,26 @@ export async function importStatusesFromBucket() {
       
     if (listError) {
       console.error('Erreur lors de la récupération des fichiers:', listError);
-      if (listError.message?.includes('Permission denied')) {
+      if (listError.message?.includes('Permission denied') || listError.message?.includes('not allowed')) {
         console.error('Erreur de permissions:', listError);
-        return { success: false, error: 'PERMISSION_DENIED' };
+        return { 
+          success: false, 
+          error: 'PERMISSION_DENIED',
+          message: 'Vous n\'avez pas les permissions nécessaires pour lister les fichiers.' 
+        };
       }
-      return null;
+      if (listError.message?.includes('does not exist')) {
+        return { 
+          success: false, 
+          error: 'BUCKET_NOT_FOUND',
+          message: 'Le bucket "status-icons" n\'existe pas. Aucune exportation n\'a été effectuée précédemment.' 
+        };
+      }
+      return { 
+        success: false, 
+        error: 'LIST_ERROR',
+        message: 'Erreur lors de la récupération des fichiers: ' + listError.message
+      };
     }
     
     // Trouver le fichier JSON le plus récent
@@ -125,7 +188,11 @@ export async function importStatusesFromBucket() {
     
     if (jsonFiles.length === 0) {
       console.log('Aucun fichier de statuts trouvé dans le bucket');
-      return [];
+      return { 
+        success: true, 
+        data: [],
+        message: 'Aucun fichier de statuts trouvé. Exportez d\'abord vos statuts.' 
+      };
     }
     
     // Récupérer le contenu du fichier le plus récent
@@ -136,10 +203,18 @@ export async function importStatusesFromBucket() {
       
     if (downloadError) {
       console.error('Erreur lors du téléchargement du fichier:', downloadError);
-      if (downloadError.message?.includes('Permission denied')) {
-        return { success: false, error: 'PERMISSION_DENIED' };
+      if (downloadError.message?.includes('Permission denied') || downloadError.message?.includes('not allowed')) {
+        return { 
+          success: false, 
+          error: 'PERMISSION_DENIED',
+          message: 'Vous n\'avez pas les permissions nécessaires pour télécharger les fichiers.' 
+        };
       }
-      return null;
+      return { 
+        success: false, 
+        error: 'DOWNLOAD_ERROR',
+        message: 'Erreur lors du téléchargement du fichier: ' + downloadError.message
+      };
     }
     
     // Parser le contenu JSON
@@ -150,9 +225,17 @@ export async function importStatusesFromBucket() {
     return { success: true, data: statuses };
   } catch (error: any) {
     console.error('Erreur lors de l\'importation des statuts:', error);
-    if (error.message?.includes('Permission denied')) {
-      return { success: false, error: 'PERMISSION_DENIED' };
+    if (error.message?.includes('Permission denied') || error.message?.includes('not allowed')) {
+      return { 
+        success: false, 
+        error: 'PERMISSION_DENIED',
+        message: 'Erreur d\'accès: ' + error.message 
+      };
     }
-    return { success: false, error: 'GENERAL_ERROR' };
+    return { 
+      success: false, 
+      error: 'GENERAL_ERROR',
+      message: 'Erreur inattendue: ' + error.message 
+    };
   }
 }

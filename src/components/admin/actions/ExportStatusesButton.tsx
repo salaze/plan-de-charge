@@ -33,19 +33,22 @@ export function ExportStatusesButton({ statuses }: ExportStatusesButtonProps) {
         
         switch(result.error) {
           case 'PERMISSION_DENIED':
-            errorMessage = "Erreur de permissions Supabase. Vérifiez les politiques RLS du bucket.";
+            errorMessage = result.message || "Problème d'accès ou de permission Supabase. Vérifiez les politiques du bucket.";
+            break;
+          case 'BUCKET_NOT_FOUND':
+            errorMessage = result.message || "Le bucket de stockage n'existe pas. Vérifiez la configuration Supabase.";
             break;
           case 'BUCKET_CREATE_ERROR':
-            errorMessage = "Impossible de créer le bucket de stockage. Vérifiez vos permissions Supabase.";
+            errorMessage = result.message || "Impossible de créer le bucket de stockage. Vérifiez vos permissions Supabase.";
             break;
           case 'BUCKET_LIST_ERROR':
-            errorMessage = "Impossible de lister les buckets. Vérifiez vos permissions Supabase.";
+            errorMessage = result.message || "Impossible de lister les buckets. Vérifiez vos permissions Supabase.";
             break;
           case 'UPLOAD_ERROR':
-            errorMessage = "Erreur lors de l'upload du fichier. Vérifiez les permissions du bucket.";
+            errorMessage = result.message || "Erreur lors de l'upload du fichier. Vérifiez les permissions du bucket.";
             break;
           default:
-            errorMessage = "Erreur inattendue lors de l'exportation des statuts.";
+            errorMessage = result.message || "Erreur inattendue lors de l'exportation des statuts.";
         }
         
         toast({

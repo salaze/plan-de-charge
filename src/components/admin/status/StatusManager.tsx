@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,6 +18,7 @@ import { StatusTable } from './StatusTable';
 import { ColorPicker } from './ColorPicker';
 import { StatusManagerProps, Status } from './types';
 import { GenerateStatusIconsButton } from '../actions/GenerateStatusIconsButton';
+import { StatusCode } from '@/types';
 
 export function StatusManager({
   statuses,
@@ -28,7 +30,7 @@ export function StatusManager({
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [newStatus, setNewStatus] = useState<Status>({
     id: '',
-    code: '',
+    code: '' as StatusCode,
     label: '',
     color: ''
   });
@@ -48,7 +50,7 @@ export function StatusManager({
     const newStatusWithId = { ...newStatus, id: newStatus.code };
 
     onStatusesChange([...statuses, newStatusWithId]);
-    setNewStatus({ id: '', code: '', label: '', color: '' });
+    setNewStatus({ id: '', code: '' as StatusCode, label: '', color: '' });
     setIsAddDialogOpen(false);
 
     toast({
@@ -135,7 +137,7 @@ export function StatusManager({
               <Input
                 id="code"
                 value={newStatus.code}
-                onChange={(e) => setNewStatus({ ...newStatus, code: e.target.value })}
+                onChange={(e) => setNewStatus({ ...newStatus, code: e.target.value as StatusCode })}
                 className="col-span-3"
               />
             </div>
@@ -184,7 +186,7 @@ export function StatusManager({
               <Input
                 id="code"
                 value={editStatus?.code || ''}
-                onChange={(e) => setEditStatus({ ...editStatus, code: e.target.value } as Status)}
+                onChange={(e) => setEditStatus({ ...editStatus, code: e.target.value as StatusCode } as Status)}
                 className="col-span-3"
               />
             </div>

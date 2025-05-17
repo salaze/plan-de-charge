@@ -31,3 +31,9 @@ export interface DeleteDialogProps {
   onConfirm: () => void;
 }
 
+export interface StatusManagerProps {
+  statuses: Status[];
+  onStatusesChange: (statuses: Status[]) => void;
+  isLoading: boolean;
+  isConnected: boolean;
+}

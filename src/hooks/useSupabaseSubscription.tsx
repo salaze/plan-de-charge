@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { queryClient } from '@/contexts/QueryContext';
 import { toast } from 'sonner';
-import type { RealtimeChannel, RealtimeChannelOptions, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 
 type TableName = 'employe_schedule' | 'statuts' | 'employes';
 type EventType = 'INSERT' | 'UPDATE' | 'DELETE' | '*';
@@ -22,22 +22,21 @@ export const useSupabaseSubscription = (
     const channelId = `watch_${tableName}_${Date.now()}`;
     const channel = supabase.channel(channelId);
     
-    const options: RealtimeChannelOptions["postgres_changes"] = {
-      event: eventType,
-      schema: 'public',
-      table: tableName
-    };
-    
     // Configurer l'écoute des événements Postgres avec la syntaxe correcte pour TypeScript
     channel
       .on(
         'postgres_changes', 
-        options,
-        (payload: RealtimePostgresChangesPayload<{[key: string]: any}>) => {
+        {
+          event: eventType,
+          schema: 'public',
+          table: tableName
+        },
+        (payload) => {
           console.log(`Change detected in ${tableName}:`, payload);
           
           // Afficher une notification
           if (showNotifications) {
+            const eventType = payload.eventType as "INSERT" | "UPDATE" | "DELETE";
             const messages = {
               INSERT: 'Nouvelle entrée ajoutée',
               UPDATE: 'Données mises à jour',
@@ -45,7 +44,7 @@ export const useSupabaseSubscription = (
             };
             
             toast.info(
-              `${messages[payload.eventType as keyof typeof messages]} dans ${tableName}`, 
+              `${messages[eventType]} dans ${tableName}`, 
               { duration: 3000 }
             );
           }

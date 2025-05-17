@@ -48,7 +48,7 @@ export async function uploadDefaultStatusIcons(statuses: StatusCode[] = []) {
     const statusesToUpload = statuses.length > 0 
       ? statuses 
       : ['assistance', 'vigi', 'formation', 'projet', 'conges', 'management', 
-         'tp', 'coordinateur', 'absence', 'regisseur', 'demenagement', 'permanence', 'parc'];
+         'tp', 'coordinateur', 'absence', 'regisseur', 'demenagement', 'permanence', 'parc'] as StatusCode[];
     
     // Télécharger chaque icône
     for (const status of statusesToUpload) {

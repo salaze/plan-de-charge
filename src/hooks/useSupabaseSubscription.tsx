@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { queryClient } from '@/contexts/QueryContext';
 import { toast } from 'sonner';
-import { RealtimeChannel } from '@supabase/supabase-js';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 
 type TableName = 'employe_schedule' | 'statuts' | 'employes';
 type EventType = 'INSERT' | 'UPDATE' | 'DELETE' | '*';
@@ -54,7 +54,7 @@ export const useSupabaseSubscription = (
           }, 100);
         }
       )
-      .subscribe((status) => {
+      .subscribe((status: string) => {
         console.log(`Subscription status for ${tableName}: ${status}`);
         if (status === 'SUBSCRIBED') {
           console.log(`Successfully subscribed to ${tableName} changes`);

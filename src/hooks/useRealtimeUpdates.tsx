@@ -27,7 +27,7 @@ export function useRealtimeEmployeeSchedule() {
             setUpdates(prev => [...prev, payload.new]);
           }
         )
-        .subscribe((status) => {
+        .subscribe((status: string) => {
           if (status === 'TIMED_OUT' || status === 'CHANNEL_ERROR') {
             console.error(`Realtime subscription error: ${status}`);
             toast.error('Erreur de connexion en temps réel pour le planning');
@@ -76,7 +76,7 @@ export function useRealtimeEmployees() {
             setUpdates(prev => [...prev, employee]);
           }
         )
-        .subscribe((status) => {
+        .subscribe((status: string) => {
           if (status === 'TIMED_OUT' || status === 'CHANNEL_ERROR') {
             console.error(`Realtime subscription error: ${status}`);
             toast.error('Erreur de connexion en temps réel pour les employés');
@@ -125,7 +125,7 @@ export function useRealtimeStatuses() {
             }]);
           }
         )
-        .subscribe((status) => {
+        .subscribe((status: string) => {
           if (status === 'TIMED_OUT' || status === 'CHANNEL_ERROR') {
             console.error(`Realtime subscription error: ${status}`);
             toast.error('Erreur de connexion en temps réel pour les statuts');

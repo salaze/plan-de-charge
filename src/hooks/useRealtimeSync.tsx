@@ -82,7 +82,11 @@ export const useRealtimeSync = (isConnected: boolean, onDataChange: () => void) 
           }
         }
       )
-      .subscribe();
+      .subscribe((status: string) => {
+        if (status !== 'SUBSCRIBED') {
+          console.log(`Status channel subscription status: ${status}`);
+        }
+      });
       
     const employeesChannel = supabase
       .channel('employees-changes')
@@ -107,7 +111,11 @@ export const useRealtimeSync = (isConnected: boolean, onDataChange: () => void) 
           onDataChange();
         }
       )
-      .subscribe();
+      .subscribe((status: string) => {
+        if (status !== 'SUBSCRIBED') {
+          console.log(`Employees channel subscription status: ${status}`);
+        }
+      });
       
     // Ajouter un canal pour suivre les changements de planning (employe_schedule)
     const scheduleChannel = supabase
@@ -139,7 +147,11 @@ export const useRealtimeSync = (isConnected: boolean, onDataChange: () => void) 
           }
         }
       )
-      .subscribe();
+      .subscribe((status: string) => {
+        if (status !== 'SUBSCRIBED') {
+          console.log(`Schedule channel subscription status: ${status}`);
+        }
+      });
       
     return () => {
       window.removeEventListener('statusEditStart', handleEditStart);

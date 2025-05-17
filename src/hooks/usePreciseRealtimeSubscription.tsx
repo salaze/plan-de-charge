@@ -1,7 +1,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { RealtimeChannel } from '@supabase/supabase-js';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 
 type TableName = 'employe_schedule' | 'statuts' | 'employes';
@@ -137,7 +137,7 @@ export const usePreciseRealtimeSubscription = (
           }
         }
       )
-      .subscribe((status) => {
+      .subscribe((status: string) => {
         if (status === 'SUBSCRIBED') {
           console.log(`✅ Precise subscription active for ${tableName}`);
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {

@@ -21,7 +21,11 @@ export function useStatusRealtime(onStatusUpdate: () => void) {
           }, 500);
         }
       )
-      .subscribe();
+      .subscribe((status: string) => {
+        if (status !== 'SUBSCRIBED') {
+          console.log(`Status realtime subscription status: ${status}`);
+        }
+      });
     
     // Clean up on unmount
     return () => {

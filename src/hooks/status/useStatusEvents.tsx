@@ -63,7 +63,11 @@ export function useStatusEvents(onStatusesUpdated: () => void) {
           }, 1000);
         }
       )
-      .subscribe();
+      .subscribe((status: string) => {
+        if (status !== 'SUBSCRIBED') {
+          console.log(`Status options realtime subscription status: ${status}`);
+        }
+      });
 
     // Listen for custom events
     const handleStatusesUpdated = (event: Event) => {

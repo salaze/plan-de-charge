@@ -8,6 +8,8 @@ import { GenerateStatusIconsButton } from '../actions/GenerateStatusIconsButton'
 import { StatusAddDialog } from './StatusAddDialog';
 import { StatusEditDialog } from './StatusEditDialog';
 import { StatusManagerProps } from './types';
+import { ExportStatusesButton } from '../actions/ExportStatusesButton';
+import { ImportStatusesButton } from '../actions/ImportStatusesButton';
 
 export function StatusManager({
   statuses,
@@ -72,6 +74,8 @@ export function StatusManager({
         
         <div className="flex flex-col sm:flex-row gap-2">
           <GenerateStatusIconsButton />
+          <ExportStatusesButton statuses={statuses} />
+          <ImportStatusesButton onStatusesImported={onStatusesChange} />
           <Button onClick={() => setIsAddDialogOpen(true)}>Ajouter un statut</Button>
         </div>
       </div>

@@ -25,7 +25,7 @@ export const useSupabaseSubscription = (
     // Configurer l'écoute des événements Postgres avec la syntaxe correcte
     channel
       .on(
-        'postgres_changes',
+        'postgres_changes', // Utilisation comme string sans type générique
         { 
           event: eventType, 
           schema: 'public', 

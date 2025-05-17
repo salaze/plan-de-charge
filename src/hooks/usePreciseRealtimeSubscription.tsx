@@ -106,7 +106,7 @@ export const usePreciseRealtimeSubscription = (
     // Configurer l'écoute avec une gestion d'événements optimisée
     channel
       .on(
-        'postgres_changes', 
+        'postgres_changes', // Utilisation comme string sans type générique
         {
           event: eventType,
           schema: 'public',

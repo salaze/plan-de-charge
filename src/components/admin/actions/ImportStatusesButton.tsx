@@ -4,9 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Upload } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { importStatusesFromBucket } from '@/utils/supabase/status/importOperations';
+import { Status } from '@/components/admin/status/types';
 
 interface ImportStatusesButtonProps {
-  onStatusesImported: (statuses: any[]) => void;
+  onStatusesImported: (statuses: Status[]) => void;
 }
 
 export function ImportStatusesButton({ onStatusesImported }: ImportStatusesButtonProps) {
@@ -25,10 +26,10 @@ export function ImportStatusesButton({ onStatusesImported }: ImportStatusesButto
       if (result) {
         if ('success' in result) {
           if (result.success && 'data' in result && result.data) {
-            onStatusesImported(result.data);
+            onStatusesImported(result.data as Status[]);
             toast({
               title: "Succès",
-              description: `${result.data.length} statuts ont été importés avec succès.`,
+              description: `${(result.data as Status[]).length} statuts ont été importés avec succès.`,
             });
           } else {
             // Gérer les différents types d'erreurs
@@ -67,7 +68,7 @@ export function ImportStatusesButton({ onStatusesImported }: ImportStatusesButto
               variant: "default",
             });
           } else {
-            onStatusesImported(result);
+            onStatusesImported(result as Status[]);
             toast({
               title: "Succès",
               description: `${result.length} statuts ont été importés avec succès.`,

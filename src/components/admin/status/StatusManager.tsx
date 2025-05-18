@@ -1,13 +1,11 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { useToast } from "@/components/ui/use-toast";
 import { StatusTable } from './StatusTable';
-import { Status } from './types';
+import { StatusManagerProps } from './types';
 import { GenerateStatusIconsButton } from '../actions/GenerateStatusIconsButton';
 import { StatusAddDialog } from './StatusAddDialog';
 import { StatusEditDialog } from './StatusEditDialog';
-import { StatusManagerProps } from './types';
 import { ExportStatusesButton } from '../actions/ExportStatusesButton';
 import { ImportStatusesButton } from '../actions/ImportStatusesButton';
 import { useStatusManager } from '@/hooks/status/useStatusManager';

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from "@/components/ui/use-toast";
 import { StatusTable } from './StatusTable';
@@ -10,6 +10,7 @@ import { StatusEditDialog } from './StatusEditDialog';
 import { StatusManagerProps } from './types';
 import { ExportStatusesButton } from '../actions/ExportStatusesButton';
 import { ImportStatusesButton } from '../actions/ImportStatusesButton';
+import { useStatusManager } from '@/hooks/status/useStatusManager';
 
 export function StatusManager({
   statuses,
@@ -17,50 +18,34 @@ export function StatusManager({
   isLoading,
   isConnected
 }: StatusManagerProps) {
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [editStatus, setEditStatus] = useState<Status | null>(null);
-  const { toast } = useToast();
+  const { 
+    formOpen, 
+    currentStatus, 
+    deleteDialogOpen, 
+    code, 
+    label, 
+    color,
+    isSaving,
+    setFormOpen, 
+    setCode, 
+    setLabel, 
+    setColor, 
+    handleAddStatus, 
+    handleEditStatus, 
+    handleDeleteStatus, 
+    handleConfirmDelete, 
+    handleSaveStatus, 
+    setDeleteDialogOpen 
+  } = useStatusManager({ statuses, onStatusesChange, isConnected });
 
-  const handleAddStatus = (newStatus: Status) => {
-    onStatusesChange([...statuses, newStatus]);
-    setIsAddDialogOpen(false);
-
-    toast({
-      title: "Succès",
-      description: "Statut ajouté avec succès.",
-    });
-  };
-
-  const handleEditStatus = (editedStatus: Status) => {
-    const updatedStatuses = statuses.map((status) =>
-      status.id === editedStatus.id ? editedStatus : status
-    );
-    
-    onStatusesChange(updatedStatuses);
-    setEditStatus(null);
-    setIsEditDialogOpen(false);
-
-    toast({
-      title: "Succès",
-      description: "Statut mis à jour avec succès.",
-    });
-  };
-
-  const handleDeleteStatus = (id: string) => {
-    const updatedStatuses = statuses.filter((status) => status.id !== id);
-    onStatusesChange(updatedStatuses);
-
-    toast({
-      title: "Succès",
-      description: "Statut supprimé avec succès.",
-    });
-  };
-
-  const onEditStatus = (status: Status) => {
-    setEditStatus(status);
-    setIsEditDialogOpen(true);
-  };
+  // Ajouter un effet pour recharger les statuts quand la connexion est rétablie
+  useEffect(() => {
+    if (isConnected) {
+      // Émettre un événement pour forcer le rechargement des statuts
+      const event = new CustomEvent('statusesUpdated');
+      window.dispatchEvent(event);
+    }
+  }, [isConnected]);
 
   return (
     <div className="space-y-6">
@@ -70,33 +55,53 @@ export function StatusManager({
           <p className="text-muted-foreground">
             Configurez les statuts disponibles pour le planning
           </p>
+          {!isConnected && (
+            <p className="text-amber-500 text-sm mt-1">
+              Mode hors ligne: les modifications ne seront pas synchronisées avec la base de données
+            </p>
+          )}
         </div>
         
         <div className="flex flex-col sm:flex-row gap-2">
           <GenerateStatusIconsButton />
           <ExportStatusesButton statuses={statuses} />
           <ImportStatusesButton onStatusesImported={onStatusesChange} />
-          <Button onClick={() => setIsAddDialogOpen(true)}>Ajouter un statut</Button>
+          <Button onClick={handleAddStatus} disabled={isSaving}>
+            {isSaving ? 'Traitement en cours...' : 'Ajouter un statut'}
+          </Button>
         </div>
       </div>
 
       <StatusTable
         statuses={statuses}
-        onEditStatus={onEditStatus}
+        onEditStatus={handleEditStatus}
         onDeleteStatus={handleDeleteStatus}
       />
 
       <StatusAddDialog
-        open={isAddDialogOpen}
-        onOpenChange={setIsAddDialogOpen}
-        onAddStatus={handleAddStatus}
+        open={formOpen && !currentStatus}
+        onOpenChange={(open) => !isSaving && setFormOpen(open)}
+        code={code}
+        label={label}
+        color={color}
+        onCodeChange={setCode}
+        onLabelChange={setLabel}
+        onColorChange={setColor}
+        onSubmit={handleSaveStatus}
+        isLoading={isSaving}
       />
 
       <StatusEditDialog
-        open={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
-        status={editStatus}
-        onEditStatus={handleEditStatus}
+        open={formOpen && !!currentStatus}
+        onOpenChange={(open) => !isSaving && setFormOpen(open)}
+        code={code}
+        label={label}
+        color={color}
+        onCodeChange={setCode}
+        onLabelChange={setLabel}
+        onColorChange={setColor}
+        onSubmit={handleSaveStatus}
+        isLoading={isSaving}
       />
     </div>
   );

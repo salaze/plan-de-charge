@@ -69,4 +69,3 @@ export function StatusTable({ statuses, onEditStatus, onDeleteStatus }: StatusTa
     </Table>
   );
 }
-

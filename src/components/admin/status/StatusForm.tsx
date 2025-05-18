@@ -29,8 +29,13 @@ export function StatusForm({
     { value: 'bg-gray-500 text-white', label: 'Gris' },
   ];
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(e);
+  };
+
   return (
-    <form onSubmit={onSubmit}>
+    <form onSubmit={handleSubmit}>
       <div className="grid gap-4 py-4">
         <div className="space-y-2">
           <Label htmlFor="status-code">Code du statut</Label>
@@ -72,13 +77,6 @@ export function StatusForm({
           </div>
         </div>
       </div>
-      
-      <DialogFooter>
-        <Button type="button" variant="outline" onClick={onClose}>
-          Annuler
-        </Button>
-        <Button type="submit">Enregistrer</Button>
-      </DialogFooter>
     </form>
   );
 }

@@ -32,19 +32,23 @@ export function ImportStatusesButton({ onStatusesImported }: ImportStatusesButto
           // Gérer les différents types d'erreurs
           let errorMessage = "Impossible d'importer les statuts.";
           
-          switch(result.error) {
-            case 'PERMISSION_DENIED':
-              errorMessage = result.message || "Problème d'accès ou de permission Supabase. Vérifiez les politiques du bucket.";
-              break;
-            case 'BUCKET_NOT_FOUND':
-              errorMessage = result.message || "Le bucket de stockage n'existe pas. Exportez d'abord vos statuts.";
-              break;
-            case 'LIST_ERROR':
-            case 'DOWNLOAD_ERROR':
-              errorMessage = result.message || "Erreur lors de la récupération des fichiers. Vérifiez vos permissions.";
-              break;
-            default:
-              errorMessage = result.message || "Erreur inattendue lors de l'importation des statuts.";
+          if ('error' in result && result.error) {
+            switch(result.error) {
+              case 'PERMISSION_DENIED':
+                errorMessage = result.message || "Problème d'accès ou de permission Supabase. Vérifiez les politiques du bucket.";
+                break;
+              case 'BUCKET_NOT_FOUND':
+                errorMessage = result.message || "Le bucket de stockage n'existe pas. Exportez d'abord vos statuts.";
+                break;
+              case 'LIST_ERROR':
+              case 'DOWNLOAD_ERROR':
+                errorMessage = result.message || "Erreur lors de la récupération des fichiers. Vérifiez vos permissions.";
+                break;
+              default:
+                errorMessage = result.message || "Erreur inattendue lors de l'importation des statuts.";
+            }
+          } else if ('message' in result && result.message) {
+            errorMessage = result.message;
           }
           
           toast({

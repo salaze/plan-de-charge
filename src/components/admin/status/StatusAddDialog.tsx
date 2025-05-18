@@ -52,6 +52,8 @@ export function StatusAddDialog({
           onCodeChange={onCodeChange}
           onLabelChange={onLabelChange}
           onColorChange={onColorChange}
+          onSubmit={onSubmit}
+          onClose={() => onOpenChange(false)}
         />
         
         <DialogFooter className="gap-2 sm:justify-between sm:gap-0">

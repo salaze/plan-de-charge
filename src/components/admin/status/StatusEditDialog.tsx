@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { StatusForm } from './StatusForm';
 import { Loader2 } from 'lucide-react';
+import { StatusCode } from '@/types';
 
 interface StatusEditDialogProps {
   open: boolean;
@@ -18,7 +19,7 @@ interface StatusEditDialogProps {
   code: string;
   label: string;
   color: string;
-  onCodeChange: (code: any) => void;
+  onCodeChange: (code: StatusCode) => void;
   onLabelChange: (label: string) => void;
   onColorChange: (color: string) => void;
   onSubmit: (event: React.FormEvent) => void;
@@ -45,7 +46,7 @@ export function StatusEditDialog({
         </DialogHeader>
         
         <StatusForm
-          code={code}
+          code={code as StatusCode}
           label={label}
           color={color}
           onCodeChange={onCodeChange}

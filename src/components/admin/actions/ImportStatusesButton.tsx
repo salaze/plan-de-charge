@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Upload } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { importStatusesFromBucket } from '@/utils/supabase/status/exportStatuses';
+import { importStatusesFromBucket } from '@/utils/supabase/status/importOperations';
 
 interface ImportStatusesButtonProps {
   onStatusesImported: (statuses: any[]) => void;
@@ -62,7 +62,7 @@ export function ImportStatusesButton({ onStatusesImported }: ImportStatusesButto
           toast({
             title: "Attention",
             description: "Aucun statut trouvé à importer.",
-            variant: "default", // Changed from "warning" to "default" which is a valid variant
+            variant: "default",
           });
         } else {
           onStatusesImported(result);

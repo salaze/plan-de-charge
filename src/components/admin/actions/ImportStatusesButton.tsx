@@ -24,7 +24,7 @@ export function ImportStatusesButton({ onStatusesImported }: ImportStatusesButto
       // Gérer les différents formats de retour possibles
       if (result) {
         if ('success' in result) {
-          if (result.success && result.data) {
+          if (result.success && 'data' in result && result.data) {
             onStatusesImported(result.data);
             toast({
               title: "Succès",

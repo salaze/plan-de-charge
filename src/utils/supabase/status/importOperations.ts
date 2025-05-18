@@ -34,7 +34,12 @@ export async function importStatusesFromBucket(): Promise<ImportResult> {
     const filesResult = await listFilesInBucket(STATUS_BUCKET_NAME, '.json');
     
     if (!filesResult.success) {
-      return filesResult;
+      // Convert to the proper ImportErrorResult format
+      return { 
+        success: false, 
+        error: filesResult.error || 'LIST_ERROR',
+        message: filesResult.message || 'Erreur lors de la récupération des fichiers'
+      };
     }
     
     const jsonFiles = filesResult.data || [];

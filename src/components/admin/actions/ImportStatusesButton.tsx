@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Upload } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { importStatusesFromBucket } from '@/utils/supabase/status/importOperations';
+import { importStatusesFromBucket, ImportResult } from '@/utils/supabase/status/importOperations';
 import { Status } from '@/components/admin/status/types';
 
 interface ImportStatusesButtonProps {
@@ -20,16 +20,16 @@ export function ImportStatusesButton({ onStatusesImported }: ImportStatusesButto
         description: "Récupération des statuts depuis Supabase...",
       });
       
-      const result = await importStatusesFromBucket();
+      const result: ImportResult = await importStatusesFromBucket();
       
       // Gérer les différents formats de retour possibles
       if (result) {
         if ('success' in result) {
           if (result.success && 'data' in result && result.data) {
-            onStatusesImported(result.data as Status[]);
+            onStatusesImported(result.data);
             toast({
               title: "Succès",
-              description: `${(result.data as Status[]).length} statuts ont été importés avec succès.`,
+              description: `${result.data.length} statuts ont été importés avec succès.`,
             });
           } else {
             // Gérer les différents types d'erreurs
@@ -68,12 +68,11 @@ export function ImportStatusesButton({ onStatusesImported }: ImportStatusesButto
               variant: "default",
             });
           } else {
-            // The TypeScript error occurs here - we need to properly type 'result'
-            const statusArray = result as Status[];
-            onStatusesImported(statusArray);
+            // Properly typed as Status[] array
+            onStatusesImported(result);
             toast({
               title: "Succès",
-              description: `${statusArray.length} statuts ont été importés avec succès.`,
+              description: `${result.length} statuts ont été importés avec succès.`,
             });
           }
         }

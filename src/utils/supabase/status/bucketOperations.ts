@@ -1,12 +1,27 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
+// Define specific return types for bucket operations
+export type BucketSuccessResult<T> = {
+  success: true;
+  data: T;
+  message?: string;
+};
+
+export type BucketErrorResult = {
+  success: false;
+  error: string;
+  message?: string;
+};
+
+export type BucketOperationResult<T> = BucketSuccessResult<T> | BucketErrorResult;
+
 /**
  * Checks if a bucket exists and creates it if needed
  * @param bucketName Name of the bucket to check/create
  * @returns Object containing the operation result
  */
-export async function ensureBucketExists(bucketName: string) {
+export async function ensureBucketExists(bucketName: string): Promise<BucketOperationResult<boolean>> {
   try {
     console.log(`Checking if bucket '${bucketName}' exists...`);
     
@@ -22,14 +37,14 @@ export async function ensureBucketExists(bucketName: string) {
           message: 'Vous n\'avez pas les permissions nécessaires pour lister les buckets.' 
         };
       }
-      return { success: false, error: 'BUCKET_LIST_ERROR' };
+      return { success: false, error: 'BUCKET_LIST_ERROR', message: 'Erreur lors de la récupération des buckets' };
     }
     
     const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
     
     if (bucketExists) {
       console.log(`Bucket '${bucketName}' already exists.`);
-      return { success: true };
+      return { success: true, data: true };
     }
     
     // Create the bucket if it doesn't exist
@@ -56,7 +71,7 @@ export async function ensureBucketExists(bucketName: string) {
     }
     
     console.log(`Bucket '${bucketName}' created successfully.`);
-    return { success: true };
+    return { success: true, data: true };
   } catch (error: any) {
     console.error('Error ensuring bucket exists:', error);
     if (error.message?.includes('Permission denied')) {
@@ -80,7 +95,7 @@ export async function ensureBucketExists(bucketName: string) {
  * @param extension Optional file extension to filter by (e.g. '.json')
  * @returns Array of files or error object
  */
-export async function listFilesInBucket(bucketName: string, extension?: string) {
+export async function listFilesInBucket(bucketName: string, extension?: string): Promise<BucketOperationResult<any[]>> {
   try {
     const { data: files, error } = await supabase.storage
       .from(bucketName)

@@ -5,19 +5,33 @@ import { ensureBucketExists } from "./bucketOperations";
 
 const STATUS_BUCKET_NAME = 'status-icons';
 
+// Define specific return types for export operations
+export type ExportSuccessResult = {
+  success: true;
+  message?: string;
+};
+
+export type ExportErrorResult = {
+  success: false;
+  error: string;
+  message?: string;
+};
+
+export type ExportResult = ExportSuccessResult | ExportErrorResult;
+
 /**
  * Exports statuses to a Supabase storage bucket
  * @param statuses List of statuses to export
  * @returns Result object with success/error information
  */
-export async function exportStatusesToBucket(statuses: Status[]) {
+export async function exportStatusesToBucket(statuses: Status[]): Promise<ExportResult> {
   try {
     console.log('Exportation des statuts vers le bucket...');
     
     // Ensure the bucket exists
     const bucketResult = await ensureBucketExists(STATUS_BUCKET_NAME);
     if (!bucketResult.success) {
-      return bucketResult;
+      return bucketResult as ExportErrorResult;
     }
     
     // Prepare the status data for export
@@ -61,7 +75,7 @@ export async function exportStatusesToBucket(statuses: Status[]) {
       }
       
       console.log('Statuts exportés avec succès:', data);
-      return { success: true };
+      return { success: true, message: "Export réussi" };
     } catch (uploadError: any) {
       console.error('Exception lors de l\'upload des statuts:', uploadError);
       if (uploadError.message?.includes('Permission denied') || uploadError.message?.includes('not allowed')) {

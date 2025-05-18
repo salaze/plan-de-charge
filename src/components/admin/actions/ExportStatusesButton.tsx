@@ -31,24 +31,29 @@ export function ExportStatusesButton({ statuses }: ExportStatusesButtonProps) {
         // Gérer les différents types d'erreurs
         let errorMessage = "Impossible d'exporter les statuts.";
         
-        switch(result.error) {
-          case 'PERMISSION_DENIED':
-            errorMessage = result.message || "Problème d'accès ou de permission Supabase. Vérifiez les politiques du bucket.";
-            break;
-          case 'BUCKET_NOT_FOUND':
-            errorMessage = result.message || "Le bucket de stockage n'existe pas. Vérifiez la configuration Supabase.";
-            break;
-          case 'BUCKET_CREATE_ERROR':
-            errorMessage = result.message || "Impossible de créer le bucket de stockage. Vérifiez vos permissions Supabase.";
-            break;
-          case 'BUCKET_LIST_ERROR':
-            errorMessage = result.message || "Impossible de lister les buckets. Vérifiez vos permissions Supabase.";
-            break;
-          case 'UPLOAD_ERROR':
-            errorMessage = result.message || "Erreur lors de l'upload du fichier. Vérifiez les permissions du bucket.";
-            break;
-          default:
-            errorMessage = result.message || "Erreur inattendue lors de l'exportation des statuts.";
+        // Safely check if error property exists
+        if ('error' in result) {
+          switch(result.error) {
+            case 'PERMISSION_DENIED':
+              errorMessage = result.message || "Problème d'accès ou de permission Supabase. Vérifiez les politiques du bucket.";
+              break;
+            case 'BUCKET_NOT_FOUND':
+              errorMessage = result.message || "Le bucket de stockage n'existe pas. Vérifiez la configuration Supabase.";
+              break;
+            case 'BUCKET_CREATE_ERROR':
+              errorMessage = result.message || "Impossible de créer le bucket de stockage. Vérifiez vos permissions Supabase.";
+              break;
+            case 'BUCKET_LIST_ERROR':
+              errorMessage = result.message || "Impossible de lister les buckets. Vérifiez vos permissions Supabase.";
+              break;
+            case 'UPLOAD_ERROR':
+              errorMessage = result.message || "Erreur lors de l'upload du fichier. Vérifiez les permissions du bucket.";
+              break;
+            default:
+              errorMessage = result.message || "Erreur inattendue lors de l'exportation des statuts.";
+          }
+        } else if ('message' in result && result.message) {
+          errorMessage = result.message;
         }
         
         toast({

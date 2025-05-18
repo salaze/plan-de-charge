@@ -68,10 +68,12 @@ export function ImportStatusesButton({ onStatusesImported }: ImportStatusesButto
               variant: "default",
             });
           } else {
-            onStatusesImported(result as Status[]);
+            // The TypeScript error occurs here - we need to properly type 'result'
+            const statusArray = result as Status[];
+            onStatusesImported(statusArray);
             toast({
               title: "Succès",
-              description: `${result.length} statuts ont été importés avec succès.`,
+              description: `${statusArray.length} statuts ont été importés avec succès.`,
             });
           }
         }

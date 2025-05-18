@@ -6,10 +6,27 @@ import { listFilesInBucket } from "./bucketOperations";
 const STATUS_BUCKET_NAME = 'status-icons';
 
 /**
+ * Type definitions for the function return values
+ */
+type ImportSuccessResult = {
+  success: true;
+  data: Status[];
+  message?: string;
+};
+
+type ImportErrorResult = {
+  success: false;
+  error: string;
+  message?: string;
+};
+
+export type ImportResult = ImportSuccessResult | ImportErrorResult | Status[];
+
+/**
  * Imports statuses from a Supabase storage bucket
  * @returns Object containing statuses or error information
  */
-export async function importStatusesFromBucket() {
+export async function importStatusesFromBucket(): Promise<ImportResult> {
   try {
     console.log('Importation des statuts depuis le bucket...');
     
